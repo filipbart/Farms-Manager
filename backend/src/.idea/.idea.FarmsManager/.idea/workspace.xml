@@ -7,7 +7,29 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="3b1c537e-afff-4695-8cf4-fb551c71bcef" name="Changes" comment="" />
+    <list default="true" id="3b1c537e-afff-4695-8cf4-fb551c71bcef" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/FarmsManager.Application/Common/Constants/ClaimNames.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/FarmsManager.Application/Common/Constants/JwtKeys.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/FarmsManager.Domain/Aggregates/UserAggregate/Entites/UserEntity.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/FarmsManager.Domain/Aggregates/UserAggregate/IUserAccessTokenGenerator.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/FarmsManager.Domain/SeedWork/Entity.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/FarmsManager.Domain/SeedWork/IAggregateRoot.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/FarmsManager.Domain/SeedWork/IRepository.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/FarmsManager.HostBuilder/Configuration/ConfigurationOptions.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/FarmsManager.HostBuilder/Extensions/HostBuilderExtensions.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/FarmsManager.HostBuilder/Host/FmHostBuilder.Autofac.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/FarmsManager.HostBuilder/Host/FmHostBuilder.Configuration.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/FarmsManager.HostBuilder/Host/FmHostBuilder.Core.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/FarmsManager.HostBuilder/Host/FmHostBuilder.Jwt.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/FarmsManager.Infrastructure/Autofac/FarmsManagerDatabaseModule.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/FarmsManager.Infrastructure/Configuration/JwtOptions.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/FarmsManager.Infrastructure/FarmsManagerContext.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/FarmsManager.Infrastructure/JwtUserAccessTokenGenerator.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/FarmsManager.Infrastructure/ServiceCollectionExtensions.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.FarmsManager/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.FarmsManager/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/FarmsManager.Api/FarmsManager.Api.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/FarmsManager.Api/FarmsManager.Api.csproj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/FarmsManager.sln" beforeDir="false" afterPath="$PROJECT_DIR$/FarmsManager.sln" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -16,10 +38,23 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../.." />
   </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "filipbart"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/filipbart/Farms-Manager.git",
+    "accountId": "93c5f304-842b-4836-85d5-1ecb5e01f0dc"
+  }
+}]]></component>
   <component name="KubernetesApiPersistence">{}</component>
   <component name="KubernetesApiProvider">{
   &quot;isMigrated&quot;: true
 }</component>
+  <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="true" />
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 1
 }</component>
@@ -32,13 +67,15 @@
   "keyToString": {
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "master",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "main",
     "ignore.virus.scanning.warn.message": "true",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "ml.llm.LLMConfigurable",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -76,15 +113,29 @@
       <updated>1749835531592</updated>
       <workItem from="1749835532844" duration="23000" />
       <workItem from="1749835590155" duration="736000" />
+      <workItem from="1749837310478" duration="10919000" />
     </task>
+    <task id="LOCAL-00001" summary="Add IntelliJ IDEA project configuration files for FarmsManager.">
+      <option name="closed" value="true" />
+      <created>1749837381855</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1749837381855</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
+  <component name="UnityCheckinConfiguration" checkUnsavedScenes="true" />
   <component name="UnityProjectConfiguration" hasMinimizedUI="false" />
   <component name="VcsManagerConfiguration">
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
+    <MESSAGE value="Update `.idea` configuration and add shelved changes to version control." />
+    <MESSAGE value="Add IntelliJ IDEA project configuration files for FarmsManager." />
+    <option name="LAST_COMMIT_MESSAGE" value="Add IntelliJ IDEA project configuration files for FarmsManager." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
