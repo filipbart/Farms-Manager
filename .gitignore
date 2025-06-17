@@ -7,6 +7,8 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/Dotnet.gitignore
 
+.idea/
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
@@ -52,4 +54,3 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
-.idea/
