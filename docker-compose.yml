@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:16
+    container_name: postgres-db
+    restart: always
+    environment:
+      POSTGRES_USER: fm
+      POSTGRES_PASSWORD: fm123
+      POSTGRES_DB: farms_manager
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+  # backend:
+  #   container_name: dotnet-api
+  #   build:
+  #     context: ./backend/src
+  #     dockerfile: Dockerfile
+  #   depends_on:
+  #     - db
+  #   environment:
+  #     ASPNETCORE_ENVIRONMENT: Development
+  #     ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=farms_manager;Username=fm;Password=fm123
+  #   ports:
+  #     - "8082:8082"
+
+  # frontend:
+  #   container_name: vite-react
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "3000:3000"
+  #   depends_on:
+  #     - backend
+  #   environment:
+  #     VITE_API_URL: http://localhost:5000
+
+volumes:
+  postgres_data:

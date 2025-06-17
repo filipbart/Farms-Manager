@@ -1,0 +1,11 @@
+﻿{
+  "Jwt": {
+    "Issuer": "farms-manager.pl",
+    "Secret": "secret-key-256-bit",
+    "Expiry": "0.00:20:00.000",
+    "AllowedOrigins": [
+      "http://localhost:3001",
+      "https://localhost:3001"
+    ]
+  }
+}

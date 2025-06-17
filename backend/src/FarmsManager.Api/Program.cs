@@ -1,24 +1,102 @@
-var builder = WebApplication.CreateBuilder(args);
+using System.Text.Json.Serialization;
+using Autofac;
+using Autofac.Extensions.DependencyInjection;
+using FarmsManager.Application.Invoices.Queries;
+using FarmsManager.HostBuilder.Extensions;
+using FarmsManager.HostBuilder.Host;
+using FarmsManager.Infrastructure.Autofac;
+using Microsoft.OpenApi.Any;
+using Microsoft.OpenApi.Models;
 
-// Add services to the container.
+var webAppBuilder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+webAppBuilder.Host.GetBuilder()
+    .AddAutofac(builder => { builder.RegisterModule<InfrastructureModule>(); })
+    .AddDatabase()
+    .AddJwt()
+    .AddAutoMapper() //todo add assemblies
+    .AddMediator(typeof(TestQuery).Assembly) //todo add assemblies
+    .AddSerilog()
+    ;
 
-var app = builder.Build();
+webAppBuilder.Logging.AddFilter("Microsoft.AspNetCore.Http.Connections", LogLevel.Debug);
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+webAppBuilder.WebHost.UsePortForHttp(FmHostBuilder.ConfigurationRoot.GetValue<int?>("AppPort") ?? 8082);
+
+webAppBuilder.Services
+    .AddRouting(options => options.LowercaseUrls = true)
+    .AddResponseCompression()
+    .AddSwaggerGen(options =>
+    {
+        options.MapType<TimeSpan>(() => new OpenApiSchema
+        {
+            Type = "string",
+            Example = new OpenApiString("00:00:00")
+        });
+
+        options.DescribeAllParametersInCamelCase();
+
+        options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+        {
+            Description =
+                "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+            Name = "Authorization",
+            In = ParameterLocation.Header,
+            Type = SecuritySchemeType.ApiKey,
+            Scheme = "Bearer"
+        });
+
+        options.AddSecurityRequirement(new OpenApiSecurityRequirement
+        {
+            {
+                new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                    },
+                    Scheme = "oauth2",
+                    Name = "Bearer",
+                    In = ParameterLocation.Header,
+                },
+                new List<string>()
+            }
+        });
+    })
+    .AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
+
+
+var app = webAppBuilder.Build();
+
+using (var lifetimeScope = app.Services.GetAutofacRoot().BeginLifetimeScope())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    var configuration = lifetimeScope.Resolve<IConfiguration>();
+
+    if (configuration.GetValue<bool>("SwaggerEnabled"))
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI();
+    }
 }
 
-app.UseHttpsRedirection();
+app.UseCors(builder =>
+{
+    var allowedOrigins = app.Configuration.GetSection("AllowedOrigins").Get<string[]>();
+    builder.AllowAnyHeader();
+    builder.AllowAnyMethod();
+    builder.AllowCredentials();
+    if (allowedOrigins != null) builder.WithOrigins(allowedOrigins);
+});
 
+app.UseAuthentication();
 app.UseAuthorization();
+app.UseResponseCompression();
 
 app.MapControllers();
 

@@ -16,4 +16,8 @@
       <Folder Include="Middleware\" />
     </ItemGroup>
 
+    <ItemGroup>
+        <ProjectReference Include="..\FarmsManager.HostBuilder\FarmsManager.HostBuilder.csproj" />
+    </ItemGroup>
+
 </Project>
