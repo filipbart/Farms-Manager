@@ -9,15 +9,17 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.1" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.6">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.1"/>
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Middleware\" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <ProjectReference Include="..\FarmsManager.HostBuilder\FarmsManager.HostBuilder.csproj" />
+        <ProjectReference Include="..\FarmsManager.HostBuilder\FarmsManager.HostBuilder.csproj"/>
+        <ProjectReference Include="..\FarmsManager.Infrastructure\FarmsManager.Infrastructure.csproj"/>
+        <ProjectReference Include="..\FarmsManager.Shared\FarmsManager.Shared.csproj"/>
     </ItemGroup>
 
 </Project>

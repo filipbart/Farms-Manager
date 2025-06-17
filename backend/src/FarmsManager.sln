@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FarmsManager.Infrastructure
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FarmsManager.HostBuilder", "FarmsManager.HostBuilder\FarmsManager.HostBuilder.csproj", "{42E441AD-C725-4B3E-AF4C-1ADDBACE92ED}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FarmsManager.Shared", "FarmsManager.Shared\FarmsManager.Shared.csproj", "{A372B414-EFA7-4232-ACF8-E4477DC526EE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +38,9 @@ Global
 		{42E441AD-C725-4B3E-AF4C-1ADDBACE92ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{42E441AD-C725-4B3E-AF4C-1ADDBACE92ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{42E441AD-C725-4B3E-AF4C-1ADDBACE92ED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A372B414-EFA7-4232-ACF8-E4477DC526EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A372B414-EFA7-4232-ACF8-E4477DC526EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A372B414-EFA7-4232-ACF8-E4477DC526EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A372B414-EFA7-4232-ACF8-E4477DC526EE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

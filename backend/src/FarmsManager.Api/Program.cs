@@ -1,27 +1,42 @@
 using System.Text.Json.Serialization;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using FarmsManager.Api.Controllers;
+using FarmsManager.Api.Middleware;
+using FarmsManager.Application.Invoices.Commands.Dev;
 using FarmsManager.Application.Invoices.Queries;
 using FarmsManager.HostBuilder.Extensions;
 using FarmsManager.HostBuilder.Host;
+using FarmsManager.Infrastructure;
 using FarmsManager.Infrastructure.Autofac;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 
 var webAppBuilder = WebApplication.CreateBuilder(args);
 
 webAppBuilder.Host.GetBuilder()
-    .AddAutofac(builder => { builder.RegisterModule<InfrastructureModule>(); })
+    .AddAutofac(builder =>
+    {
+        builder.RegisterAssemblyTypes(typeof(DomainExceptionMiddleware).Assembly)
+            .Where(t => t.IsAssignableTo<IMiddleware>()).AsSelf();
+        builder.RegisterModule<InfrastructureModule>();
+    })
     .AddDatabase()
     .AddJwt()
     .AddAutoMapper() //todo add assemblies
-    .AddMediator(typeof(TestQuery).Assembly) //todo add assemblies
-    .AddSerilog()
-    ;
+    .AddMediator(typeof(TestQuery).Assembly, typeof(CreateDevAccountCommand).Assembly) //todo add assemblies
+    .AddSerilog();
 
 webAppBuilder.Logging.AddFilter("Microsoft.AspNetCore.Http.Connections", LogLevel.Debug);
 
 webAppBuilder.WebHost.UsePortForHttp(FmHostBuilder.ConfigurationRoot.GetValue<int?>("AppPort") ?? 8082);
+
+if (!webAppBuilder.Environment.IsProduction())
+{
+    webAppBuilder.Services.AddControllers()
+        .AddApplicationPart(typeof(DevController).Assembly); // Dodaj kontroler tylko w środowisku innym niż produkcyjne
+}
 
 webAppBuilder.Services
     .AddRouting(options => options.LowercaseUrls = true)
@@ -74,6 +89,12 @@ webAppBuilder.Services
 
 var app = webAppBuilder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<FarmsManagerContext>();
+    context.Database.Migrate();
+}
+
 using (var lifetimeScope = app.Services.GetAutofacRoot().BeginLifetimeScope())
 {
     var configuration = lifetimeScope.Resolve<IConfiguration>();
@@ -99,5 +120,8 @@ app.UseAuthorization();
 app.UseResponseCompression();
 
 app.MapControllers();
+
+app.UseMiddleware<DomainExceptionMiddleware>();
+app.UseMiddleware<BlockDevControllerMiddleware>();
 
 app.Run();

@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using FarmsManager.Domain.SeedWork;
+using FarmsManager.Infrastructure.Repositories.UserAggregate;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
@@ -39,7 +40,7 @@ public class FarmsManagerDatabaseModule : Module
             .AsSelf()
             .InstancePerLifetimeScope();
 
-        builder.RegisterAssemblyTypes(typeof(IRepository).Assembly) //dodac (UserRepository).Assembly
+        builder.RegisterAssemblyTypes(typeof(IRepository).Assembly, typeof(UserRepository).Assembly)
             .Where(t => t.IsAssignableTo<IRepository>())
             .AsImplementedInterfaces();
     }

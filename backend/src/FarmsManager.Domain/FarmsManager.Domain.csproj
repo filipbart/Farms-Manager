@@ -3,7 +3,26 @@
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
+        <Nullable>disable</Nullable>
     </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Ardalis.Specification" Version="9.2.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Update="Resources\DomainExceptionDescription.resx">
+        <Generator>ResXFileCodeGenerator</Generator>
+        <LastGenOutput>DomainExceptionDescription.Designer.cs</LastGenOutput>
+      </EmbeddedResource>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Resources\DomainExceptionDescription.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>DomainExceptionDescription.resx</DependentUpon>
+      </Compile>
+    </ItemGroup>
 
 </Project>
