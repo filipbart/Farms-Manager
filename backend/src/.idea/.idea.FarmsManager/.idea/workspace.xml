@@ -11,24 +11,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3b1c537e-afff-4695-8cf4-fb551c71bcef" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/FarmsManager.Api/Properties/launchSettings.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/FarmsManager.Api/jwt.appsettings.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/FarmsManager.Application/Invoices/Commands/TestCommand.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/FarmsManager.Application/Invoices/Queries/TestQuery.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/FarmsManager.HostBuilder/Configuration/Options/SerilogOptions.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/FarmsManager.HostBuilder/Extensions/WebHostBuilderExtensions.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/FarmsManager.HostBuilder/Host/FmHostBuilder.Database.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/FarmsManager.HostBuilder/Host/FmHostBuilder.Serilog.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/FarmsManager.Infrastructure/Autofac/InfrastructureModule.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/../../.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.FarmsManager/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.FarmsManager/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/FarmsManager.Api/Controllers/WeatherForecastController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/FarmsManager.Api/Controllers/WeatherForecastController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/FarmsManager.Api/FarmsManager.Api.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/FarmsManager.Api/FarmsManager.Api.csproj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/FarmsManager.Api/Program.cs" beforeDir="false" afterPath="$PROJECT_DIR$/FarmsManager.Api/Program.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/FarmsManager.Api/appsettings.json" beforeDir="false" afterPath="$PROJECT_DIR$/FarmsManager.Api/appsettings.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/FarmsManager.Application/FarmsManager.Application.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/FarmsManager.Application/FarmsManager.Application.csproj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/FarmsManager.HostBuilder/Configuration/ConfigurationOptions.cs" beforeDir="false" afterPath="$PROJECT_DIR$/FarmsManager.HostBuilder/Configuration/ConfigurationOptions.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/FarmsManager.HostBuilder/FarmsManager.HostBuilder.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/FarmsManager.HostBuilder/FarmsManager.HostBuilder.csproj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../frontend/vite.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../../frontend/vite.config.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -62,6 +46,7 @@
 }</component>
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/bd1d5c50194fea68ff3559c160230b0ab50f5acf4ce3061bffd6d62958e2182/ExceptionDispatchInfo.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="mock://D:/Projekty/farms-manager/backend/src/FarmsManager.Api/appsettings.json" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/FarmsManager.Infrastructure/FarmsManagerContext.cs" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="KubernetesApiPersistence">{}</component>
@@ -77,24 +62,24 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    ".NET Launch Settings Profile.FarmsManager.Api.executor": "Run",
-    ".NET Project.FarmsManager.Api.executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main",
-    "ignore.virus.scanning.warn.message": "true",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "ml.llm.LLMConfigurable",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;.NET Launch Settings Profile.FarmsManager.Api.executor&quot;: &quot;Run&quot;,
+    &quot;.NET Project.FarmsManager.Api.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;ml.llm.LLMConfigurable&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager" selected=".NET Project.FarmsManager.Api">
     <configuration name="FarmsManager.Api" type="DotNetProject" factoryName=".NET Project">
       <option name="EXE_PATH" value="$PROJECT_DIR$/FarmsManager.Api/bin/Debug/net8.0/FarmsManager.Api.exe" />
@@ -165,7 +150,8 @@
       <workItem from="1749835532844" duration="23000" />
       <workItem from="1749835590155" duration="736000" />
       <workItem from="1749837310478" duration="11101000" />
-      <workItem from="1750162400193" duration="6118000" />
+      <workItem from="1750162400193" duration="6308000" />
+      <workItem from="1750182825323" duration="300000" />
     </task>
     <task id="LOCAL-00001" summary="Add IntelliJ IDEA project configuration files for FarmsManager.">
       <option name="closed" value="true" />
@@ -183,7 +169,23 @@
       <option name="project" value="LOCAL" />
       <updated>1749851470085</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Add Docker Compose setup, backend and frontend Dockerfiles, and Serilog integration with necessary configurations.">
+      <option name="closed" value="true" />
+      <created>1750178984876</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1750178984876</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Update .gitignore to exclude IntelliJ IDEA configuration files">
+      <option name="closed" value="true" />
+      <created>1750183044966</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1750183044966</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -196,7 +198,9 @@
     <MESSAGE value="Update `.idea` configuration and add shelved changes to version control." />
     <MESSAGE value="Add IntelliJ IDEA project configuration files for FarmsManager." />
     <MESSAGE value="Initialize core project structure with .NET backend and relevant dependencies." />
-    <option name="LAST_COMMIT_MESSAGE" value="Initialize core project structure with .NET backend and relevant dependencies." />
+    <MESSAGE value="Add Docker Compose setup, backend and frontend Dockerfiles, and Serilog integration with necessary configurations." />
+    <MESSAGE value="Update .gitignore to exclude IntelliJ IDEA configuration files" />
+    <option name="LAST_COMMIT_MESSAGE" value="Update .gitignore to exclude IntelliJ IDEA configuration files" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
