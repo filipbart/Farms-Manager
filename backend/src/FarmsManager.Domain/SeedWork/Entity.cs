@@ -31,8 +31,6 @@ public abstract class Entity
         DeletedBy = deleterId;
     }
 
-    public bool IsDeleted => DateDeletedUtc.HasValue;
-
     public override bool Equals(object? obj)
     {
         if (obj is not Entity otherEntity)

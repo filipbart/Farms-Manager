@@ -85,5 +85,14 @@ namespace FarmsManager.Domain.Resources {
                 return ResourceManager.GetString("Unauthorized", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Nie znaleziono użytkownika.
+        /// </summary>
+        internal static string UserNotFound {
+            get {
+                return ResourceManager.GetString("UserNotFound", resourceCulture);
+            }
+        }
     }
 }

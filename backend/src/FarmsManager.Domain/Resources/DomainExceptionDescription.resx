@@ -27,4 +27,7 @@
     <data name="Unauthorized" xml:space="preserve">
         <value>Nie jesteś zalogowany</value>
     </data>
+    <data name="UserNotFound" xml:space="preserve">
+        <value>Nie znaleziono użytkownika</value>
+    </data>
 </root>

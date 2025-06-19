@@ -24,6 +24,11 @@ public class UserSessionEntity : Entity
         DeactivatedAtUtc = DateTime.UtcNow;
     }
 
+    public bool IsValid(int sessionLength)
+    {
+        return LastSeenAtUtc.AddMilliseconds(sessionLength) > DateTime.UtcNow;
+    }
+
     public static UserSessionEntity Create(Guid userId, Guid sessionId)
     {
         return new UserSessionEntity

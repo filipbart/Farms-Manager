@@ -5,7 +5,9 @@ using FarmsManager.Api.Controllers;
 using FarmsManager.Api.Middleware;
 using FarmsManager.Application.Commands.Dev;
 using FarmsManager.Application.Common;
+using FarmsManager.Application.Mappings.User;
 using FarmsManager.Application.Queries;
+using FarmsManager.Application.Queries.User;
 using FarmsManager.Application.Services;
 using FarmsManager.HostBuilder.Extensions;
 using FarmsManager.HostBuilder.Host;
@@ -30,8 +32,8 @@ webAppBuilder.Host.GetBuilder()
     })
     .AddDatabase()
     .AddJwt()
-    .AddAutoMapper() //todo add assemblies
-    .AddMediator(typeof(TestQuery).Assembly, typeof(CreateDevAccountCommand).Assembly) //todo add assemblies
+    .AddAutoMapper(typeof(UserProfile).Assembly)
+    .AddMediator(typeof(MeQuery).Assembly, typeof(CreateDevAccountCommand).Assembly)
     .AddSerilog();
 
 webAppBuilder.Logging.AddFilter("Microsoft.AspNetCore.Http.Connections", LogLevel.Debug);

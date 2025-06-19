@@ -9,9 +9,14 @@ namespace FarmsManager.Api.Controllers;
 
 public class AuthController(IMediator mediator) : BaseController
 {
+    /// <summary>
+    /// Autoryzacja użytkownika
+    /// </summary>
+    /// <param name="command"></param>
+    /// <returns></returns>
     [HttpPost("authenticate")]
     [AllowAnonymous]
-    [ProducesResponseType(typeof(BaseResponse<>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(BaseResponse<AuthenticateCommandResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Authenticate(AuthenticateCommand command)
     {

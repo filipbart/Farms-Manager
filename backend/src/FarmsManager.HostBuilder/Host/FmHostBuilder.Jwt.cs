@@ -15,7 +15,8 @@ public partial class FmHostBuilder
         ConfigureContainer(builder =>
         {
             builder.RegisterType<JwtUserAccessTokenGenerator>().As<IUserAccessTokenGenerator>();
-            builder.Register(_ => ConfigurationRoot.GetSection("Jwt").Get<JwtOptions>());
+            builder.Register(_ => ConfigurationRoot.GetSection("Jwt").Get<JwtOptions>())
+                .AsImplementedInterfaces().AsSelf();
         });
 
         ConfigureServices(services => { services.AddJwt(ConfigurationRoot.GetSection("Jwt").Get<JwtOptions>()); });

@@ -13,7 +13,7 @@ public class BaseSpecification<T> : Specification<T> where T : Entity
 
     protected void EnsureExists()
     {
-        Query.Where(t => t.IsDeleted == false);
+        Query.Where(t => t.DateDeletedUtc.HasValue == false);
     }
 
     protected void Paginate(PaginationParams paginationParams)
@@ -31,7 +31,7 @@ public class BaseSpecification<T, TResult> : Specification<T, TResult> where T :
 
     protected void EnsureExists()
     {
-        Query.Where(t => t.IsDeleted == false);
+        Query.Where(t => t.DateDeletedUtc.HasValue == false);
     }
 
     protected void Paginate(PaginationParams paginationParams)
