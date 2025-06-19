@@ -1,4 +1,5 @@
 ﻿using FarmsManager.Api.Controllers.Base;
+using FarmsManager.Application.Commands.Dev;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,16 +9,9 @@ namespace FarmsManager.Api.Controllers;
 public class DevController(IMediator mediator) : BaseController
 {
     [AllowAnonymous]
-    [HttpGet("test")]
-    public async Task<IActionResult> Test()
-    {
-        return Ok("Działa");
-    }
-
-    [AllowAnonymous]
     [HttpPost("create-account")]
-    public async Task<IActionResult> CreateAccount()
+    public async Task<IActionResult> CreateAccount(CreateDevAccountCommand command)
     {
-        return Ok();
+        return Ok(await mediator.Send(command));
     }
 }

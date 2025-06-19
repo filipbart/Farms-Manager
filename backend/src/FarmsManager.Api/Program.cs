@@ -3,8 +3,10 @@ using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using FarmsManager.Api.Controllers;
 using FarmsManager.Api.Middleware;
-using FarmsManager.Application.Invoices.Commands.Dev;
-using FarmsManager.Application.Invoices.Queries;
+using FarmsManager.Application.Commands.Dev;
+using FarmsManager.Application.Common;
+using FarmsManager.Application.Queries;
+using FarmsManager.Application.Services;
 using FarmsManager.HostBuilder.Extensions;
 using FarmsManager.HostBuilder.Host;
 using FarmsManager.Infrastructure;
@@ -21,6 +23,10 @@ webAppBuilder.Host.GetBuilder()
         builder.RegisterAssemblyTypes(typeof(DomainExceptionMiddleware).Assembly)
             .Where(t => t.IsAssignableTo<IMiddleware>()).AsSelf();
         builder.RegisterModule<InfrastructureModule>();
+
+        builder.RegisterAssemblyTypes(typeof(AuthService).Assembly)
+            .Where(t => t.IsAssignableTo<IService>())
+            .AsImplementedInterfaces();
     })
     .AddDatabase()
     .AddJwt()

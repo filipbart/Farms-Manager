@@ -37,14 +37,14 @@ public abstract class AbstractRepository<T> : RepositoryBase<T>, ICustomReposito
     public async Task<T> GetAsync(ISingleResultSpecification<T> spec, CancellationToken cancellationToken = default)
     {
         return await SingleOrDefaultAsync(spec, cancellationToken) ??
-               throw DomainException.RecordNotFoundException(typeof(T).Name);
+               throw DomainException.RecordNotFound(typeof(T).Name);
     }
 
     public async Task<TResult> GetAsync<TResult>(ISingleResultSpecification<T> spec,
         CancellationToken cancellationToken = default)
     {
         return await SingleOrDefaultAsync<TResult>(spec, cancellationToken) ??
-               throw DomainException.RecordNotFoundException(typeof(T).Name);
+               throw DomainException.RecordNotFound(typeof(T).Name);
     }
 
     public async Task<TResult> SingleOrDefaultAsync<TResult>(ISingleResultSpecification<T> spec,

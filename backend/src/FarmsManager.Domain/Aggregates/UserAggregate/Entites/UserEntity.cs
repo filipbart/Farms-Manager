@@ -1,4 +1,5 @@
-﻿using FarmsManager.Domain.SeedWork;
+﻿using Ardalis.GuardClauses;
+using FarmsManager.Domain.SeedWork;
 
 namespace FarmsManager.Domain.Aggregates.UserAggregate.Entites;
 
@@ -12,15 +13,26 @@ public class UserEntity : Entity
     public string PasswordHash { get; protected internal set; }
     public string Name { get; protected internal set; }
 
-    public static UserEntity CreateUser(string login, string password, string name)
+    public static UserEntity CreateUser(string login, string name)
     {
-        
-        
-        return new UserEntity
+        var user = new UserEntity
         {
-            Login = login,
-            PasswordHash = null,
-            Name = name
+            Login = login
         };
+
+        user.ChangeName(name);
+        return user;
+    }
+
+    public void ChangePassword(string passwordHash)
+    {
+        Guard.Against.NullOrWhiteSpace(passwordHash);
+        PasswordHash = passwordHash;
+    }
+
+    public void ChangeName(string name)
+    {
+        Guard.Against.NullOrWhiteSpace(name);
+        Name = name;
     }
 }

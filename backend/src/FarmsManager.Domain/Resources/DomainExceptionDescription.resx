@@ -21,4 +21,10 @@
     <data name="RecordNotFound" xml:space="preserve">
         <value>Nie znaleziono rekordu w '{0}'</value>
     </data>
+    <data name="InvalidCredentials" xml:space="preserve">
+        <value>Niepoprawne dane logowania</value>
+    </data>
+    <data name="Unauthorized" xml:space="preserve">
+        <value>Nie jesteś zalogowany</value>
+    </data>
 </root>

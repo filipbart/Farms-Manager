@@ -1,7 +1,7 @@
 ﻿using FarmsManager.Domain.Aggregates.UserAggregate.Entites;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace FarmsManager.Infrastructure.EntityConfigurations;
+namespace FarmsManager.Infrastructure.EntityConfigurations.UserAggregate;
 
 public class UserEntityConfiguration : BaseConfiguration<UserEntity>
 {

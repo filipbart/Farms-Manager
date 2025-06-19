@@ -60,11 +60,29 @@ namespace FarmsManager.Domain.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Niepoprawne dane logowania.
+        /// </summary>
+        internal static string InvalidCredentials {
+            get {
+                return ResourceManager.GetString("InvalidCredentials", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Nie znaleziono rekordu w &apos;{0}&apos;.
         /// </summary>
         internal static string RecordNotFound {
             get {
                 return ResourceManager.GetString("RecordNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Nie jesteś zalogowany.
+        /// </summary>
+        internal static string Unauthorized {
+            get {
+                return ResourceManager.GetString("Unauthorized", resourceCulture);
             }
         }
     }

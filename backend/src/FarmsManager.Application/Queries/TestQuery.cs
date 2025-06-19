@@ -1,5 +1,5 @@
 ﻿using MediatR;
 
-namespace FarmsManager.Application.Invoices.Queries;
+namespace FarmsManager.Application.Queries;
 
 public class TestQuery : IRequest;
