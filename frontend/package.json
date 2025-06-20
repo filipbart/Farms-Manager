@@ -1,7 +1,7 @@
 {
   "name": "farms-manager",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -18,16 +18,23 @@
     "@mui/x-data-grid-generator": "^8.5.1",
     "@mui/x-date-pickers": "^8.5.1",
     "@tailwindcss/vite": "^4.1.8",
+    "axios": "^1.10.0",
+    "jwt-decode": "^4.0.0",
+    "qs": "^6.14.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-error-boundary": "^6.0.0",
     "react-icons": "^5.5.0",
     "react-router-dom": "^7.6.2",
+    "react-spinners": "^0.17.0",
+    "react-toastify": "^11.0.5",
+    "react-use-cookie": "^1.6.1",
     "tailwindcss": "^4.1.8"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",
     "@types/node": "^22.15.30",
+    "@types/qs": "^6.14.0",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "@vitejs/plugin-react": "^4.4.1",

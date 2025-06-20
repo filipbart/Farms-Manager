@@ -6,6 +6,8 @@ import DashboardNavbar from "./dashboard-navbar";
 import DashboardSidebar from "./dashboard-sidebar";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallback from "../../pages/error-fallback";
+import { useRouter } from "../../router/use-router";
+import { RouteName } from "../../router/route-names";
 
 const DashboardLayoutRoot = styled("div")(({ theme }) => ({
   maxWidth: "100%",
@@ -20,14 +22,12 @@ const DashboardLayoutRoot = styled("div")(({ theme }) => ({
 
 const DashboardLayout: React.FC = () => {
   const [sidebarOpened, setSidebarOpened] = useState(false);
+  const { getRoute } = useRouter();
+  const { isAuthenticated } = useAuth();
 
-  //   const { isLoggedIn } = useAuth();
-
-  //   useEffect(() => {
-  //     if (!isLoggedIn) {
-  //       <Navigate to="/login" />;
-  //     }
-  //   }, [isLoggedIn]);
+  if (!isAuthenticated()) {
+    return <Navigate to={getRoute(RouteName.Login)} />;
+  }
 
   return (
     <>

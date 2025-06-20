@@ -1,15 +1,18 @@
 import React from "react";
 import { Route, Routes } from "react-router-dom";
-import LoginPage from "./pages/login-page";
-import DashboardLayout from "./layouts/dashboard/dashboard-layout";
-import DashboardPage from "./pages/dashboard";
-import { DashboardCtxProvider } from "./pages/dashboard/dashboard-ctx";
-import InsertionsPage from "./pages/insertions";
+import LoginPage from "../pages/login-page";
+import DashboardLayout from "../layouts/dashboard/dashboard-layout";
+import DashboardPage from "../pages/dashboard";
+import { DashboardCtxProvider } from "../pages/dashboard/dashboard-ctx";
+import InsertionsPage from "../pages/insertions";
+import { useRouter } from "./use-router";
+import { RouteName } from "./route-names";
 
 const DefaultRouter: React.FC = () => {
+  const { getRoute } = useRouter();
   return (
     <Routes>
-      <Route path="/login" element={<LoginPage />} />
+      <Route path={getRoute(RouteName.Login)} element={<LoginPage />} />
       <Route path="/" element={<DashboardLayout />}>
         <Route
           path=""
