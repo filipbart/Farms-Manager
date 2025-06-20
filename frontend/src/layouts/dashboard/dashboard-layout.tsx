@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../../auth/useAuth";
 import { styled } from "@mui/material";
