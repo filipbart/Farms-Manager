@@ -5,7 +5,7 @@ import AxiosWrapper from "../utils/axios/wrapper";
 
 export class AuthService {
   public static async loginAsync(login: string, password: string) {
-    await AxiosWrapper.post<AuthUserResponse>(ApiUrl.Authenticate, {
+    return await AxiosWrapper.post<AuthUserResponse>(ApiUrl.Authenticate, {
       login,
       password,
     });

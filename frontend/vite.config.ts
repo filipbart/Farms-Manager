@@ -6,14 +6,14 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
-    host: true,
+    // host: true,
     port: 3000,
     allowedHosts: ["23f7-5-173-180-31.ngrok-free.app"],
     proxy: {
       "/api": {
-        target: "http://localhost:8080",
+        target: "http://localhost:8082",
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ""),
+        ws: true,
       },
     },
   },

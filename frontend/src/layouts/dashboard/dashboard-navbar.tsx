@@ -5,6 +5,7 @@ import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
 import { IconButton, useMediaQuery } from "@mui/material";
 import { IoMenu } from "react-icons/io5";
+import { useAuth } from "../../auth/useAuth";
 
 interface DashboardNavbarProps {
   onSidebarOpened: () => void;
@@ -13,9 +14,10 @@ interface DashboardNavbarProps {
 const DashboardNavbar: React.FC<DashboardNavbarProps> = ({
   onSidebarOpened,
 }) => {
+  const auth = useAuth();
+
   const handleLogout = () => {
-    // Implement logout functionality here
-    console.log("Logout clicked");
+    auth.logout();
   };
 
   const lgUp = useMediaQuery((theme: any) => theme.breakpoints.up("lg"), {

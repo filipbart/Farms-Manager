@@ -11,19 +11,18 @@ import logo_dark_trans from "../../assets/logo-dark-trans.png";
 import SidebarMenuItem from "./sidebar-menu-item";
 import { IoCard, IoHome, IoSettings } from "react-icons/io5";
 import {
-  FaCashRegister,
   FaClone,
   FaDatabase,
   FaHandshake,
   FaList,
   FaMoneyBill,
-  FaTractor,
   FaTruck,
   FaWarehouse,
 } from "react-icons/fa";
 import { FaArrowTrendUp, FaGear, FaHouse, FaJarWheat } from "react-icons/fa6";
 import { MdFactory, MdPeopleAlt } from "react-icons/md";
 import { PiFarmFill } from "react-icons/pi";
+import { useAuth } from "../../auth/useAuth";
 
 interface DashboardSidebarProps {
   open: boolean;
@@ -115,6 +114,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
     noSsr: true,
   });
 
+  const auth = useAuth();
+
   return (
     <Drawer
       anchor="left"
@@ -151,8 +152,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           <div className="flex items-center m-3 p-3 rounded-lg bg-gray-100 select-none">
             <Avatar />
             <div className="ml-3 flex flex-col">
-              <Typography variant="h6">User Name</Typography>
-              <Typography variant="body2">user@example.com</Typography>
+              <Typography variant="h6">{auth.userData?.name}</Typography>
+              <Typography variant="body2">{auth.userData?.login}</Typography>
             </div>
           </div>
 
