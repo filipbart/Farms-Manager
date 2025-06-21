@@ -7,6 +7,8 @@ import { DashboardCtxProvider } from "../pages/dashboard/dashboard-ctx";
 import InsertionsPage from "../pages/insertions";
 import { useRouter } from "./use-router";
 import { RouteName } from "./route-names";
+import FarmsPage from "../pages/data/farms";
+import HousesPage from "../pages/data/houses";
 
 const DefaultRouter: React.FC = () => {
   const { getRoute } = useRouter();
@@ -22,7 +24,12 @@ const DefaultRouter: React.FC = () => {
             </DashboardCtxProvider>
           }
         />
-        <Route path="/insertions" element={<InsertionsPage />} />
+        <Route
+          path={getRoute(RouteName.Insertions)}
+          element={<InsertionsPage />}
+        />
+        <Route path={getRoute(RouteName.Farms)} element={<FarmsPage />} />
+        <Route path={getRoute(RouteName.Houses)} element={<HousesPage />} />
       </Route>
     </Routes>
   );

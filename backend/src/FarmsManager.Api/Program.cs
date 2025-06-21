@@ -6,7 +6,6 @@ using FarmsManager.Api.Middleware;
 using FarmsManager.Application.Commands.Dev;
 using FarmsManager.Application.Common;
 using FarmsManager.Application.Mappings.User;
-using FarmsManager.Application.Queries;
 using FarmsManager.Application.Queries.User;
 using FarmsManager.Application.Services;
 using FarmsManager.HostBuilder.Extensions;
@@ -131,5 +130,6 @@ app.MapControllers();
 
 app.UseMiddleware<DomainExceptionMiddleware>();
 app.UseMiddleware<BlockDevControllerMiddleware>();
+app.UseMiddleware<FluentValidationExceptionMiddleware>();
 
 app.Run();

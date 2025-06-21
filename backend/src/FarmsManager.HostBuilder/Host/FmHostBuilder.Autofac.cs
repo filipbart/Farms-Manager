@@ -2,6 +2,7 @@
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using AutoMapper.Contrib.Autofac.DependencyInjection;
+using FluentValidation;
 using MediatR.Extensions.Autofac.DependencyInjection;
 using MediatR.Extensions.Autofac.DependencyInjection.Builder;
 using Microsoft.Extensions.Configuration;
@@ -58,9 +59,17 @@ public partial class FmHostBuilder
 
         var conf = MediatRConfigurationBuilder.Create(assemblies)
             .WithAllOpenGenericHandlerTypesRegistered()
+            .WithCustomPipelineBehavior(typeof(ValidationBehavior<,>))
             .Build();
 
-        ConfigureContainer(builder => { builder.RegisterMediatR(conf); });
+        ConfigureContainer(builder =>
+        {
+            builder.RegisterMediatR(conf);
+            AssemblyScanner.FindValidatorsInAssemblies(assemblies).ForEach(i =>
+            {
+                builder.RegisterType(i.ValidatorType).As(i.InterfaceType);
+            });
+        });
 
         return this;
     }

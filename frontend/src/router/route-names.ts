@@ -3,6 +3,8 @@ export enum RouteName {
   LogoutConfirm = "logout-confirm",
   Dashboard = "dashboard",
   Insertions = "insertions",
+  Farms = "data/farms",
+  Houses = "data/houses",
   Settings = "settings",
   Users = "users",
   UserProfile = "user-profile",

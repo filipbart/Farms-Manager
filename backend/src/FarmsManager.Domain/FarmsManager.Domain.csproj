@@ -30,8 +30,4 @@
       </Compile>
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Aggregates\FarmAggregate\Entities\" />
-    </ItemGroup>
-
 </Project>
