@@ -19,7 +19,7 @@ namespace FarmsManager.Infrastructure.Migrations
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     farm_id = table.Column<Guid>(type: "uuid", nullable: false),
                     name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
-                    number = table.Column<int>(type: "integer", nullable: false),
+                    area = table.Column<int>(type: "integer", nullable: false),
                     description = table.Column<string>(type: "text", nullable: true),
                     date_created_utc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     date_modified_utc = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),

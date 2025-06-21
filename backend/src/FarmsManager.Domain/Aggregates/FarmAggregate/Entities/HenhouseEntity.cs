@@ -10,7 +10,7 @@ public class HenhouseEntity : Entity
 
     public Guid FarmId { get; init; }
     public string Name { get; protected internal set; }
-    public int Number { get; protected internal set; }
+    public int Area { get; protected internal set; }
     public string Description { get; protected internal set; }
     public virtual FarmEntity Farm { get; init; }
 }

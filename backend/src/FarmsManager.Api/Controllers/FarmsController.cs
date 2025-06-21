@@ -22,6 +22,19 @@ public class FarmsController(IMediator mediator) : BaseController
     }
 
     /// <summary>
+    /// Pobiera całą listę kurników fermy
+    /// </summary>
+    /// <param name="farmId"></param>
+    /// <returns></returns>
+    [HttpGet("{farmId:guid}/henhouses")]
+    [ProducesResponseType(typeof(BaseResponse<GetFarmHenhousesQueryResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetFarmHenhouses([FromRoute] Guid farmId)
+    {
+        return Ok(await mediator.Send(new GetFarmHenhousesQuery(farmId)));
+    }
+
+    /// <summary>
     /// Dodaje nową fęrmę
     /// </summary>
     /// <param name="command"></param>

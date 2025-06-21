@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FarmsManager.Infrastructure.Migrations
 {
     [DbContext(typeof(FarmsManagerContext))]
-    [Migration("20250621151228_AddHenhouseEntity")]
+    [Migration("20250621151852_AddHenhouseEntity")]
     partial class AddHenhouseEntity
     {
         /// <inheritdoc />
@@ -83,6 +83,10 @@ namespace FarmsManager.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<int>("Area")
+                        .HasColumnType("integer")
+                        .HasColumnName("area");
+
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("uuid")
                         .HasColumnName("created_by");
@@ -119,10 +123,6 @@ namespace FarmsManager.Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
                         .HasColumnName("name");
-
-                    b.Property<int>("Number")
-                        .HasColumnType("integer")
-                        .HasColumnName("number");
 
                     b.HasKey("Id")
                         .HasName("pk_henhouse");
