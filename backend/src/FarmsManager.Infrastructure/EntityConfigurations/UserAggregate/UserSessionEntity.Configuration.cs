@@ -1,4 +1,4 @@
-﻿using FarmsManager.Domain.Aggregates.UserAggregate.Entites;
+﻿using FarmsManager.Domain.Aggregates.UserAggregate.Entities;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace FarmsManager.Infrastructure.EntityConfigurations.UserAggregate;

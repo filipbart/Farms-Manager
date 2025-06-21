@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using FarmsManager.Application.Queries.User;
-using FarmsManager.Domain.Aggregates.UserAggregate.Entites;
+using FarmsManager.Domain.Aggregates.UserAggregate.Entities;
 
 namespace FarmsManager.Application.Mappings.User;
 

@@ -1,7 +1,7 @@
 ﻿using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications.UserSessions;
 using FarmsManager.Domain.Aggregates.UserAggregate;
-using FarmsManager.Domain.Aggregates.UserAggregate.Entites;
+using FarmsManager.Domain.Aggregates.UserAggregate.Entities;
 using FarmsManager.Domain.Aggregates.UserAggregate.Interfaces;
 
 namespace FarmsManager.Application.Services;

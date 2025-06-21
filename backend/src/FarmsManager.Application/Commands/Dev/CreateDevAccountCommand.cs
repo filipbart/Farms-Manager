@@ -1,6 +1,6 @@
 ﻿using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
-using FarmsManager.Domain.Aggregates.UserAggregate.Entites;
+using FarmsManager.Domain.Aggregates.UserAggregate.Entities;
 using FarmsManager.Domain.Aggregates.UserAggregate.Interfaces;
 using FarmsManager.Shared.Extensions;
 using MediatR;

@@ -3,7 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using FarmsManager.Application.Common.Constants;
 using FarmsManager.Domain.Aggregates.UserAggregate;
-using FarmsManager.Domain.Aggregates.UserAggregate.Entites;
+using FarmsManager.Domain.Aggregates.UserAggregate.Entities;
 using FarmsManager.Infrastructure.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;

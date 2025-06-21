@@ -1,7 +1,7 @@
 ﻿using Ardalis.GuardClauses;
 using FarmsManager.Domain.SeedWork;
 
-namespace FarmsManager.Domain.Aggregates.UserAggregate.Entites;
+namespace FarmsManager.Domain.Aggregates.UserAggregate.Entities;
 
 public class UserEntity : Entity
 {
