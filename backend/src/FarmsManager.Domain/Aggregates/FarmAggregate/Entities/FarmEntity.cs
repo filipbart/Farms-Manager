@@ -12,6 +12,13 @@ public class FarmEntity : Entity
     public string Nip { get; protected internal set; }
     public string Address { get; protected internal set; }
 
+    /// <summary>
+    /// Kurniki
+    /// </summary>
+    private readonly List<HenhouseEntity> _henhouses = [];
+
+    public virtual IReadOnlyCollection<HenhouseEntity> Henhouses => _henhouses.AsReadOnly();
+
     public static FarmEntity CreateNew(string name, string nip, string address)
     {
         return new FarmEntity
@@ -22,6 +29,5 @@ public class FarmEntity : Entity
         };
     }
 
-    //HenHouses - kurniki
     //Cycles - cykle
 }
