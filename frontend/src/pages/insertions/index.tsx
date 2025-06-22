@@ -94,11 +94,7 @@ const InsertionsPage: React.FC = () => {
       </Box>
 
       <AddInsertionModal open={openModal} onClose={handleClose} />
-      <SetCycleModal
-        open={openCycleModal}
-        onClose={handleCloseCycle}
-        onSave={(data) => console.log("Zapisz cykl:", data)}
-      />
+      <SetCycleModal open={openCycleModal} onClose={handleCloseCycle} />
     </Box>
   );
 };
