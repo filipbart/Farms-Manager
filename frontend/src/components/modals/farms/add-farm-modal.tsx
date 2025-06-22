@@ -15,7 +15,7 @@ import {
 } from "../../../services/farms-service";
 import { toast } from "react-toastify";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
-import Loading from "../../loading/loading";
+import LoadingButton from "../../common/loading-button";
 
 interface AddFarmModalProps {
   open: boolean;
@@ -105,20 +105,15 @@ const AddFarmModal: React.FC<AddFarmModalProps> = ({
           >
             Anuluj
           </Button>
-          {loading ? (
-            <div className="ml-1">
-              <Loading height="0" size={10} />
-            </div>
-          ) : (
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              disabled={loading}
-            >
-              Zapisz
-            </Button>
-          )}
+          <LoadingButton
+            type="submit"
+            variant="contained"
+            color="primary"
+            disabled={loading}
+            loading={loading}
+          >
+            Zapisz
+          </LoadingButton>
         </DialogActions>
       </form>
     </Dialog>

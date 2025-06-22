@@ -14,13 +14,14 @@ import { useFarms } from "../../../hooks/useFarms";
 import type FarmRowModel from "../../../models/farms/farm-row-model";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import type LatestCycle from "../../../models/farms/latest-cycle";
-import Loading from "../../loading/loading";
 import { FarmsService } from "../../../services/farms-service";
 import {
   InsertionsService,
   type AddCycleData,
 } from "../../../services/insertions-service";
 import { toast } from "react-toastify";
+import LoadingButton from "../../common/loading-button";
+import LoadingTextField from "../../common/loading-textfield";
 
 interface SetCycleModalProps {
   open: boolean;
@@ -128,23 +129,18 @@ const SetCycleModal: React.FC<SetCycleModalProps> = ({ open, onClose }) => {
           </Box>
 
           <Box>
-            <>
-              {loading ? (
-                <Loading height="0" size={10} />
-              ) : (
-                <TextField
-                  name="identifier"
-                  label="Nowy cykl"
-                  value={cycleText}
-                  slotProps={{
-                    input: {
-                      readOnly: true,
-                    },
-                  }}
-                  fullWidth
-                />
-              )}
-            </>
+            <LoadingTextField
+              loading={loading}
+              name="identifier"
+              label="Nowy cykl"
+              value={cycleText}
+              slotProps={{
+                input: {
+                  readOnly: true,
+                },
+              }}
+              fullWidth
+            />
           </Box>
         </Box>
       </DialogContent>
@@ -157,20 +153,15 @@ const SetCycleModal: React.FC<SetCycleModalProps> = ({ open, onClose }) => {
         >
           Anuluj
         </Button>
-        {loadingNewCycle ? (
-          <div className="ml-1">
-            <Loading height="0" size={10} />
-          </div>
-        ) : (
-          <Button
-            onClick={handleSave}
-            variant="contained"
-            color="primary"
-            disabled={loadingNewCycle}
-          >
-            Zapisz
-          </Button>
-        )}
+        <LoadingButton
+          onClick={handleSave}
+          variant="contained"
+          color="primary"
+          loading={loadingNewCycle}
+          disabled={loadingNewCycle}
+        >
+          Zapisz
+        </LoadingButton>
       </DialogActions>
     </Dialog>
   );
