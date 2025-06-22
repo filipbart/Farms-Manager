@@ -5,7 +5,7 @@ using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
 using FarmsManager.Domain.Models.FarmAggregate;
 using MediatR;
 
-namespace FarmsManager.Application.Queries.Insertions;
+namespace FarmsManager.Application.Queries.Farms;
 
 public record GetFarmLatestCycleQuery(Guid FarmId) : IRequest<BaseResponse<FarmLatestCycleDto>>;
 

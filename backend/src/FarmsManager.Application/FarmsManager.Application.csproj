@@ -19,4 +19,8 @@
       <ProjectReference Include="..\FarmsManager.Shared\FarmsManager.Shared.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Queries\Insertions\" />
+    </ItemGroup>
+
 </Project>

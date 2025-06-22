@@ -2,7 +2,6 @@
 using FarmsManager.Application.Commands.Farms;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Queries.Farms;
-using FarmsManager.Application.Queries.Insertions;
 using FarmsManager.Domain.Models.FarmAggregate;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
