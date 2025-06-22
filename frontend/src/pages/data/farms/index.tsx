@@ -1,6 +1,6 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FarmsService } from "../../../services/farms-service";
 import AddFarmModal from "../../../components/modals/farms/add-farm-modal";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
@@ -69,6 +69,10 @@ const FarmsPage: React.FC = () => {
     await fetchFarms();
   };
 
+  useEffect(() => {
+    fetchFarms();
+  }, []);
+
   const data = useMemo(
     () => ({
       rows: farms,
@@ -113,6 +117,7 @@ const FarmsPage: React.FC = () => {
           rowSelection={false}
           showToolbar={false}
           sx={{
+            minHeight: farms.length === 0 ? 300 : "auto",
             [`& .${tablePaginationClasses.selectLabel}`]: {
               display: "block",
             },

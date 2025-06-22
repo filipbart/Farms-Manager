@@ -18,12 +18,6 @@ export interface AddHenhouseFormData {
   desc: string;
 }
 
-export interface AddCycleData {
-  farmId: string;
-  identifier: number;
-  year: number;
-}
-
 export class FarmsService {
   public static async getFarmsAsync() {
     return await AxiosWrapper.get<PaginateModel<FarmRowModel>>(ApiUrl.Farms);

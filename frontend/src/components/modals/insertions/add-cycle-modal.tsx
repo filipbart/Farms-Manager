@@ -15,23 +15,21 @@ import type FarmRowModel from "../../../models/farms/farm-row-model";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import type LatestCycle from "../../../models/farms/latest-cycle";
 import Loading from "../../loading/loading";
+import { FarmsService } from "../../../services/farms-service";
 import {
-  FarmsService,
+  InsertionsService,
   type AddCycleData,
-} from "../../../services/farms-service";
+} from "../../../services/insertions-service";
+import { toast } from "react-toastify";
 
 interface SetCycleModalProps {
   open: boolean;
   onClose: () => void;
-  onSave: (data: { farmId: string; cycle: string }) => void;
 }
 
-const SetCycleModal: React.FC<SetCycleModalProps> = ({
-  open,
-  onClose,
-  onSave,
-}) => {
+const SetCycleModal: React.FC<SetCycleModalProps> = ({ open, onClose }) => {
   const [loading, setLoading] = useState(false);
+  const [loadingNewCycle, setLoadingNewCycle] = useState(false);
   const [chosenFarm, setChosenFarm] = useState<FarmRowModel>();
   const setChosenFarmCallback = useCallback(
     async (chosenFarm: FarmRowModel) => {
@@ -74,8 +72,21 @@ const SetCycleModal: React.FC<SetCycleModalProps> = ({
     onClose();
   };
 
-  const handleSave = () => {
-    onClose();
+  const handleSave = async () => {
+    if (loadingNewCycle || !cycle) return;
+    setLoadingNewCycle(true);
+    await handleApiResponse(
+      () => InsertionsService.addNewCycle(cycle),
+      () => {
+        toast.success("Dodano nowy cykl");
+        setLoadingNewCycle(false);
+        handleClose();
+      },
+      undefined,
+      "Wystąpił błąd podczas dodawania cyklu"
+    );
+
+    if (!loadingNewCycle) setLoadingNewCycle(false);
   };
 
   const { farms, loadingFarms, fetchFarms } = useFarms();
@@ -107,9 +118,6 @@ const SetCycleModal: React.FC<SetCycleModalProps> = ({
                 }}
                 fullWidth
               >
-                <MenuItem disabled value="">
-                  Wybierz Fermę
-                </MenuItem>
                 {farms.map((farm) => (
                   <MenuItem key={farm.id} value={farm.id}>
                     {farm.name}
@@ -141,12 +149,28 @@ const SetCycleModal: React.FC<SetCycleModalProps> = ({
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose} variant="outlined" color="inherit">
+        <Button
+          onClick={handleClose}
+          variant="outlined"
+          color="inherit"
+          disabled={loadingNewCycle}
+        >
           Anuluj
         </Button>
-        <Button onClick={handleSave} variant="contained" color="primary">
-          Zapisz
-        </Button>
+        {loadingNewCycle ? (
+          <div className="ml-1">
+            <Loading height="0" size={10} />
+          </div>
+        ) : (
+          <Button
+            onClick={handleSave}
+            variant="contained"
+            color="primary"
+            disabled={loadingNewCycle}
+          >
+            Zapisz
+          </Button>
+        )}
       </DialogActions>
     </Dialog>
   );

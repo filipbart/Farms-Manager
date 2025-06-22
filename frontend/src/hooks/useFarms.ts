@@ -6,16 +6,20 @@ import { FarmsService } from "../services/farms-service";
 
 export function useFarms() {
   const [farms, setFarms] = useState<FarmRowModel[]>([]);
-  const [loadingFarms, setLoadingFarms] = useState(true);
+  const [loadingFarms, setLoadingFarms] = useState(false);
 
   const fetchFarms = useCallback(async () => {
-    await handleApiResponse<PaginateModel<FarmRowModel>>(
-      () => FarmsService.getFarmsAsync(),
-      (data) => setFarms(data.responseData?.items ?? []),
-      undefined,
-      "Nie udało się pobrać listy farm"
-    );
-    setLoadingFarms(false);
+    setLoadingFarms(true);
+    try {
+      await handleApiResponse<PaginateModel<FarmRowModel>>(
+        () => FarmsService.getFarmsAsync(),
+        (data) => setFarms(data.responseData?.items ?? []),
+        undefined,
+        "Nie udało się pobrać listy farm"
+      );
+    } finally {
+      setLoadingFarms(false);
+    }
   }, []);
 
   return { farms, loadingFarms, fetchFarms };

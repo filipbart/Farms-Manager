@@ -15,6 +15,7 @@ import {
 } from "../../../services/farms-service";
 import { toast } from "react-toastify";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
+import Loading from "../../loading/loading";
 
 interface AddFarmModalProps {
   open: boolean;
@@ -96,12 +97,28 @@ const AddFarmModal: React.FC<AddFarmModalProps> = ({
           </Box>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={close} variant="outlined" color="inherit">
+          <Button
+            onClick={close}
+            variant="outlined"
+            color="inherit"
+            disabled={loading}
+          >
             Anuluj
           </Button>
-          <Button type="submit" variant="contained" color="primary">
-            Zapisz
-          </Button>
+          {loading ? (
+            <div className="ml-1">
+              <Loading height="0" size={10} />
+            </div>
+          ) : (
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              disabled={loading}
+            >
+              Zapisz
+            </Button>
+          )}
         </DialogActions>
       </form>
     </Dialog>

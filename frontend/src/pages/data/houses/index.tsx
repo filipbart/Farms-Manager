@@ -182,6 +182,7 @@ const HousesPage: React.FC = () => {
           rowSelection={false}
           showToolbar={false}
           sx={{
+            minHeight: henhouses.length === 0 ? 300 : "auto",
             [`& .${tablePaginationClasses.selectLabel}`]: {
               display: "block",
             },
