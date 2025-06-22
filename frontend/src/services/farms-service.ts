@@ -2,6 +2,7 @@ import ApiUrl from "../common/ApiUrl";
 import type { PaginateModel } from "../common/interfaces/paginate";
 import type FarmRowModel from "../models/farms/farm-row-model";
 import type { HouseRowModel } from "../models/farms/house-row-model";
+import type LatestCycle from "../models/farms/latest-cycle";
 import AxiosWrapper from "../utils/axios/wrapper";
 
 export interface AddFarmFormData {
@@ -17,9 +18,21 @@ export interface AddHenhouseFormData {
   desc: string;
 }
 
+export interface AddCycleData {
+  farmId: string;
+  identifier: number;
+  year: number;
+}
+
 export class FarmsService {
   public static async getFarmsAsync() {
     return await AxiosWrapper.get<PaginateModel<FarmRowModel>>(ApiUrl.Farms);
+  }
+
+  public static async getLatestCycle(farmId: string) {
+    return await AxiosWrapper.get<LatestCycle>(
+      ApiUrl.Farms + "/" + farmId + ApiUrl.LatestCycle
+    );
   }
 
   public static async addFarmAsync(data: AddFarmFormData) {

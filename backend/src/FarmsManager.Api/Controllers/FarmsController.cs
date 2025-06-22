@@ -2,6 +2,8 @@
 using FarmsManager.Application.Commands.Farms;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Queries.Farms;
+using FarmsManager.Application.Queries.Insertions;
+using FarmsManager.Domain.Models.FarmAggregate;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,6 +21,19 @@ public class FarmsController(IMediator mediator) : BaseController
     public async Task<IActionResult> GetAllFarms()
     {
         return Ok(await mediator.Send(new GetAllFarmsQuery()));
+    }
+
+    /// <summary>
+    /// Pobiera aktualny cykl dla farmy
+    /// </summary>
+    /// <param name="farmId"></param>
+    /// <returns></returns>
+    [HttpGet("{farmId:guid}/latest-cycle")]
+    [ProducesResponseType(typeof(BaseResponse<FarmLatestCycleDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetLatestCycle([FromRoute] Guid farmId)
+    {
+        return Ok(await mediator.Send(new GetFarmLatestCycleQuery(farmId)));
     }
 
     /// <summary>

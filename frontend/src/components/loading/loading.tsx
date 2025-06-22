@@ -1,7 +1,12 @@
 import React from "react";
 import { PulseLoader } from "react-spinners";
 
-const Loading: React.FC = () => {
+interface LoadingProps {
+  height?: string;
+  size?: number;
+}
+
+const Loading: React.FC<LoadingProps> = ({ height = "100vh", size = 30 }) => {
   return (
     <div
       className="loading-container"
@@ -9,10 +14,10 @@ const Loading: React.FC = () => {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        height: "100vh",
+        height: height,
       }}
     >
-      <PulseLoader color={"#0D1B2A"} loading size={30} />
+      <PulseLoader color={"#0D1B2A"} loading size={size} />
     </div>
   );
 };

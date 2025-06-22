@@ -14,5 +14,8 @@ public class FarmEntityConfiguration : BaseConfiguration<FarmEntity>
 
         builder.HasMany(t => t.Henhouses).WithOne(t => t.Farm).HasForeignKey(t => t.FarmId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(t => t.Cycles).WithOne(t => t.Farm).HasForeignKey(t => t.FarmId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

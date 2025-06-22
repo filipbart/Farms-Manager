@@ -16,12 +16,12 @@ import type { HouseRowModel } from "../../../models/farms/house-row-model";
 import Loading from "../../../components/loading/loading";
 import AddHenhouseModal from "../../../components/modals/farms/add-henhouse-modal";
 import { toast } from "react-toastify";
+import { useFarms } from "../../../hooks/useFarms";
 
 const HousesPage: React.FC = () => {
-  const [loadingFarms, setLoadingFarms] = useState(true);
   const [loading, setLoading] = useState(false);
 
-  const [farms, setFarms] = useState<FarmRowModel[]>([]);
+  const { farms, loadingFarms, fetchFarms } = useFarms();
   const [henhouses, setHenhouses] = useState<HouseRowModel[]>([]);
   const [chosenFarm, setChosenFarm] = useState<FarmRowModel>();
 
@@ -29,18 +29,6 @@ const HousesPage: React.FC = () => {
     setChosenFarm(chosenFarm);
     fetchHouses(chosenFarm.id);
   }, []);
-
-  const fetchFarms = async () => {
-    await handleApiResponse<PaginateModel<FarmRowModel>>(
-      () => FarmsService.getFarmsAsync(),
-      (data) => {
-        setFarms(data.responseData?.items ?? []);
-      },
-      undefined,
-      "Nie udało się pobrać listy farm"
-    );
-    setLoadingFarms(false);
-  };
 
   const fetchHouses = async (farmId: string) => {
     await handleApiResponse<PaginateModel<HouseRowModel>>(
@@ -149,7 +137,7 @@ const HousesPage: React.FC = () => {
       <Box mb={2}>
         <Typography variant="h6">Wybierz fermę:</Typography>
         {loadingFarms ? (
-          <Loading />
+          <Loading height="0" size={20} />
         ) : (
           <TextField
             sx={{ marginTop: 1 }}

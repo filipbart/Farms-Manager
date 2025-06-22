@@ -11,6 +11,8 @@ public class FarmEntity : Entity
     public string Name { get; protected internal set; }
     public string Nip { get; protected internal set; }
     public string Address { get; protected internal set; }
+    public Guid? ActiveCycleId { get; protected internal set; }
+    public virtual CycleEntity ActiveCycle { get; protected internal set; }
 
     /// <summary>
     /// Kurniki
@@ -18,6 +20,13 @@ public class FarmEntity : Entity
     private readonly List<HenhouseEntity> _henhouses = [];
 
     public virtual IReadOnlyCollection<HenhouseEntity> Henhouses => _henhouses.AsReadOnly();
+
+    /// <summary>
+    /// Cykle
+    /// </summary>
+    private readonly List<CycleEntity> _cycles = [];
+
+    public virtual IReadOnlyCollection<CycleEntity> Cycles => _cycles.AsReadOnly();
 
     public static FarmEntity CreateNew(string name, string nip, string address, Guid? createdBy = null)
     {
@@ -30,5 +39,14 @@ public class FarmEntity : Entity
         };
     }
 
-    //Cycles - cykle
+    /// <summary>
+    /// Ustawia aktywny cykl
+    /// </summary>
+    /// <param name="cycle"></param>
+    public void SetLatestCycle(CycleEntity cycle)
+    {
+        _cycles.Add(cycle);
+        ActiveCycle = cycle;
+        ActiveCycleId = cycle.Id;
+    }
 }

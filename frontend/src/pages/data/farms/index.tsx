@@ -1,32 +1,13 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { FarmsService } from "../../../services/farms-service";
-import type FarmRowModel from "../../../models/farms/farm-row-model";
 import AddFarmModal from "../../../components/modals/farms/add-farm-modal";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
-import type { PaginateModel } from "../../../common/interfaces/paginate";
+import { useFarms } from "../../../hooks/useFarms";
 
 const FarmsPage: React.FC = () => {
-  const [loading, setLoading] = useState(true);
-
-  const [farms, setFarms] = useState<FarmRowModel[]>([]);
-
-  const fetchFarms = async () => {
-    await handleApiResponse<PaginateModel<FarmRowModel>>(
-      () => FarmsService.getFarmsAsync(),
-      (data) => {
-        setFarms(data.responseData?.items ?? []);
-      },
-      undefined,
-      "Nie udało się pobrać listy farm"
-    );
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    fetchFarms();
-  }, []);
+  const { farms, loadingFarms, fetchFarms } = useFarms();
 
   const columns: GridColDef[] = [
     { field: "name", headerName: "Nazwa", flex: 1 },
@@ -67,7 +48,6 @@ const FarmsPage: React.FC = () => {
                 "Nie udało się usunąć farmy"
               );
               await fetchFarms();
-              setLoading(false);
             }}
           >
             Usuń
@@ -123,7 +103,7 @@ const FarmsPage: React.FC = () => {
         }}
       >
         <DataGrid
-          loading={loading}
+          loading={loadingFarms}
           {...data}
           columns={columns}
           localeText={{
