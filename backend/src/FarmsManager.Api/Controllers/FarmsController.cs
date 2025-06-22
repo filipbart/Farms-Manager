@@ -55,8 +55,34 @@ public class FarmsController(IMediator mediator) : BaseController
     [HttpPost("delete/{farmId:guid}")]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> AddFarm([FromRoute] Guid farmId)
+    public async Task<IActionResult> DeleteFarm([FromRoute] Guid farmId)
     {
         return Ok(await mediator.Send(new DeleteFarmCommand(farmId)));
+    }
+
+    /// <summary>
+    /// Dodaje kurnik do fermy
+    /// </summary>
+    /// <param name="command"></param>
+    /// <returns></returns>
+    [HttpPost("{farmId:guid}/add-henhouse")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> AddHenhouse(AddHenhouseCommand command)
+    {
+        return Ok(await mediator.Send(command));
+    }
+
+    /// <summary>
+    /// Usuwa wybraną fermę
+    /// </summary>
+    /// <param name="henhouseId"></param>
+    /// <returns></returns>
+    [HttpPost("henhouse/delete/{henhouseId:guid}")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> DeleteHenhouse([FromRoute] Guid henhouseId)
+    {
+        return Ok(await mediator.Send(new DeleteHenhouseCommand(henhouseId)));
     }
 }

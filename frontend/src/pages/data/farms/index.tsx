@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { FarmsService } from "../../../services/farms-service";
 import type FarmRowModel from "../../../models/farms/farm-row-model";
 import AddFarmModal from "../../../components/modals/farms/add-farm-modal";
+import { handleApiResponse } from "../../../utils/axios/handle-api-response";
+import type { PaginateModel } from "../../../common/interfaces/paginate";
 
 const FarmsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -11,14 +13,15 @@ const FarmsPage: React.FC = () => {
   const [farms, setFarms] = useState<FarmRowModel[]>([]);
 
   const fetchFarms = async () => {
-    try {
-      const response = await FarmsService.getFarmsAsync();
-      setFarms(response.responseData?.items ?? []);
-    } catch (error) {
-      console.error("Error fetching farms:", error);
-    } finally {
-      setLoading(false);
-    }
+    await handleApiResponse<PaginateModel<FarmRowModel>>(
+      () => FarmsService.getFarmsAsync(),
+      (data) => {
+        setFarms(data.responseData?.items ?? []);
+      },
+      undefined,
+      "Nie udało się pobrać listy farm"
+    );
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -57,12 +60,14 @@ const FarmsPage: React.FC = () => {
             color="error"
             sx={{ ml: 1 }}
             onClick={async () => {
-              try {
-                await FarmsService.deleteFarmAsync(params.row.id);
-                await fetchFarms();
-              } catch (e) {
-                console.error("Nie udało się usunąć farmy", e);
-              }
+              await handleApiResponse(
+                () => FarmsService.deleteFarmAsync(params.row.id),
+                undefined,
+                undefined,
+                "Nie udało się usunąć farmy"
+              );
+              await fetchFarms();
+              setLoading(false);
             }}
           >
             Usuń

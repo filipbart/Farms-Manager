@@ -10,7 +10,7 @@ public abstract class Entity
     public DateTime? DateModifiedUtc { get; private set; }
     public DateTime? DateDeletedUtc { get; private set; }
 
-    public Guid? CreatedBy { get; private set; }
+    public Guid? CreatedBy { get; set; }
     public Guid? ModifiedBy { get; private set; }
     public Guid? DeletedBy { get; private set; }
 

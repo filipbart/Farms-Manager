@@ -13,4 +13,16 @@ public class HenhouseEntity : Entity
     public int Area { get; protected internal set; }
     public string Description { get; protected internal set; }
     public virtual FarmEntity Farm { get; init; }
+
+    public static HenhouseEntity CreateNew(string name, int area, string description, Guid farmId, Guid? userId = null)
+    {
+        return new HenhouseEntity
+        {
+            Name = name,
+            Area = area,
+            Description = description,
+            FarmId = farmId,
+            CreatedBy = userId
+        };
+    }
 }

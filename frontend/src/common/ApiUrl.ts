@@ -9,4 +9,5 @@ export default class ApiUrl {
   public static Farms = this.BaseUrl + "farms";
   public static AddFarm = this.BaseUrl + "farms/add";
   public static DeleteFarm = this.BaseUrl + "farms/delete";
+  public static DeleteHenhouse = this.BaseUrl + "farms/henhouse/delete";
 }

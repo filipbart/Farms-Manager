@@ -10,19 +10,21 @@ import {
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import {
-  type AddFarmFormData,
+  type AddHenhouseFormData,
   FarmsService,
 } from "../../../services/farms-service";
 import { toast } from "react-toastify";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 
-interface AddFarmModalProps {
+interface AddHenhouseModalProps {
+  farmId: string;
   open: boolean;
   onClose: () => void;
   onSave: () => void;
 }
 
-const AddFarmModal: React.FC<AddFarmModalProps> = ({
+const AddHenhouseModal: React.FC<AddHenhouseModalProps> = ({
+  farmId,
   open,
   onClose,
   onSave,
@@ -32,21 +34,22 @@ const AddFarmModal: React.FC<AddFarmModalProps> = ({
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm<AddFarmFormData>();
+  } = useForm<AddHenhouseFormData>();
 
   const [loading, setLoading] = useState(false);
 
-  const handleSave = async (data: AddFarmFormData) => {
+  const handleSave = async (data: AddHenhouseFormData) => {
+    data.farmId = farmId;
     if (loading) return;
     setLoading(true);
     await handleApiResponse(
-      () => FarmsService.addFarmAsync(data),
+      () => FarmsService.addHenhouseAsync(data),
       () => {
-        toast.success("Farma została dodana");
+        toast.success("Kurnik został dodany");
         onSave();
       },
       undefined,
-      "Wystąpił błąd podczas zapisywania farm"
+      "Wystąpił błąd podczas dodawania kurnika"
     );
 
     setLoading(false);
@@ -74,23 +77,20 @@ const AddFarmModal: React.FC<AddFarmModalProps> = ({
             />
 
             <TextField
-              label="NIP"
-              error={!!errors?.nip}
-              helperText={errors.nip ? (errors.nip.message as string) : ""}
-              {...register("nip", {
-                required: "NIP jest wymagany",
+              type="number"
+              label="Powierzchnia (m²)"
+              error={!!errors?.area}
+              helperText={errors.area ? (errors.area.message as string) : ""}
+              {...register("area", {
+                required: "Powierzchnia jest wymagana",
               })}
               fullWidth
             />
             <TextField
-              label="Adres"
-              error={!!errors?.address}
-              helperText={
-                errors.address ? (errors.address.message as string) : ""
-              }
-              {...register("address", {
-                required: "Adres jest wymagany",
-              })}
+              label="Opis"
+              error={!!errors?.desc}
+              helperText={errors.desc ? (errors.desc.message as string) : ""}
+              {...register("desc")}
               fullWidth
             />
           </Box>
@@ -108,4 +108,4 @@ const AddFarmModal: React.FC<AddFarmModalProps> = ({
   );
 };
 
-export default AddFarmModal;
+export default AddHenhouseModal;

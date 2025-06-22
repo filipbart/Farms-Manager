@@ -132,7 +132,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     if (!authToken && location.pathname !== "/login") {
       console.log("wywołało");
-      toast.warning("Musisz być zalogowany.");
+      toast.warning("Musisz być zalogowany");
       nav(getRoute(RouteName.Login));
     }
   }, [authToken]);
@@ -144,6 +144,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
         const status = err?.response?.status;
         if (status === 401) logout();
         else if (status === 403) nav(getRoute(RouteName.Forbidden));
+        else if (status === 404) toast.error("Nie znaleziono zasobu");
         else if (status >= 500) nav(getRoute(RouteName.InternalServerError));
         return Promise.reject(err);
       }

@@ -19,13 +19,14 @@ public class FarmEntity : Entity
 
     public virtual IReadOnlyCollection<HenhouseEntity> Henhouses => _henhouses.AsReadOnly();
 
-    public static FarmEntity CreateNew(string name, string nip, string address)
+    public static FarmEntity CreateNew(string name, string nip, string address, Guid? createdBy = null)
     {
         return new FarmEntity
         {
             Name = name,
             Nip = nip,
-            Address = address
+            Address = address,
+            CreatedBy = createdBy
         };
     }
 

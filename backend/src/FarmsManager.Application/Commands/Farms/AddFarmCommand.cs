@@ -1,6 +1,8 @@
 ﻿using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Interfaces;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
+using FarmsManager.Domain.Exceptions;
 using FluentValidation;
 using MediatR;
 
@@ -26,15 +28,18 @@ public class AddFarmCommandValidator : AbstractValidator<AddFarmCommand>
 public class AddCommandHandler : IRequestHandler<AddFarmCommand, EmptyBaseResponse>
 {
     private readonly IFarmRepository _farmRepository;
+    private readonly IUserDataResolver _userDataResolver;
 
-    public AddCommandHandler(IFarmRepository farmRepository)
+    public AddCommandHandler(IFarmRepository farmRepository, IUserDataResolver userDataResolver)
     {
         _farmRepository = farmRepository;
+        _userDataResolver = userDataResolver;
     }
 
     public async Task<EmptyBaseResponse> Handle(AddFarmCommand request, CancellationToken cancellationToken)
     {
-        var newFarm = FarmEntity.CreateNew(request.Name, request.Nip, request.Address);
+        var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
+        var newFarm = FarmEntity.CreateNew(request.Name, request.Nip, request.Address, userId);
         await _farmRepository.AddAsync(newFarm, cancellationToken);
 
         return new EmptyBaseResponse();

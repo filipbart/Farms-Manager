@@ -12,7 +12,7 @@ const Loading: React.FC = () => {
         height: "100vh",
       }}
     >
-      <PulseLoader color={"#0D1B2A"} loading size={50} />
+      <PulseLoader color={"#0D1B2A"} loading size={30} />
     </div>
   );
 };
