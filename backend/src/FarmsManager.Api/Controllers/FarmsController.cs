@@ -49,7 +49,7 @@ public class FarmsController(IMediator mediator) : BaseController
     }
 
     /// <summary>
-    /// Dodaje nową fęrmę
+    /// Dodaje nową fermę
     /// </summary>
     /// <param name="command"></param>
     /// <returns></returns>

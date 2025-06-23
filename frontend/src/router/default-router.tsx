@@ -9,6 +9,7 @@ import { useRouter } from "./use-router";
 import { RouteName } from "./route-names";
 import FarmsPage from "../pages/data/farms";
 import HousesPage from "../pages/data/houses";
+import HatcheriesPage from "../pages/data/hatcheries";
 
 const DefaultRouter: React.FC = () => {
   const { getRoute } = useRouter();
@@ -30,6 +31,10 @@ const DefaultRouter: React.FC = () => {
         />
         <Route path={getRoute(RouteName.Farms)} element={<FarmsPage />} />
         <Route path={getRoute(RouteName.Houses)} element={<HousesPage />} />
+        <Route
+          path={getRoute(RouteName.Hatcheries)}
+          element={<HatcheriesPage />}
+        />
       </Route>
     </Routes>
   );

@@ -11,6 +11,10 @@ export default class ApiUrl {
   public static DeleteFarm = this.BaseUrl + "farms/delete";
   public static DeleteHenhouse = this.BaseUrl + "farms/henhouse/delete";
 
+  public static Hatcheries = this.BaseUrl + "hatcheries";
+  public static AddHatchery = this.BaseUrl + "hatcheries/add";
+  public static DeleteHatchery = this.BaseUrl + "hatcheries/delete";
+
   public static Insertions = this.BaseUrl + "insertions";
   public static LatestCycle = "/latest-cycle";
 }

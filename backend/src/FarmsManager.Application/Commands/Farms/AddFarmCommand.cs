@@ -25,12 +25,12 @@ public class AddFarmCommandValidator : AbstractValidator<AddFarmCommand>
     }
 }
 
-public class AddCommandHandler : IRequestHandler<AddFarmCommand, EmptyBaseResponse>
+public class AddFarmCommandHandler : IRequestHandler<AddFarmCommand, EmptyBaseResponse>
 {
     private readonly IFarmRepository _farmRepository;
     private readonly IUserDataResolver _userDataResolver;
 
-    public AddCommandHandler(IFarmRepository farmRepository, IUserDataResolver userDataResolver)
+    public AddFarmCommandHandler(IFarmRepository farmRepository, IUserDataResolver userDataResolver)
     {
         _farmRepository = farmRepository;
         _userDataResolver = userDataResolver;

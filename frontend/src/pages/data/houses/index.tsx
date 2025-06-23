@@ -31,6 +31,7 @@ const HousesPage: React.FC = () => {
   }, []);
 
   const fetchHouses = async (farmId: string) => {
+    setLoading(true);
     await handleApiResponse<PaginateModel<HouseRowModel>>(
       () => FarmsService.getFarmHousesAsync(farmId),
       (data) => {
