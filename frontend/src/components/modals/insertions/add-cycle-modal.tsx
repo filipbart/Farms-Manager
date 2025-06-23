@@ -6,8 +6,6 @@ import {
   DialogContent,
   DialogTitle,
   MenuItem,
-  TextField,
-  Typography,
 } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 import { useFarms } from "../../../hooks/useFarms";
@@ -101,30 +99,27 @@ const SetCycleModal: React.FC<SetCycleModalProps> = ({ open, onClose }) => {
       <DialogContent sx={{ mt: 1 }}>
         <Box display="flex" flexDirection="column" gap={3}>
           <Box mt={1}>
-            {loadingFarms ? (
-              <Typography>Ładowanie farm...</Typography>
-            ) : (
-              <TextField
-                select
-                name="farm"
-                label="Wybierz fermę"
-                value={chosenFarm?.id || ""}
-                onChange={(e) => {
-                  const farmId = e.target.value;
-                  const selectedFarm = farms.find((farm) => farm.id === farmId);
-                  if (selectedFarm) {
-                    setChosenFarmCallback(selectedFarm);
-                  }
-                }}
-                fullWidth
-              >
-                {farms.map((farm) => (
-                  <MenuItem key={farm.id} value={farm.id}>
-                    {farm.name}
-                  </MenuItem>
-                ))}
-              </TextField>
-            )}
+            <LoadingTextField
+              loading={loadingFarms}
+              select
+              name="farm"
+              label="Wybierz fermę"
+              value={chosenFarm?.id || ""}
+              onChange={(e) => {
+                const farmId = e.target.value;
+                const selectedFarm = farms.find((farm) => farm.id === farmId);
+                if (selectedFarm) {
+                  setChosenFarmCallback(selectedFarm);
+                }
+              }}
+              fullWidth
+            >
+              {farms.map((farm) => (
+                <MenuItem key={farm.id} value={farm.id}>
+                  {farm.name}
+                </MenuItem>
+              ))}
+            </LoadingTextField>
           </Box>
 
           <Box>
