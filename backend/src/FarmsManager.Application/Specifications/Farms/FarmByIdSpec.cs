@@ -9,5 +9,6 @@ public class FarmByIdSpec : BaseSpecification<FarmEntity>, ISingleResultSpecific
     {
         EnsureExists();
         Query.Where(t => t.Id == id);
+        Query.Include(t => t.ActiveCycle);
     }
 }

@@ -46,7 +46,7 @@ const SetCycleModal: React.FC<SetCycleModalProps> = ({ open, onClose }) => {
   const getLatestCycle = async (farmId: string) => {
     setLoading(true);
 
-    handleApiResponse<LatestCycle>(
+    await handleApiResponse<LatestCycle>(
       () => FarmsService.getLatestCycle(farmId),
       (data) => {
         const now = new Date();
@@ -62,7 +62,6 @@ const SetCycleModal: React.FC<SetCycleModalProps> = ({ open, onClose }) => {
       undefined,
       "Nie udało się pobrać ostatniego cyklu"
     );
-    setCycleText(cycle ? `${cycle.identifier}/${cycle.year}` : "");
     setLoading(false);
   };
 

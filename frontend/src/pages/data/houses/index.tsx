@@ -49,7 +49,7 @@ const HousesPage: React.FC = () => {
 
   const columns: GridColDef[] = [
     { field: "name", headerName: "Nazwa", flex: 1 },
-    { field: "area", headerName: "Powierzchnia", flex: 1 },
+    { field: "area", headerName: "Powierzchnia (m²)", flex: 1 },
     { field: "desc", headerName: "Opis", flex: 1 },
     {
       field: "dateCreatedUtc",

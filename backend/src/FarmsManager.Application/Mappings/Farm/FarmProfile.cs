@@ -12,3 +12,11 @@ public class FarmProfile : Profile
             .ForMember(m => m.HenHousesCount, opt => opt.MapFrom(t => 2));
     }
 }
+
+public class CycleProfile : Profile
+{
+    public CycleProfile()
+    {
+        CreateMap<CycleEntity, FarmLatestCycleDto>();
+    }
+}
