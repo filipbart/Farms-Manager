@@ -1,58 +1,116 @@
+import React, { useEffect, useReducer, useState } from "react";
 import {
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   Button,
-  TextField,
   MenuItem,
   Box,
+  Typography,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { useEffect, useState, type ChangeEvent } from "react";
-import { Dayjs } from "dayjs";
-import { useFarms } from "../../../hooks/useFarms";
-import LoadingTextField from "../../common/loading-textfield";
-import { useHatcheries } from "../../../hooks/useHatcheries";
-import type { HouseRowModel } from "../../../models/farms/house-row-model";
-import { FarmsService } from "../../../services/farms-service";
-import type { PaginateModel } from "../../../common/interfaces/paginate";
-import { handleApiResponse } from "../../../utils/axios/handle-api-response";
-import type LatestCycle from "../../../models/farms/latest-cycle";
-import { InsertionsService } from "../../../services/insertions-service";
 import { toast } from "react-toastify";
+
+import { useFarms } from "../../../hooks/useFarms";
+import { useHatcheries } from "../../../hooks/useHatcheries";
+import { FarmsService } from "../../../services/farms-service";
+import { InsertionsService } from "../../../services/insertions-service";
+import { handleApiResponse } from "../../../utils/axios/handle-api-response";
+
+import LoadingTextField from "../../common/loading-textfield";
 import LoadingButton from "../../common/loading-button";
+
+import type { Dayjs } from "dayjs";
+import type { HouseRowModel } from "../../../models/farms/house-row-model";
+import InsertionEntriesTable from "./insertions-entry-table";
 
 interface AddInsertionModalProps {
   open: boolean;
   onClose: () => void;
 }
 
+interface InsertionEntry {
+  henhouseId: string;
+  hatcheryId: string;
+  quantity: string;
+  bodyWeight: string;
+  isEditing?: boolean;
+}
+
+interface InsertionEntryErrors {
+  henhouseId?: string;
+  hatcheryId?: string;
+  quantity?: string;
+  bodyWeight?: string;
+}
+
 interface InsertionFormState {
   farmId: string;
-  henhouseId: string;
   identifierId: string;
   identifierDisplay: string;
   insertionDate: Dayjs | null;
-  quantity: number | "";
-  hatcheryId: string;
-  bodyWeight: number | "";
+  entries: InsertionEntry[];
 }
 
 interface InsertionFormErrors {
-  [key: string]: string | undefined;
+  farmId?: string;
+  identifierId?: string;
+  insertionDate?: string;
+  entries?: { [index: number]: InsertionEntryErrors };
+  entriesGeneral?: string;
 }
 
-const defaultForm: InsertionFormState = {
+const initialState: InsertionFormState = {
   farmId: "",
-  henhouseId: "",
   identifierId: "",
   identifierDisplay: "",
   insertionDate: null,
-  quantity: "",
-  hatcheryId: "",
-  bodyWeight: "",
+  entries: [],
 };
+
+function formReducer(
+  state: InsertionFormState,
+  action: any
+): InsertionFormState {
+  switch (action.type) {
+    case "SET_FIELD":
+      return { ...state, [action.name]: action.value };
+    case "UPDATE_ENTRY":
+      const updatedEntries = [...state.entries];
+      updatedEntries[action.index] = {
+        ...updatedEntries[action.index],
+        [action.name]: action.value,
+      };
+      return {
+        ...state,
+        entries: updatedEntries,
+      };
+    case "ADD_ENTRY":
+      return {
+        ...state,
+        entries: [
+          ...state.entries,
+          {
+            henhouseId: "",
+            hatcheryId: "",
+            quantity: "",
+            bodyWeight: "",
+            isEditing: true,
+          },
+        ],
+      };
+    case "REMOVE_ENTRY":
+      return {
+        ...state,
+        entries: state.entries.filter((_, idx) => idx !== action.index),
+      };
+    case "RESET":
+      return initialState;
+    default:
+      return state;
+  }
+}
 
 const AddInsertionModal: React.FC<AddInsertionModalProps> = ({
   open,
@@ -60,13 +118,11 @@ const AddInsertionModal: React.FC<AddInsertionModalProps> = ({
 }) => {
   const { farms, loadingFarms, fetchFarms } = useFarms();
   const { hatcheries, loadingHatcheries, fetchHatcheries } = useHatcheries();
-
   const [henhouses, setHenhouses] = useState<HouseRowModel[]>([]);
   const [loadingHenhouses, setLoadingHenhouses] = useState(false);
   const [loadingLatestCycle, setLoadingLatestCycle] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  const [form, setForm] = useState<InsertionFormState>(defaultForm);
+  const [form, dispatch] = useReducer(formReducer, initialState);
   const [errors, setErrors] = useState<InsertionFormErrors>({});
 
   useEffect(() => {
@@ -74,84 +130,92 @@ const AddInsertionModal: React.FC<AddInsertionModalProps> = ({
     fetchHatcheries();
   }, []);
 
-  const updateField = (name: string, value: any) => {
-    setForm((prev) => ({ ...prev, [name]: value }));
-    setErrors((prev) => ({ ...prev, [name]: undefined }));
+  const handleFarmChange = async (farmId: string) => {
+    dispatch({ type: "SET_FIELD", name: "farmId", value: farmId });
+    dispatch({ type: "SET_FIELD", name: "identifierId", value: "" });
+    dispatch({ type: "SET_FIELD", name: "identifierDisplay", value: "" });
+    setHenhouses([]);
+    setErrors({});
+
+    setLoadingHenhouses(true);
+    await handleApiResponse(
+      () => FarmsService.getFarmHousesAsync(farmId),
+      (data) => setHenhouses(data.responseData?.items ?? []),
+      undefined,
+      "Nie udało się pobrać listy kurników"
+    );
+    setLoadingHenhouses(false);
+
+    setLoadingLatestCycle(true);
+    await handleApiResponse(
+      () => FarmsService.getLatestCycle(farmId),
+      (data) => {
+        if (!data?.responseData) {
+          setErrors((prev) => ({
+            ...prev,
+            identifierId: "Brak aktywnego cyklu",
+          }));
+          return;
+        }
+        const cycle = data.responseData;
+        dispatch({ type: "SET_FIELD", name: "identifierId", value: cycle.id });
+        dispatch({
+          type: "SET_FIELD",
+          name: "identifierDisplay",
+          value: `${cycle.identifier}/${cycle.year}`,
+        });
+      },
+      undefined,
+      "Nie udało się pobrać ostatniego cyklu"
+    );
+    setLoadingLatestCycle(false);
   };
 
-  const handleChange = async (
-    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
+  const validateEntry = (entry: InsertionEntry): InsertionEntryErrors => {
+    const e: InsertionEntryErrors = {};
 
-    updateField(name, value);
+    if (!entry.hatcheryId) e.hatcheryId = "Wylęgarnia jest wymagana";
+    if (!entry.henhouseId) e.henhouseId = "Kurnik jest wymagany";
 
-    if (name === "farmId") {
-      updateField("henhouseId", "");
-      updateField("identifierId", "");
-      updateField("identifierDisplay", "");
-      setHenhouses([]);
-      setErrors((prev) => ({
-        ...prev,
-        henhouseId: undefined,
-        identifierId: undefined,
-      }));
+    const quantityNum = Number(entry.quantity);
+    if (entry.quantity === "" || isNaN(quantityNum) || quantityNum <= 0)
+      e.quantity = "Ilość musi być większa niż 0";
 
-      setLoadingHenhouses(true);
-      try {
-        await handleApiResponse<PaginateModel<HouseRowModel>>(
-          () => FarmsService.getFarmHousesAsync(value),
-          (data) => setHenhouses(data.responseData?.items ?? []),
-          undefined,
-          "Nie udało się pobrać listy kurników"
-        );
-      } finally {
-        setLoadingHenhouses(false);
-      }
+    const bodyWeightNum = Number(entry.bodyWeight);
+    if (entry.bodyWeight === "" || isNaN(bodyWeightNum) || bodyWeightNum <= 0)
+      e.bodyWeight = "Masa musi być większa niż 0";
 
-      setLoadingLatestCycle(true);
-      try {
-        await handleApiResponse<LatestCycle>(
-          () => FarmsService.getLatestCycle(value),
-          (data) => {
-            if (!data?.responseData) {
-              setErrors((prev) => ({
-                ...prev,
-                identifierId: "Brak aktywnego cyklu",
-              }));
-              updateField("identifierId", "");
-              updateField("identifierDisplay", "");
-              return;
-            }
-            const cycle = data.responseData;
-            updateField("identifierId", cycle.id);
-            updateField(
-              "identifierDisplay",
-              `${cycle.identifier}/${cycle.year}`
-            );
-          },
-          undefined,
-          "Nie udało się pobrać ostatniego cyklu"
-        );
-      } finally {
-        setLoadingLatestCycle(false);
-      }
-    }
+    return e;
+  };
+
+  const setEntryErrors = (index: number, entryErrors: InsertionEntryErrors) => {
+    setErrors((prev) => {
+      const newEntriesErrors = { ...(prev.entries || {}) };
+      newEntriesErrors[index] = entryErrors;
+      return { ...prev, entries: newEntriesErrors };
+    });
   };
 
   const validateForm = (): boolean => {
     const newErrors: InsertionFormErrors = {};
 
     if (!form.farmId) newErrors.farmId = "Ferma jest wymagana";
-    if (!form.henhouseId) newErrors.henhouseId = "Kurnik jest wymagany";
     if (!form.identifierId) newErrors.identifierId = "Brak aktywnego cyklu";
-    if (!form.insertionDate)
-      newErrors.insertionDate = "Data wstawienia jest wymagana";
-    if (form.quantity === "" || form.quantity < 1)
-      newErrors.quantity = "Ilość musi być większa niż 0";
-    if (!form.hatcheryId) newErrors.hatcheryId = "Wylęgarnia jest wymagana";
-    if (form.bodyWeight === "" || form.bodyWeight < 0)
-      newErrors.bodyWeight = "Masa ciała musi być większa niż 0";
+    if (!form.insertionDate) newErrors.insertionDate = "Data jest wymagana";
+
+    if (form.entries.length === 0) {
+      newErrors.entriesGeneral = "Musisz dodać przynajmniej jedną pozycję";
+    } else {
+      const entryErrors: { [index: number]: InsertionEntryErrors } = {};
+
+      form.entries.forEach((entry, index) => {
+        const e: InsertionEntryErrors = validateEntry(entry);
+
+        if (Object.keys(e).length > 0) entryErrors[index] = e;
+      });
+
+      if (Object.keys(entryErrors).length > 0) newErrors.entries = entryErrors;
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -160,52 +224,63 @@ const AddInsertionModal: React.FC<AddInsertionModalProps> = ({
   const handleSave = async () => {
     if (!validateForm()) return;
 
-    console.log("Zapisuję dane:", form);
     setLoading(true);
-    try {
-      await handleApiResponse(
-        () =>
-          InsertionsService.addNewInsertion({
-            farmId: form.farmId,
-            henhouseId: form.henhouseId,
-            identifierId: form.identifierId,
-            insertionDate: form.insertionDate!.toDate(),
-            quantity: form.quantity as number,
-            hatcheryId: form.hatcheryId,
-            bodyWeight: form.bodyWeight as number,
-          }),
-        () => {
-          toast.success("Pomyślnie dodano wstawienie");
-          setForm(defaultForm);
-          setErrors({});
-          onClose();
-        },
-        undefined,
-        "Nie udało się dodać wstawienia. Sprawdź dane"
-      );
-    } finally {
-      setLoading(false);
-    }
+
+    await handleApiResponse(
+      () =>
+        InsertionsService.addNewInsertion({
+          farmId: form.farmId,
+          identifierId: form.identifierId,
+          insertionDate: form.insertionDate!.toDate(),
+          entries: form.entries.map(
+            ({ henhouseId, hatcheryId, quantity, bodyWeight }) => ({
+              henhouseId,
+              hatcheryId,
+              quantity: Number(quantity),
+              bodyWeight: Number(bodyWeight),
+            })
+          ),
+        }),
+      () => {
+        toast.success("Dodano wstawienie");
+        dispatch({ type: "RESET" });
+        setErrors({});
+        onClose();
+      },
+      undefined,
+      "Nie udało się dodać wstawienia"
+    );
+
+    setLoading(false);
   };
 
   const handleClose = () => {
-    setForm(defaultForm);
+    dispatch({ type: "RESET" });
     setErrors({});
+    setHenhouses([]);
     onClose();
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
-      <DialogTitle>Wprowadź Dane Wstawienia</DialogTitle>
+    <Dialog
+      open={open}
+      onClose={(_event, reason) => {
+        if (reason !== "backdropClick") {
+          handleClose();
+        }
+      }}
+      fullWidth
+      maxWidth="lg"
+    >
+      <DialogTitle>Nowe wstawienie</DialogTitle>
       <DialogContent>
         <Box display="flex" flexDirection="column" gap={2} mt={1}>
           <LoadingTextField
             loading={loadingFarms}
             select
-            name="farmId"
             label="Ferma"
             value={form.farmId}
-            onChange={handleChange}
+            onChange={(e) => handleFarmChange(e.target.value)}
             error={!!errors.farmId}
             helperText={errors.farmId}
             fullWidth
@@ -218,27 +293,7 @@ const AddInsertionModal: React.FC<AddInsertionModalProps> = ({
           </LoadingTextField>
 
           <LoadingTextField
-            loading={loadingHenhouses}
-            select
-            name="henhouseId"
-            label="Kurnik"
-            value={form.henhouseId}
-            onChange={handleChange}
-            disabled={!form.farmId}
-            error={!!errors.henhouseId}
-            helperText={errors.henhouseId}
-            fullWidth
-          >
-            {henhouses.map((house) => (
-              <MenuItem key={house.id} value={house.id}>
-                {house.name}
-              </MenuItem>
-            ))}
-          </LoadingTextField>
-
-          <LoadingTextField
             loading={loadingLatestCycle}
-            name="identifierDisplay"
             label="Identyfikator"
             value={form.identifierDisplay}
             slotProps={{ input: { readOnly: true } }}
@@ -250,10 +305,11 @@ const AddInsertionModal: React.FC<AddInsertionModalProps> = ({
           <DatePicker
             label="Data wstawienia"
             value={form.insertionDate}
-            disableFuture
-            onChange={(newValue) => {
-              updateField("insertionDate", newValue);
+            onChange={(value) => {
+              dispatch({ type: "SET_FIELD", name: "insertionDate", value });
+              setErrors((prev) => ({ ...prev, insertionDate: undefined }));
             }}
+            disableFuture
             format="DD.MM.YYYY"
             slotProps={{
               textField: {
@@ -264,53 +320,38 @@ const AddInsertionModal: React.FC<AddInsertionModalProps> = ({
             }}
           />
 
-          <TextField
-            name="quantity"
-            label="Sztuki wstawione"
-            type="number"
-            inputProps={{ min: 1, step: 1 }}
-            value={form.quantity}
-            onChange={handleChange}
-            error={!!errors.quantity}
-            helperText={errors.quantity}
-            fullWidth
+          {errors.entriesGeneral && (
+            <Box sx={{ mb: 1 }}>
+              <Typography color="error">{errors.entriesGeneral}</Typography>
+            </Box>
+          )}
+
+          <InsertionEntriesTable
+            entries={form.entries}
+            henhouses={henhouses}
+            hatcheries={hatcheries}
+            errors={errors.entries}
+            dispatch={dispatch}
+            setEntryErrors={setEntryErrors}
+            validateEntry={validateEntry}
+            loadingHenhouses={loadingHenhouses}
+            loadingHatcheries={loadingHatcheries}
+            farmId={form.farmId}
           />
 
-          <LoadingTextField
-            loading={loadingHatcheries}
-            select
-            name="hatcheryId"
-            label="Wylęgarnia"
-            value={form.hatcheryId}
-            onChange={handleChange}
-            error={!!errors.hatcheryId}
-            helperText={errors.hatcheryId}
-            fullWidth
+          <Button
+            variant="outlined"
+            onClick={() => {
+              dispatch({ type: "ADD_ENTRY" });
+              setErrors((prev) => ({ ...prev, entriesGeneral: undefined }));
+            }}
           >
-            {hatcheries.map((hatchery) => (
-              <MenuItem key={hatchery.id} value={hatchery.id}>
-                {hatchery.name}
-              </MenuItem>
-            ))}
-          </LoadingTextField>
-
-          <TextField
-            name="bodyWeight"
-            label="Śr. masa ciała"
-            value={form.bodyWeight}
-            onChange={handleChange}
-            type="number"
-            inputProps={{ min: 0, step: 0.01 }}
-            error={!!errors.bodyWeight}
-            helperText={errors.bodyWeight}
-            fullWidth
-          />
+            Dodaj pozycję
+          </Button>
         </Box>
       </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={handleClose} variant="outlined" color="inherit">
-          Anuluj
-        </Button>
+      <DialogActions>
+        <Button onClick={handleClose}>Anuluj</Button>
         <LoadingButton
           loading={loading}
           onClick={handleSave}

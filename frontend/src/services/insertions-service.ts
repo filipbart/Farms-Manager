@@ -10,12 +10,14 @@ export interface AddCycleData {
 
 export interface AddInsertionData {
   farmId: string;
-  henhouseId: string;
   identifierId: string;
   insertionDate: Date;
-  quantity: number;
-  hatcheryId: string;
-  bodyWeight: number;
+  entries: {
+    henhouseId: string;
+    hatcheryId: string;
+    quantity: number;
+    bodyWeight: number;
+  }[];
 }
 
 export class InsertionsService {
