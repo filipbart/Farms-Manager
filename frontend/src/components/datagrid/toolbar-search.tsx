@@ -9,8 +9,8 @@ import {
 import Tooltip from "@mui/material/Tooltip";
 import TextField from "@mui/material/TextField";
 import InputAdornment from "@mui/material/InputAdornment";
-import CancelIcon from "@mui/icons-material/Cancel";
-import SearchIcon from "@mui/icons-material/Search";
+import { FaSearch } from "react-icons/fa";
+import { MdCancel } from "react-icons/md";
 
 type OwnerState = {
   expanded: boolean;
@@ -55,7 +55,7 @@ const ToolbarSearch: React.FC = () => {
               color="inherit"
               aria-disabled={state.expanded}
             >
-              <SearchIcon fontSize="small" />
+              <FaSearch fontSize="small" />
             </StyledToolbarButton>
           </Tooltip>
         )}
@@ -73,7 +73,7 @@ const ToolbarSearch: React.FC = () => {
               input: {
                 startAdornment: (
                   <InputAdornment position="start">
-                    <SearchIcon fontSize="small" />
+                    <FaSearch fontSize="small" />
                   </InputAdornment>
                 ),
                 endAdornment: state.value ? (
@@ -84,7 +84,7 @@ const ToolbarSearch: React.FC = () => {
                       aria-label="Wyczyść"
                       material={{ sx: { marginRight: -0.75 } }}
                     >
-                      <CancelIcon fontSize="small" />
+                      <MdCancel fontSize="small" />
                     </QuickFilterClear>
                   </InputAdornment>
                 ) : null,

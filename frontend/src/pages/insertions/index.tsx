@@ -34,7 +34,7 @@ const columns: GridColDef[] = [
     headerName: "Data wstawienia",
     flex: 1,
     type: "string",
-    valueGetter: (params: any) => params && dayjs(params).format("YYYY-MM-DD"),
+    valueGetter: (params: any) => dayjs(params.value).format("YYYY-MM-DD"),
   },
   { field: "quantity", headerName: "Sztuki wstawione", flex: 1 },
   { field: "hatcheryName", headerName: "Wylęgarnia", flex: 1 },
@@ -49,6 +49,8 @@ const initialFilters: InsertionsFilterPaginationModel = {
   hatcheryIds: [],
   dateSince: "",
   dateTo: "",
+  pageNumber: 1,
+  pageSize: 10,
 };
 
 function filterReducer(
@@ -73,7 +75,7 @@ const InsertionsPage: React.FC = () => {
   const [openModal, setOpenModal] = useState(false);
   const [openCycleModal, setOpenCycleModal] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [insertions, setInsertions] = useState<InsertionListModel[]>();
+  const [insertions, setInsertions] = useState<InsertionListModel[]>([]);
   const [totalRows, setTotalRows] = useState(0);
 
   const uniqueCycles = useMemo(() => {
@@ -88,43 +90,41 @@ const InsertionsPage: React.FC = () => {
     return Array.from(map.values());
   }, [dictionary]);
 
-  const fetchInsertions = async () => {
-    setLoading(true);
-    try {
-      await handleApiResponse<PaginateModel<InsertionListModel>>(
-        () => InsertionsService.getInsertions(filters),
-        (data) => {
-          setInsertions(data.responseData?.items);
-          setTotalRows(data.responseData?.totalRows ?? 0);
-        },
-        undefined,
-        "Błąd podczas pobierania wstawień"
-      );
-    } catch (error) {
-      toast.error("Błąd podczas pobierania wstawień");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchDictionaries = async () => {
-    try {
-      await handleApiResponse(
-        () => InsertionsService.getDictionaries(),
-        (data) => setDictionary(data.responseData),
-        undefined,
-        "Błąd podczas pobierania słowników filtrów"
-      );
-    } catch (error) {
-      toast.error("Błąd podczas pobierania słowników filtrów");
-    }
-  };
-
   useEffect(() => {
+    const fetchDictionaries = async () => {
+      try {
+        await handleApiResponse(
+          () => InsertionsService.getDictionaries(),
+          (data) => setDictionary(data.responseData),
+          undefined,
+          "Błąd podczas pobierania słowników filtrów"
+        );
+      } catch {
+        toast.error("Błąd podczas pobierania słowników filtrów");
+      }
+    };
     fetchDictionaries();
   }, []);
 
   useEffect(() => {
+    const fetchInsertions = async () => {
+      setLoading(true);
+      try {
+        await handleApiResponse<PaginateModel<InsertionListModel>>(
+          () => InsertionsService.getInsertions(filters),
+          (data) => {
+            setInsertions(data.responseData?.items ?? []);
+            setTotalRows(data.responseData?.totalRows ?? 0);
+          },
+          undefined,
+          "Błąd podczas pobierania wstawień"
+        );
+      } catch {
+        toast.error("Błąd podczas pobierania wstawień");
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchInsertions();
   }, [filters]);
 
@@ -170,11 +170,7 @@ const InsertionsPage: React.FC = () => {
           rows={insertions}
           columns={columns}
           initialState={{
-            columns: {
-              columnVisibilityModel: {
-                id: false,
-              },
-            },
+            columns: { columnVisibilityModel: { id: false } },
           }}
           localeText={{
             paginationRowsPerPage: "Wierszy na stronę:",
@@ -189,10 +185,7 @@ const InsertionsPage: React.FC = () => {
           onPaginationModelChange={({ page, pageSize }) =>
             dispatch({
               type: "setMultiple",
-              payload: {
-                pageNumber: page + 1,
-                pageSize,
-              },
+              payload: { pageNumber: page + 1, pageSize },
             })
           }
           rowCount={totalRows}
@@ -218,34 +211,35 @@ const InsertionsPage: React.FC = () => {
           onSortModelChange={(model) => {
             if (model.length > 0) {
               const sortField = model[0].field;
-
-              // Znajdź enum dla pola field
               const foundOrderBy = Object.values(InsertionOrderType).find(
                 (orderType) =>
                   mapInsertionOrderTypeToField(orderType) === sortField
               );
-
               dispatch({
                 type: "setMultiple",
                 payload: {
-                  orderBy: foundOrderBy ?? undefined,
+                  orderBy: foundOrderBy,
                   isDescending: model[0].sort === "desc",
                 },
               });
             } else {
               dispatch({
                 type: "setMultiple",
-                payload: {
-                  orderBy: undefined,
-                  isDescending: undefined,
-                },
+                payload: { orderBy: undefined, isDescending: undefined },
               });
             }
           }}
         />
       </Box>
 
-      <AddInsertionModal open={openModal} onClose={() => setOpenModal(false)} />
+      <AddInsertionModal
+        open={openModal}
+        onClose={() => setOpenModal(false)}
+        onSave={() => {
+          setOpenModal(false);
+          dispatch({ type: "setMultiple", payload: { pageNumber: 1 } });
+        }}
+      />
       <SetCycleModal
         open={openCycleModal}
         onClose={() => setOpenCycleModal(false)}

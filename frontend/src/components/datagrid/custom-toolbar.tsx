@@ -7,10 +7,9 @@ import {
 } from "@mui/x-data-grid";
 import Tooltip from "@mui/material/Tooltip";
 import Badge from "@mui/material/Badge";
-import ViewColumnIcon from "@mui/icons-material/ViewColumn";
-import FilterListIcon from "@mui/icons-material/FilterList";
 import Divider from "@mui/material/Divider";
 import ToolbarSearch from "./toolbar-search";
+import { MdFilterList, MdViewColumn } from "react-icons/md";
 
 interface CustomToolbarProps extends GridToolbarProps {
   withSearch?: boolean;
@@ -23,7 +22,7 @@ const CustomToolbar: React.FC<CustomToolbarProps> = ({ withSearch }) => {
         <ColumnsPanelTrigger
           render={<ToolbarButton style={{ color: "#374151" }} />}
         >
-          <ViewColumnIcon fontSize="small" />
+          <MdViewColumn fontSize="small" />
         </ColumnsPanelTrigger>
       </Tooltip>
 
@@ -36,7 +35,7 @@ const CustomToolbar: React.FC<CustomToolbarProps> = ({ withSearch }) => {
                 color="primary"
                 variant="dot"
               >
-                <FilterListIcon fontSize="small" />
+                <MdFilterList fontSize="small" />
               </Badge>
             </ToolbarButton>
           )}

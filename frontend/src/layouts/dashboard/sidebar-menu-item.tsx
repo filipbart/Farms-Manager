@@ -1,4 +1,3 @@
-import { ExpandLess, ExpandMore } from "@mui/icons-material";
 import {
   Collapse,
   List,
@@ -8,6 +7,7 @@ import {
   styled,
 } from "@mui/material";
 import { useCallback, useState, type ReactNode } from "react";
+import { MdExpandLess, MdExpandMore } from "react-icons/md";
 import { Link, useLocation } from "react-router-dom";
 
 interface SidebarMenuItemProps {
@@ -109,9 +109,9 @@ const SidebarMenuItem: React.FC<SidebarMenuItemProps> = ({
           }}
         />
         {open ? (
-          <ExpandLess className="mr-3" />
+          <MdExpandLess className="mr-3" />
         ) : (
-          <ExpandMore className="mr-3" />
+          <MdExpandMore className="mr-3" />
         )}
       </ListItemStyle>
       <Collapse in={open} timeout="auto" unmountOnExit>

@@ -28,6 +28,7 @@ import InsertionEntriesTable from "./insertions-entry-table";
 interface AddInsertionModalProps {
   open: boolean;
   onClose: () => void;
+  onSave: () => void;
 }
 
 interface InsertionEntry {
@@ -115,6 +116,7 @@ function formReducer(
 const AddInsertionModal: React.FC<AddInsertionModalProps> = ({
   open,
   onClose,
+  onSave,
 }) => {
   const { farms, loadingFarms, fetchFarms } = useFarms();
   const { hatcheries, loadingHatcheries, fetchHatcheries } = useHatcheries();
@@ -129,6 +131,12 @@ const AddInsertionModal: React.FC<AddInsertionModalProps> = ({
     fetchFarms();
     fetchHatcheries();
   }, []);
+
+  useEffect(() => {
+    if (open) {
+      dispatch({ type: "ADD_ENTRY" });
+    }
+  }, [open]);
 
   const handleFarmChange = async (farmId: string) => {
     dispatch({ type: "SET_FIELD", name: "farmId", value: farmId });
@@ -245,6 +253,7 @@ const AddInsertionModal: React.FC<AddInsertionModalProps> = ({
         toast.success("Dodano wstawienie");
         dispatch({ type: "RESET" });
         setErrors({});
+        onSave();
         onClose();
       },
       undefined,

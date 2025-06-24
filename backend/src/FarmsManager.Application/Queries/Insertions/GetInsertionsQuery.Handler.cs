@@ -19,7 +19,7 @@ public class GetInsertionsQueryHandler : IRequestHandler<GetInsertionsQuery, Bas
         CancellationToken cancellationToken)
     {
         var data = await _insertionRepository.ListAsync<InsertionRowDto>(
-            new GetAllInsertionsSpec(request.Filters, false), cancellationToken);
+            new GetAllInsertionsSpec(request.Filters, true), cancellationToken);
         var count = await _insertionRepository.CountAsync(new GetAllInsertionsSpec(request.Filters, false),
             cancellationToken);
         return BaseResponse.CreateResponse(new GetInsertionsQueryResponse

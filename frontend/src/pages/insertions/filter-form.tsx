@@ -1,4 +1,4 @@
-import { Grid as MuiGrid, MenuItem, TextField } from "@mui/material";
+import { Grid, MenuItem, TextField } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import { Dayjs } from "dayjs";
@@ -29,7 +29,13 @@ const FiltersForm: React.FC<FiltersFormProps> = ({
     key: keyof InsertionsFilterPaginationModel,
     values: string[]
   ) => {
-    dispatch({ type: "set", key, value: values });
+    dispatch({
+      type: "setMultiple",
+      payload: {
+        [key]: values,
+        pageNumber: 1,
+      },
+    });
   };
 
   const handleDateChange = (
@@ -37,16 +43,17 @@ const FiltersForm: React.FC<FiltersFormProps> = ({
     value: Dayjs | null
   ) => {
     dispatch({
-      type: "set",
-      key,
-      value: value ? value.format("YYYY-MM-DD") : "",
+      type: "setMultiple",
+      payload: {
+        [key]: value ? value.format("YYYY-MM-DD") : "",
+        pageNumber: 1,
+      },
     });
   };
 
   return (
-    <MuiGrid container spacing={2}>
-      {/*@ts-ignore*/}
-      <MuiGrid item xs={12} sm={6} md={3}>
+    <Grid container spacing={2}>
+      <Grid>
         <TextField
           label="Ferma"
           select
@@ -68,10 +75,9 @@ const FiltersForm: React.FC<FiltersFormProps> = ({
             </MenuItem>
           )) || <MenuItem disabled>Ładowanie...</MenuItem>}
         </TextField>
-      </MuiGrid>
+      </Grid>
 
-      {/*@ts-ignore*/}
-      <MuiGrid item xs={12} sm={6} md={3}>
+      <Grid>
         <TextField
           label="Identyfikator (cykl)"
           select
@@ -99,10 +105,9 @@ const FiltersForm: React.FC<FiltersFormProps> = ({
             </MenuItem>
           ))}
         </TextField>
-      </MuiGrid>
+      </Grid>
 
-      {/*@ts-ignore*/}
-      <MuiGrid item xs={12} sm={6} md={3}>
+      <Grid>
         <TextField
           label="Kurnik"
           select
@@ -132,10 +137,9 @@ const FiltersForm: React.FC<FiltersFormProps> = ({
               )
           )}
         </TextField>
-      </MuiGrid>
+      </Grid>
 
-      {/*@ts-ignore*/}
-      <MuiGrid item xs={12} sm={6} md={3}>
+      <Grid>
         <TextField
           label="Wylęgarnia"
           select
@@ -157,10 +161,9 @@ const FiltersForm: React.FC<FiltersFormProps> = ({
             </MenuItem>
           )) || <MenuItem disabled>Ładowanie...</MenuItem>}
         </TextField>
-      </MuiGrid>
+      </Grid>
 
-      {/*@ts-ignore*/}
-      <MuiGrid item xs={12} sm={6} md={3}>
+      <Grid>
         <DatePicker
           label="Data od"
           value={filters.dateSince ? dayjs(filters.dateSince) : null}
@@ -170,10 +173,9 @@ const FiltersForm: React.FC<FiltersFormProps> = ({
             actionBar: { actions: ["clear"] },
           }}
         />
-      </MuiGrid>
+      </Grid>
 
-      {/*@ts-ignore*/}
-      <MuiGrid item xs={12} sm={6} md={3}>
+      <Grid>
         <DatePicker
           label="Data do"
           value={filters.dateTo ? dayjs(filters.dateTo) : null}
@@ -183,8 +185,8 @@ const FiltersForm: React.FC<FiltersFormProps> = ({
             actionBar: { actions: ["clear"] },
           }}
         />
-      </MuiGrid>
-    </MuiGrid>
+      </Grid>
+    </Grid>
   );
 };
 
