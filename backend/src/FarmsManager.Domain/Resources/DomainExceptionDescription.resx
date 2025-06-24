@@ -30,4 +30,7 @@
     <data name="UserNotFound" xml:space="preserve">
         <value>Nie znaleziono użytkownika</value>
     </data>
+    <data name="InsertionExists" xml:space="preserve">
+        <value>Wstawienie dla kurnika '{0}' oraz tego cyklu już istnieje</value>
+    </data>
 </root>

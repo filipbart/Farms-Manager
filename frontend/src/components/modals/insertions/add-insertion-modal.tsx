@@ -230,8 +230,8 @@ const AddInsertionModal: React.FC<AddInsertionModalProps> = ({
       () =>
         InsertionsService.addNewInsertion({
           farmId: form.farmId,
-          identifierId: form.identifierId,
-          insertionDate: form.insertionDate!.toDate(),
+          cycleId: form.identifierId,
+          insertionDate: form.insertionDate!.format("YYYY-MM-DD"),
           entries: form.entries.map(
             ({ henhouseId, hatcheryId, quantity, bodyWeight }) => ({
               henhouseId,

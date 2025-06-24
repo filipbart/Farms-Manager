@@ -60,6 +60,15 @@ namespace FarmsManager.Domain.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Wstawienie dla kurnika &apos;{0}&apos; oraz tego cyklu już istnieje.
+        /// </summary>
+        internal static string InsertionExists {
+            get {
+                return ResourceManager.GetString("InsertionExists", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Niepoprawne dane logowania.
         /// </summary>
         internal static string InvalidCredentials {

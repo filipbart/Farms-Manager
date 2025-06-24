@@ -10,8 +10,8 @@ export interface AddCycleData {
 
 export interface AddInsertionData {
   farmId: string;
-  identifierId: string;
-  insertionDate: Date;
+  cycleId: string;
+  insertionDate: string;
   entries: {
     henhouseId: string;
     hatcheryId: string;
@@ -22,6 +22,7 @@ export interface AddInsertionData {
 
 export class InsertionsService {
   public static async addNewInsertion(data: AddInsertionData) {
+    console.log(data);
     return await AxiosWrapper.post(ApiUrl.Insertions + "/add", data);
   }
 
