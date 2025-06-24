@@ -11,7 +11,6 @@ public sealed class GetAllInsertionsSpec : BaseSpecification<InsertionEntity>
         EnsureExists();
         DisableTracking();
 
-
         PopulateFilters(filters);
         if (withPagination)
         {
@@ -62,8 +61,95 @@ public sealed class GetAllInsertionsSpec : BaseSpecification<InsertionEntity>
 
     private void ApplyOrdering(GetInsertionsQueryFilters filters)
     {
+        var isDescending = filters.IsDescending;
         switch (filters.OrderBy)
         {
+            case InsertionOrderBy.Cycle:
+                if (isDescending)
+                {
+                    Query.OrderByDescending(t => t.Cycle.Identifier)
+                        .ThenByDescending(t => t.Cycle.Year);
+                }
+                else
+                {
+                    Query.OrderBy(t => t.Cycle.Identifier)
+                        .ThenBy(t => t.Cycle.Year);
+                }
+
+                break;
+
+            case InsertionOrderBy.Farm:
+                if (isDescending)
+                {
+                    Query.OrderByDescending(t => t.Farm.Name);
+                }
+                else
+                {
+                    Query.OrderBy(t => t.Farm.Name);
+                }
+
+                break;
+
+            case InsertionOrderBy.Henhouse:
+                if (isDescending)
+                {
+                    Query.OrderByDescending(t => t.Henhouse.Name);
+                }
+                else
+                {
+                    Query.OrderBy(t => t.Henhouse.Name);
+                }
+
+                break;
+
+            case InsertionOrderBy.InsertionDate:
+                if (isDescending)
+                {
+                    Query.OrderByDescending(t => t.InsertionDate);
+                }
+                else
+                {
+                    Query.OrderBy(t => t.InsertionDate);
+                }
+
+                break;
+
+            case InsertionOrderBy.Quantity:
+                if (isDescending)
+                {
+                    Query.OrderByDescending(t => t.Quantity);
+                }
+                else
+                {
+                    Query.OrderBy(t => t.Quantity);
+                }
+
+                break;
+
+            case InsertionOrderBy.Hatchery:
+                if (isDescending)
+                {
+                    Query.OrderByDescending(t => t.Hatchery.Name);
+                }
+                else
+                {
+                    Query.OrderBy(t => t.Hatchery.Name);
+                }
+
+                break;
+
+            case InsertionOrderBy.BodyWeight:
+                if (isDescending)
+                {
+                    Query.OrderByDescending(t => t.BodyWeight);
+                }
+                else
+                {
+                    Query.OrderBy(t => t.BodyWeight);
+                }
+
+                break;
+            case InsertionOrderBy.DateCreatedUtc:
             default:
                 if (filters.IsDescending)
                 {
