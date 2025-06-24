@@ -1,4 +1,5 @@
-﻿using FarmsManager.Domain.SeedWork;
+﻿using FarmsManager.Domain.Aggregates.HatcheryAggregate.Entities;
+using FarmsManager.Domain.SeedWork;
 
 namespace FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
 
@@ -14,6 +15,9 @@ public class InsertionEntity : Entity
 
     public virtual CycleEntity Cycle { get; init; }
     public virtual HenhouseEntity Henhouse { get; init; }
+    public virtual FarmEntity Farm { get; init; }
+    public virtual HatcheryEntity Hatchery { get; init; }
+    
 
 
     public static InsertionEntity CreateNew(Guid farmId, Guid cycleId, Guid henhouseId, Guid hatcheryId,

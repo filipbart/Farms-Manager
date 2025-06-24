@@ -1,5 +1,15 @@
 {
   "files": [],
+  "jsx":true,
+  "typeRoots":[
+    "node_modules/@types"
+  ],
+  "compilerOptions": {
+    "typeRoots": ["node_modules/@types"],
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
+  },
   "references": [
     { "path": "./tsconfig.app.json" },
     { "path": "./tsconfig.node.json" }
