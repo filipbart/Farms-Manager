@@ -49,7 +49,7 @@ const initialFilters: InsertionsFilterPaginationModel = {
   hatcheryIds: [],
   dateSince: "",
   dateTo: "",
-  pageNumber: 1,
+  page: 0,
   pageSize: 10,
 };
 
@@ -180,12 +180,12 @@ const InsertionsPage: React.FC = () => {
           paginationMode="server"
           paginationModel={{
             pageSize: filters.pageSize ?? 10,
-            page: (filters.pageNumber ?? 1) - 1,
+            page: filters.page ?? 0,
           }}
           onPaginationModelChange={({ page, pageSize }) =>
             dispatch({
               type: "setMultiple",
-              payload: { pageNumber: page + 1, pageSize },
+              payload: { page, pageSize },
             })
           }
           rowCount={totalRows}
@@ -198,16 +198,6 @@ const InsertionsPage: React.FC = () => {
             [`& .${tablePaginationClasses.input}`]: { display: "inline-flex" },
           }}
           sortingMode="server"
-          sortModel={
-            filters.orderBy
-              ? [
-                  {
-                    field: mapInsertionOrderTypeToField(filters.orderBy),
-                    sort: filters.isDescending ? "desc" : "asc",
-                  },
-                ]
-              : []
-          }
           onSortModelChange={(model) => {
             if (model.length > 0) {
               const sortField = model[0].field;
@@ -220,6 +210,7 @@ const InsertionsPage: React.FC = () => {
                 payload: {
                   orderBy: foundOrderBy,
                   isDescending: model[0].sort === "desc",
+                  page: 0,
                 },
               });
             } else {
@@ -237,7 +228,7 @@ const InsertionsPage: React.FC = () => {
         onClose={() => setOpenModal(false)}
         onSave={() => {
           setOpenModal(false);
-          dispatch({ type: "setMultiple", payload: { pageNumber: 1 } });
+          dispatch({ type: "setMultiple", payload: { page: 0 } });
         }}
       />
       <SetCycleModal

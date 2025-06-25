@@ -33,7 +33,6 @@ const FiltersForm: React.FC<FiltersFormProps> = ({
       type: "setMultiple",
       payload: {
         [key]: values,
-        pageNumber: 1,
       },
     });
   };
@@ -46,7 +45,6 @@ const FiltersForm: React.FC<FiltersFormProps> = ({
       type: "setMultiple",
       payload: {
         [key]: value ? value.format("YYYY-MM-DD") : "",
-        pageNumber: 1,
       },
     });
   };
