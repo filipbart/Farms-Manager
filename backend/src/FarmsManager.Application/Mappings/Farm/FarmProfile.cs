@@ -9,7 +9,8 @@ public class FarmProfile : Profile
     public FarmProfile()
     {
         CreateMap<FarmEntity, FarmRowDto>()
-            .ForMember(m => m.HenHousesCount, opt => opt.MapFrom(t => 2));
+            .ForMember(m => m.HenHousesCount,
+                opt => opt.MapFrom(t => t.Henhouses.Count(h => h.DateDeletedUtc.HasValue == false)));
     }
 }
 

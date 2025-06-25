@@ -12,10 +12,10 @@ public sealed class GetAllInsertionsSpec : BaseSpecification<InsertionEntity>
         DisableTracking();
 
         PopulateFilters(filters);
+        ApplyOrdering(filters);
         if (withPagination)
         {
             Paginate(filters);
-            ApplyOrdering(filters);
         }
     }
 
@@ -68,12 +68,14 @@ public sealed class GetAllInsertionsSpec : BaseSpecification<InsertionEntity>
                 if (isDescending)
                 {
                     Query.OrderByDescending(t => t.Cycle.Identifier)
-                        .ThenByDescending(t => t.Cycle.Year);
+                        .ThenByDescending(t => t.Cycle.Year)
+                        .ThenByDescending(t => t.DateCreatedUtc);
                 }
                 else
                 {
-                    Query.OrderBy(t => t.Cycle.Identifier)
-                        .ThenBy(t => t.Cycle.Year);
+                    Query.OrderBy(t => t.Cycle.Year)
+                        .ThenBy(t => t.Cycle.Identifier)
+                        .ThenBy(t => t.DateCreatedUtc);
                 }
 
                 break;
@@ -151,7 +153,7 @@ public sealed class GetAllInsertionsSpec : BaseSpecification<InsertionEntity>
                 break;
             case InsertionOrderBy.DateCreatedUtc:
             default:
-                if (filters.IsDescending)
+                if (isDescending)
                 {
                     Query.OrderByDescending(t => t.DateCreatedUtc);
                 }

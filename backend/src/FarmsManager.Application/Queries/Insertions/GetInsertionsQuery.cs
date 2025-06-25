@@ -7,6 +7,7 @@ namespace FarmsManager.Application.Queries.Insertions;
 
 public enum InsertionOrderBy
 {
+    DateCreatedUtc,
     Cycle,
     Farm,
     Henhouse,
@@ -14,7 +15,6 @@ public enum InsertionOrderBy
     Quantity,
     Hatchery,
     BodyWeight,
-    DateCreatedUtc
 }
 
 public record GetInsertionsQueryFilters : OrderedPaginationParams<InsertionOrderBy>

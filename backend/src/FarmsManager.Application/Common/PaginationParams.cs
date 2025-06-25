@@ -2,10 +2,10 @@
 
 public record PaginationParams
 {
-    public int PageNumber { get; set; } = 1;
+    public int Page { get; set; } = 0;
     public int PageSize { get; set; } = 10;
 
-    public int Skip => (PageNumber - 1) * PageSize;
+    public int Skip => Page * PageSize;
 }
 
 public record OrderedPaginationParams<T> : PaginationParams where T : Enum

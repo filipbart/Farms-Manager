@@ -22,7 +22,7 @@ const CustomToolbar: React.FC<CustomToolbarProps> = ({ withSearch }) => {
         <ColumnsPanelTrigger
           render={<ToolbarButton style={{ color: "#374151" }} />}
         >
-          <MdViewColumn fontSize="small" />
+          <MdViewColumn />
         </ColumnsPanelTrigger>
       </Tooltip>
 
@@ -35,7 +35,7 @@ const CustomToolbar: React.FC<CustomToolbarProps> = ({ withSearch }) => {
                 color="primary"
                 variant="dot"
               >
-                <MdFilterList fontSize="small" />
+                <MdFilterList />
               </Badge>
             </ToolbarButton>
           )}

@@ -4,6 +4,7 @@ using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Queries.Insertions;
 using FarmsManager.Application.Queries.Insertions.Dictionary;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FarmsManager.Api.Controllers;
@@ -16,6 +17,7 @@ public class InsertionsController(IMediator mediator) : BaseController
     /// <param name="filters"></param>
     /// <returns></returns>
     [HttpGet]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetInsertions([FromQuery] GetInsertionsQueryFilters filters)
