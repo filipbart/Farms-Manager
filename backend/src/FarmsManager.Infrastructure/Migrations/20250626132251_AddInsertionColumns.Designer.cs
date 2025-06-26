@@ -4,6 +4,7 @@ using FarmsManager.Domain.Aggregates.UserAggregate.Models;
 using FarmsManager.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FarmsManager.Infrastructure.Migrations
 {
     [DbContext(typeof(FarmsManagerContext))]
-    partial class FarmsManagerContextModelSnapshot : ModelSnapshot
+    [Migration("20250626132251_AddInsertionColumns")]
+    partial class AddInsertionColumns
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -223,13 +226,13 @@ namespace FarmsManager.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("date_deleted_utc");
 
-                    b.Property<DateTime?>("DateIrzSentUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("date_irz_sent_utc");
-
                     b.Property<DateTime?>("DateModifiedUtc")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("date_modified_utc");
+
+                    b.Property<DateTime?>("DateSentUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_sent_utc");
 
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uuid")
@@ -251,9 +254,9 @@ namespace FarmsManager.Infrastructure.Migrations
                         .HasColumnType("date")
                         .HasColumnName("insertion_date");
 
-                    b.Property<bool>("IsSentToIrz")
+                    b.Property<bool>("IsSent")
                         .HasColumnType("boolean")
-                        .HasColumnName("is_sent_to_irz");
+                        .HasColumnName("is_sent");
 
                     b.Property<Guid?>("ModifiedBy")
                         .HasColumnType("uuid")
@@ -262,10 +265,6 @@ namespace FarmsManager.Infrastructure.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("integer")
                         .HasColumnName("quantity");
-
-                    b.Property<Guid?>("SentToIrzBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("sent_to_irz_by");
 
                     b.HasKey("Id")
                         .HasName("pk_insertion");

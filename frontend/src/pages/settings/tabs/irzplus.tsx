@@ -88,9 +88,7 @@ const IrzPlusSettingsTab: React.FC<IrzPlusSettingsTabProps> = ({
           variant="outlined"
           error={!!errors?.login}
           helperText={errors.login ? (errors.login.message as string) : ""}
-          {...register("login", {
-            required: "Login jest wymagany",
-          })}
+          {...register("login")}
           margin="normal"
         />
         <TextField
@@ -116,9 +114,7 @@ const IrzPlusSettingsTab: React.FC<IrzPlusSettingsTabProps> = ({
           helperText={
             errors.password ? (errors.password.message as string) : ""
           }
-          {...register("password", {
-            required: "Hasło jest wymagane",
-          })}
+          {...register("password")}
           margin="normal"
         />
         <LoadingButton

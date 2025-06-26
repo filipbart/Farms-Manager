@@ -5,6 +5,12 @@ namespace FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
 
 public class InsertionEntity : Entity
 {
+    protected InsertionEntity()
+    {
+        IsSentToIrz = false;
+        DateIrzSentUtc = null;
+    }
+
     public Guid FarmId { get; init; }
     public Guid CycleId { get; init; }
     public DateOnly InsertionDate { get; init; }
@@ -12,6 +18,9 @@ public class InsertionEntity : Entity
     public Guid HatcheryId { get; init; }
     public int Quantity { get; init; }
     public decimal BodyWeight { get; init; }
+    public DateTime? DateIrzSentUtc { get; private set; }
+    public bool IsSentToIrz { get; private set; }
+    public Guid? SentToIrzBy { get; protected internal set; }
 
     public virtual CycleEntity Cycle { get; init; }
     public virtual HenhouseEntity Henhouse { get; init; }
@@ -33,5 +42,12 @@ public class InsertionEntity : Entity
             BodyWeight = bodyWeight,
             CreatedBy = userId
         };
+    }
+
+    public void MarkAsSentToIrz(Guid userId)
+    {
+        IsSentToIrz = true;
+        SentToIrzBy = userId;
+        DateIrzSentUtc = DateTime.UtcNow;
     }
 }

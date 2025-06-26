@@ -76,4 +76,17 @@ public class InsertionsController(IMediator mediator) : BaseController
     {
         return Ok(await mediator.Send(new GetAvailableHenhousesQuery(farmId)));
     }
+
+    /// <summary>
+    /// Wysyła wstawienie do systemu IRZ+
+    /// </summary>
+    /// <param name="command"></param>
+    /// <returns></returns>
+    [HttpPost("send-to-irz")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> SendToIrzPlus(SendToIrzCommand command)
+    {
+        return Ok(await mediator.Send(command));
+    }
 }
