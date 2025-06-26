@@ -170,7 +170,9 @@ const InsertionsPage: React.FC = () => {
           rows={insertions}
           columns={columns}
           initialState={{
-            columns: { columnVisibilityModel: { id: false } },
+            columns: {
+              columnVisibilityModel: { id: false, dateCreatedUtc: false },
+            },
           }}
           localeText={{
             paginationRowsPerPage: "Wierszy na stronę:",

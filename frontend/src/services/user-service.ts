@@ -6,4 +6,8 @@ export class UserService {
   public static async getUserAsync() {
     return await AxiosWrapper.get<UserModel>(ApiUrl.Me);
   }
+
+  public static async getDetailsAsync() {
+    return await AxiosWrapper.get<UserModel>(ApiUrl.UserDetails);
+  }
 }

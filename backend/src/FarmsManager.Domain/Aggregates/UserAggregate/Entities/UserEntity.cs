@@ -1,4 +1,5 @@
 ﻿using Ardalis.GuardClauses;
+using FarmsManager.Domain.Aggregates.UserAggregate.Models;
 using FarmsManager.Domain.SeedWork;
 
 namespace FarmsManager.Domain.Aggregates.UserAggregate.Entities;
@@ -12,6 +13,7 @@ public class UserEntity : Entity
     public string Login { get; init; }
     public string PasswordHash { get; protected internal set; }
     public string Name { get; protected internal set; }
+    public IrzplusCredentials IrzplusCredentials { get; protected internal set; }
 
     public static UserEntity CreateUser(string login, string name)
     {
@@ -34,5 +36,11 @@ public class UserEntity : Entity
     {
         Guard.Against.NullOrWhiteSpace(name);
         Name = name;
+    }
+
+    public void ChangeIrzplusCredentials(IrzplusCredentials irzplusCredentials)
+    {
+        Guard.Against.Null(irzplusCredentials);
+        IrzplusCredentials = irzplusCredentials;
     }
 }

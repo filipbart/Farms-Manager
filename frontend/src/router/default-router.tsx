@@ -10,6 +10,7 @@ import { RouteName } from "./route-names";
 import FarmsPage from "../pages/data/farms";
 import HousesPage from "../pages/data/houses";
 import HatcheriesPage from "../pages/data/hatcheries";
+import SettingsPageTab from "../pages/settings";
 
 const DefaultRouter: React.FC = () => {
   const { getRoute } = useRouter();
@@ -34,6 +35,10 @@ const DefaultRouter: React.FC = () => {
         <Route
           path={getRoute(RouteName.Hatcheries)}
           element={<HatcheriesPage />}
+        />
+        <Route
+          path={getRoute(RouteName.Settings)}
+          element={<SettingsPageTab />}
         />
       </Route>
     </Routes>

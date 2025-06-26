@@ -19,4 +19,16 @@ public class UserController(IMediator mediator) : BaseController
     {
         return Ok(await mediator.Send(new MeQuery()));
     }
+    
+    /// <summary>
+    /// Zwraca szczegóły użytkownika
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet("details")]
+    [ProducesResponseType(typeof(BaseResponse<MeQueryResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Details()
+    {
+        return Ok(await mediator.Send(new DetailsQuery()));
+    }
 }

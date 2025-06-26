@@ -54,6 +54,6 @@ public class DomainExceptionMiddleware : IMiddleware
 
 public class ExceptionDetailsDto
 {
-    public string ErrorName { get; init; }
-    public string ErrorDescription { get; init; }
+    public required string ErrorName { get; init; }
+    public required string ErrorDescription { get; init; }
 }
