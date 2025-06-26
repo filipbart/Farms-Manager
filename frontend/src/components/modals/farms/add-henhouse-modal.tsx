@@ -78,6 +78,16 @@ const AddHenhouseModal: React.FC<AddHenhouseModalProps> = ({
             />
 
             <TextField
+              label="ID budynku"
+              error={!!errors?.code}
+              helperText={errors.code ? (errors.code.message as string) : ""}
+              {...register("code", {
+                required: "ID budynku jest wymagane",
+              })}
+              fullWidth
+            />
+
+            <TextField
               type="number"
               label="Powierzchnia (m²)"
               error={!!errors?.area}

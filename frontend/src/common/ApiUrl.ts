@@ -23,6 +23,7 @@ export default class ApiUrl {
   public static LatestCycle = "/latest-cycle";
   public static InsertionAvailableHenhouses =
     this.Insertions + "/available-henhouses";
+  public static SendToIrz = this.Insertions + "/send-to-irz";
 
   public static Settings = this.BaseUrl + "settings";
   public static IrzPlusCredentials =

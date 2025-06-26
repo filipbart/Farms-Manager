@@ -15,6 +15,7 @@ export interface AddFarmFormData {
 export interface AddHenhouseFormData {
   farmId: string;
   name: string;
+  code: string;
   area: number;
   desc: string;
 }

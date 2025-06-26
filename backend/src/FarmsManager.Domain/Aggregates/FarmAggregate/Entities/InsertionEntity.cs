@@ -18,6 +18,7 @@ public class InsertionEntity : Entity
     public Guid HatcheryId { get; init; }
     public int Quantity { get; init; }
     public decimal BodyWeight { get; init; }
+    public Guid InternalGroupId { get; init; }
     public DateTime? DateIrzSentUtc { get; private set; }
     public bool IsSentToIrz { get; private set; }
     public Guid? SentToIrzBy { get; protected internal set; }
@@ -28,11 +29,12 @@ public class InsertionEntity : Entity
     public virtual HatcheryEntity Hatchery { get; init; }
 
 
-    public static InsertionEntity CreateNew(Guid farmId, Guid cycleId, Guid henhouseId, Guid hatcheryId,
+    public static InsertionEntity CreateNew(Guid internalGroupId, Guid farmId, Guid cycleId, Guid henhouseId, Guid hatcheryId,
         DateOnly insertionDate, int quantity, decimal bodyWeight, Guid? userId = null)
     {
         return new InsertionEntity
         {
+            InternalGroupId = internalGroupId,
             FarmId = farmId,
             CycleId = cycleId,
             HenhouseId = henhouseId,
@@ -50,4 +52,7 @@ public class InsertionEntity : Entity
         SentToIrzBy = userId;
         DateIrzSentUtc = DateTime.UtcNow;
     }
+    
+    public bool IsAlreadySentToIrz() => DateIrzSentUtc.HasValue || IsSentToIrz;
+
 }

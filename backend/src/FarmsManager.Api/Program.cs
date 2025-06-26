@@ -30,6 +30,7 @@ webAppBuilder.Host.GetBuilder()
             .AsImplementedInterfaces();
     })
     .AddDatabase()
+    .AddInfrastructure()
     .AddJwt()
     .AddAutoMapper(typeof(UserProfile).Assembly)
     .AddMediator(typeof(MeQuery).Assembly, typeof(CreateDevAccountCommand).Assembly)

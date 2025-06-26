@@ -18,8 +18,7 @@ public class InsertionsController(IMediator mediator) : BaseController
     /// <param name="filters"></param>
     /// <returns></returns>
     [HttpGet]
-    [AllowAnonymous]
-    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(BaseResponse<GetInsertionsQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetInsertions([FromQuery] GetInsertionsQueryFilters filters)
     {
@@ -78,7 +77,7 @@ public class InsertionsController(IMediator mediator) : BaseController
     }
 
     /// <summary>
-    /// Wysyła wstawienie do systemu IRZ+
+    /// Wysyła wstawienie do systemu IRZplus
     /// </summary>
     /// <param name="command"></param>
     /// <returns></returns>

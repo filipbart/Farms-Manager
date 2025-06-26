@@ -15,7 +15,7 @@ using MediatR;
 
 namespace FarmsManager.Application.Commands.Insertions;
 
-public record AddNewInsertionCommand : IRequest<EmptyBaseResponse>
+public record AddNewInsertionCommand : IRequest<BaseResponse<AddNewInsertionCommandResponse>>
 {
     public Guid FarmId { get; init; }
     public Guid CycleId { get; init; }
@@ -31,7 +31,14 @@ public record AddNewInsertionCommand : IRequest<EmptyBaseResponse>
     }
 }
 
-public class AddNewInsertionCommandHandler : IRequestHandler<AddNewInsertionCommand, EmptyBaseResponse>
+public class AddNewInsertionCommandResponse
+{
+    public Guid InternalGroupId { get; set; }
+}
+
+public class
+    AddNewInsertionCommandHandler : IRequestHandler<AddNewInsertionCommand,
+    BaseResponse<AddNewInsertionCommandResponse>>
 {
     private readonly IUserDataResolver _userDataResolver;
     private readonly IFarmRepository _farmRepository;
@@ -52,10 +59,11 @@ public class AddNewInsertionCommandHandler : IRequestHandler<AddNewInsertionComm
         _hatcheryRepository = hatcheryRepository;
     }
 
-    public async Task<EmptyBaseResponse> Handle(AddNewInsertionCommand request, CancellationToken ct)
+    public async Task<BaseResponse<AddNewInsertionCommandResponse>> Handle(AddNewInsertionCommand request,
+        CancellationToken ct)
     {
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
-        var response = new EmptyBaseResponse();
+        var response = new BaseResponse<AddNewInsertionCommandResponse>();
 
         var farm = await _farmRepository.GetAsync(new FarmByIdSpec(request.FarmId), ct);
         var cycle = await _cycleRepository.GetAsync(new CycleByIdSpec(request.CycleId), ct);
@@ -88,6 +96,7 @@ public class AddNewInsertionCommandHandler : IRequestHandler<AddNewInsertionComm
         }
 
         var newInsertions = new List<InsertionEntity>();
+        var internalGroupId = Guid.NewGuid();
         foreach (var entry in request.Entries)
         {
             var henhouse = await _henhouseRepository.GetAsync(new HenhouseByIdSpec(entry.HenhouseId),
@@ -95,13 +104,15 @@ public class AddNewInsertionCommandHandler : IRequestHandler<AddNewInsertionComm
             var hatchery =
                 await _hatcheryRepository.GetAsync(new HatcheryByIdSpec(entry.HatcheryId), ct);
 
-            var newInsertion = InsertionEntity.CreateNew(farm.Id, cycle.Id, henhouse.Id, hatchery.Id,
+            var newInsertion = InsertionEntity.CreateNew(internalGroupId, farm.Id, cycle.Id, henhouse.Id, hatchery.Id,
                 request.InsertionDate, entry.Quantity, entry.BodyWeight, userId);
             newInsertions.Add(newInsertion);
         }
 
         if (newInsertions.Count != 0)
             await _insertionRepository.AddRangeAsync(newInsertions, ct);
+
+        response.ResponseData.InternalGroupId = internalGroupId;
 
         return response;
     }

@@ -9,7 +9,8 @@ using MediatR;
 
 namespace FarmsManager.Application.Commands.Farms;
 
-public record AddHenhouseCommand(Guid FarmId, string Name, int Area, string Desc) : IRequest<EmptyBaseResponse>;
+public record AddHenhouseCommand(Guid FarmId, string Name, string Code, int Area, string Desc)
+    : IRequest<EmptyBaseResponse>;
 
 public class AddHenhouseCommandHandler : IRequestHandler<AddHenhouseCommand, EmptyBaseResponse>
 {
@@ -30,7 +31,8 @@ public class AddHenhouseCommandHandler : IRequestHandler<AddHenhouseCommand, Emp
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var farm = await _farmRepository.GetAsync(new FarmByIdSpec(request.FarmId), cancellationToken);
 
-        var henhouse = HenhouseEntity.CreateNew(request.Name, request.Area, request.Desc, farm.Id, userId);
+        var henhouse =
+            HenhouseEntity.CreateNew(request.Name, request.Code, request.Area, request.Desc, farm.Id, userId);
         await _henhouseRepository.AddAsync(henhouse, cancellationToken);
         return new EmptyBaseResponse();
     }

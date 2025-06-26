@@ -25,14 +25,20 @@ export interface AddInsertionData {
   }[];
 }
 
+export interface AddNewInsertionReponse {
+  internalGroupId: string;
+}
+
 export interface AvailableHenhousesResponse {
   items: HouseRowModel[];
 }
 
 export class InsertionsService {
   public static async addNewInsertion(data: AddInsertionData) {
-    console.log(data);
-    return await AxiosWrapper.post(ApiUrl.Insertions + "/add", data);
+    return await AxiosWrapper.post<AddNewInsertionReponse>(
+      ApiUrl.Insertions + "/add",
+      data
+    );
   }
 
   public static async addNewCycle(data: AddCycleData) {
@@ -60,5 +66,12 @@ export class InsertionsService {
         farmId: farmId,
       }
     );
+  }
+
+  public static async sendToIrzPlus(payload: {
+    internalGroupId?: string;
+    insertionId?: string;
+  }) {
+    return await AxiosWrapper.post(ApiUrl.SendToIrz, payload);
   }
 }

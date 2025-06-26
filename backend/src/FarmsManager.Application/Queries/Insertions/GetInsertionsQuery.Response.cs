@@ -13,6 +13,9 @@ public class InsertionRowDto
     public string HatcheryName { get; init; }
     public decimal BodyWeight { get; init; }
     public DateTime DateCreatedUtc { get; init; }
+    public Guid InternalGroupId { get; init; }
+    public DateTime? DateIrzSentUtc { get; init; }
+    public bool IsSentToIrz { get; init; }
 }
 
 public class GetInsertionsQueryResponse : PaginationModel<InsertionRowDto>;

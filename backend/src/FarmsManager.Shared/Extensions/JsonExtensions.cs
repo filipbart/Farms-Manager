@@ -12,9 +12,10 @@ public static class JsonExtensions
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         ReferenceHandler = ReferenceHandler.IgnoreCycles,
         Converters = { new JsonStringEnumConverter(), new TimeOnlyConverter() },
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
         NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals
     };
+
 
     public static readonly JsonSerializerOptions DefaultOptionsIndented = new(DefaultOptions)
     {
@@ -26,12 +27,22 @@ public static class JsonExtensions
         PropertyNamingPolicy = null
     };
 
+    public static readonly JsonSerializerOptions DefaultOptionsWithNulls = new(DefaultOptions)
+    {
+        DefaultIgnoreCondition = JsonIgnoreCondition.Never
+    };
+
     public static T ParseJsonString<T>(this string text, JsonSerializerOptions options = null) =>
         JsonSerializer.Deserialize<T>(text, options ?? DefaultOptions);
 
     public static string ToJsonString(this object obj, bool withCamelCase = true)
     {
         return JsonSerializer.Serialize(obj, withCamelCase ? DefaultOptions : DefaultOptionsWithoutCamelCase);
+    }
+    
+    public static string ToJsonStringWithNulls(this object obj)
+    {
+        return JsonSerializer.Serialize(obj, DefaultOptionsWithNulls);
     }
 }
 

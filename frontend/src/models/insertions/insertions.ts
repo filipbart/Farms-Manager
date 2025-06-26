@@ -8,4 +8,7 @@ export default interface InsertionListModel {
   hatcheryName: string;
   bodyWeight: number;
   dateCreatedUtc: Date;
+  internalGroupId: string;
+  dateIrzSentUtc?: Date;
+  isSentToIrz: boolean;
 }

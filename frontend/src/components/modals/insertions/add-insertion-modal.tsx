@@ -8,6 +8,8 @@ import {
   MenuItem,
   Box,
   Typography,
+  Checkbox,
+  FormControlLabel,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { toast } from "react-toastify";
@@ -126,6 +128,7 @@ const AddInsertionModal: React.FC<AddInsertionModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [form, dispatch] = useReducer(formReducer, initialState);
   const [errors, setErrors] = useState<InsertionFormErrors>({});
+  const [sendToIrz, setSendToIrz] = useState(false);
 
   useEffect(() => {
     fetchFarms();
@@ -249,7 +252,27 @@ const AddInsertionModal: React.FC<AddInsertionModalProps> = ({
             })
           ),
         }),
-      () => {
+      async (data) => {
+        if (!data || !data.responseData || !data.responseData.internalGroupId) {
+          toast.error(
+            "Nie udało się dodać wstawienia, brak ID grupy wewnętrznej"
+          );
+        }
+
+        if (sendToIrz) {
+          await handleApiResponse(
+            () =>
+              InsertionsService.sendToIrzPlus({
+                internalGroupId: data.responseData!.internalGroupId,
+              }),
+            () => {
+              toast.success("Wstawienie wysłane do IRZplus");
+            },
+            undefined,
+            "Nie udało się wysłać wstawienia do IRZplus"
+          );
+        }
+
         toast.success("Dodano wstawienie");
         dispatch({ type: "RESET" });
         setErrors({});
@@ -360,9 +383,35 @@ const AddInsertionModal: React.FC<AddInsertionModalProps> = ({
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose}>Anuluj</Button>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={sendToIrz}
+              onChange={() => setSendToIrz(!sendToIrz)}
+              color="error"
+              sx={{
+                "&.MuiCheckbox-root": {
+                  color: "error.main", // kolor pustego checkboxa
+                },
+                "&.Mui-checked": {
+                  color: "error.main", // kolor zaznaczonego checkboxa
+                },
+              }}
+            />
+          }
+          label={
+            <Typography sx={{ color: "error.main" }}>
+              Wyślij do IRZplus
+            </Typography>
+          }
+        />
+
+        <Button disabled={loading} onClick={handleClose}>
+          Anuluj
+        </Button>
         <LoadingButton
           loading={loading}
+          loadingSize={20}
           onClick={handleSave}
           variant="contained"
           color="primary"

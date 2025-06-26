@@ -23,7 +23,7 @@ import type { PaginateModel } from "../../common/interfaces/paginate";
 import type InsertionListModel from "../../models/insertions/insertions";
 import FiltersForm from "./filter-form";
 import { mapInsertionOrderTypeToField } from "../../common/helpers/insertion-order-type-helper";
-import LoadingButton from "../../components/common/loading-button";
+import Loading from "../../components/loading/loading";
 
 const initialFilters: InsertionsFilterPaginationModel = {
   farmIds: [],
@@ -61,9 +61,6 @@ const InsertionsPage: React.FC = () => {
   const [insertions, setInsertions] = useState<InsertionListModel[]>([]);
   const [totalRows, setTotalRows] = useState(0);
 
-  const [loadingSendToIrz, setLoadingSendToIrz] = useState(false);
-  const handleSendToIrz = (row: InsertionListModel) => {};
-
   const columns: GridColDef[] = [
     { field: "id", headerName: "Id", width: 70 },
     { field: "cycleText", headerName: "Identyfikator", flex: 1 },
@@ -81,19 +78,94 @@ const InsertionsPage: React.FC = () => {
     { field: "bodyWeight", headerName: "Śr. masa ciała", flex: 1 },
     {
       field: "sendToIrz",
-      headerName: "Akcje",
+      headerName: "Wyślij do IRZplus",
       flex: 1,
+
+      minWidth: 200,
       type: "actions",
       renderCell: (params) => {
+        const { isSentToIrz, dateIrzSentUtc } = params.row;
+        const [loadingSendToIrz, setLoadingSendToIrz] = useState(false);
+        const handleSendToIrz = async (data: {
+          internalGroupId?: string;
+          insertionId?: string;
+        }) => {
+          setLoadingSendToIrz(true);
+          await handleApiResponse(
+            () => InsertionsService.sendToIrzPlus(data),
+            async () => {
+              toast.success("Wysłano do IRZplus");
+              dispatch({
+                type: "setMultiple",
+                payload: { page: filters.page },
+              });
+              setLoadingSendToIrz(false);
+            },
+            undefined,
+            "Wystąpił błąd podczas wysyłania do IRZplus"
+          );
+          setLoadingSendToIrz(false);
+        };
+        if (dateIrzSentUtc) {
+          const formattedDate = new Date(dateIrzSentUtc).toLocaleString(
+            "pl-PL",
+            {
+              dateStyle: "short",
+              timeStyle: "short",
+            }
+          );
+
+          return (
+            <Typography variant="body2" sx={{ whiteSpace: "nowrap" }}>
+              Wysłano - {formattedDate}
+            </Typography>
+          );
+        }
+
+        if (isSentToIrz) {
+          return null;
+        }
+
         return (
-          <LoadingButton
-            variant="contained"
-            color="error" // Set the button color to red
-            loading={loadingSendToIrz}
-            onClick={() => handleSendToIrz(params.row)}
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 1,
+              flexWrap: "nowrap",
+            }}
           >
-            Wyślij do IRZ+
-          </LoadingButton>
+            {loadingSendToIrz ? (
+              <Loading height="0" size={10} />
+            ) : (
+              <>
+                <Button
+                  variant="contained"
+                  color="error"
+                  size="small"
+                  onClick={() =>
+                    handleSendToIrz({ insertionId: params.row.id })
+                  }
+                >
+                  Osobno
+                </Button>
+
+                <Button
+                  variant="outlined"
+                  color="error"
+                  size="small"
+                  onClick={() =>
+                    handleSendToIrz({
+                      internalGroupId: params.row.internalGroupId,
+                    })
+                  }
+                >
+                  Z grupą
+                </Button>
+              </>
+            )}
+          </Box>
         );
       },
     },
