@@ -75,6 +75,18 @@ const AddFarmModal: React.FC<AddFarmModalProps> = ({
             />
 
             <TextField
+              label="Numer producenta"
+              error={!!errors?.prodNumber}
+              helperText={
+                errors.prodNumber ? (errors.prodNumber.message as string) : ""
+              }
+              {...register("prodNumber", {
+                required: "Numer producenta jest wymagany",
+              })}
+              fullWidth
+            />
+
+            <TextField
               label="NIP"
               error={!!errors?.nip}
               helperText={errors.nip ? (errors.nip.message as string) : ""}
@@ -83,6 +95,7 @@ const AddFarmModal: React.FC<AddFarmModalProps> = ({
               })}
               fullWidth
             />
+
             <TextField
               label="Adres"
               error={!!errors?.address}

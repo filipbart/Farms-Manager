@@ -5,6 +5,7 @@ import AxiosWrapper from "../utils/axios/wrapper";
 
 export interface AddHatcheryFormData {
   name: string;
+  prodNumber: string;
   fullName: string;
   nip: string;
   address: string;

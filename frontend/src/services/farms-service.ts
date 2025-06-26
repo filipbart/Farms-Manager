@@ -7,6 +7,7 @@ import AxiosWrapper from "../utils/axios/wrapper";
 
 export interface AddFarmFormData {
   name: string;
+  prodNumber: string;
   nip: string;
   address: string;
 }

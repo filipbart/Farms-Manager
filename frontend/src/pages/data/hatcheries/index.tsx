@@ -31,6 +31,7 @@ const HatcheriesPage: React.FC = () => {
   const columns: GridColDef[] = [
     { field: "name", headerName: "Nazwa", flex: 1 },
     { field: "fullName", headerName: "Pełna nazwa", flex: 1 },
+    { field: "producerNumber", headerName: "Numer producenta", flex: 1 },
     { field: "nip", headerName: "NIP", flex: 1 },
     { field: "address", headerName: "Adres", flex: 1 },
     {

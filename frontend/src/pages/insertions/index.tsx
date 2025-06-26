@@ -23,24 +23,7 @@ import type { PaginateModel } from "../../common/interfaces/paginate";
 import type InsertionListModel from "../../models/insertions/insertions";
 import FiltersForm from "./filter-form";
 import { mapInsertionOrderTypeToField } from "../../common/helpers/insertion-order-type-helper";
-
-const columns: GridColDef[] = [
-  { field: "id", headerName: "Id", width: 70 },
-  { field: "cycleText", headerName: "Identyfikator", flex: 1 },
-  { field: "farmName", headerName: "Ferma", flex: 1 },
-  { field: "henhouseName", headerName: "Kurnik", flex: 1 },
-  {
-    field: "insertionDate",
-    headerName: "Data wstawienia",
-    flex: 1,
-    type: "string",
-    valueGetter: (params: any) => dayjs(params.value).format("YYYY-MM-DD"),
-  },
-  { field: "quantity", headerName: "Sztuki wstawione", flex: 1 },
-  { field: "hatcheryName", headerName: "Wylęgarnia", flex: 1 },
-  { field: "bodyWeight", headerName: "Śr. masa ciała", flex: 1 },
-  { field: "dateCreatedUtc", headerName: "Data utworzenia wpisu", flex: 1 },
-];
+import LoadingButton from "../../components/common/loading-button";
 
 const initialFilters: InsertionsFilterPaginationModel = {
   farmIds: [],
@@ -77,6 +60,45 @@ const InsertionsPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [insertions, setInsertions] = useState<InsertionListModel[]>([]);
   const [totalRows, setTotalRows] = useState(0);
+
+  const [loadingSendToIrz, setLoadingSendToIrz] = useState(false);
+  const handleSendToIrz = (row: InsertionListModel) => {};
+
+  const columns: GridColDef[] = [
+    { field: "id", headerName: "Id", width: 70 },
+    { field: "cycleText", headerName: "Identyfikator", flex: 1 },
+    { field: "farmName", headerName: "Ferma", flex: 1 },
+    { field: "henhouseName", headerName: "Kurnik", flex: 1 },
+    {
+      field: "insertionDate",
+      headerName: "Data wstawienia",
+      flex: 1,
+      type: "string",
+      valueGetter: (params: any) => dayjs(params.value).format("YYYY-MM-DD"),
+    },
+    { field: "quantity", headerName: "Sztuki wstawione", flex: 1 },
+    { field: "hatcheryName", headerName: "Wylęgarnia", flex: 1 },
+    { field: "bodyWeight", headerName: "Śr. masa ciała", flex: 1 },
+    {
+      field: "sendToIrz",
+      headerName: "Akcje",
+      flex: 1,
+      type: "actions",
+      renderCell: (params) => {
+        return (
+          <LoadingButton
+            variant="contained"
+            color="error" // Set the button color to red
+            loading={loadingSendToIrz}
+            onClick={() => handleSendToIrz(params.row)}
+          >
+            Wyślij do IRZ+
+          </LoadingButton>
+        );
+      },
+    },
+    { field: "dateCreatedUtc", headerName: "Data utworzenia wpisu", flex: 1 },
+  ];
 
   const uniqueCycles = useMemo(() => {
     if (!dictionary) return [];

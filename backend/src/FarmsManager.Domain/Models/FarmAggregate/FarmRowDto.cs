@@ -7,5 +7,6 @@ public record FarmRowDto
     public string Nip { get; init; }
     public string Address { get; init; }
     public int HenHousesCount { get; init; }
+    public string ProducerNumber { get; init; }
     public DateTime DateCreatedUtc { get; init; }
 }

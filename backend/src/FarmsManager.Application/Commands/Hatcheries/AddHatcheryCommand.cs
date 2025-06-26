@@ -11,6 +11,7 @@ namespace FarmsManager.Application.Commands.Hatcheries;
 public class AddHatcheryCommand : IRequest<EmptyBaseResponse>
 {
     public string Name { get; init; }
+    public string ProdNumber { get; init; }
     public string FullName { get; init; }
     public string Nip { get; init; }
     public string Address { get; init; }
@@ -41,7 +42,8 @@ public class AddHatcheryCommandHandler : IRequestHandler<AddHatcheryCommand, Emp
     public async Task<EmptyBaseResponse> Handle(AddHatcheryCommand request, CancellationToken cancellationToken)
     {
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
-        var newHatcher = HatcheryEntity.CreateNew(request.Name, request.FullName, request.Nip, request.Address, userId);
+        var newHatcher = HatcheryEntity.CreateNew(request.Name, request.ProdNumber, request.FullName, request.Nip,
+            request.Address, userId);
         await _hatcheryRepository.AddAsync(newHatcher, cancellationToken);
 
         return new EmptyBaseResponse();

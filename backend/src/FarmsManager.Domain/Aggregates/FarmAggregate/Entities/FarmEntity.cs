@@ -12,6 +12,7 @@ public class FarmEntity : Entity
     public string Nip { get; protected internal set; }
     public string Address { get; protected internal set; }
     public Guid? ActiveCycleId { get; protected internal set; }
+    public string ProducerNumber { get; protected internal set; }
     public virtual CycleEntity ActiveCycle { get; protected internal set; }
 
     /// <summary>
@@ -28,11 +29,13 @@ public class FarmEntity : Entity
 
     public virtual IReadOnlyCollection<CycleEntity> Cycles => _cycles.AsReadOnly();
 
-    public static FarmEntity CreateNew(string name, string nip, string address, Guid? createdBy = null)
+    public static FarmEntity CreateNew(string name, string producerNumber, string nip, string address,
+        Guid? createdBy = null)
     {
         return new FarmEntity
         {
             Name = name,
+            ProducerNumber = producerNumber,
             Nip = nip,
             Address = address,
             CreatedBy = createdBy

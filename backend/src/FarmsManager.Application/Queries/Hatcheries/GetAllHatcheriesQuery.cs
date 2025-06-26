@@ -14,6 +14,7 @@ public record HatcheryRowDto
     public string FullName { get; init; }
     public string Nip { get; init; }
     public string Address { get; init; }
+    public string ProducerNumber { get; init; }
     public DateTime DateCreatedUtc { get; init; }
 }
 

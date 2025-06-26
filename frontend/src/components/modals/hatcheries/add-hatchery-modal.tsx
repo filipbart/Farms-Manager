@@ -75,9 +75,23 @@ const AddHatcheryModal: React.FC<AddHatcheryModalProps> = ({
             />
 
             <TextField
+              label="Numer producenta"
+              error={!!errors?.prodNumber}
+              helperText={
+                errors.prodNumber ? (errors.prodNumber.message as string) : ""
+              }
+              {...register("prodNumber", {
+                required: "Numer producenta jest wymagany",
+              })}
+              fullWidth
+            />
+
+            <TextField
               label="Pełna nazwa"
-              error={!!errors?.name}
-              helperText={errors.name ? (errors.name.message as string) : ""}
+              error={!!errors?.fullName}
+              helperText={
+                errors.fullName ? (errors.fullName.message as string) : ""
+              }
               {...register("fullName", {
                 required: "Pełna nazwa jest wymagana",
               })}

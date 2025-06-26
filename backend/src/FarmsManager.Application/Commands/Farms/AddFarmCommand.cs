@@ -11,6 +11,7 @@ namespace FarmsManager.Application.Commands.Farms;
 public record AddFarmCommand : IRequest<EmptyBaseResponse>
 {
     public string Name { get; init; }
+    public string ProdNumber { get; init; }
     public string Nip { get; init; }
     public string Address { get; init; }
 }
@@ -39,7 +40,7 @@ public class AddFarmCommandHandler : IRequestHandler<AddFarmCommand, EmptyBaseRe
     public async Task<EmptyBaseResponse> Handle(AddFarmCommand request, CancellationToken cancellationToken)
     {
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
-        var newFarm = FarmEntity.CreateNew(request.Name, request.Nip, request.Address, userId);
+        var newFarm = FarmEntity.CreateNew(request.Name, request.ProdNumber, request.Nip, request.Address, userId);
         await _farmRepository.AddAsync(newFarm, cancellationToken);
 
         return new EmptyBaseResponse();
