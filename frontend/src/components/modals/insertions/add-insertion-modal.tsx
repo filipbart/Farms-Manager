@@ -147,7 +147,7 @@ const AddInsertionModal: React.FC<AddInsertionModalProps> = ({
 
     setLoadingHenhouses(true);
     await handleApiResponse(
-      () => FarmsService.getFarmHousesAsync(farmId),
+      () => InsertionsService.getAvailableHenhouses(farmId),
       (data) => setHenhouses(data.responseData?.items ?? []),
       undefined,
       "Nie udało się pobrać listy kurników"

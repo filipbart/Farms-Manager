@@ -18,4 +18,6 @@ export default class ApiUrl {
   public static Insertions = this.BaseUrl + "insertions";
   public static InsertionsDict = this.BaseUrl + "insertions/dictionary";
   public static LatestCycle = "/latest-cycle";
+  public static InsertionAvailableHenhouses =
+    this.Insertions + "/available-henhouses";
 }

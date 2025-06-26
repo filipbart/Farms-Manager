@@ -17,7 +17,6 @@ public class InsertionEntity : Entity
     public virtual HenhouseEntity Henhouse { get; init; }
     public virtual FarmEntity Farm { get; init; }
     public virtual HatcheryEntity Hatchery { get; init; }
-    
 
 
     public static InsertionEntity CreateNew(Guid farmId, Guid cycleId, Guid henhouseId, Guid hatcheryId,

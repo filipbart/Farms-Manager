@@ -1,5 +1,6 @@
 import ApiUrl from "../common/ApiUrl";
 import type { PaginateModel } from "../common/interfaces/paginate";
+import type { HouseRowModel } from "../models/farms/house-row-model";
 import type LatestCycle from "../models/farms/latest-cycle";
 import type { InsertionDictionary } from "../models/insertions/insertion-dictionary";
 import type InsertionListModel from "../models/insertions/insertions";
@@ -24,6 +25,10 @@ export interface AddInsertionData {
   }[];
 }
 
+export interface AvailableHenhousesResponse {
+  items: HouseRowModel[];
+}
+
 export class InsertionsService {
   public static async addNewInsertion(data: AddInsertionData) {
     console.log(data);
@@ -45,6 +50,15 @@ export class InsertionsService {
     return await AxiosWrapper.get<PaginateModel<InsertionListModel>>(
       ApiUrl.Insertions,
       { ...filters }
+    );
+  }
+
+  public static async getAvailableHenhouses(farmId: string) {
+    return await AxiosWrapper.get<AvailableHenhousesResponse>(
+      ApiUrl.InsertionAvailableHenhouses,
+      {
+        farmId: farmId,
+      }
     );
   }
 }
