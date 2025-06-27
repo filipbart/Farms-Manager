@@ -90,10 +90,6 @@ public class IrzplusService : IIrzplusService
 
         var responseString = await response.Content.ReadAsStringAsync(ct);
         var responseModel = responseString.ParseJsonString<ZlozenieDyspozycjiResponse>();
-        if (responseModel.Bledy.Count != 0)
-        {
-            throw new Exception(responseModel.Bledy.First().Komunikat);
-        }
 
         return responseModel;
     }

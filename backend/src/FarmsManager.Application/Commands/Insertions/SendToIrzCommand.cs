@@ -104,9 +104,8 @@ public class SendToIrzCommandHandler : IRequestHandler<SendToIrzCommand, EmptyBa
             return response;
         }
 
-        insertionsToSend.ForEach(t => t.MarkAsSentToIrz(userId));
+        insertionsToSend.ForEach(t => t.MarkAsSentToIrz(dispositionResponse.NumerDokumentu, userId));
         await _insertionRepository.UpdateRangeAsync(insertionsToSend, ct);
-
 
         return response;
     }

@@ -22,6 +22,7 @@ public class InsertionEntity : Entity
     public DateTime? DateIrzSentUtc { get; private set; }
     public bool IsSentToIrz { get; private set; }
     public Guid? SentToIrzBy { get; protected internal set; }
+    public string DocumentNumber { get; protected internal set; }
 
     public virtual CycleEntity Cycle { get; init; }
     public virtual HenhouseEntity Henhouse { get; init; }
@@ -29,7 +30,8 @@ public class InsertionEntity : Entity
     public virtual HatcheryEntity Hatchery { get; init; }
 
 
-    public static InsertionEntity CreateNew(Guid internalGroupId, Guid farmId, Guid cycleId, Guid henhouseId, Guid hatcheryId,
+    public static InsertionEntity CreateNew(Guid internalGroupId, Guid farmId, Guid cycleId, Guid henhouseId,
+        Guid hatcheryId,
         DateOnly insertionDate, int quantity, decimal bodyWeight, Guid? userId = null)
     {
         return new InsertionEntity
@@ -46,13 +48,19 @@ public class InsertionEntity : Entity
         };
     }
 
-    public void MarkAsSentToIrz(Guid userId)
+    public void MarkAsSentToIrz(string documentNumber, Guid userId)
     {
         IsSentToIrz = true;
         SentToIrzBy = userId;
         DateIrzSentUtc = DateTime.UtcNow;
+        DocumentNumber = documentNumber;
     }
-    
-    public bool IsAlreadySentToIrz() => DateIrzSentUtc.HasValue || IsSentToIrz;
 
+    public void MarkAsSentToIrzByAdmin(Guid userId)
+    {
+        IsSentToIrz = true;
+        SentToIrzBy = userId;
+    }
+
+    public bool IsAlreadySentToIrz() => DateIrzSentUtc.HasValue || IsSentToIrz;
 }

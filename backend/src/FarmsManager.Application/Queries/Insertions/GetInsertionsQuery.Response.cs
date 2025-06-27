@@ -16,6 +16,7 @@ public class InsertionRowDto
     public Guid InternalGroupId { get; init; }
     public DateTime? DateIrzSentUtc { get; init; }
     public bool IsSentToIrz { get; init; }
+    public string DocumentNumber { get; init; }
 }
 
 public class GetInsertionsQueryResponse : PaginationModel<InsertionRowDto>;

@@ -11,4 +11,5 @@ export default interface InsertionListModel {
   internalGroupId: string;
   dateIrzSentUtc?: Date;
   isSentToIrz: boolean;
+  documentNumber?: string;
 }

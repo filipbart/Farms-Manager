@@ -74,6 +74,14 @@ const InsertionsPage: React.FC = () => {
       valueGetter: (params: any) => dayjs(params.value).format("YYYY-MM-DD"),
     },
     { field: "quantity", headerName: "Sztuki wstawione", flex: 1 },
+    {
+      field: "documentNumber",
+      headerName: "Numer dokumentu IRZplus",
+      flex: 1,
+      renderCell: (params) => {
+        return params.value ? params.value : "Brak numeru";
+      },
+    },
     { field: "hatcheryName", headerName: "Wylęgarnia", flex: 1 },
     { field: "bodyWeight", headerName: "Śr. masa ciała", flex: 1 },
     {
