@@ -1,4 +1,5 @@
-﻿using FarmsManager.Application.Common.Configurations;
+﻿using System.Text;
+using FarmsManager.Application.Common.Configurations;
 using FarmsManager.Application.Extensions;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models.Irzplus;
@@ -51,7 +52,8 @@ public class IrzplusService : IIrzplusService
 
         if (!response.IsSuccessStatusCode)
         {
-            throw new Exception("Błąd autoryzacji do IRZplus");
+            var errorContent = await response.Content.ReadAsStringAsync();
+            throw new Exception($"Błąd autoryzacji do IRZplus: {response.StatusCode}\n{errorContent}");
         }
 
         var responseString = await response.Content.ReadAsStringAsync();
@@ -69,6 +71,35 @@ public class IrzplusService : IIrzplusService
     {
         var authData = await AuthorizeToIrzplusAsync();
 
+        var dispositionZzssd = MapDispositionZzssd(insertions);
+
+        var dispositionJson = dispositionZzssd.ToJsonStringWithNulls();
+
+        using var httpClient = new HttpClient();
+        httpClient.BaseAddress = new Uri(Options.Value.Url);
+        httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {authData.AccessToken}");
+
+        var jsonContent = new StringContent(dispositionJson, Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync("drob/dokument/api/test/zzssd", jsonContent, ct);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync(ct);
+            throw new Exception($"Błąd podczas wysyłania dyspozycji do IRZplus: {response.StatusCode}\n{errorContent}");
+        }
+
+        var responseString = await response.Content.ReadAsStringAsync(ct);
+        var responseModel = responseString.ParseJsonString<ZlozenieDyspozycjiResponse>();
+        if (responseModel.Bledy.Count != 0)
+        {
+            throw new Exception(responseModel.Bledy.First().Komunikat);
+        }
+
+        return responseModel;
+    }
+
+    private static DyspozycjaZZSSD MapDispositionZzssd(IList<InsertionEntity> insertions)
+    {
         var firstInsertion = insertions.First();
         var dispositionZzssd = new DyspozycjaZZSSD
         {
@@ -97,10 +128,10 @@ public class IrzplusService : IIrzplusService
             var item = new PozycjaZZSSDDTO
             {
                 Lp = index + 1,
-                StatusPozycji = StatusPozycjiZZSSD.Zatwierdzona,
+                StatusPozycji = StatusPozycjiZZSSD.Zatwierdzona.GetEnumMemberValue(),
                 NumerIdenPartiiDrobiu = insertionEntity.Farm.ProducerNumber,
                 LiczbaDrobiuUbylo = insertionEntity.Quantity,
-                KategoriaJajWylegowych = KategoriaJajWylegowych.Miesna.ToKodOpisDto(), //TODO do weryfikacji
+                KategoriaJajWylegowych = null, //KategoriaJajWylegowych.Miesna.ToKodOpisDto(),
                 Budynek = new KodOpisWartosciDto
                 {
                     Kod = insertionEntity.Henhouse.Code,
@@ -114,8 +145,6 @@ public class IrzplusService : IIrzplusService
 
         dispositionZzssd.Zgloszenie.Pozycje = items;
 
-        var dispositionJson = dispositionZzssd.ToJsonStringWithNulls();
-
-        return null;
+        return dispositionZzssd;
     }
 }

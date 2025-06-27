@@ -17,7 +17,7 @@ public class PozycjaZZSSDDTO
     /// Status pozycji (ZATWIERDZONA, DO_ZATWIERDZENIA, POMINIETA)
     /// </summary>
     [JsonPropertyName("statusPozycji")]
-    public StatusPozycjiZZSSD StatusPozycji { get; set; }
+    public string StatusPozycji { get; set; }
 
     /// <summary>
     /// Numer identyfikacyjny partii drobiu

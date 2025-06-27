@@ -37,7 +37,7 @@ public class DomainExceptionMiddleware : IMiddleware
         {
             var details = new ExceptionDetailsDto
             {
-                ErrorDescription = "Internal server error",
+                ErrorDescription = ex.Message,
                 ErrorName = "InternalServerError"
             };
 

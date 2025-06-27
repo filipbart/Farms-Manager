@@ -1,16 +1,17 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 
 namespace FarmsManager.Application.Models.Irzplus.ZZSSD.Enums;
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum StatusPozycjiZZSSD
 {
-    [JsonPropertyName("ZATWIERDZONA")]
+    [EnumMember(Value = "ZATWIERDZONA")] 
     Zatwierdzona,
 
-    [JsonPropertyName("DO_ZATWIERDZENIA")]
+    [EnumMember(Value = "DO_ZATWIERDZENIA")]
     DoZatwierdzenia,
 
-    [JsonPropertyName("POMINIETA")]
+    [EnumMember(Value = "POMINIETA")] 
     Pominieta
 }

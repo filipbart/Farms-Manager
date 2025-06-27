@@ -145,7 +145,8 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
         if (status === 401) logout();
         else if (status === 403) nav(getRoute(RouteName.Forbidden));
         else if (status === 404) toast.error("Nie znaleziono zasobu");
-        else if (status >= 500) nav(getRoute(RouteName.InternalServerError));
+        //else if (status >= 500) nav(getRoute(RouteName.InternalServerError));
+
         return Promise.reject(err);
       }
     );
