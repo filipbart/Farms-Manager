@@ -5,7 +5,6 @@ using FarmsManager.Application.Queries.Insertions;
 using FarmsManager.Application.Queries.Insertions.Dictionary;
 using FarmsManager.Application.Queries.Insertions.Henhouses;
 using MediatR;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FarmsManager.Api.Controllers;

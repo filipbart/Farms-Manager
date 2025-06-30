@@ -1,24 +1,8 @@
-interface FarmDictModel {
-  id: string;
-  name: string;
-  henhouses: HenhouseDictModel[];
-}
-
-interface HenhouseDictModel {
-  id: string;
-  name: string;
-}
-
-interface HatcheryDictModel {
-  id: string;
-  name: string;
-}
-
-export interface CycleDictModel {
-  id: string;
-  identifier: number;
-  year: number;
-}
+import type {
+  FarmDictModel,
+  HatcheryDictModel,
+  CycleDictModel,
+} from "../common/dictionaries";
 
 export interface InsertionDictionary {
   farms: FarmDictModel[];

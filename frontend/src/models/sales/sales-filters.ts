@@ -1,26 +1,24 @@
 import type { CycleDictModel } from "../common/dictionaries";
 import type { OrderedPaginationParams } from "../common/pagination-params";
 
-export enum InsertionOrderType {
+export enum SalesOrderType {
   Cycle = "Cycle",
   Farm = "Farm",
   Henhouse = "Henhouse",
-  InsertionDate = "InsertionDate",
-  Quantity = "Quantity",
-  Hatchery = "Hatchery",
-  BodyWeight = "BodyWeight",
+  SaleDate = "SaleDate",
+  //   WeightSlaughter = "WeightSlaughter",
+  //   QuantitySlaughter = "QuantitySlaughter",
   DateCreatedUtc = "DateCreatedUtc",
 }
 
-export default interface InsertionsFilter {
+export default interface SalesFilter {
   farmIds: string[];
   cycles: CycleDictModel[];
   henhouseIds: string[];
-  hatcheryIds: string[];
   dateSince: string;
   dateTo: string;
 }
 
-export interface InsertionsFilterPaginationModel
-  extends InsertionsFilter,
-    OrderedPaginationParams<InsertionOrderType> {}
+export interface SalesFilterPaginationModel
+  extends SalesFilter,
+    OrderedPaginationParams<SalesOrderType> {}

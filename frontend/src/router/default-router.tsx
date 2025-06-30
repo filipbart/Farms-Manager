@@ -11,6 +11,8 @@ import FarmsPage from "../pages/data/farms";
 import HousesPage from "../pages/data/houses";
 import HatcheriesPage from "../pages/data/hatcheries";
 import SettingsPageTab from "../pages/settings";
+import SalesPage from "../pages/sales";
+import SlaughterhousesPage from "../pages/data/slaughterhouse";
 
 const DefaultRouter: React.FC = () => {
   const { getRoute } = useRouter();
@@ -30,11 +32,17 @@ const DefaultRouter: React.FC = () => {
           path={getRoute(RouteName.Insertions)}
           element={<InsertionsPage />}
         />
+        <Route path={getRoute(RouteName.SalesList)} element={<SalesPage />} />
+
         <Route path={getRoute(RouteName.Farms)} element={<FarmsPage />} />
         <Route path={getRoute(RouteName.Houses)} element={<HousesPage />} />
         <Route
           path={getRoute(RouteName.Hatcheries)}
           element={<HatcheriesPage />}
+        />
+        <Route
+          path={getRoute(RouteName.Slaughterhouses)}
+          element={<SlaughterhousesPage />}
         />
         <Route
           path={getRoute(RouteName.Settings)}

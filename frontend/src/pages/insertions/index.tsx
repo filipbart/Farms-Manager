@@ -11,19 +11,18 @@ import {
   InsertionOrderType,
   type InsertionsFilterPaginationModel,
 } from "../../models/insertions/insertions-filters";
-import type {
-  CycleDictModel,
-  InsertionDictionary,
-} from "../../models/insertions/insertion-dictionary";
+import type { InsertionDictionary } from "../../models/insertions/insertion-dictionary";
 import { handleApiResponse } from "../../utils/axios/handle-api-response";
 import { InsertionsService } from "../../services/insertions-service";
 import { toast } from "react-toastify";
 import type { PaginateModel } from "../../common/interfaces/paginate";
 import type InsertionListModel from "../../models/insertions/insertions";
-import FiltersForm from "./filter-form";
 import { mapInsertionOrderTypeToField } from "../../common/helpers/insertion-order-type-helper";
 import Loading from "../../components/loading/loading";
 import EditInsertionModal from "../../components/modals/insertions/edit-insertion-modal";
+import type { CycleDictModel } from "../../models/common/dictionaries";
+import { getInsertionFiltersConfig } from "./filter-config.insertion";
+import FiltersForm from "../../components/filters/filters-form";
 
 const initialFilters: InsertionsFilterPaginationModel = {
   farmIds: [],
@@ -283,10 +282,9 @@ const InsertionsPage: React.FC = () => {
       </Box>
 
       <FiltersForm
-        dictionary={dictionary}
+        config={getInsertionFiltersConfig(dictionary, uniqueCycles, filters)}
         filters={filters}
         dispatch={dispatch}
-        uniqueCycles={uniqueCycles}
       />
 
       <Box mt={4} sx={{ width: "100%", overflowX: "auto" }}>

@@ -44,7 +44,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           icon={<FaClone />}
         />
         <SidebarMenuItem to="/sales" title="Sprzedaże" icon={<IoCard />}>
-          <SidebarMenuItem to="/sales/list" title="Lista" icon={<FaList />} />
+          <SidebarMenuItem to="/sales" title="Lista" icon={<FaList />} />
           <SidebarMenuItem
             to="/sales/settings"
             title="Ustawienia pól"
@@ -92,6 +92,11 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             to="/data/hatcheries"
             title="Wylęgarnie"
             icon={<FaWarehouse />}
+          />
+          <SidebarMenuItem
+            to="/data/slaughterhouses"
+            title="Ubojnie"
+            icon={<MdFactory />}
           />
         </SidebarMenuItem>
 

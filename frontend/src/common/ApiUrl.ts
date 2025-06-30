@@ -18,6 +18,10 @@ export default class ApiUrl {
   public static AddHatchery = this.Hatcheries + "/add";
   public static DeleteHatchery = this.Hatcheries + "/delete";
 
+  public static Slaughterhouses = this.BaseUrl + "slaughterhouses";
+  public static AddSlaughterhouse = this.Hatcheries + "/add";
+  public static DeleteSlaughterhouse = this.Hatcheries + "/delete";
+
   public static Insertions = this.BaseUrl + "insertions";
   public static UpdateInsertion = this.Insertions + "/update";
   public static InsertionsDict = this.Insertions + "/dictionary";

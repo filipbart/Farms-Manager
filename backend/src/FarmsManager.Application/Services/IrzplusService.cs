@@ -76,7 +76,7 @@ public class IrzplusService : IIrzplusService
         var dispositionJson = dispositionZzssd.ToJsonStringWithNulls();
 
         using var httpClient = new HttpClient();
-        httpClient.BaseAddress = new Uri(Options.Value.Url);
+        httpClient.BaseAddress = new Uri(Options.Value.Url); //TODO prawdopodobnie zawsze jeden adres dla Sales również
         httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {authData.AccessToken}");
 
         var jsonContent = new StringContent(dispositionJson, Encoding.UTF8, "application/json");

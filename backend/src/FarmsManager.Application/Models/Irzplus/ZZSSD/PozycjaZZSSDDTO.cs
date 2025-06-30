@@ -1,5 +1,4 @@
 ﻿using FarmsManager.Application.Models.Irzplus.Common;
-using FarmsManager.Application.Models.Irzplus.ZZSSD.Enums;
 
 namespace FarmsManager.Application.Models.Irzplus.ZZSSD;
 
