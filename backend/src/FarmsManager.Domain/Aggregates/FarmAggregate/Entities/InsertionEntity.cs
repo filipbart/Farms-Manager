@@ -13,11 +13,11 @@ public class InsertionEntity : Entity
 
     public Guid FarmId { get; init; }
     public Guid CycleId { get; init; }
-    public DateOnly InsertionDate { get; init; }
+    public DateOnly InsertionDate { get; protected internal set; }
     public Guid HenhouseId { get; init; }
     public Guid HatcheryId { get; init; }
-    public int Quantity { get; init; }
-    public decimal BodyWeight { get; init; }
+    public int Quantity { get; protected internal set; }
+    public decimal BodyWeight { get; protected internal set; }
     public Guid InternalGroupId { get; init; }
     public DateTime? DateIrzSentUtc { get; private set; }
     public bool IsSentToIrz { get; private set; }
@@ -60,6 +60,13 @@ public class InsertionEntity : Entity
     {
         IsSentToIrz = true;
         SentToIrzBy = userId;
+    }
+
+    public void UpdateData(DateOnly insertionDate, int quantity, decimal bodyWeight)
+    {
+        InsertionDate = insertionDate;
+        Quantity = quantity;
+        BodyWeight = bodyWeight;
     }
 
     public bool IsAlreadySentToIrz() => DateIrzSentUtc.HasValue || IsSentToIrz;

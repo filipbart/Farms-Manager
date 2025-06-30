@@ -41,6 +41,13 @@ export class InsertionsService {
     );
   }
 
+  public static async updateInsertion(insertionId: string, payload: any) {
+    return await AxiosWrapper.patch(
+      ApiUrl.UpdateInsertion + "/" + insertionId,
+      payload
+    );
+  }
+
   public static async addNewCycle(data: AddCycleData) {
     return await AxiosWrapper.post<LatestCycle>(
       ApiUrl.Insertions + "/add-cycle",

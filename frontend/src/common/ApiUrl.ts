@@ -19,6 +19,7 @@ export default class ApiUrl {
   public static DeleteHatchery = this.Hatcheries + "/delete";
 
   public static Insertions = this.BaseUrl + "insertions";
+  public static UpdateInsertion = this.Insertions + "/update";
   public static InsertionsDict = this.Insertions + "/dictionary";
   public static LatestCycle = "/latest-cycle";
   public static InsertionAvailableHenhouses =

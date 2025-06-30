@@ -5,7 +5,6 @@ import CustomToolbar from "../../components/datagrid/custom-toolbar";
 import NoRowsOverlay from "../../components/datagrid/custom-norows";
 import AddInsertionModal from "../../components/modals/insertions/add-insertion-modal";
 import SetCycleModal from "../../components/modals/insertions/add-cycle-modal";
-//@ts-ignore
 import dayjs from "dayjs";
 
 import {
@@ -24,6 +23,7 @@ import type InsertionListModel from "../../models/insertions/insertions";
 import FiltersForm from "./filter-form";
 import { mapInsertionOrderTypeToField } from "../../common/helpers/insertion-order-type-helper";
 import Loading from "../../components/loading/loading";
+import EditInsertionModal from "../../components/modals/insertions/edit-insertion-modal";
 
 const initialFilters: InsertionsFilterPaginationModel = {
   farmIds: [],
@@ -60,6 +60,9 @@ const InsertionsPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [insertions, setInsertions] = useState<InsertionListModel[]>([]);
   const [totalRows, setTotalRows] = useState(0);
+  const [selectedInsertion, setSelectedInsertion] =
+    useState<InsertionListModel | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const columns: GridColDef[] = [
     { field: "id", headerName: "Id", width: 70 },
@@ -74,14 +77,6 @@ const InsertionsPage: React.FC = () => {
       valueGetter: (params: any) => dayjs(params.value).format("YYYY-MM-DD"),
     },
     { field: "quantity", headerName: "Sztuki wstawione", flex: 1 },
-    {
-      field: "documentNumber",
-      headerName: "Numer dokumentu IRZplus",
-      flex: 1,
-      renderCell: (params) => {
-        return params.value ? params.value : "Brak numeru";
-      },
-    },
     { field: "hatcheryName", headerName: "Wylęgarnia", flex: 1 },
     { field: "bodyWeight", headerName: "Śr. masa ciała", flex: 1 },
     {
@@ -175,6 +170,34 @@ const InsertionsPage: React.FC = () => {
             )}
           </Box>
         );
+      },
+    },
+    {
+      field: "actions",
+      type: "actions",
+      headerName: "Akcje",
+      flex: 1,
+      getActions: (params) => [
+        <Button
+          key="edit"
+          variant="outlined"
+          size="small"
+          onClick={() => {
+            setSelectedInsertion(params.row);
+            setIsEditModalOpen(true);
+          }}
+        >
+          Edytuj
+        </Button>,
+      ],
+    },
+
+    {
+      field: "documentNumber",
+      headerName: "Numer dokumentu IRZplus",
+      flex: 1,
+      renderCell: (params) => {
+        return params.value ? params.value : "Brak numeru";
       },
     },
     { field: "dateCreatedUtc", headerName: "Data utworzenia wpisu", flex: 1 },
@@ -326,6 +349,19 @@ const InsertionsPage: React.FC = () => {
           }}
         />
       </Box>
+      <EditInsertionModal
+        open={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setSelectedInsertion(null);
+        }}
+        onSave={() => {
+          setIsEditModalOpen(false);
+          setSelectedInsertion(null);
+          dispatch({ type: "setMultiple", payload: { page: filters.page } });
+        }}
+        insertion={selectedInsertion}
+      />
 
       <AddInsertionModal
         open={openModal}

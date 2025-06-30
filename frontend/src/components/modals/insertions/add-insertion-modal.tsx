@@ -391,10 +391,10 @@ const AddInsertionModal: React.FC<AddInsertionModalProps> = ({
               color="error"
               sx={{
                 "&.MuiCheckbox-root": {
-                  color: "error.main", // kolor pustego checkboxa
+                  color: "error.main",
                 },
                 "&.Mui-checked": {
-                  color: "error.main", // kolor zaznaczonego checkboxa
+                  color: "error.main",
                 },
               }}
             />

@@ -52,6 +52,20 @@ public class InsertionsController(IMediator mediator) : BaseController
     }
 
     /// <summary>
+    /// Aktualizuje dane wstawienia
+    /// </summary>
+    /// <param name="id"></param>
+    /// <param name="payload"></param>
+    /// <returns></returns>
+    [HttpPatch("update/{id:guid}")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> UpdateInsertin([FromRoute] Guid id, [FromBody] UpdateInsertionCommandDto payload)
+    {
+        return Ok(await mediator.Send(new UpdateInsertionCommand(id, payload)));
+    }
+
+    /// <summary>
     /// Zwraca słowniki filtrów
     /// </summary>
     /// <returns></returns>

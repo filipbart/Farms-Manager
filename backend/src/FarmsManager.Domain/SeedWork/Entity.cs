@@ -19,7 +19,7 @@ public abstract class Entity
         DateCreatedUtc = DateTime.UtcNow;
     }
 
-    public void SetModified(Guid modifierId)
+    public void SetModified(Guid? modifierId = null)
     {
         DateModifiedUtc = DateTime.UtcNow;
         ModifiedBy = modifierId;
