@@ -9,7 +9,7 @@ import {
   MenuItem,
   TextField,
   IconButton,
-  Typography,
+  FormHelperText,
 } from "@mui/material";
 import { FaFloppyDisk, FaPenToSquare, FaXmark } from "react-icons/fa6";
 import { FaTrash } from "react-icons/fa";
@@ -45,7 +45,10 @@ const SaleEntriesTable: React.FC<SaleEntriesTableProps> = ({
   };
 
   return (
-    <Table size="small" sx={{ mt: 2 }}>
+    <Table
+      size="small"
+      sx={{ mt: 2, "& td, & th": { verticalAlign: "top" }, "& td": { pt: 2 } }}
+    >
       <TableHead>
         <TableRow>
           <TableCell>Kurnik</TableCell>
@@ -91,11 +94,12 @@ const SaleEntriesTable: React.FC<SaleEntriesTableProps> = ({
                         </MenuItem>
                       ))}
                     </Select>
-                    {errors?.[index]?.henhouseId && (
-                      <Typography variant="caption" color="error">
-                        {errors[index].henhouseId}
-                      </Typography>
-                    )}
+                    <FormHelperText
+                      error={!!errors?.[index]?.henhouseId}
+                      sx={{ minHeight: 24 }}
+                    >
+                      {errors?.[index]?.henhouseId || "\u00A0"}
+                    </FormHelperText>
                   </>
                 ) : (
                   henhouses.find((h) => h.id === entry.henhouseId)?.name || "—"
@@ -128,11 +132,12 @@ const SaleEntriesTable: React.FC<SaleEntriesTableProps> = ({
                         </MenuItem>
                       ))}
                     </Select>
-                    {errors?.[index]?.slaughterhouseId && (
-                      <Typography variant="caption" color="error">
-                        {errors[index].slaughterhouseId}
-                      </Typography>
-                    )}
+                    <FormHelperText
+                      error={!!errors?.[index]?.slaughterhouseId}
+                      sx={{ minHeight: 24 }}
+                    >
+                      {errors?.[index]?.slaughterhouseId || "\u00A0"}
+                    </FormHelperText>
                   </>
                 ) : (
                   slaughterhouses.find((s) => s.id === entry.slaughterhouseId)
@@ -148,10 +153,10 @@ const SaleEntriesTable: React.FC<SaleEntriesTableProps> = ({
                     onChange={(e) =>
                       handleFieldChange(index, "quantity", e.target.value)
                     }
-                    slotProps={{ htmlInput: { min: 1, step: 1 } }}
+                    inputProps={{ min: 1, step: 1 }}
                     sx={{ minWidth: numberInputWidth, width: numberInputWidth }}
                     error={!!errors?.[index]?.quantity}
-                    helperText={errors?.[index]?.quantity}
+                    helperText={errors?.[index]?.quantity || "\u00A0"}
                     fullWidth
                   />
                 ) : (
@@ -167,16 +172,17 @@ const SaleEntriesTable: React.FC<SaleEntriesTableProps> = ({
                     onChange={(e) =>
                       handleFieldChange(index, "weight", e.target.value)
                     }
-                    slotProps={{ htmlInput: { min: 0, step: 0.01 } }}
+                    inputProps={{ min: 0, step: 0.01 }}
                     sx={{ minWidth: numberInputWidth, width: numberInputWidth }}
                     error={!!errors?.[index]?.weight}
-                    helperText={errors?.[index]?.weight}
+                    helperText={errors?.[index]?.weight || "\u00A0"}
                     fullWidth
                   />
                 ) : (
                   entry.weight || "—"
                 )}
               </TableCell>
+
               <TableCell align="right">
                 {entry.isEditing ? (
                   <TextField
@@ -189,10 +195,10 @@ const SaleEntriesTable: React.FC<SaleEntriesTableProps> = ({
                         e.target.value
                       )
                     }
-                    slotProps={{ htmlInput: { min: 0, step: 1 } }}
+                    inputProps={{ min: 0, step: 1 }}
                     sx={{ minWidth: numberInputWidth }}
                     error={!!errors?.[index]?.confiscatedCount}
-                    helperText={errors?.[index]?.confiscatedCount}
+                    helperText={errors?.[index]?.confiscatedCount || "\u00A0"}
                     fullWidth
                   />
                 ) : (
@@ -212,10 +218,10 @@ const SaleEntriesTable: React.FC<SaleEntriesTableProps> = ({
                         e.target.value
                       )
                     }
-                    slotProps={{ htmlInput: { min: 0, step: 0.01 } }}
+                    inputProps={{ min: 0, step: 0.01 }}
                     sx={{ minWidth: numberInputWidth }}
                     error={!!errors?.[index]?.confiscatedWeight}
-                    helperText={errors?.[index]?.confiscatedWeight}
+                    helperText={errors?.[index]?.confiscatedWeight || "\u00A0"}
                     fullWidth
                   />
                 ) : (
@@ -231,10 +237,10 @@ const SaleEntriesTable: React.FC<SaleEntriesTableProps> = ({
                     onChange={(e) =>
                       handleFieldChange(index, "deadCount", e.target.value)
                     }
-                    slotProps={{ htmlInput: { min: 0, step: 1 } }}
+                    inputProps={{ min: 0, step: 1 }}
                     sx={{ minWidth: numberInputWidth }}
                     error={!!errors?.[index]?.deadCount}
-                    helperText={errors?.[index]?.deadCount}
+                    helperText={errors?.[index]?.deadCount || "\u00A0"}
                     fullWidth
                   />
                 ) : (
@@ -250,10 +256,10 @@ const SaleEntriesTable: React.FC<SaleEntriesTableProps> = ({
                     onChange={(e) =>
                       handleFieldChange(index, "deadWeight", e.target.value)
                     }
-                    slotProps={{ htmlInput: { min: 0, step: 0.01 } }}
+                    inputProps={{ min: 0, step: 0.01 }}
                     sx={{ minWidth: numberInputWidth }}
                     error={!!errors?.[index]?.deadWeight}
-                    helperText={errors?.[index]?.deadWeight}
+                    helperText={errors?.[index]?.deadWeight || "\u00A0"}
                     fullWidth
                   />
                 ) : (
@@ -269,10 +275,10 @@ const SaleEntriesTable: React.FC<SaleEntriesTableProps> = ({
                     onChange={(e) =>
                       handleFieldChange(index, "farmerWeight", e.target.value)
                     }
-                    slotProps={{ htmlInput: { min: 0, step: 0.01 } }}
+                    inputProps={{ min: 0, step: 0.01 }}
                     sx={{ minWidth: numberInputWidth }}
                     error={!!errors?.[index]?.farmerWeight}
-                    helperText={errors?.[index]?.farmerWeight}
+                    helperText={errors?.[index]?.farmerWeight || "\u00A0"}
                     fullWidth
                   />
                 ) : (

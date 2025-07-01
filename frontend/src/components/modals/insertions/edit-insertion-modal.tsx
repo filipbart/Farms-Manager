@@ -16,6 +16,7 @@ import { InsertionsService } from "../../../services/insertions-service";
 import type { Dayjs } from "dayjs";
 import type InsertionListModel from "../../../models/insertions/insertions";
 import dayjs from "dayjs";
+import { MdSave } from "react-icons/md";
 
 interface EditInsertionModalProps {
   open: boolean;
@@ -141,6 +142,7 @@ const EditInsertionModal: React.FC<EditInsertionModalProps> = ({
           loading={loading}
           onClick={handleSave}
           variant="contained"
+          startIcon={<MdSave />}
         >
           Zapisz
         </LoadingButton>

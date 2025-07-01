@@ -16,6 +16,7 @@ import {
   HatcheriesService,
   type AddHatcheryFormData,
 } from "../../../services/hatcheries-service";
+import { MdSave } from "react-icons/md";
 
 interface AddHatcheryModalProps {
   open: boolean;
@@ -131,6 +132,7 @@ const AddHatcheryModal: React.FC<AddHatcheryModalProps> = ({
             type="submit"
             variant="contained"
             color="primary"
+            startIcon={<MdSave />}
             disabled={loading}
             loading={loading}
           >

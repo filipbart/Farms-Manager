@@ -30,6 +30,7 @@ import type {
   InsertionEntry,
   InsertionEntryErrors,
 } from "../../../models/insertions/insertion-entry";
+import { MdSave } from "react-icons/md";
 
 interface AddInsertionModalProps {
   open: boolean;
@@ -404,6 +405,7 @@ const AddInsertionModal: React.FC<AddInsertionModalProps> = ({
           onClick={handleSave}
           variant="contained"
           color="primary"
+          startIcon={<MdSave />}
         >
           Zapisz
         </LoadingButton>

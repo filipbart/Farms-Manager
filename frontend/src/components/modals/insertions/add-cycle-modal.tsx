@@ -20,6 +20,7 @@ import {
 import { toast } from "react-toastify";
 import LoadingButton from "../../common/loading-button";
 import LoadingTextField from "../../common/loading-textfield";
+import { MdSave } from "react-icons/md";
 
 interface SetCycleModalProps {
   open: boolean;
@@ -153,6 +154,7 @@ const SetCycleModal: React.FC<SetCycleModalProps> = ({ open, onClose }) => {
           color="primary"
           loading={loadingNewCycle}
           disabled={loadingNewCycle}
+          startIcon={<MdSave />}
         >
           Zapisz
         </LoadingButton>

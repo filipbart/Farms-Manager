@@ -12,7 +12,7 @@ import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import { SettingsService } from "../../../services/settings-service";
 import { toast } from "react-toastify";
 import type UserDetails from "../../../models/user/user-details";
-import { MdVisibility, MdVisibilityOff } from "react-icons/md";
+import { MdSave, MdVisibility, MdVisibilityOff } from "react-icons/md";
 
 interface IrzPlusSettingsTabProps {
   userDetails?: UserDetails;
@@ -118,6 +118,7 @@ const IrzPlusSettingsTab: React.FC<IrzPlusSettingsTabProps> = ({
           margin="normal"
         />
         <LoadingButton
+          startIcon={<MdSave />}
           variant="contained"
           color="primary"
           type="submit"

@@ -16,6 +16,7 @@ import {
   SlaughterhousesService,
   type AddSlaughterhouseFormData,
 } from "../../../services/slaughterhouses-service";
+import { MdSave } from "react-icons/md";
 
 interface AddSlaughterhouseModalProps {
   open: boolean;
@@ -116,6 +117,7 @@ const AddSlaughterhouseModal: React.FC<AddSlaughterhouseModalProps> = ({
             Anuluj
           </Button>
           <LoadingButton
+            startIcon={<MdSave />}
             type="submit"
             variant="contained"
             color="primary"

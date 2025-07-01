@@ -16,6 +16,7 @@ import {
 import { toast } from "react-toastify";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import LoadingButton from "../../common/loading-button";
+import { MdSave } from "react-icons/md";
 
 interface AddHenhouseModalProps {
   farmId: string;
@@ -116,6 +117,7 @@ const AddHenhouseModal: React.FC<AddHenhouseModalProps> = ({
             Anuluj
           </Button>
           <LoadingButton
+            startIcon={<MdSave />}
             type="submit"
             variant="contained"
             color="primary"

@@ -17,7 +17,7 @@ export function useSlaughterhouses() {
         () => SlaughterhousesService.getAllSlaughterhouses(),
         (data) => setSlaughterhouses(data.responseData?.items ?? []),
         undefined,
-        "Nie udało się pobrać listy wylęgarni"
+        "Nie udało się pobrać listy ubojni"
       );
     } finally {
       setLoadingSlaughterhouses(false);

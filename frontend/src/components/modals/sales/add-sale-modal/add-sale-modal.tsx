@@ -27,6 +27,10 @@ import FinancialSection from "./financial-section";
 import SaleEntriesTable from "./sale-entries-table";
 import { validateForm } from "./validation/validate-form";
 import { useSlaughterhouses } from "../../../../hooks/useSlaughterhouses";
+import { MdSave } from "react-icons/md";
+import { useSaleFieldsExtra } from "../../../../hooks/sales/useSaleFieldsExtra";
+import { SalesService } from "../../../../services/sales-service";
+import { toast } from "react-toastify";
 
 interface AddSaleModalProps {
   open: boolean;
@@ -55,6 +59,7 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
   const { farms, loadingFarms, fetchFarms } = useFarms();
   const { slaughterhouses, loadingSlaughterhouses, fetchSlaughterhouses } =
     useSlaughterhouses();
+  const { saleFieldsExtra, fetchSaleFieldsExtra } = useSaleFieldsExtra();
   const [henhouses, setHenhouses] = useState<HouseRowModel[]>([]);
   const [loadingLatestCycle, setLoadingLatestCycle] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -65,6 +70,7 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
   useEffect(() => {
     fetchFarms();
     fetchSlaughterhouses();
+    fetchSaleFieldsExtra();
   }, []);
 
   useEffect(() => {
@@ -122,61 +128,73 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
     if (Object.keys(validationErrors).length > 0) return;
 
     setLoading(true);
+    console.log(form);
 
-    // await handleApiResponse(
-    //   () =>
-    //     SalesService.addNewSale({
-    //       farmId: form.farmId,
-    //       cycleId: form.identifierId,
-    //       saleDate: form.saleDate!.format("YYYY-MM-DD"),
-    //       entries: form.entries.map(
-    //         ({ henhouseId, hatcheryId, quantity, bodyWeight }) => ({
-    //           henhouseId,
-    //           hatcheryId,
-    //           quantity: Number(quantity),
-    //           bodyWeight: Number(bodyWeight),
-    //         })
-    //       ),
-    //     }),
-    //   async (data) => {
-    //     if (!data || !data.responseData || !data.responseData.internalGroupId) {
-    //       toast.error(
-    //         "Nie udało się dodać wstawienia, brak ID grupy wewnętrznej"
-    //       );
-    //     }
+    await handleApiResponse(
+      () =>
+        SalesService.addNewSale({
+          saleType: form.saleType!,
+          farmId: form.farmId,
+          cycleId: form.identifierId,
+          saleDate: form.saleDate!.format("YYYY-MM-DD"),
+          basePrice: Number(form.basePrice),
+          priceWithExtras: Number(form.priceWithExtras),
+          comment: form.comment || undefined,
+          otherExtras: form.otherExtras.map((extra) => ({
+            name: extra.name,
+            value: extra.value.toString(),
+          })),
+          entries: form.entries.map((entry) => ({
+            henhouseId: entry.henhouseId,
+            slaughterhouseId: entry.slaughterhouseId,
+            quantity: Number(entry.quantity),
+            weight: Number(entry.weight),
+            confiscatedCount: Number(entry.confiscatedCount),
+            confiscatedWeight: Number(entry.confiscatedWeight),
+            deadCount: Number(entry.deadCount),
+            deadWeight: Number(entry.deadWeight),
+            farmerWeight: Number(entry.farmerWeight),
+          })),
+        }),
+      async (data) => {
+        if (!data || !data.responseData || !data.responseData.internalGroupId) {
+          toast.error(
+            "Nie udało się dodać sprzedaży, brak ID grupy wewnętrznej"
+          );
+        }
 
-    //     if (sendToIrz) {
-    //       await handleApiResponse(
-    //         () =>
-    //           SalesService.sendToIrzPlus({
-    //             internalGroupId: data.responseData!.internalGroupId,
-    //           }),
-    //         () => {
-    //           toast.success("Wstawienie wysłane do IRZplus");
-    //         },
-    //         undefined,
-    //         "Nie udało się wysłać wstawienia do IRZplus"
-    //       );
-    //     }
+        if (sendToIrz) {
+          // await handleApiResponse(
+          //   () =>
+          //     SalesService.sendToIrzPlus({
+          //       internalGroupId: data.responseData!.internalGroupId,
+          //     }),
+          //   () => {
+          //     toast.success("Wstawienie wysłane do IRZplus");
+          //   },
+          //   undefined,
+          //   "Nie udało się wysłać wstawienia do IRZplus"
+          // );
+        }
 
-    //     toast.success("Dodano wstawienie");
-    //     dispatch({ type: "RESET" });
-    //     setErrors({});
-    //     onSave();
-    //     onClose();
-    //   },
-    //   undefined,
-    //   "Nie udało się dodać wstawienia"
-    // );
+        toast.success("Dodano sprzedaż");
+        dispatch({ type: "RESET" });
+        setErrors({});
+        onSave();
+        onClose();
+      },
+      undefined,
+      "Nie udało się dodać sprzedaży"
+    );
 
     setLoading(false);
   };
 
   const handleClose = () => {
+    onClose();
     dispatch({ type: "RESET" });
     setErrors({});
     setHenhouses([]);
-    onClose();
   };
 
   return (
@@ -261,7 +279,13 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
             }}
           />
 
-          <FinancialSection form={form} dispatch={dispatch} errors={errors} />
+          <FinancialSection
+            form={form}
+            saleFieldsExtra={saleFieldsExtra}
+            dispatch={dispatch}
+            errors={errors}
+            setErrors={setErrors}
+          />
 
           {errors.entriesGeneral && (
             <Box sx={{ mb: 1 }}>
@@ -319,6 +343,7 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
           Anuluj
         </Button>
         <LoadingButton
+          startIcon={<MdSave />}
           loading={loading}
           loadingSize={20}
           onClick={handleSave}

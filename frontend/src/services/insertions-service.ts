@@ -25,7 +25,7 @@ export interface AddInsertionData {
   }[];
 }
 
-export interface AddNewInsertionReponse {
+export interface AddNewInsertionResponse {
   internalGroupId: string;
 }
 
@@ -35,7 +35,7 @@ export interface AvailableHenhousesResponse {
 
 export class InsertionsService {
   public static async addNewInsertion(data: AddInsertionData) {
-    return await AxiosWrapper.post<AddNewInsertionReponse>(
+    return await AxiosWrapper.post<AddNewInsertionResponse>(
       ApiUrl.Insertions + "/add",
       data
     );

@@ -13,6 +13,7 @@ import HatcheriesPage from "../pages/data/hatcheries";
 import SettingsPageTab from "../pages/settings";
 import SalesPage from "../pages/sales";
 import SlaughterhousesPage from "../pages/data/slaughterhouse";
+import SaleFieldsSettingsPage from "../pages/sales/fields-settings";
 
 const DefaultRouter: React.FC = () => {
   const { getRoute } = useRouter();
@@ -47,6 +48,10 @@ const DefaultRouter: React.FC = () => {
         <Route
           path={getRoute(RouteName.Settings)}
           element={<SettingsPageTab />}
+        />
+        <Route
+          path={getRoute(RouteName.SalesFieldsSettings)}
+          element={<SaleFieldsSettingsPage />}
         />
       </Route>
     </Routes>

@@ -36,4 +36,8 @@ export default class ApiUrl {
 
   public static Sales = this.BaseUrl + "sales";
   public static SalesDict = this.Sales + "/dictionary";
+
+  public static SalesSettings = this.BaseUrl + "sales-settings";
+  public static AddSaleFieldExtra = this.SalesSettings + "/add";
+  public static DeleteSaleFieldExtra = this.SalesSettings + "/delete";
 }

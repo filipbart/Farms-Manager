@@ -62,7 +62,10 @@ const InsertionEntriesTable: React.FC<InsertionEntriesTableProps> = ({
   };
 
   return (
-    <Table size="small" sx={{ mt: 2 }}>
+    <Table
+      size="small"
+      sx={{ mt: 2, "& td, & th": { verticalAlign: "top" }, "& td": { pt: 2 } }}
+    >
       <TableHead>
         <TableRow>
           <TableCell>Kurnik</TableCell>
