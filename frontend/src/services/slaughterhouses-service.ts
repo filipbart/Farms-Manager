@@ -1,6 +1,6 @@
 import ApiUrl from "../common/ApiUrl";
 import type { PaginateModel } from "../common/interfaces/paginate";
-import type { SlaughtherhouseRowModel } from "../models/slaughthouses/slaughterhouse-row-model";
+import type { SlaughterhouseRowModel } from "../models/slaughterhouses/slaughterhouse-row-model";
 import AxiosWrapper from "../utils/axios/wrapper";
 
 export interface AddSlaughterhouseFormData {
@@ -13,7 +13,7 @@ export interface AddSlaughterhouseFormData {
 
 export class SlaughterhousesService {
   public static async getAllSlaughterhouses() {
-    return await AxiosWrapper.get<PaginateModel<SlaughtherhouseRowModel>>(
+    return await AxiosWrapper.get<PaginateModel<SlaughterhouseRowModel>>(
       ApiUrl.Slaughterhouses
     );
   }

@@ -69,11 +69,11 @@ public class InsertionsController(IMediator mediator) : BaseController
     /// </summary>
     /// <returns></returns>
     [HttpGet("dictionary")]
-    [ProducesResponseType(typeof(BaseResponse<GetDictionaryQueryResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(BaseResponse<GetInsertionDictionaryQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetDictionaries()
     {
-        return Ok(await mediator.Send(new GetDictionaryQuery()));
+        return Ok(await mediator.Send(new GetInsertionDictionaryQuery()));
     }
 
     /// <summary>
@@ -82,7 +82,7 @@ public class InsertionsController(IMediator mediator) : BaseController
     /// <param name="farmId"></param>
     /// <returns></returns>
     [HttpGet("available-henhouses")]
-    [ProducesResponseType(typeof(BaseResponse<GetDictionaryQueryResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(BaseResponse<GetInsertionDictionaryQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetAvailableHenhouses([FromQuery] Guid farmId)
     {

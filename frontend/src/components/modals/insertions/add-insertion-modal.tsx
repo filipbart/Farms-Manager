@@ -26,26 +26,15 @@ import LoadingButton from "../../common/loading-button";
 import type { Dayjs } from "dayjs";
 import type { HouseRowModel } from "../../../models/farms/house-row-model";
 import InsertionEntriesTable from "./insertions-entry-table";
+import type {
+  InsertionEntry,
+  InsertionEntryErrors,
+} from "../../../models/insertions/insertion-entry";
 
 interface AddInsertionModalProps {
   open: boolean;
   onClose: () => void;
   onSave: () => void;
-}
-
-interface InsertionEntry {
-  henhouseId: string;
-  hatcheryId: string;
-  quantity: string;
-  bodyWeight: string;
-  isEditing?: boolean;
-}
-
-interface InsertionEntryErrors {
-  henhouseId?: string;
-  hatcheryId?: string;
-  quantity?: string;
-  bodyWeight?: string;
 }
 
 interface InsertionFormState {

@@ -3,19 +3,19 @@ import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { useEffect, useMemo, useState } from "react";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import type { PaginateModel } from "../../../common/interfaces/paginate";
-import type { SlaughtherhouseRowModel } from "../../../models/slaughthouses/slaughterhouse-row-model";
+import type { SlaughterhouseRowModel } from "../../../models/slaughterhouses/slaughterhouse-row-model";
 import { SlaughterhousesService } from "../../../services/slaughterhouses-service";
 import AddSlaughterhouseModal from "../../../components/modals/slaughterhouses/add-slaugtherhouse-modal";
 
 const SlaughterhousesPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [Slaughterhouses, setSlaughterhouses] = useState<
-    SlaughtherhouseRowModel[]
+    SlaughterhouseRowModel[]
   >([]);
 
   const fetchSlaughterhouses = async () => {
     setLoading(true);
-    await handleApiResponse<PaginateModel<SlaughtherhouseRowModel>>(
+    await handleApiResponse<PaginateModel<SlaughterhouseRowModel>>(
       () => SlaughterhousesService.getAllSlaughterhouses(),
       (data) => {
         setSlaughterhouses(data.responseData?.items ?? []);

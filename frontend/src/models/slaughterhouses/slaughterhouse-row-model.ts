@@ -1,4 +1,4 @@
-export interface SlaughtherhouseRowModel {
+export interface SlaughterhouseRowModel {
   id: string;
   name: string;
   producerNumber: string;

@@ -1,4 +1,5 @@
-﻿using FarmsManager.Application.Common;
+﻿using Ardalis.Specification;
+using FarmsManager.Application.Common;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
@@ -38,5 +39,6 @@ public sealed class GetAllFarmsSpec : BaseSpecification<FarmEntity>
     public GetAllFarmsSpec()
     {
         EnsureExists();
+        Query.Include(t => t.Henhouses);
     }
 }

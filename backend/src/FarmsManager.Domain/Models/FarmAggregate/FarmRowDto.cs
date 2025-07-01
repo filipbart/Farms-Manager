@@ -9,4 +9,5 @@ public record FarmRowDto
     public int HenHousesCount { get; init; }
     public string ProducerNumber { get; init; }
     public DateTime DateCreatedUtc { get; init; }
+    public List<HenhouseRowDto> Henhouses { get; init; }
 }

@@ -17,6 +17,7 @@ import {
 import { InsertionsService } from "../../services/insertions-service";
 import { handleApiResponse } from "../../utils/axios/handle-api-response";
 import { getSaleFiltersConfig } from "./filter-config.sales";
+import AddSaleModal from "../../components/modals/sales/add-sale-modal/add-sale-modal";
 
 const initialFilters: SalesFilterPaginationModel = {
   farmIds: [],
@@ -207,12 +208,12 @@ const SalesPage: React.FC = () => {
   useEffect(() => {
     const fetchDictionaries = async () => {
       try {
-        await handleApiResponse(
-          () => InsertionsService.getDictionaries(), //todo
-          (data) => setDictionary(data.responseData),
-          undefined,
-          "Błąd podczas pobierania słowników filtrów"
-        );
+        // await handleApiResponse(
+        //   () => InsertionsService.getDictionaries(), //todo
+        //   (data) => setDictionary(data.responseData),
+        //   undefined,
+        //   "Błąd podczas pobierania słowników filtrów"
+        // );
       } catch {
         toast.error("Błąd podczas pobierania słowników filtrów");
       }
@@ -341,16 +342,16 @@ const SalesPage: React.FC = () => {
           dispatch({ type: "setMultiple", payload: { page: filters.page } });
         }}
         insertion={selectedInsertion}
-      />
+      /> */}
 
-      <AddInsertionModal
+      <AddSaleModal
         open={openModal}
         onClose={() => setOpenModal(false)}
         onSave={() => {
           setOpenModal(false);
           dispatch({ type: "setMultiple", payload: { page: 0 } });
         }}
-      /> */}
+      />
     </Box>
   );
 };

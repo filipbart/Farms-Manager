@@ -1,11 +1,11 @@
 import type {
   FarmDictModel,
-  HatcheryDictModel,
   CycleDictModel,
+  DictModel,
 } from "../common/dictionaries";
 
 export interface InsertionDictionary {
   farms: FarmDictModel[];
-  hatcheries: HatcheryDictModel[];
+  hatcheries: DictModel[];
   cycles: CycleDictModel[];
 }

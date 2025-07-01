@@ -19,8 +19,8 @@ export default class ApiUrl {
   public static DeleteHatchery = this.Hatcheries + "/delete";
 
   public static Slaughterhouses = this.BaseUrl + "slaughterhouses";
-  public static AddSlaughterhouse = this.Hatcheries + "/add";
-  public static DeleteSlaughterhouse = this.Hatcheries + "/delete";
+  public static AddSlaughterhouse = this.Slaughterhouses + "/add";
+  public static DeleteSlaughterhouse = this.Slaughterhouses + "/delete";
 
   public static Insertions = this.BaseUrl + "insertions";
   public static UpdateInsertion = this.Insertions + "/update";
@@ -33,4 +33,7 @@ export default class ApiUrl {
   public static Settings = this.BaseUrl + "settings";
   public static IrzPlusCredentials =
     this.Settings + "/save-irzplus-credentials";
+
+  public static Sales = this.BaseUrl + "sales";
+  public static SalesDict = this.Sales + "/dictionary";
 }

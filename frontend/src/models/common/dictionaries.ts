@@ -1,15 +1,8 @@
-export interface FarmDictModel {
-  id: string;
-  name: string;
-  henhouses: HenhouseDictModel[];
+export interface FarmDictModel extends DictModel {
+  henhouses: DictModel[];
 }
 
-export interface HenhouseDictModel {
-  id: string;
-  name: string;
-}
-
-export interface HatcheryDictModel {
+export interface DictModel {
   id: string;
   name: string;
 }

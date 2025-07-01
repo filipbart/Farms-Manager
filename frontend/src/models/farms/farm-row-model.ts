@@ -1,3 +1,5 @@
+import type { HouseRowModel } from "./house-row-model";
+
 export default interface FarmRowModel {
   id: string;
   name: string;
@@ -6,4 +8,5 @@ export default interface FarmRowModel {
   address: string;
   henHousesCount: number;
   dateCreatedUtc: Date;
+  henhouses: HouseRowModel[];
 }

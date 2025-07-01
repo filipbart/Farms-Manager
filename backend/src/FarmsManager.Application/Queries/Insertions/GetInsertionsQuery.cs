@@ -1,5 +1,6 @@
 ﻿using FarmsManager.Application.Common;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Models;
 using FarmsManager.Application.Queries.Insertions.Dictionary;
 using MediatR;
 

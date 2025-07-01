@@ -1,6 +1,11 @@
-import type { FarmDictModel, CycleDictModel } from "../common/dictionaries";
+import type {
+  FarmDictModel,
+  DictModel,
+  CycleDictModel,
+} from "../common/dictionaries";
 
 export interface SalesDictionary {
   farms: FarmDictModel[];
+  slaughterhouses: DictModel[];
   cycles: CycleDictModel[];
 }

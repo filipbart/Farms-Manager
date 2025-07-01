@@ -35,6 +35,17 @@ export const getSaleFiltersConfig = (
     disabled: !dictionary || filters.farmIds.length === 0,
   },
   {
+    key: "slaughterhouseIds",
+    label: "Ubojnia",
+    type: "multiSelect",
+    options:
+      dictionary?.slaughterhouses?.map((slaughterhouse) => ({
+        value: slaughterhouse.id,
+        label: slaughterhouse.name,
+      })) || [],
+    disabled: !dictionary,
+  },
+  {
     key: "cycles",
     label: "Identyfikator (cykl)",
     type: "multiSelect",

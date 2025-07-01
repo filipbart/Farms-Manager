@@ -3,7 +3,7 @@ export default interface SalesListModel {
   cycleText: string;
   farmName: string;
   henhouseName: string;
-  type: string;
+  type: SaleType;
   typeDesc: string;
   saleDate: Date;
   //todo uzupełnić
@@ -14,3 +14,13 @@ export default interface SalesListModel {
   isSentToIrz: boolean;
   documentNumber?: string;
 }
+
+export enum SaleType {
+  PartSale = "PartSale",
+  TotalSale = "TotalSale",
+}
+
+export const SaleTypeLabels: Record<SaleType, string> = {
+  [SaleType.PartSale]: "Ubiórka",
+  [SaleType.TotalSale]: "Całkowita",
+};
