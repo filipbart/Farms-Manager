@@ -6,11 +6,11 @@ import {
   DialogActions,
   Button,
   MenuItem,
-  Box,
   Typography,
   Checkbox,
   FormControlLabel,
   TextField,
+  Grid,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { useFarms } from "../../../../hooks/useFarms";
@@ -23,14 +23,11 @@ import type { SaleEntryErrors } from "../../../../models/sales/sales-entry";
 import { SaleType, SaleTypeLabels } from "../../../../models/sales/sales";
 import { formReducer } from "./sale-form-reducer";
 import type { SaleFormErrors, SaleFormState } from "./sale-form-types";
-import FinancialSection from "./financial-section";
-import SaleEntriesTable from "./sale-entries-table";
 import { validateForm } from "./validation/validate-form";
 import { useSlaughterhouses } from "../../../../hooks/useSlaughterhouses";
 import { MdSave } from "react-icons/md";
 import { useSaleFieldsExtra } from "../../../../hooks/sales/useSaleFieldsExtra";
-import { SalesService } from "../../../../services/sales-service";
-import { toast } from "react-toastify";
+import SaleEntriesSection from "./sale-entries";
 
 interface AddSaleModalProps {
   open: boolean;
@@ -41,14 +38,11 @@ interface AddSaleModalProps {
 const initialState: SaleFormState = {
   saleType: undefined,
   farmId: "",
+  slaughterhouseId: "",
   identifierId: "",
   identifierDisplay: "",
   saleDate: null,
   entries: [],
-  basePrice: "",
-  priceWithExtras: "",
-  comment: "",
-  otherExtras: [],
 };
 
 const AddSaleModal: React.FC<AddSaleModalProps> = ({
@@ -130,62 +124,62 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
     setLoading(true);
     console.log(form);
 
-    await handleApiResponse(
-      () =>
-        SalesService.addNewSale({
-          saleType: form.saleType!,
-          farmId: form.farmId,
-          cycleId: form.identifierId,
-          saleDate: form.saleDate!.format("YYYY-MM-DD"),
-          basePrice: Number(form.basePrice),
-          priceWithExtras: Number(form.priceWithExtras),
-          comment: form.comment || undefined,
-          otherExtras: form.otherExtras.map((extra) => ({
-            name: extra.name,
-            value: extra.value.toString(),
-          })),
-          entries: form.entries.map((entry) => ({
-            henhouseId: entry.henhouseId,
-            slaughterhouseId: entry.slaughterhouseId,
-            quantity: Number(entry.quantity),
-            weight: Number(entry.weight),
-            confiscatedCount: Number(entry.confiscatedCount),
-            confiscatedWeight: Number(entry.confiscatedWeight),
-            deadCount: Number(entry.deadCount),
-            deadWeight: Number(entry.deadWeight),
-            farmerWeight: Number(entry.farmerWeight),
-          })),
-        }),
-      async (data) => {
-        if (!data || !data.responseData || !data.responseData.internalGroupId) {
-          toast.error(
-            "Nie udało się dodać sprzedaży, brak ID grupy wewnętrznej"
-          );
-        }
+    // await handleApiResponse(
+    //   () =>
+    //     SalesService.addNewSale({
+    //       saleType: form.saleType!,
+    //       farmId: form.farmId,
+    //       cycleId: form.identifierId,
+    //       saleDate: form.saleDate!.format("YYYY-MM-DD"),
+    //       basePrice: Number(form.basePrice),
+    //       priceWithExtras: Number(form.priceWithExtras),
+    //       comment: form.comment || undefined,
+    //       otherExtras: form.otherExtras.map((extra) => ({
+    //         name: extra.name,
+    //         value: extra.value.toString(),
+    //       })),
+    //       entries: form.entries.map((entry) => ({
+    //         henhouseId: entry.henhouseId,
+    //         slaughterhouseId: entry.slaughterhouseId,
+    //         quantity: Number(entry.quantity),
+    //         weight: Number(entry.weight),
+    //         confiscatedCount: Number(entry.confiscatedCount),
+    //         confiscatedWeight: Number(entry.confiscatedWeight),
+    //         deadCount: Number(entry.deadCount),
+    //         deadWeight: Number(entry.deadWeight),
+    //         farmerWeight: Number(entry.farmerWeight),
+    //       })),
+    //     }),
+    //   async (data) => {
+    //     if (!data || !data.responseData || !data.responseData.internalGroupId) {
+    //       toast.error(
+    //         "Nie udało się dodać sprzedaży, brak ID grupy wewnętrznej"
+    //       );
+    //     }
 
-        if (sendToIrz) {
-          // await handleApiResponse(
-          //   () =>
-          //     SalesService.sendToIrzPlus({
-          //       internalGroupId: data.responseData!.internalGroupId,
-          //     }),
-          //   () => {
-          //     toast.success("Wstawienie wysłane do IRZplus");
-          //   },
-          //   undefined,
-          //   "Nie udało się wysłać wstawienia do IRZplus"
-          // );
-        }
+    //     if (sendToIrz) {
+    //       // await handleApiResponse(
+    //       //   () =>
+    //       //     SalesService.sendToIrzPlus({
+    //       //       internalGroupId: data.responseData!.internalGroupId,
+    //       //     }),
+    //       //   () => {
+    //       //     toast.success("Wstawienie wysłane do IRZplus");
+    //       //   },
+    //       //   undefined,
+    //       //   "Nie udało się wysłać wstawienia do IRZplus"
+    //       // );
+    //     }
 
-        toast.success("Dodano sprzedaż");
-        dispatch({ type: "RESET" });
-        setErrors({});
-        onSave();
-        onClose();
-      },
-      undefined,
-      "Nie udało się dodać sprzedaży"
-    );
+    //     toast.success("Dodano sprzedaż");
+    //     dispatch({ type: "RESET" });
+    //     setErrors({});
+    //     onSave();
+    //     onClose();
+    //   },
+    //   undefined,
+    //   "Nie udało się dodać sprzedaży"
+    // );
 
     setLoading(false);
   };
@@ -210,111 +204,137 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
     >
       <DialogTitle>Nowa sprzedaż</DialogTitle>
       <DialogContent>
-        <Box display="flex" flexDirection="column" gap={2} mt={1}>
-          <TextField
-            select
-            label="Typ sprzedaży"
-            value={form.saleType}
-            onChange={(e) => {
-              dispatch({
-                type: "SET_FIELD",
-                name: "saleType",
-                value: e.target.value,
-              });
-              setErrors((prev) => ({ ...prev, saleType: undefined }));
-            }}
-            error={!!errors.saleType}
-            helperText={errors.saleType}
-            fullWidth
-          >
-            {Object.values(SaleType).map((value) => (
-              <MenuItem key={value} value={value}>
-                {SaleTypeLabels[value]}
-              </MenuItem>
-            ))}
-          </TextField>
+        <Grid container spacing={2} mt={1}>
+          <Grid size={{ xs: 12, sm: 4 }}>
+            <TextField
+              select
+              fullWidth
+              label="Typ sprzedaży"
+              value={form.saleType}
+              onChange={(e) => {
+                dispatch({
+                  type: "SET_FIELD",
+                  name: "saleType",
+                  value: e.target.value,
+                });
+                setErrors((prev) => ({ ...prev, saleType: undefined }));
+              }}
+              error={!!errors.saleType}
+              helperText={errors.saleType}
+            >
+              {Object.values(SaleType).map((value) => (
+                <MenuItem key={value} value={value}>
+                  {SaleTypeLabels[value]}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Grid>
 
-          <LoadingTextField
-            loading={loadingFarms}
-            select
-            label="Ferma"
-            value={form.farmId}
-            onChange={(e) => handleFarmChange(e.target.value)}
-            error={!!errors.farmId}
-            helperText={errors.farmId}
-            fullWidth
-          >
-            {farms.map((farm) => (
-              <MenuItem key={farm.id} value={farm.id}>
-                {farm.name}
-              </MenuItem>
-            ))}
-          </LoadingTextField>
+          <Grid size={{ xs: 12, sm: 4 }}>
+            <LoadingTextField
+              loading={loadingFarms}
+              select
+              fullWidth
+              label="Ferma"
+              value={form.farmId}
+              onChange={(e) => handleFarmChange(e.target.value)}
+              error={!!errors.farmId}
+              helperText={errors.farmId}
+            >
+              {farms.map((farm) => (
+                <MenuItem key={farm.id} value={farm.id}>
+                  {farm.name}
+                </MenuItem>
+              ))}
+            </LoadingTextField>
+          </Grid>
 
-          <LoadingTextField
-            loading={loadingLatestCycle}
-            label="Identyfikator"
-            value={form.identifierDisplay}
-            slotProps={{ input: { readOnly: true } }}
-            error={!!errors.identifierId}
-            helperText={errors.identifierId}
-            fullWidth
-          />
+          <Grid size={{ xs: 12, sm: 4 }}>
+            <LoadingTextField
+              loading={loadingLatestCycle}
+              fullWidth
+              label="Identyfikator"
+              value={form.identifierDisplay}
+              slotProps={{ input: { readOnly: true } }}
+              error={!!errors.identifierId}
+              helperText={errors.identifierId}
+            />
+          </Grid>
 
-          <DatePicker
-            label="Data sprzedaży"
-            value={form.saleDate}
-            onChange={(value) => {
-              dispatch({ type: "SET_FIELD", name: "saleDate", value });
-              setErrors((prev) => ({ ...prev, saleDate: undefined }));
-            }}
-            disableFuture
-            format="DD.MM.YYYY"
-            slotProps={{
-              textField: {
-                error: !!errors.saleDate,
-                helperText: errors.saleDate,
-                fullWidth: true,
-              },
-            }}
-          />
+          <Grid size={{ xs: 12, sm: 4 }}>
+            <LoadingTextField
+              loading={loadingSlaughterhouses}
+              select
+              fullWidth
+              label="Ubojnia"
+              value={form.slaughterhouseId}
+              onChange={(e) => {
+                dispatch({
+                  type: "SET_FIELD",
+                  name: "slaughterhouseId",
+                  value: e.target.value,
+                });
+                setErrors((prev) => ({ ...prev, slaughterhouseId: undefined }));
+              }}
+              error={!!errors.slaughterhouseId}
+              helperText={errors.slaughterhouseId}
+            >
+              {slaughterhouses.map((slaughterhouse) => (
+                <MenuItem key={slaughterhouse.id} value={slaughterhouse.id}>
+                  {slaughterhouse.name}
+                </MenuItem>
+              ))}
+            </LoadingTextField>
+          </Grid>
 
-          <FinancialSection
-            form={form}
-            saleFieldsExtra={saleFieldsExtra}
-            dispatch={dispatch}
-            errors={errors}
-            setErrors={setErrors}
-          />
+          <Grid size={{ xs: 12, sm: 4 }}>
+            <DatePicker
+              label="Data sprzedaży"
+              value={form.saleDate}
+              onChange={(value) => {
+                dispatch({ type: "SET_FIELD", name: "saleDate", value });
+                setErrors((prev) => ({ ...prev, saleDate: undefined }));
+              }}
+              disableFuture
+              format="DD.MM.YYYY"
+              slotProps={{
+                textField: {
+                  error: !!errors.saleDate,
+                  helperText: errors.saleDate,
+                  fullWidth: true,
+                },
+              }}
+            />
+          </Grid>
+          <Grid size={20}>
+            <SaleEntriesSection
+              form={form}
+              dispatch={dispatch}
+              entries={form.entries}
+              henhouses={henhouses}
+              saleFieldsExtra={saleFieldsExtra}
+              setErrors={setErrors}
+              errors={errors.entries}
+              setEntryErrors={setEntryErrors}
+              farmId={form.farmId}
+            />
+          </Grid>
 
-          {errors.entriesGeneral && (
-            <Box sx={{ mb: 1 }}>
-              <Typography color="error">{errors.entriesGeneral}</Typography>
-            </Box>
-          )}
-
-          <SaleEntriesTable
-            entries={form.entries}
-            henhouses={henhouses}
-            slaughterhouses={slaughterhouses}
-            errors={errors.entries}
-            dispatch={dispatch}
-            setEntryErrors={setEntryErrors}
-            loadingSlaughterhouses={loadingSlaughterhouses}
-            farmId={form.farmId}
-          />
-
-          <Button
-            variant="outlined"
-            onClick={() => {
-              dispatch({ type: "ADD_ENTRY" });
-              setErrors((prev) => ({ ...prev, entriesGeneral: undefined }));
-            }}
-          >
-            Dodaj pozycję
-          </Button>
-        </Box>
+          <Grid size={20}>
+            <Button
+              fullWidth
+              variant="outlined"
+              onClick={() => {
+                dispatch({ type: "ADD_ENTRY" });
+                setErrors((prev) => ({ ...prev, entriesGeneral: undefined }));
+              }}
+            >
+              Dodaj pozycję
+            </Button>
+          </Grid>
+        </Grid>
       </DialogContent>
+
       <DialogActions>
         <FormControlLabel
           control={

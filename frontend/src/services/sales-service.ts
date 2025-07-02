@@ -8,9 +8,9 @@ export interface AddSaleData {
   farmId: string;
   cycleId: string;
   saleDate: string;
+  slaughterhouseId: string;
   entries: {
     henhouseId: string;
-    slaughterhouseId: string;
     quantity: number;
     weight: number;
     confiscatedCount: number;
@@ -18,13 +18,13 @@ export interface AddSaleData {
     deadCount: number;
     deadWeight: number;
     farmerWeight: number;
-  }[];
-  basePrice: number;
-  priceWithExtras: number;
-  comment?: string;
-  otherExtras?: {
-    name: string;
-    value: string;
+    basePrice: number;
+    priceWithExtras: number;
+    comment?: string;
+    otherExtras?: {
+      name: string;
+      value: string;
+    }[];
   }[];
 }
 

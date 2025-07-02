@@ -23,11 +23,9 @@ const numberInputWidth = 120;
 const SaleEntriesTable: React.FC<SaleEntriesTableProps> = ({
   entries,
   henhouses,
-  slaughterhouses,
   errors,
   dispatch,
   setEntryErrors,
-  loadingSlaughterhouses,
   farmId,
 }) => {
   const handleFieldChange = (

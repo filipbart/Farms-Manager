@@ -1,6 +1,10 @@
+import type {
+  OtherExtra,
+  OtherExtraErrors,
+} from "../../components/modals/sales/add-sale-modal/sale-form-types";
+
 export interface SaleEntry {
   henhouseId: string;
-  slaughterhouseId: string;
   quantity: string;
   weight: string;
   confiscatedCount: string;
@@ -8,12 +12,14 @@ export interface SaleEntry {
   deadCount: string;
   deadWeight: string;
   farmerWeight: string;
-  isEditing: boolean;
+  basePrice: number | "";
+  priceWithExtras: number | "";
+  comment: string;
+  otherExtras: OtherExtra[];
 }
 
 export interface SaleEntryErrors {
   henhouseId?: string;
-  slaughterhouseId?: string;
   quantity?: string;
   weight?: string;
   confiscatedCount?: string;
@@ -21,4 +27,8 @@ export interface SaleEntryErrors {
   deadCount?: string;
   deadWeight?: string;
   farmerWeight?: string;
+  basePrice?: string;
+  priceWithExtras?: string;
+  comment?: string;
+  otherExtras?: OtherExtraErrors[];
 }

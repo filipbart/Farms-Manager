@@ -3,14 +3,17 @@ import type {
   SaleEntry,
   SaleEntryErrors,
 } from "../../../../../models/sales/sales-entry";
+import type { SaleFieldsExtraRow } from "../../../../../services/sales-settings-service";
+import type { SaleFormState, SaleFormErrors } from "../sale-form-types";
 
-export interface SaleEntriesTableProps {
+export interface SaleEntriesSectionProps {
+  form: SaleFormState;
+  saleFieldsExtra: SaleFieldsExtraRow[];
+  setErrors: React.Dispatch<React.SetStateAction<SaleFormErrors>>;
+  dispatch: React.Dispatch<any>;
   entries: SaleEntry[];
   henhouses: HouseRowModel[];
-  slaughterhouses: { id: string; name: string }[];
   errors: { [index: number]: SaleEntryErrors } | undefined;
-  dispatch: React.Dispatch<any>;
   setEntryErrors: (index: number, errors: SaleEntryErrors) => void;
-  loadingSlaughterhouses: boolean;
   farmId?: string;
 }

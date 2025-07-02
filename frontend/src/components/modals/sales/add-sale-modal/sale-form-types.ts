@@ -13,27 +13,21 @@ export interface OtherExtra {
 export interface SaleFormState {
   saleType?: SaleType;
   farmId: string;
+  slaughterhouseId: string;
   identifierId: string;
   identifierDisplay: string;
   saleDate: Dayjs | null;
   entries: SaleEntry[];
-  basePrice: number | "";
-  priceWithExtras: number | "";
-  comment: string;
-  otherExtras: OtherExtra[];
 }
 
 export interface SaleFormErrors {
   saleType?: string;
   farmId?: string;
+  slaughterhouseId?: string;
   identifierId?: string;
   saleDate?: string;
-  basePrice?: string;
-  priceWithExtras?: string;
-  comment?: string;
   entries?: { [index: number]: SaleEntryErrors };
   entriesGeneral?: string;
-  otherExtras?: OtherExtraErrors[];
 }
 export interface OtherExtraErrors {
   name?: string;
