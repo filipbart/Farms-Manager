@@ -35,7 +35,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
 }) => {
   const contentList = (
     <>
-      <List sx={{ width: "100%" }}>
+      <List sx={{ width: "100%", backgroundColor: "primary.dark" }}>
         <SidebarMenuItem to="/" title="Strona główna" icon={<IoHome />} />
 
         <SidebarMenuItem

@@ -1,9 +1,6 @@
 import type { Dayjs } from "dayjs";
-import type { SaleType } from "../../../../models/sales/sales";
-import type {
-  SaleEntry,
-  SaleEntryErrors,
-} from "../../../../models/sales/sales-entry";
+import type { SaleType } from "./sales";
+import type { SaleEntry, SaleEntryErrors } from "./sales-entry";
 
 export interface OtherExtra {
   name: string;
@@ -18,6 +15,7 @@ export interface SaleFormState {
   identifierDisplay: string;
   saleDate: Dayjs | null;
   entries: SaleEntry[];
+  entriesTableReady: number[];
 }
 
 export interface SaleFormErrors {

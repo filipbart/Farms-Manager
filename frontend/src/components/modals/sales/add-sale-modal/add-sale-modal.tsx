@@ -21,29 +21,23 @@ import LoadingButton from "../../../common/loading-button";
 import type { HouseRowModel } from "../../../../models/farms/house-row-model";
 import type { SaleEntryErrors } from "../../../../models/sales/sales-entry";
 import { SaleType, SaleTypeLabels } from "../../../../models/sales/sales";
-import { formReducer } from "./sale-form-reducer";
-import type { SaleFormErrors, SaleFormState } from "./sale-form-types";
+import { formReducer, initialState } from "./sale-form-reducer";
 import { validateForm } from "./validation/validate-form";
 import { useSlaughterhouses } from "../../../../hooks/useSlaughterhouses";
 import { MdSave } from "react-icons/md";
 import { useSaleFieldsExtra } from "../../../../hooks/sales/useSaleFieldsExtra";
 import SaleEntriesSection from "./sale-entries";
+import SaleEntriesTable from "./sale-entries-table";
+import { validateEntry } from "./validation/validate-entry";
+import type { SaleFormErrors } from "../../../../models/sales/sale-form-states";
+import { toast } from "react-toastify";
+import { SalesService } from "../../../../services/sales-service";
 
 interface AddSaleModalProps {
   open: boolean;
   onClose: () => void;
   onSave: () => void;
 }
-
-const initialState: SaleFormState = {
-  saleType: undefined,
-  farmId: "",
-  slaughterhouseId: "",
-  identifierId: "",
-  identifierDisplay: "",
-  saleDate: null,
-  entries: [],
-};
 
 const AddSaleModal: React.FC<AddSaleModalProps> = ({
   open,
@@ -60,6 +54,7 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
   const [form, dispatch] = useReducer(formReducer, initialState);
   const [errors, setErrors] = useState<SaleFormErrors>({});
   const [sendToIrz, setSendToIrz] = useState(false);
+  const [entriesTableReady, setEntriesTableReady] = useState<number[]>([]);
 
   useEffect(() => {
     fetchFarms();
@@ -122,64 +117,64 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
     if (Object.keys(validationErrors).length > 0) return;
 
     setLoading(true);
-    console.log(form);
 
-    // await handleApiResponse(
-    //   () =>
-    //     SalesService.addNewSale({
-    //       saleType: form.saleType!,
-    //       farmId: form.farmId,
-    //       cycleId: form.identifierId,
-    //       saleDate: form.saleDate!.format("YYYY-MM-DD"),
-    //       basePrice: Number(form.basePrice),
-    //       priceWithExtras: Number(form.priceWithExtras),
-    //       comment: form.comment || undefined,
-    //       otherExtras: form.otherExtras.map((extra) => ({
-    //         name: extra.name,
-    //         value: extra.value.toString(),
-    //       })),
-    //       entries: form.entries.map((entry) => ({
-    //         henhouseId: entry.henhouseId,
-    //         slaughterhouseId: entry.slaughterhouseId,
-    //         quantity: Number(entry.quantity),
-    //         weight: Number(entry.weight),
-    //         confiscatedCount: Number(entry.confiscatedCount),
-    //         confiscatedWeight: Number(entry.confiscatedWeight),
-    //         deadCount: Number(entry.deadCount),
-    //         deadWeight: Number(entry.deadWeight),
-    //         farmerWeight: Number(entry.farmerWeight),
-    //       })),
-    //     }),
-    //   async (data) => {
-    //     if (!data || !data.responseData || !data.responseData.internalGroupId) {
-    //       toast.error(
-    //         "Nie udało się dodać sprzedaży, brak ID grupy wewnętrznej"
-    //       );
-    //     }
+    await handleApiResponse(
+      () =>
+        SalesService.addNewSale({
+          saleType: form.saleType!,
+          farmId: form.farmId,
+          cycleId: form.identifierId,
+          slaughterhouseId: form.slaughterhouseId,
+          saleDate: form.saleDate!.format("YYYY-MM-DD"),
 
-    //     if (sendToIrz) {
-    //       // await handleApiResponse(
-    //       //   () =>
-    //       //     SalesService.sendToIrzPlus({
-    //       //       internalGroupId: data.responseData!.internalGroupId,
-    //       //     }),
-    //       //   () => {
-    //       //     toast.success("Wstawienie wysłane do IRZplus");
-    //       //   },
-    //       //   undefined,
-    //       //   "Nie udało się wysłać wstawienia do IRZplus"
-    //       // );
-    //     }
+          entries: form.entries.map((entry) => ({
+            henhouseId: entry.henhouseId,
+            basePrice: Number(entry.basePrice),
+            priceWithExtras: Number(entry.priceWithExtras),
+            comment: entry.comment || undefined,
+            otherExtras: entry.otherExtras.map((extra) => ({
+              name: extra.name,
+              value: extra.value.toString(),
+            })),
+            quantity: Number(entry.quantity),
+            weight: Number(entry.weight),
+            confiscatedCount: Number(entry.confiscatedCount),
+            confiscatedWeight: Number(entry.confiscatedWeight),
+            deadCount: Number(entry.deadCount),
+            deadWeight: Number(entry.deadWeight),
+            farmerWeight: Number(entry.farmerWeight),
+          })),
+        }),
+      async (data) => {
+        if (!data || !data.responseData || !data.responseData.internalGroupId) {
+          toast.error(
+            "Nie udało się dodać sprzedaży, brak ID grupy wewnętrznej"
+          );
+        }
 
-    //     toast.success("Dodano sprzedaż");
-    //     dispatch({ type: "RESET" });
-    //     setErrors({});
-    //     onSave();
-    //     onClose();
-    //   },
-    //   undefined,
-    //   "Nie udało się dodać sprzedaży"
-    // );
+        if (sendToIrz) {
+          // await handleApiResponse(
+          //   () =>
+          //     SalesService.sendToIrzPlus({
+          //       internalGroupId: data.responseData!.internalGroupId,
+          //     }),
+          //   () => {
+          //     toast.success("Wstawienie wysłane do IRZplus");
+          //   },
+          //   undefined,
+          //   "Nie udało się wysłać wstawienia do IRZplus"
+          // );
+        }
+
+        toast.success("Dodano sprzedaż");
+        dispatch({ type: "RESET" });
+        setErrors({});
+        onSave();
+        onClose();
+      },
+      undefined,
+      "Nie udało się dodać sprzedaży"
+    );
 
     setLoading(false);
   };
@@ -200,12 +195,43 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
         }
       }}
       fullWidth
-      maxWidth="xl"
+      maxWidth="md"
     >
       <DialogTitle>Nowa sprzedaż</DialogTitle>
       <DialogContent>
         <Grid container spacing={2} mt={1}>
-          <Grid size={{ xs: 12, sm: 4 }}>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <LoadingTextField
+              loading={loadingFarms}
+              select
+              fullWidth
+              label="Ferma"
+              value={form.farmId}
+              onChange={(e) => handleFarmChange(e.target.value)}
+              error={!!errors.farmId}
+              helperText={errors.farmId}
+            >
+              {farms.map((farm) => (
+                <MenuItem key={farm.id} value={farm.id}>
+                  {farm.name}
+                </MenuItem>
+              ))}
+            </LoadingTextField>
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <LoadingTextField
+              loading={loadingLatestCycle}
+              fullWidth
+              label="Identyfikator"
+              value={form.identifierDisplay}
+              slotProps={{ input: { readOnly: true } }}
+              error={!!errors.identifierId}
+              helperText={errors.identifierId}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               select
               fullWidth
@@ -230,38 +256,7 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
             </TextField>
           </Grid>
 
-          <Grid size={{ xs: 12, sm: 4 }}>
-            <LoadingTextField
-              loading={loadingFarms}
-              select
-              fullWidth
-              label="Ferma"
-              value={form.farmId}
-              onChange={(e) => handleFarmChange(e.target.value)}
-              error={!!errors.farmId}
-              helperText={errors.farmId}
-            >
-              {farms.map((farm) => (
-                <MenuItem key={farm.id} value={farm.id}>
-                  {farm.name}
-                </MenuItem>
-              ))}
-            </LoadingTextField>
-          </Grid>
-
-          <Grid size={{ xs: 12, sm: 4 }}>
-            <LoadingTextField
-              loading={loadingLatestCycle}
-              fullWidth
-              label="Identyfikator"
-              value={form.identifierDisplay}
-              slotProps={{ input: { readOnly: true } }}
-              error={!!errors.identifierId}
-              helperText={errors.identifierId}
-            />
-          </Grid>
-
-          <Grid size={{ xs: 12, sm: 4 }}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <LoadingTextField
               loading={loadingSlaughterhouses}
               select
@@ -287,7 +282,7 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
             </LoadingTextField>
           </Grid>
 
-          <Grid size={{ xs: 12, sm: 4 }}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <DatePicker
               label="Data sprzedaży"
               value={form.saleDate}
@@ -306,9 +301,33 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
               }}
             />
           </Grid>
-          <Grid size={20}>
+          <Grid size={{ xs: 12 }}>
+            {entriesTableReady.length > 0 && (
+              <SaleEntriesTable
+                entries={form.entries}
+                indexes={entriesTableReady}
+                onRemove={(indexToRemove) => {
+                  dispatch({ type: "REMOVE_ENTRY", index: indexToRemove });
+                  setEntriesTableReady((prev) =>
+                    prev.filter((i) => i !== indexToRemove)
+                  );
+                  setErrors((prev) => {
+                    const updated = { ...(prev.entries || {}) };
+                    delete updated[indexToRemove];
+                    return { ...prev, entries: updated };
+                  });
+                }}
+                onEdit={(indexToEdit) => {
+                  setEntriesTableReady((prev) =>
+                    prev.filter((i) => i !== indexToEdit)
+                  );
+                }}
+              />
+            )}
+          </Grid>
+
+          <Grid size={12}>
             <SaleEntriesSection
-              form={form}
               dispatch={dispatch}
               entries={form.entries}
               henhouses={henhouses}
@@ -317,16 +336,45 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
               errors={errors.entries}
               setEntryErrors={setEntryErrors}
               farmId={form.farmId}
+              entriesTableReady={entriesTableReady}
             />
           </Grid>
 
-          <Grid size={20}>
+          <Grid size={8} />
+          <Grid size={4}>
             <Button
               fullWidth
               variant="outlined"
               onClick={() => {
-                dispatch({ type: "ADD_ENTRY" });
-                setErrors((prev) => ({ ...prev, entriesGeneral: undefined }));
+                const lastIndex = form.entries.length - 1;
+                const lastEntry = form.entries[lastIndex];
+                const validation = validateEntry(lastEntry);
+
+                const isValid =
+                  !validation || Object.keys(validation).length === 0;
+
+                if (!entriesTableReady.includes(lastIndex) && isValid) {
+                  setEntriesTableReady((prev) => [...prev, lastIndex]);
+                  setErrors((prev) => {
+                    const newEntriesErrors = { ...(prev.entries || {}) };
+                    delete newEntriesErrors[lastIndex];
+                    return { ...prev, entries: newEntriesErrors };
+                  });
+                } else if (entriesTableReady.includes(lastIndex)) {
+                  dispatch({ type: "ADD_ENTRY" });
+                  setErrors((prev) => {
+                    const newEntriesErrors = { ...(prev.entries || {}) };
+                    const newEntryIndex = form.entries.length;
+                    delete newEntriesErrors[newEntryIndex];
+                    return {
+                      ...prev,
+                      entries: newEntriesErrors,
+                      entriesGeneral: undefined,
+                    };
+                  });
+                } else {
+                  setEntryErrors(lastIndex, validation);
+                }
               }}
             >
               Dodaj pozycję

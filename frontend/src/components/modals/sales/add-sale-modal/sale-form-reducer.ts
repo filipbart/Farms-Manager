@@ -1,4 +1,4 @@
-import type { SaleFormState } from "./sale-form-types";
+import type { SaleFormState } from "../../../../models/sales/sale-form-states";
 
 export const initialState: SaleFormState = {
   saleType: undefined,
@@ -8,6 +8,7 @@ export const initialState: SaleFormState = {
   identifierDisplay: "",
   saleDate: null,
   entries: [],
+  entriesTableReady: [],
 };
 
 export function formReducer(state: SaleFormState, action: any): SaleFormState {
@@ -15,13 +16,28 @@ export function formReducer(state: SaleFormState, action: any): SaleFormState {
     case "SET_FIELD":
       return { ...state, [action.name]: action.value };
 
-    case "UPDATE_ENTRY":
+    case "UPDATE_ENTRY": {
       const updatedEntries1 = [...state.entries];
       updatedEntries1[action.index] = {
         ...updatedEntries1[action.index],
         [action.name]: action.value,
       };
       return { ...state, entries: updatedEntries1 };
+    }
+
+    case "MARK_ENTRY_AS_READY":
+      return {
+        ...state,
+        entriesTableReady: [...state.entriesTableReady, action.index],
+      };
+
+    case "UNMARK_ENTRY_AS_READY":
+      return {
+        ...state,
+        entriesTableReady: state.entriesTableReady.filter(
+          (i) => i !== action.index
+        ),
+      };
 
     case "ADD_ENTRY":
       return {
@@ -30,6 +46,7 @@ export function formReducer(state: SaleFormState, action: any): SaleFormState {
           ...state.entries,
           {
             henhouseId: "",
+            henhouseName: "",
             basePrice: "",
             priceWithExtras: "",
             comment: "",
@@ -45,11 +62,20 @@ export function formReducer(state: SaleFormState, action: any): SaleFormState {
         ],
       };
 
-    case "REMOVE_ENTRY":
+    case "REMOVE_ENTRY": {
+      const updatedEntries = state.entries.filter(
+        (_, idx) => idx !== action.index
+      );
+      const updatedReady = state.entriesTableReady
+        .filter((i) => i !== action.index)
+        .map((i) => (i > action.index ? i - 1 : i));
+
       return {
         ...state,
-        entries: state.entries.filter((_, idx) => idx !== action.index),
+        entries: updatedEntries,
+        entriesTableReady: updatedReady,
       };
+    }
 
     case "ADD_OTHER_EXTRA": {
       const updatedEntries = [...state.entries];
@@ -59,7 +85,7 @@ export function formReducer(state: SaleFormState, action: any): SaleFormState {
 
       const updatedOtherExtras = [
         ...(entry.otherExtras || []),
-        { name: "", value: "" as "" },
+        { name: "", value: "" } as const,
       ];
 
       updatedEntries[action.entryIndex] = {
@@ -104,7 +130,7 @@ export function formReducer(state: SaleFormState, action: any): SaleFormState {
 
         if (action.field === "value") {
           if (newValue === "") {
-            newValue = "" as "";
+            newValue = "" as const;
           } else {
             newValue = Number(newValue);
           }

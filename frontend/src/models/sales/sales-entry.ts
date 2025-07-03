@@ -1,10 +1,8 @@
-import type {
-  OtherExtra,
-  OtherExtraErrors,
-} from "../../components/modals/sales/add-sale-modal/sale-form-types";
+import type { OtherExtra, OtherExtraErrors } from "./sale-form-states";
 
 export interface SaleEntry {
   henhouseId: string;
+  henhouseName: string;
   quantity: string;
   weight: string;
   confiscatedCount: string;
