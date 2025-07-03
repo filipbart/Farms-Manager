@@ -3,5 +3,5 @@
 public class SaleOtherExtras
 {
     public string Name { get; set; }
-    public decimal Price { get; set; }
+    public decimal Value { get; set; }
 }

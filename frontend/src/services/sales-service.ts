@@ -23,7 +23,7 @@ export interface AddSaleData {
     comment?: string;
     otherExtras?: {
       name: string;
-      value: string;
+      value: number;
     }[];
   }[];
 }

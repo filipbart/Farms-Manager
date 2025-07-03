@@ -1,5 +1,6 @@
 ﻿using FarmsManager.Domain.Aggregates.FarmAggregate.Enums;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Models;
+using FarmsManager.Domain.Aggregates.SlaughterhouseAggregate.Entities;
 
 namespace FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
 
@@ -51,35 +52,41 @@ public class SaleEntity
         };
     }
 
+    public SaleType Type { get; init; }
     public Guid FarmId { get; init; }
     public Guid CycleId { get; init; }
     public DateOnly SaleDate { get; protected internal set; }
+    public Guid SlaughterhouseId { get; init; }
     public Guid HenhouseId { get; init; }
-    public SaleType Type { get; init; }
-    public decimal BreederWeight { get; protected internal set; }
 
     //Przyjęto:
-    public decimal AdoptedWeight { get; protected internal set; }
-    public int AdoptedQuantity { get; protected internal set; }
+    public decimal Weight { get; protected internal set; }
+    public int Quantity { get; protected internal set; }
 
     //Konfiskata
     public decimal ConfiscatedWeight { get; protected internal set; }
-    public int ConfiscatedQuantity { get; protected internal set; }
+    public int ConfiscatedCount { get; protected internal set; }
 
     //Martwe
     public decimal DeadWeight { get; protected internal set; }
-    public int DeadQuantity { get; protected internal set; }
+    public int DeadCount { get; protected internal set; }
 
+    public decimal FarmerWeight { get; protected internal set; }
     public decimal BasePrice { get; protected internal set; }
     public decimal PriceWithExtras { get; protected internal set; }
     public string Comment { get; protected internal set; }
 
     public List<SaleOtherExtras> OtherExtras { get; protected internal set; }
 
+    public virtual FarmEntity Farm { get; init; }
+    public virtual CycleEntity Cycle { get; init; }
+    public virtual SlaughterhouseEntity Slaughterhouse { get; init; }
+    public virtual HenhouseEntity Henhouse { get; init; }
 
-    //public Guid InternalGroupId { get; init; }
-    //public DateTime? DateIrzSentUtc { get; private set; }
-    //public bool IsSentToIrz { get; private set; }
-    //public Guid? SentToIrzBy { get; protected internal set; }
-    //public string DocumentNumber { get; protected internal set; }
+    //Dane IRZplus
+    public Guid InternalGroupId { get; init; }
+    public DateTime? DateIrzSentUtc { get; private set; }
+    public bool IsSentToIrz { get; private set; }
+    public Guid? SentToIrzBy { get; protected internal set; }
+    public string DocumentNumber { get; protected internal set; }
 }

@@ -126,7 +126,6 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
           cycleId: form.identifierId,
           slaughterhouseId: form.slaughterhouseId,
           saleDate: form.saleDate!.format("YYYY-MM-DD"),
-
           entries: form.entries.map((entry) => ({
             henhouseId: entry.henhouseId,
             basePrice: Number(entry.basePrice),
@@ -134,7 +133,7 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
             comment: entry.comment || undefined,
             otherExtras: entry.otherExtras.map((extra) => ({
               name: extra.name,
-              value: extra.value.toString(),
+              value: Number(extra.value),
             })),
             quantity: Number(entry.quantity),
             weight: Number(entry.weight),
