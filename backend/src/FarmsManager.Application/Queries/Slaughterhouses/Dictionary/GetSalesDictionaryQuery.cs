@@ -1,11 +1,9 @@
 ﻿using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Models;
 using FarmsManager.Application.Queries.Farms;
-using FarmsManager.Application.Queries.Hatcheries;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
-using FarmsManager.Domain.Aggregates.HatcheryAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.SlaughterhouseAggregate.Interfaces;
 using MediatR;
 

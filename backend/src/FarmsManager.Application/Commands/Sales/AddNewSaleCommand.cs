@@ -1,5 +1,7 @@
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Interfaces;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Enums;
+using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
 using FluentValidation;
 using MediatR;
 
@@ -44,6 +46,8 @@ public record AddNewSaleCommandResponse
 
 public class AddNewSaleCommandHandler : IRequestHandler<AddNewSaleCommand, BaseResponse<AddNewSaleCommandResponse>>
 {
+    private readonly IUserDataResolver _userDataResolver;
+    private readonly ISaleRepository _saleRepository;
     public async Task<BaseResponse<AddNewSaleCommandResponse>> Handle(AddNewSaleCommand request,
         CancellationToken ct)
     {

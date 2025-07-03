@@ -1,31 +1,33 @@
 ﻿using FarmsManager.Domain.Aggregates.FarmAggregate.Enums;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Models;
 using FarmsManager.Domain.Aggregates.SlaughterhouseAggregate.Entities;
+using FarmsManager.Domain.SeedWork;
 
 namespace FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
 
-public class SaleEntity
+public class SaleEntity : Entity
 {
     protected SaleEntity()
     {
-        // IsSentToIrz = false;
-        // DateIrzSentUtc = null;
+        IsSentToIrz = false;
+        DateIrzSentUtc = null;
         OtherExtras = [];
     }
 
     public static SaleEntity CreateNew(
+        SaleType type,
+        DateOnly saleDate,
         Guid farmId,
         Guid cycleId,
-        DateOnly saleDate,
+        Guid slaughterhouseId,
         Guid henhouseId,
-        SaleType type,
-        decimal breederWeight,
-        decimal adoptedWeight,
-        int adoptedQuantity,
+        decimal weight,
+        int quantity,
         decimal confiscatedWeight,
-        int confiscatedQuantity,
+        int confiscatedCount,
         decimal deadWeight,
-        int deadQuantity,
+        int deadCount,
+        decimal farmerWeight,
         decimal basePrice,
         decimal priceWithExtras,
         string comment,
@@ -33,18 +35,19 @@ public class SaleEntity
     {
         return new SaleEntity
         {
+            Type = type,
+            SaleDate = saleDate,
             FarmId = farmId,
             CycleId = cycleId,
-            SaleDate = saleDate,
+            SlaughterhouseId = slaughterhouseId,
             HenhouseId = henhouseId,
-            Type = type,
-            BreederWeight = breederWeight,
-            AdoptedWeight = adoptedWeight,
-            AdoptedQuantity = adoptedQuantity,
+            Weight = weight,
+            Quantity = quantity,
             ConfiscatedWeight = confiscatedWeight,
-            ConfiscatedQuantity = confiscatedQuantity,
+            ConfiscatedCount = confiscatedCount,
             DeadWeight = deadWeight,
-            DeadQuantity = deadQuantity,
+            DeadCount = deadCount,
+            FarmerWeight = farmerWeight,
             BasePrice = basePrice,
             PriceWithExtras = priceWithExtras,
             Comment = comment,
