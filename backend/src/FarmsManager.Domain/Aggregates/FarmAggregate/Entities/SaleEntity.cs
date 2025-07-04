@@ -15,6 +15,7 @@ public class SaleEntity : Entity
     }
 
     public static SaleEntity CreateNew(
+        Guid internalGroupId,
         SaleType type,
         DateOnly saleDate,
         Guid farmId,
@@ -31,10 +32,12 @@ public class SaleEntity : Entity
         decimal basePrice,
         decimal priceWithExtras,
         string comment,
-        List<SaleOtherExtras> otherExtras)
+        IEnumerable<SaleOtherExtras> otherExtras,
+        Guid? userId = null)
     {
         return new SaleEntity
         {
+            InternalGroupId = internalGroupId,
             Type = type,
             SaleDate = saleDate,
             FarmId = farmId,
@@ -51,7 +54,8 @@ public class SaleEntity : Entity
             BasePrice = basePrice,
             PriceWithExtras = priceWithExtras,
             Comment = comment,
-            OtherExtras = otherExtras
+            OtherExtras = otherExtras?.ToList(),
+            CreatedBy = userId
         };
     }
 

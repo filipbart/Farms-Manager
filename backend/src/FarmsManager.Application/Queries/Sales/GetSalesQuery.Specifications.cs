@@ -2,11 +2,11 @@
 using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
 
-namespace FarmsManager.Application.Queries.Insertions;
+namespace FarmsManager.Application.Queries.Sales;
 
-public sealed class GetAllInsertionsSpec : BaseSpecification<InsertionEntity>
+public sealed class GetAllSalesSpec : BaseSpecification<SaleEntity>
 {
-    public GetAllInsertionsSpec(GetInsertionsQueryFilters filters, bool withPagination)
+    public GetAllSalesSpec(GetSalesQueryFilters filters, bool withPagination)
     {
         EnsureExists();
         DisableTracking();
@@ -19,7 +19,7 @@ public sealed class GetAllInsertionsSpec : BaseSpecification<InsertionEntity>
         }
     }
 
-    private void PopulateFilters(GetInsertionsQueryFilters filters)
+    private void PopulateFilters(GetSalesQueryFilters filters)
     {
         if (filters.FarmIds is not null && filters.FarmIds.Count != 0)
         {
@@ -31,9 +31,9 @@ public sealed class GetAllInsertionsSpec : BaseSpecification<InsertionEntity>
             Query.Where(t => filters.HenhouseIds.Contains(t.HenhouseId));
         }
 
-        if (filters.HatcheryIds is not null && filters.HatcheryIds.Count != 0)
+        if (filters.SlaughterhouseIds is not null && filters.SlaughterhouseIds.Count != 0)
         {
-            Query.Where(t => filters.HatcheryIds.Contains(t.HatcheryId));
+            Query.Where(t => filters.SlaughterhouseIds.Contains(t.SlaughterhouseId));
         }
 
         if (filters.Cycles is not null && filters.Cycles.Count != 0)
@@ -50,21 +50,21 @@ public sealed class GetAllInsertionsSpec : BaseSpecification<InsertionEntity>
 
         if (filters.DateSince is not null)
         {
-            Query.Where(t => t.InsertionDate >= filters.DateSince);
+            Query.Where(t => t.SaleDate >= filters.DateSince);
         }
 
         if (filters.DateTo is not null)
         {
-            Query.Where(t => t.InsertionDate <= filters.DateTo);
+            Query.Where(t => t.SaleDate <= filters.DateTo);
         }
     }
 
-    private void ApplyOrdering(GetInsertionsQueryFilters filters)
+    private void ApplyOrdering(GetSalesQueryFilters filters)
     {
         var isDescending = filters.IsDescending;
         switch (filters.OrderBy)
         {
-            case InsertionOrderBy.Cycle:
+            case SaleOrderBy.Cycle:
                 if (isDescending)
                 {
                     Query.OrderByDescending(t => t.Cycle.Identifier)
@@ -80,7 +80,7 @@ public sealed class GetAllInsertionsSpec : BaseSpecification<InsertionEntity>
 
                 break;
 
-            case InsertionOrderBy.Farm:
+            case SaleOrderBy.Farm:
                 if (isDescending)
                 {
                     Query.OrderByDescending(t => t.Farm.Name);
@@ -92,7 +92,7 @@ public sealed class GetAllInsertionsSpec : BaseSpecification<InsertionEntity>
 
                 break;
 
-            case InsertionOrderBy.Henhouse:
+            case SaleOrderBy.Henhouse:
                 if (isDescending)
                 {
                     Query.OrderByDescending(t => t.Henhouse.Name);
@@ -104,19 +104,19 @@ public sealed class GetAllInsertionsSpec : BaseSpecification<InsertionEntity>
 
                 break;
 
-            case InsertionOrderBy.InsertionDate:
+            case SaleOrderBy.SaleDate:
                 if (isDescending)
                 {
-                    Query.OrderByDescending(t => t.InsertionDate);
+                    Query.OrderByDescending(t => t.SaleDate);
                 }
                 else
                 {
-                    Query.OrderBy(t => t.InsertionDate);
+                    Query.OrderBy(t => t.SaleDate);
                 }
 
                 break;
 
-            case InsertionOrderBy.Quantity:
+            case SaleOrderBy.Quantity:
                 if (isDescending)
                 {
                     Query.OrderByDescending(t => t.Quantity);
@@ -128,30 +128,19 @@ public sealed class GetAllInsertionsSpec : BaseSpecification<InsertionEntity>
 
                 break;
 
-            case InsertionOrderBy.Hatchery:
+
+            case SaleOrderBy.Weight:
                 if (isDescending)
                 {
-                    Query.OrderByDescending(t => t.Hatchery.Name);
+                    Query.OrderByDescending(t => t.Weight);
                 }
                 else
                 {
-                    Query.OrderBy(t => t.Hatchery.Name);
+                    Query.OrderBy(t => t.Weight);
                 }
 
                 break;
-
-            case InsertionOrderBy.BodyWeight:
-                if (isDescending)
-                {
-                    Query.OrderByDescending(t => t.BodyWeight);
-                }
-                else
-                {
-                    Query.OrderBy(t => t.BodyWeight);
-                }
-
-                break;
-            case InsertionOrderBy.DateCreatedUtc:
+            case SaleOrderBy.DateCreatedUtc:
             default:
                 if (isDescending)
                 {

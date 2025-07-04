@@ -20,14 +20,11 @@ public class AddNewCycleCommandHandler : IRequestHandler<AddNewCycleCommand, Emp
 {
     private readonly IUserDataResolver _userDataResolver;
     private readonly IFarmRepository _farmRepository;
-    private readonly ICycleRepository _cycleRepository;
 
-    public AddNewCycleCommandHandler(IUserDataResolver userDataResolver, IFarmRepository farmRepository,
-        ICycleRepository cycleRepository)
+    public AddNewCycleCommandHandler(IUserDataResolver userDataResolver, IFarmRepository farmRepository)
     {
         _userDataResolver = userDataResolver;
         _farmRepository = farmRepository;
-        _cycleRepository = cycleRepository;
     }
 
     public async Task<EmptyBaseResponse> Handle(AddNewCycleCommand request, CancellationToken cancellationToken)
@@ -35,24 +32,10 @@ public class AddNewCycleCommandHandler : IRequestHandler<AddNewCycleCommand, Emp
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var farm = await _farmRepository.GetAsync(new FarmByIdSpec(request.FarmId), cancellationToken);
 
-        var activeCycle = farm.ActiveCycle;
-        if (activeCycle is null)
-        {
-            var newCycle = CycleEntity.CreateNew(request.Identifier, request.Year, farm.Id, userId);
-            farm.SetLatestCycle(newCycle);
-            await _farmRepository.UpdateAsync(farm, cancellationToken);
-            return new EmptyBaseResponse();
-        }
-
-        var response = BaseResponse.EmptyResponse;
-        if (activeCycle.Identifier == request.Identifier && activeCycle.Year == request.Year)
-        {
-            response.AddError("Identyfikator", "Podany identyfikator już istnieje");
-        }
-
-        //TODO: z kurnikami walidacja
-
-        return response;
+        var newCycle = CycleEntity.CreateNew(request.Identifier, request.Year, farm.Id, userId);
+        farm.SetLatestCycle(newCycle);
+        await _farmRepository.UpdateAsync(farm, cancellationToken);
+        return new EmptyBaseResponse();
     }
 }
 

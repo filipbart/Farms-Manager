@@ -14,15 +14,18 @@ import {
   type SalesFilterPaginationModel,
   SalesOrderType,
 } from "../../models/sales/sales-filters";
-import { InsertionsService } from "../../services/insertions-service";
 import { handleApiResponse } from "../../utils/axios/handle-api-response";
 import { getSaleFiltersConfig } from "./filter-config.sales";
 import AddSaleModal from "../../components/modals/sales/add-sale-modal/add-sale-modal";
+import { SalesService } from "../../services/sales-service";
+import Loading from "../../components/loading/loading";
+import type { PaginateModel } from "../../common/interfaces/paginate";
 
 const initialFilters: SalesFilterPaginationModel = {
   farmIds: [],
   cycles: [],
   henhouseIds: [],
+  slaughterhouseIds: [],
   dateSince: "",
   dateTo: "",
   page: 0,
@@ -68,119 +71,131 @@ const SalesPage: React.FC = () => {
       type: "string",
       valueGetter: (params: any) => dayjs(params.value).format("YYYY-MM-DD"),
     },
+    { field: "typeDesc", headerName: "Typ sprzedaży", flex: 1 },
+    { field: "weight", headerName: "Waga ubojni [kg]", flex: 1 },
+    { field: "quantity", headerName: "Ilość sztuk ubojnia [szt]", flex: 1 },
+    { field: "confiscatedWeight", headerName: "Konfiskaty [kg]", flex: 1 },
+    { field: "confiscatedCount", headerName: "Konfiskaty [szt]", flex: 1 },
+    { field: "deadWeight", headerName: "Kurczęta martwe [kg]", flex: 1 },
+    { field: "deadCount", headerName: "Kurczęta martwe [szt]", flex: 1 },
+    { field: "farmerWeight", headerName: "Waga producenta [kg]", flex: 1 },
+    { field: "basePrice", headerName: "Cena bazowa [zł]", flex: 1 },
+    { field: "priceWithExtras", headerName: "Cena z dodatkami [zł]", flex: 1 },
+    { field: "otherExtras", headerName: "Inne dodatki", flex: 1 },
+    { field: "comment", headerName: "Komentarz", flex: 1 },
 
-    // {
-    //   field: "sendToIrz",
-    //   headerName: "Wyślij do IRZplus",
-    //   flex: 1,
+    {
+      field: "sendToIrz",
+      headerName: "Wyślij do IRZplus",
+      flex: 1,
 
-    //   minWidth: 200,
-    //   type: "actions",
-    //   renderCell: (params) => {
-    //     const { isSentToIrz, dateIrzSentUtc } = params.row;
-    //     const [loadingSendToIrz, setLoadingSendToIrz] = useState(false);
-    //     const handleSendToIrz = async (data: {
-    //       internalGroupId?: string;
-    //       insertionId?: string;
-    //     }) => {
-    //       setLoadingSendToIrz(true);
-    //       await handleApiResponse(
-    //         () => InsertionsService.sendToIrzPlus(data),
-    //         async () => {
-    //           toast.success("Wysłano do IRZplus");
-    //           dispatch({
-    //             type: "setMultiple",
-    //             payload: { page: filters.page },
-    //           });
-    //           setLoadingSendToIrz(false);
-    //         },
-    //         undefined,
-    //         "Wystąpił błąd podczas wysyłania do IRZplus"
-    //       );
-    //       setLoadingSendToIrz(false);
-    //     };
-    //     if (dateIrzSentUtc) {
-    //       const formattedDate = new Date(dateIrzSentUtc).toLocaleString(
-    //         "pl-PL",
-    //         {
-    //           dateStyle: "short",
-    //           timeStyle: "short",
-    //         }
-    //       );
+      minWidth: 200,
+      type: "actions",
+      renderCell: (params) => {
+        const { isSentToIrz, dateIrzSentUtc } = params.row;
+        const [loadingSendToIrz, setLoadingSendToIrz] = useState(false);
+        const handleSendToIrz = async (data: {
+          internalGroupId?: string;
+          insertionId?: string;
+        }) => {
+          setLoadingSendToIrz(true);
+          // await handleApiResponse(
+          //   () => InsertionsService.sendToIrzPlus(data),
+          //   async () => {
+          //     toast.success("Wysłano do IRZplus");
+          //     dispatch({
+          //       type: "setMultiple",
+          //       payload: { page: filters.page },
+          //     });
+          //     setLoadingSendToIrz(false);
+          //   },
+          //   undefined,
+          //   "Wystąpił błąd podczas wysyłania do IRZplus"
+          // );
+          setLoadingSendToIrz(false);
+        };
+        if (dateIrzSentUtc) {
+          const formattedDate = new Date(dateIrzSentUtc).toLocaleString(
+            "pl-PL",
+            {
+              dateStyle: "short",
+              timeStyle: "short",
+            }
+          );
 
-    //       return (
-    //         <Typography variant="body2" sx={{ whiteSpace: "nowrap" }}>
-    //           Wysłano - {formattedDate}
-    //         </Typography>
-    //       );
-    //     }
+          return (
+            <Typography variant="body2" sx={{ whiteSpace: "nowrap" }}>
+              Wysłano - {formattedDate}
+            </Typography>
+          );
+        }
 
-    //     if (isSentToIrz) {
-    //       return null;
-    //     }
+        if (isSentToIrz) {
+          return null;
+        }
 
-    //     return (
-    //       <Box
-    //         sx={{
-    //           display: "flex",
-    //           flexDirection: "row",
-    //           alignItems: "center",
-    //           gap: 1,
-    //           flexWrap: "nowrap",
-    //         }}
-    //       >
-    //         {loadingSendToIrz ? (
-    //           <Loading height="0" size={10} />
-    //         ) : (
-    //           <>
-    //             <Button
-    //               variant="contained"
-    //               color="error"
-    //               size="small"
-    //               onClick={() =>
-    //                 handleSendToIrz({ insertionId: params.row.id })
-    //               }
-    //             >
-    //               Osobno
-    //             </Button>
+        return (
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 1,
+              flexWrap: "nowrap",
+            }}
+          >
+            {loadingSendToIrz ? (
+              <Loading height="0" size={10} />
+            ) : (
+              <>
+                <Button
+                  variant="contained"
+                  color="error"
+                  size="small"
+                  onClick={() =>
+                    handleSendToIrz({ insertionId: params.row.id })
+                  }
+                >
+                  Osobno
+                </Button>
 
-    //             <Button
-    //               variant="outlined"
-    //               color="error"
-    //               size="small"
-    //               onClick={() =>
-    //                 handleSendToIrz({
-    //                   internalGroupId: params.row.internalGroupId,
-    //                 })
-    //               }
-    //             >
-    //               Z grupą
-    //             </Button>
-    //           </>
-    //         )}
-    //       </Box>
-    //     );
-    //   },
-    // },
-    // {
-    //   field: "actions",
-    //   type: "actions",
-    //   headerName: "Akcje",
-    //   flex: 1,
-    //   getActions: (params) => [
-    //     <Button
-    //       key="edit"
-    //       variant="outlined"
-    //       size="small"
-    //       onClick={() => {
-    //         setSelectedInsertion(params.row);
-    //         setIsEditModalOpen(true);
-    //       }}
-    //     >
-    //       Edytuj
-    //     </Button>,
-    //   ],
-    // },
+                <Button
+                  variant="outlined"
+                  color="error"
+                  size="small"
+                  onClick={() =>
+                    handleSendToIrz({
+                      internalGroupId: params.row.internalGroupId,
+                    })
+                  }
+                >
+                  Z grupą
+                </Button>
+              </>
+            )}
+          </Box>
+        );
+      },
+    },
+    {
+      field: "actions",
+      type: "actions",
+      headerName: "Akcje",
+      flex: 1,
+      getActions: (params) => [
+        <Button
+          key="edit"
+          variant="outlined"
+          size="small"
+          onClick={() => {
+            // setSelectedInsertion(params.row);
+            // setIsEditModalOpen(true);
+          }}
+        >
+          Edytuj
+        </Button>,
+      ],
+    },
 
     {
       field: "documentNumber",
@@ -208,12 +223,12 @@ const SalesPage: React.FC = () => {
   useEffect(() => {
     const fetchDictionaries = async () => {
       try {
-        // await handleApiResponse(
-        //   () => InsertionsService.getDictionaries(), //todo
-        //   (data) => setDictionary(data.responseData),
-        //   undefined,
-        //   "Błąd podczas pobierania słowników filtrów"
-        // );
+        await handleApiResponse(
+          () => SalesService.getDictionaries(),
+          (data) => setDictionary(data.responseData),
+          undefined,
+          "Błąd podczas pobierania słowników filtrów"
+        );
       } catch {
         toast.error("Błąd podczas pobierania słowników filtrów");
       }
@@ -225,15 +240,15 @@ const SalesPage: React.FC = () => {
     const fetchInsertions = async () => {
       setLoading(true);
       try {
-        // await handleApiResponse<PaginateModel<SalesListModel>>(
-        //   () => InsertionsService.getInsertions(filters),//todo
-        //   (data) => {
-        //     setSales(data.responseData?.items ?? []);
-        //     setTotalRows(data.responseData?.totalRows ?? 0);
-        //   },
-        //   undefined,
-        //   "Błąd podczas pobierania wstawień"
-        // );
+        await handleApiResponse<PaginateModel<SalesListModel>>(
+          () => SalesService.getSales(filters),
+          (data) => {
+            setSales(data.responseData?.items ?? []);
+            setTotalRows(data.responseData?.totalRows ?? 0);
+          },
+          undefined,
+          "Błąd podczas pobierania wstawień"
+        );
       } catch {
         toast.error("Błąd podczas pobierania wstawień");
       } finally {

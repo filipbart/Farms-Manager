@@ -1,6 +1,9 @@
 import ApiUrl from "../common/ApiUrl";
+import type { PaginateModel } from "../common/interfaces/paginate";
+import type SalesListModel from "../models/sales/sales";
 import type { SaleType } from "../models/sales/sales";
 import type { SalesDictionary } from "../models/sales/sales-dictionary";
+import type { SalesFilterPaginationModel } from "../models/sales/sales-filters";
 import AxiosWrapper from "../utils/axios/wrapper";
 
 export interface AddSaleData {
@@ -35,6 +38,12 @@ export interface AddNewSaleResponse {
 export class SalesService {
   public static async getDictionaries() {
     return await AxiosWrapper.get<SalesDictionary>(ApiUrl.SalesDict);
+  }
+
+  public static async getSales(filters: SalesFilterPaginationModel) {
+    return await AxiosWrapper.get<PaginateModel<SalesListModel>>(ApiUrl.Sales, {
+      ...filters,
+    });
   }
 
   public static async addNewSale(data: AddSaleData) {

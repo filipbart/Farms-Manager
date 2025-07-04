@@ -15,6 +15,7 @@ export default interface SalesFilter {
   farmIds: string[];
   cycles: CycleDictModel[];
   henhouseIds: string[];
+  slaughterhouseIds: string[];
   dateSince: string;
   dateTo: string;
 }

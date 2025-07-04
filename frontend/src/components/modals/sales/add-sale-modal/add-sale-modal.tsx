@@ -162,7 +162,7 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
           //   },
           //   undefined,
           //   "Nie udało się wysłać wstawienia do IRZplus"
-          // );
+          // ); //TODO
         }
 
         toast.success("Dodano sprzedaż");

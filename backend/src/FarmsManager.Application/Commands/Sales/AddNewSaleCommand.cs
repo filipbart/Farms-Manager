@@ -1,7 +1,15 @@
+using FarmsManager.Application.Commands.Farms;
+using FarmsManager.Application.Commands.Slaughterhouses;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
+using FarmsManager.Application.Specifications.Cycle;
+using FarmsManager.Application.Specifications.Farms;
+using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Enums;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.FarmAggregate.Models;
+using FarmsManager.Domain.Aggregates.SlaughterhouseAggregate.Interfaces;
+using FarmsManager.Domain.Exceptions;
 using FluentValidation;
 using MediatR;
 
@@ -29,7 +37,7 @@ public record AddNewSaleCommand : IRequest<BaseResponse<AddNewSaleCommandRespons
         public decimal BasePrice { get; init; }
         public decimal PriceWithExtras { get; init; }
         public string Comment { get; init; }
-        public List<OtherExtra> OtherExtras { get; init; }
+        public IEnumerable<OtherExtra> OtherExtras { get; init; }
     }
 
     public class OtherExtra
@@ -46,16 +54,62 @@ public record AddNewSaleCommandResponse
 
 public class AddNewSaleCommandHandler : IRequestHandler<AddNewSaleCommand, BaseResponse<AddNewSaleCommandResponse>>
 {
+    public AddNewSaleCommandHandler(IUserDataResolver userDataResolver, ISaleRepository saleRepository,
+        IFarmRepository farmRepository, ICycleRepository cycleRepository, IHenhouseRepository henhouseRepository,
+        ISlaughterhouseRepository slaughterhouseRepository)
+    {
+        _userDataResolver = userDataResolver;
+        _saleRepository = saleRepository;
+        _farmRepository = farmRepository;
+        _cycleRepository = cycleRepository;
+        _henhouseRepository = henhouseRepository;
+        _slaughterhouseRepository = slaughterhouseRepository;
+    }
+
     private readonly IUserDataResolver _userDataResolver;
     private readonly ISaleRepository _saleRepository;
+    private readonly IFarmRepository _farmRepository;
+    private readonly ICycleRepository _cycleRepository;
+    private readonly IHenhouseRepository _henhouseRepository;
+    private readonly ISlaughterhouseRepository _slaughterhouseRepository;
+
     public async Task<BaseResponse<AddNewSaleCommandResponse>> Handle(AddNewSaleCommand request,
         CancellationToken ct)
     {
-        
-        
+        var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
+
+        var farm = await _farmRepository.GetAsync(new FarmByIdSpec(request.FarmId), ct);
+        var cycle = await _cycleRepository.GetAsync(new CycleByIdSpec(request.CycleId), ct);
+        var slaughterhouse =
+            await _slaughterhouseRepository.GetAsync(new SlaughterhouseByIdSpec(request.SlaughterhouseId), ct);
+
+        var newSales = new List<SaleEntity>();
+        var internalGroupId = Guid.NewGuid();
+        foreach (var entry in request.Entries)
+        {
+            var henhouse = await _henhouseRepository.GetAsync(new HenhouseByIdSpec(entry.HenhouseId),
+                ct);
+
+            var otherExtras = entry.OtherExtras?.Select(t => new SaleOtherExtras
+            {
+                Name = t.Name,
+                Value = t.Value
+            });
+
+            var newSale = SaleEntity.CreateNew(internalGroupId, request.SaleType, request.SaleDate, farm.Id, cycle.Id,
+                slaughterhouse.Id, henhouse.Id, entry.Weight, entry.Quantity, entry.ConfiscatedWeight,
+                entry.ConfiscatedCount, entry.DeadWeight, entry.DeadCount, entry.FarmerWeight, entry.BasePrice,
+                entry.PriceWithExtras, entry.Comment, otherExtras, userId);
+            newSales.Add(newSale);
+        }
+
+        if (newSales.Count != 0)
+            await _saleRepository.AddRangeAsync(newSales, ct);
+
+
         return BaseResponse.CreateResponse(new AddNewSaleCommandResponse
         {
-            InternalGroupId = Guid.Empty
+            InternalGroupId = internalGroupId
         });
     }
 }

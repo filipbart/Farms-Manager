@@ -12,7 +12,7 @@ namespace FarmsManager.Api.Controllers;
 public class InsertionsController(IMediator mediator) : BaseController
 {
     /// <summary>
-    /// Zwraca wstawienia według podantych filtrów
+    /// Zwraca wstawienia według podanych filtrów
     /// </summary>
     /// <param name="filters"></param>
     /// <returns></returns>

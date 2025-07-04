@@ -58,3 +58,4 @@ public sealed class GetAllCyclesSpec : BaseSpecification<CycleEntity>
         EnsureExists();
     }
 }
+

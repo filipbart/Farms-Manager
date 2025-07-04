@@ -76,10 +76,6 @@ const SaleEntriesSection: React.FC<SaleEntriesSectionProps> = ({
         if (entriesTableReady.includes(index)) {
           return null;
         }
-        const availableHenhouses = henhouses.filter(
-          (h) =>
-            !entries.some((en, idx) => idx !== index && en.henhouseId === h.id)
-        );
 
         return (
           <Grid spacing={1} key={index} alignItems="flex-start" sx={{ mb: 2 }}>
@@ -109,7 +105,7 @@ const SaleEntriesSection: React.FC<SaleEntriesSectionProps> = ({
                   value={entry.henhouseId}
                   onChange={({ target }) => {
                     const selectedId = target.value;
-                    const selectedHouse = availableHenhouses.find(
+                    const selectedHouse = henhouses.find(
                       (h) => h.id === selectedId
                     );
 
@@ -125,7 +121,7 @@ const SaleEntriesSection: React.FC<SaleEntriesSectionProps> = ({
                   error={!!errors?.[index]?.henhouseId}
                   helperText={errors?.[index]?.henhouseId}
                 >
-                  {availableHenhouses.map((house) => (
+                  {henhouses.map((house) => (
                     <MenuItem key={house.id} value={house.id}>
                       {house.name}
                     </MenuItem>
@@ -135,7 +131,7 @@ const SaleEntriesSection: React.FC<SaleEntriesSectionProps> = ({
               <Grid size={6}></Grid>
               <Grid size={12}>
                 <Typography variant="h6" mt={2} mb={1}>
-                  Przyjeto
+                  Przyjęto
                 </Typography>
               </Grid>
 
