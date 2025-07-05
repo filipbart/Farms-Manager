@@ -38,6 +38,7 @@ export default class ApiUrl {
   public static SalesDict = this.Sales + "/dictionary";
   public static UpdateSale = this.Sales + "/update";
   public static SaleSendToIrz = this.Sales + "/send-to-irz";
+  public static SaleExportFile = this.Sales + "/export";
 
   public static SalesSettings = this.BaseUrl + "sales-settings";
   public static AddSaleFieldExtra = this.SalesSettings + "/add";

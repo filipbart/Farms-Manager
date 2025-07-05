@@ -2,6 +2,7 @@
 using FarmsManager.Application.Commands.Sales;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Queries.Sales;
+using FarmsManager.Application.Queries.Sales.ExportFile;
 using FarmsManager.Application.Queries.Slaughterhouses.Dictionary;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -73,5 +74,17 @@ public class SalesController(IMediator mediator) : BaseController
     public async Task<IActionResult> SendToIrzPlus(SendSaleToIrzCommand command)
     {
         return Ok(await mediator.Send(command));
+    }
+
+
+    [HttpGet("export")]
+    [ProducesResponseType(typeof(File), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetSaleExportFile([FromQuery] GetSalesQueryFilters filters)
+    {
+        const string contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+        var fileStream = await mediator.Send(new GetSalesExportFileQuery(filters));
+
+        return fileStream is null ? NoContent() : File(fileStream, contentType);
     }
 }
