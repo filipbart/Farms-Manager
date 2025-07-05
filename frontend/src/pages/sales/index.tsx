@@ -1,15 +1,5 @@
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  tablePaginationClasses,
-  Typography,
-} from "@mui/material";
-import { type GridColDef, DataGrid } from "@mui/x-data-grid";
-import dayjs from "dayjs";
+import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
+import { DataGrid } from "@mui/x-data-grid";
 import { useReducer, useState, useMemo, useEffect } from "react";
 import { toast } from "react-toastify";
 import { mapSaleOrderTypeToField } from "../../common/helpers/sale-order-type-helper";
@@ -20,256 +10,45 @@ import type { CycleDictModel } from "../../models/common/dictionaries";
 
 import type { SalesDictionary } from "../../models/sales/sales-dictionary";
 import {
-  type SalesFilterPaginationModel,
+  filterReducer,
+  initialFilters,
   SalesOrderType,
 } from "../../models/sales/sales-filters";
 import { handleApiResponse } from "../../utils/axios/handle-api-response";
 import { getSaleFiltersConfig } from "./filter-config.sales";
 import AddSaleModal from "../../components/modals/sales/add-sale-modal/add-sale-modal";
 import { SalesService } from "../../services/sales-service";
-import Loading from "../../components/loading/loading";
-import type { PaginateModel } from "../../common/interfaces/paginate";
-import { OtherExtrasCell } from "../../models/sales/sale-other-extras-cell";
 import type { SaleListModel } from "../../models/sales/sales";
 import EditSaleModal from "../../components/modals/sales/edit-sale-modal/edit-sale-modal";
-
-const initialFilters: SalesFilterPaginationModel = {
-  farmIds: [],
-  cycles: [],
-  henhouseIds: [],
-  slaughterhouseIds: [],
-  dateSince: "",
-  dateTo: "",
-  page: 0,
-  pageSize: 10,
-};
-
-function filterReducer(
-  state: SalesFilterPaginationModel,
-  action:
-    | { type: "set"; key: keyof SalesFilterPaginationModel; value: any }
-    | { type: "setMultiple"; payload: Partial<SalesFilterPaginationModel> }
-): SalesFilterPaginationModel {
-  switch (action.type) {
-    case "set":
-      return { ...state, [action.key]: action.value };
-    case "setMultiple":
-      return { ...state, ...action.payload };
-    default:
-      return state;
-  }
-}
+import { getSalesColumns } from "./sales-columns";
+import { useSales } from "../../hooks/sales/useSales";
 
 const SalesPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
   const [dictionary, setDictionary] = useState<SalesDictionary>();
   const [openModal, setOpenModal] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [sales, setSales] = useState<SaleListModel[]>([]);
-  const [totalRows, setTotalRows] = useState(0);
   const [selectedSale, setSelectedSale] = useState<SaleListModel | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [loadingExport, setLoadingExport] = useState(false);
+  const { sales, totalRows, loading, refetch: fetchSales } = useSales(filters);
 
-  const columns: GridColDef[] = [
-    { field: "id", headerName: "Id", width: 70 },
-    { field: "cycleText", headerName: "Identyfikator", flex: 1 },
-    { field: "farmName", headerName: "Ferma", flex: 1 },
-    { field: "henhouseName", headerName: "Kurnik", flex: 1 },
-    {
-      field: "saleDate",
-      headerName: "Data sprzedaży",
-      flex: 1,
-      type: "string",
-      valueGetter: (params: any) => dayjs(params.value).format("YYYY-MM-DD"),
-    },
-    { field: "typeDesc", headerName: "Typ sprzedaży", flex: 1 },
-    { field: "weight", headerName: "Waga ubojni [kg]", flex: 1 },
-    { field: "quantity", headerName: "Ilość sztuk ubojnia [szt]", flex: 1 },
-    { field: "confiscatedWeight", headerName: "Konfiskaty [kg]", flex: 1 },
-    { field: "confiscatedCount", headerName: "Konfiskaty [szt]", flex: 1 },
-    { field: "deadWeight", headerName: "Kurczęta martwe [kg]", flex: 1 },
-    { field: "deadCount", headerName: "Kurczęta martwe [szt]", flex: 1 },
-    { field: "farmerWeight", headerName: "Waga producenta [kg]", flex: 1 },
-    { field: "basePrice", headerName: "Cena bazowa [zł]", flex: 1 },
-    { field: "priceWithExtras", headerName: "Cena z dodatkami [zł]", flex: 1 },
-    {
-      field: "otherExtras",
-      headerName: "Inne dodatki",
-      flex: 1,
-      renderCell: (params) => <OtherExtrasCell value={params.value} />,
-    },
-
-    {
-      field: "comment",
-      headerName: "Komentarz",
-      flex: 1,
-      renderCell: (params) => {
-        const [openCommentModal, setOpenCommentModal] = useState(false);
-
-        const handleOpenModal = () => {
-          setOpenCommentModal(true);
-        };
-
-        if (params.value) {
-          const commentPreview =
-            params.value.length > 20
-              ? `${params.value.substring(0, 20)}...`
-              : params.value;
-          return (
-            <>
-              <Button variant="text" onClick={handleOpenModal}>
-                {commentPreview}
-              </Button>
-              <Dialog
-                open={openCommentModal}
-                onClose={() => setOpenCommentModal(false)}
-              >
-                <DialogTitle>Zawartość komentarza</DialogTitle>
-                <DialogContent>
-                  <Typography>{params.value}</Typography>
-                </DialogContent>
-                <DialogActions>
-                  <Button onClick={() => setOpenCommentModal(false)}>
-                    Zamknij
-                  </Button>
-                </DialogActions>
-              </Dialog>
-            </>
-          );
-        }
-      },
-    },
-
-    {
-      field: "sendToIrz",
-      headerName: "Wyślij do IRZplus",
-      flex: 1,
-
-      minWidth: 200,
-      type: "actions",
-      renderCell: (params) => {
-        const { isSentToIrz, dateIrzSentUtc } = params.row;
-        const [loadingSendToIrz, setLoadingSendToIrz] = useState(false);
-        const handleSendToIrz = async (data: {
-          internalGroupId?: string;
-          saleId?: string;
-        }) => {
-          setLoadingSendToIrz(true);
-          await handleApiResponse(
-            () => SalesService.sendToIrzPlus(data),
-            async () => {
-              toast.success("Wysłano do IRZplus");
-              dispatch({
-                type: "setMultiple",
-                payload: { page: filters.page },
-              });
-              setLoadingSendToIrz(false);
-            },
-            undefined,
-            "Wystąpił błąd podczas wysyłania do IRZplus"
-          );
-          setLoadingSendToIrz(false);
-        };
-        if (dateIrzSentUtc) {
-          const formattedDate = new Date(dateIrzSentUtc).toLocaleString(
-            "pl-PL",
-            {
-              dateStyle: "short",
-              timeStyle: "short",
-            }
-          );
-
-          return (
-            <Typography variant="body2" sx={{ whiteSpace: "nowrap" }}>
-              Wysłano - {formattedDate}
-            </Typography>
-          );
-        }
-
-        if (isSentToIrz) {
-          return null;
-        }
-
-        return (
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 1,
-              flexWrap: "nowrap",
-            }}
-          >
-            {loadingSendToIrz ? (
-              <Loading height="0" size={10} />
-            ) : (
-              <>
-                <Button
-                  variant="contained"
-                  color="error"
-                  size="small"
-                  onClick={() => handleSendToIrz({ saleId: params.row.id })}
-                >
-                  Osobno
-                </Button>
-
-                <Button
-                  variant="outlined"
-                  color="error"
-                  size="small"
-                  onClick={() =>
-                    handleSendToIrz({
-                      internalGroupId: params.row.internalGroupId,
-                    })
-                  }
-                >
-                  Z grupą
-                </Button>
-              </>
-            )}
-          </Box>
-        );
-      },
-    },
-    {
-      field: "actions",
-      type: "actions",
-      headerName: "Akcje",
-      flex: 1,
-      getActions: (params) => [
-        <Button
-          key="edit"
-          variant="outlined"
-          size="small"
-          onClick={() => {
-            setSelectedSale(params.row);
-            setIsEditModalOpen(true);
-          }}
-        >
-          Edytuj
-        </Button>,
-      ],
-    },
-
-    {
-      field: "documentNumber",
-      headerName: "Numer dokumentu IRZplus",
-      flex: 1,
-      renderCell: (params) => {
-        return params.value ? params.value : "Brak numeru";
-      },
-    },
-    { field: "dateCreatedUtc", headerName: "Data utworzenia wpisu", flex: 1 },
-  ];
+  const columns = useMemo(
+    () =>
+      getSalesColumns({
+        setSelectedSale,
+        setIsEditModalOpen,
+        dispatch,
+        filters,
+      }),
+    [dispatch, filters]
+  );
 
   const uniqueCycles = useMemo(() => {
-    if (!dictionary) return [];
+    if (!dictionary?.cycles) return [];
     const map = new Map<string, CycleDictModel>();
     for (const cycle of dictionary.cycles) {
       const key = `${cycle.identifier}-${cycle.year}`;
-      if (!map.has(key)) {
-        map.set(key, cycle);
-      }
+      map.set(key, cycle);
     }
     return Array.from(map.values());
   }, [dictionary]);
@@ -291,26 +70,14 @@ const SalesPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const fetchInsertions = async () => {
-      setLoading(true);
-      try {
-        await handleApiResponse<PaginateModel<SaleListModel>>(
-          () => SalesService.getSales(filters),
-          (data) => {
-            setSales(data.responseData?.items ?? []);
-            setTotalRows(data.responseData?.totalRows ?? 0);
-          },
-          undefined,
-          "Błąd podczas pobierania wstawień"
-        );
-      } catch {
-        toast.error("Błąd podczas pobierania wstawień");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchInsertions();
-  }, [filters]);
+    fetchSales();
+  }, [fetchSales]);
+
+  const onClickExport = async () => {
+    setLoadingExport(true);
+
+    setLoadingExport(false);
+  };
 
   return (
     <Box p={4}>
@@ -369,7 +136,17 @@ const SalesPage: React.FC = () => {
           rowCount={totalRows}
           rowSelection={false}
           pageSizeOptions={[5, 10, 25, { value: -1, label: "Wszystkie" }]}
-          slots={{ toolbar: CustomToolbar, noRowsOverlay: NoRowsOverlay }}
+          slots={{
+            toolbar: (props) => (
+              <CustomToolbar
+                {...props}
+                withExport={true}
+                onClickExport={onClickExport}
+                loadingExport={loadingExport}
+              />
+            ),
+            noRowsOverlay: NoRowsOverlay,
+          }}
           showToolbar
           sx={{
             [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },

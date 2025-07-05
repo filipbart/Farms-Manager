@@ -12,7 +12,7 @@ import {
   TableRow,
   TableCell,
 } from "@mui/material";
-import type { SaleOtherExtras } from "./sales";
+import type { SaleOtherExtras } from "../../models/sales/sales";
 
 export const OtherExtrasCell = ({ value }: { value: SaleOtherExtras }) => {
   const [open, setOpen] = useState(false);
