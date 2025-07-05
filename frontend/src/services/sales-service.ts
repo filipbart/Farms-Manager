@@ -1,7 +1,6 @@
 import ApiUrl from "../common/ApiUrl";
 import type { PaginateModel } from "../common/interfaces/paginate";
-import type SalesListModel from "../models/sales/sales";
-import type { SaleType } from "../models/sales/sales";
+import type { SaleListModel, SaleType } from "../models/sales/sales";
 import type { SalesDictionary } from "../models/sales/sales-dictionary";
 import type { SalesFilterPaginationModel } from "../models/sales/sales-filters";
 import AxiosWrapper from "../utils/axios/wrapper";
@@ -41,7 +40,7 @@ export class SalesService {
   }
 
   public static async getSales(filters: SalesFilterPaginationModel) {
-    return await AxiosWrapper.get<PaginateModel<SalesListModel>>(ApiUrl.Sales, {
+    return await AxiosWrapper.get<PaginateModel<SaleListModel>>(ApiUrl.Sales, {
       ...filters,
     });
   }
@@ -51,5 +50,16 @@ export class SalesService {
       ApiUrl.Sales + "/add",
       data
     );
+  }
+
+  public static async updateSale(saleId: string, payload: any) {
+    return await AxiosWrapper.patch(ApiUrl.UpdateSale + "/" + saleId, payload);
+  }
+
+  public static async sendToIrzPlus(payload: {
+    internalGroupId?: string;
+    saleId?: string;
+  }) {
+    return await AxiosWrapper.post(ApiUrl.SaleSendToIrz, payload);
   }
 }

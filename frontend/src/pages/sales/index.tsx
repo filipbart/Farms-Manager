@@ -1,4 +1,13 @@
-import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  tablePaginationClasses,
+  Typography,
+} from "@mui/material";
 import { type GridColDef, DataGrid } from "@mui/x-data-grid";
 import dayjs from "dayjs";
 import { useReducer, useState, useMemo, useEffect } from "react";
@@ -8,7 +17,7 @@ import NoRowsOverlay from "../../components/datagrid/custom-norows";
 import CustomToolbar from "../../components/datagrid/custom-toolbar";
 import FiltersForm from "../../components/filters/filters-form";
 import type { CycleDictModel } from "../../models/common/dictionaries";
-import type SalesListModel from "../../models/sales/sales";
+
 import type { SalesDictionary } from "../../models/sales/sales-dictionary";
 import {
   type SalesFilterPaginationModel,
@@ -20,6 +29,9 @@ import AddSaleModal from "../../components/modals/sales/add-sale-modal/add-sale-
 import { SalesService } from "../../services/sales-service";
 import Loading from "../../components/loading/loading";
 import type { PaginateModel } from "../../common/interfaces/paginate";
+import { OtherExtrasCell } from "../../models/sales/sale-other-extras-cell";
+import type { SaleListModel } from "../../models/sales/sales";
+import EditSaleModal from "../../components/modals/sales/edit-sale-modal/edit-sale-modal";
 
 const initialFilters: SalesFilterPaginationModel = {
   farmIds: [],
@@ -53,11 +65,10 @@ const SalesPage: React.FC = () => {
   const [dictionary, setDictionary] = useState<SalesDictionary>();
   const [openModal, setOpenModal] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [sales, setSales] = useState<SalesListModel[]>([]);
+  const [sales, setSales] = useState<SaleListModel[]>([]);
   const [totalRows, setTotalRows] = useState(0);
-  //   const [selectedInsertion, setSelectedInsertion] =
-  //     useState<SalesListModel | null>(null);
-  //   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedSale, setSelectedSale] = useState<SaleListModel | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const columns: GridColDef[] = [
     { field: "id", headerName: "Id", width: 70 },
@@ -81,8 +92,53 @@ const SalesPage: React.FC = () => {
     { field: "farmerWeight", headerName: "Waga producenta [kg]", flex: 1 },
     { field: "basePrice", headerName: "Cena bazowa [zł]", flex: 1 },
     { field: "priceWithExtras", headerName: "Cena z dodatkami [zł]", flex: 1 },
-    { field: "otherExtras", headerName: "Inne dodatki", flex: 1 },
-    { field: "comment", headerName: "Komentarz", flex: 1 },
+    {
+      field: "otherExtras",
+      headerName: "Inne dodatki",
+      flex: 1,
+      renderCell: (params) => <OtherExtrasCell value={params.value} />,
+    },
+
+    {
+      field: "comment",
+      headerName: "Komentarz",
+      flex: 1,
+      renderCell: (params) => {
+        const [openCommentModal, setOpenCommentModal] = useState(false);
+
+        const handleOpenModal = () => {
+          setOpenCommentModal(true);
+        };
+
+        if (params.value) {
+          const commentPreview =
+            params.value.length > 20
+              ? `${params.value.substring(0, 20)}...`
+              : params.value;
+          return (
+            <>
+              <Button variant="text" onClick={handleOpenModal}>
+                {commentPreview}
+              </Button>
+              <Dialog
+                open={openCommentModal}
+                onClose={() => setOpenCommentModal(false)}
+              >
+                <DialogTitle>Zawartość komentarza</DialogTitle>
+                <DialogContent>
+                  <Typography>{params.value}</Typography>
+                </DialogContent>
+                <DialogActions>
+                  <Button onClick={() => setOpenCommentModal(false)}>
+                    Zamknij
+                  </Button>
+                </DialogActions>
+              </Dialog>
+            </>
+          );
+        }
+      },
+    },
 
     {
       field: "sendToIrz",
@@ -96,22 +152,22 @@ const SalesPage: React.FC = () => {
         const [loadingSendToIrz, setLoadingSendToIrz] = useState(false);
         const handleSendToIrz = async (data: {
           internalGroupId?: string;
-          insertionId?: string;
+          saleId?: string;
         }) => {
           setLoadingSendToIrz(true);
-          // await handleApiResponse(
-          //   () => InsertionsService.sendToIrzPlus(data),
-          //   async () => {
-          //     toast.success("Wysłano do IRZplus");
-          //     dispatch({
-          //       type: "setMultiple",
-          //       payload: { page: filters.page },
-          //     });
-          //     setLoadingSendToIrz(false);
-          //   },
-          //   undefined,
-          //   "Wystąpił błąd podczas wysyłania do IRZplus"
-          // );
+          await handleApiResponse(
+            () => SalesService.sendToIrzPlus(data),
+            async () => {
+              toast.success("Wysłano do IRZplus");
+              dispatch({
+                type: "setMultiple",
+                payload: { page: filters.page },
+              });
+              setLoadingSendToIrz(false);
+            },
+            undefined,
+            "Wystąpił błąd podczas wysyłania do IRZplus"
+          );
           setLoadingSendToIrz(false);
         };
         if (dateIrzSentUtc) {
@@ -152,9 +208,7 @@ const SalesPage: React.FC = () => {
                   variant="contained"
                   color="error"
                   size="small"
-                  onClick={() =>
-                    handleSendToIrz({ insertionId: params.row.id })
-                  }
+                  onClick={() => handleSendToIrz({ saleId: params.row.id })}
                 >
                   Osobno
                 </Button>
@@ -188,8 +242,8 @@ const SalesPage: React.FC = () => {
           variant="outlined"
           size="small"
           onClick={() => {
-            // setSelectedInsertion(params.row);
-            // setIsEditModalOpen(true);
+            setSelectedSale(params.row);
+            setIsEditModalOpen(true);
           }}
         >
           Edytuj
@@ -240,7 +294,7 @@ const SalesPage: React.FC = () => {
     const fetchInsertions = async () => {
       setLoading(true);
       try {
-        await handleApiResponse<PaginateModel<SalesListModel>>(
+        await handleApiResponse<PaginateModel<SaleListModel>>(
           () => SalesService.getSales(filters),
           (data) => {
             setSales(data.responseData?.items ?? []);
@@ -345,19 +399,20 @@ const SalesPage: React.FC = () => {
           }}
         />
       </Box>
-      {/* <EditInsertionModal
+
+      <EditSaleModal
         open={isEditModalOpen}
         onClose={() => {
           setIsEditModalOpen(false);
-          setSelectedInsertion(null);
+          setSelectedSale(null);
         }}
         onSave={() => {
           setIsEditModalOpen(false);
-          setSelectedInsertion(null);
+          setSelectedSale(null);
           dispatch({ type: "setMultiple", payload: { page: filters.page } });
         }}
-        insertion={selectedInsertion}
-      /> */}
+        sale={selectedSale}
+      />
 
       <AddSaleModal
         open={openModal}

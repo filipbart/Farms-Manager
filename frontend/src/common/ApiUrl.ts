@@ -28,7 +28,7 @@ export default class ApiUrl {
   public static LatestCycle = "/latest-cycle";
   public static InsertionAvailableHenhouses =
     this.Insertions + "/available-henhouses";
-  public static SendToIrz = this.Insertions + "/send-to-irz";
+  public static InsertionSendToIrz = this.Insertions + "/send-to-irz";
 
   public static Settings = this.BaseUrl + "settings";
   public static IrzPlusCredentials =
@@ -36,6 +36,8 @@ export default class ApiUrl {
 
   public static Sales = this.BaseUrl + "sales";
   public static SalesDict = this.Sales + "/dictionary";
+  public static UpdateSale = this.Sales + "/update";
+  public static SaleSendToIrz = this.Sales + "/send-to-irz";
 
   public static SalesSettings = this.BaseUrl + "sales-settings";
   public static AddSaleFieldExtra = this.SalesSettings + "/add";

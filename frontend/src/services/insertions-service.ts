@@ -79,6 +79,6 @@ export class InsertionsService {
     internalGroupId?: string;
     insertionId?: string;
   }) {
-    return await AxiosWrapper.post(ApiUrl.SendToIrz, payload);
+    return await AxiosWrapper.post(ApiUrl.InsertionSendToIrz, payload);
   }
 }

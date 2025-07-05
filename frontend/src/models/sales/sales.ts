@@ -1,18 +1,33 @@
-export default interface SalesListModel {
+export interface SaleOtherExtras {
+  name: string;
+  value: number;
+}
+
+export interface SaleListModel {
   id: string;
   cycleText: string;
   farmName: string;
   henhouseName: string;
+  slaughterhouseName: string;
   type: SaleType;
   typeDesc: string;
-  saleDate: Date;
-  //todo uzupełnić
-
-  dateCreatedUtc: Date;
+  saleDate: string;
+  weight: number;
+  quantity: number;
+  confiscatedWeight: number;
+  confiscatedCount: number;
+  deadWeight: number;
+  deadCount: number;
+  farmerWeight: number;
+  basePrice: number;
+  priceWithExtras: number;
+  otherExtras: SaleOtherExtras[];
+  comment: string;
+  dateCreatedUtc: string;
   internalGroupId: string;
-  dateIrzSentUtc?: Date;
+  dateIrzSentUtc: string | null;
   isSentToIrz: boolean;
-  documentNumber?: string;
+  documentNumber: string;
 }
 
 export enum SaleType {

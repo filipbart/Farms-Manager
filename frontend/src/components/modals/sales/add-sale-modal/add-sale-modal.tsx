@@ -152,17 +152,17 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
         }
 
         if (sendToIrz) {
-          // await handleApiResponse(
-          //   () =>
-          //     SalesService.sendToIrzPlus({
-          //       internalGroupId: data.responseData!.internalGroupId,
-          //     }),
-          //   () => {
-          //     toast.success("Wstawienie wysłane do IRZplus");
-          //   },
-          //   undefined,
-          //   "Nie udało się wysłać wstawienia do IRZplus"
-          // ); //TODO
+          await handleApiResponse(
+            () =>
+              SalesService.sendToIrzPlus({
+                internalGroupId: data.responseData!.internalGroupId,
+              }),
+            () => {
+              toast.success("Sprzedaż wysłana do IRZplus");
+            },
+            undefined,
+            "Nie udało się wysłać sprzedaży do IRZplus"
+          );
         }
 
         toast.success("Dodano sprzedaż");
