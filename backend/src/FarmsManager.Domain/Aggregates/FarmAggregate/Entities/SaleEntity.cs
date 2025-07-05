@@ -96,4 +96,53 @@ public class SaleEntity : Entity
     public bool IsSentToIrz { get; private set; }
     public Guid? SentToIrzBy { get; protected internal set; }
     public string DocumentNumber { get; protected internal set; }
+
+    public void Update(
+        DateOnly saleDate,
+        decimal weight,
+        int quantity,
+        decimal confiscatedWeight,
+        int confiscatedCount,
+        decimal deadWeight,
+        int deadCount,
+        decimal farmerWeight,
+        decimal basePrice,
+        decimal priceWithExtras,
+        string comment,
+        IEnumerable<SaleOtherExtras> otherExtras)
+    {
+        SaleDate = saleDate;
+        Weight = weight;
+        Quantity = quantity;
+        ConfiscatedWeight = confiscatedWeight;
+        ConfiscatedCount = confiscatedCount;
+        DeadWeight = deadWeight;
+        DeadCount = deadCount;
+        FarmerWeight = farmerWeight;
+        BasePrice = basePrice;
+        PriceWithExtras = priceWithExtras;
+        Comment = comment;
+
+        OtherExtras.Clear();
+        if (otherExtras != null)
+        {
+            OtherExtras.AddRange(otherExtras);
+        }
+    }
+
+    public void MarkAsSentToIrz(string documentNumber, Guid userId)
+    {
+        IsSentToIrz = true;
+        SentToIrzBy = userId;
+        DateIrzSentUtc = DateTime.UtcNow;
+        DocumentNumber = documentNumber;
+    }
+
+    public void MarkAsSentToIrzByAdmin(Guid userId)
+    {
+        IsSentToIrz = true;
+        SentToIrzBy = userId;
+    }
+
+    public bool IsAlreadySentToIrz() => DateIrzSentUtc.HasValue || IsSentToIrz;
 }

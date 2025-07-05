@@ -16,8 +16,6 @@ public class SaleEntityConfiguration : BaseConfiguration<SaleEntity>
 
         builder.HasKey(t => t.Id);
 
-        builder.HasIndex(t => new { t.CycleId, t.FarmId, t.HenhouseId }).IsUnique(); //TODO adjust
-
         builder.HasOne(t => t.Henhouse).WithMany().HasForeignKey(t => t.HenhouseId);
         builder.HasOne(t => t.Cycle).WithMany().HasForeignKey(t => t.CycleId);
         builder.HasOne(t => t.Farm).WithMany().HasForeignKey(t => t.FarmId);

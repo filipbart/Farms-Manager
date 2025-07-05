@@ -2,7 +2,7 @@
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications;
-using FarmsManager.Application.Specifications.Insertions;
+using FarmsManager.Application.Specifications.Sales;
 using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
@@ -12,27 +12,27 @@ using FarmsManager.Shared.Extensions;
 using FluentValidation;
 using MediatR;
 
-namespace FarmsManager.Application.Commands.Insertions;
+namespace FarmsManager.Application.Commands.Sales;
 
-public record SendToIrzCommand(Guid? InsertionId, Guid? InternalGroupId) : IRequest<EmptyBaseResponse>;
+public record SendSaleToIrzCommand(Guid? SaleId, Guid? InternalGroupId) : IRequest<EmptyBaseResponse>;
 
-public class SendToIrzCommandHandler : IRequestHandler<SendToIrzCommand, EmptyBaseResponse>
+public class SendSaleToIrzCommandHandler : IRequestHandler<SendSaleToIrzCommand, EmptyBaseResponse>
 {
     private readonly IUserDataResolver _userDataResolver;
     private readonly IUserRepository _userRepository;
-    private readonly IInsertionRepository _insertionRepository;
+    private readonly ISaleRepository _saleRepository;
     private readonly IIrzplusService _irzplusService;
 
-    public SendToIrzCommandHandler(IUserDataResolver userDataResolver, IInsertionRepository insertionRepository,
+    public SendSaleToIrzCommandHandler(IUserDataResolver userDataResolver, ISaleRepository saleRepository,
         IUserRepository userRepository, IIrzplusService irzplusService)
     {
         _userDataResolver = userDataResolver;
-        _insertionRepository = insertionRepository;
+        _saleRepository = saleRepository;
         _userRepository = userRepository;
         _irzplusService = irzplusService;
     }
 
-    public async Task<EmptyBaseResponse> Handle(SendToIrzCommand request, CancellationToken ct)
+    public async Task<EmptyBaseResponse> Handle(SendSaleToIrzCommand request, CancellationToken ct)
     {
         var response = new EmptyBaseResponse();
 
@@ -49,42 +49,42 @@ public class SendToIrzCommandHandler : IRequestHandler<SendToIrzCommand, EmptyBa
 
         _irzplusService.PrepareOptions(user.IrzplusCredentials);
 
-        List<InsertionEntity> insertionsToSend = [];
-        if (request.InsertionId.HasValue)
+        List<SaleEntity> salesToSend = [];
+        if (request.SaleId.HasValue)
         {
-            var insertion =
-                await _insertionRepository.GetAsync(new InsertionByIdSpec(request.InsertionId.Value), ct);
+            var sale =
+                await _saleRepository.GetAsync(new SaleByIdSpec(request.SaleId.Value), ct);
 
-            if (insertion.IsAlreadySentToIrz())
+            if (sale.IsAlreadySentToIrz())
             {
-                response.AddError("Insertion", "Wstawienie zostało już wysłane do systemu IRZplus");
+                response.AddError("Sale", "Wstawienie zostało już wysłane do systemu IRZplus");
                 return response;
             }
 
-            insertionsToSend.Add(insertion);
+            salesToSend.Add(sale);
         }
 
         else if (request.InternalGroupId.HasValue)
         {
-            var insertions =
-                await _insertionRepository.ListAsync(
-                    new GetInsertionsToSendByInternalGroupId(request.InternalGroupId.Value), ct);
-            if (insertions.Count == 0)
+            var sales =
+                await _saleRepository.ListAsync(
+                    new GetSalesToSendByInternalGroupId(request.InternalGroupId.Value), ct);
+            if (sales.Count == 0)
             {
-                response.AddError("Insertions", "Brak wstawień do wysłania");
+                response.AddError("Sales", "Brak wstawień do wysłania");
                 return response;
             }
 
-            insertionsToSend.AddRange(insertions);
+            salesToSend.AddRange(sales);
         }
         else
         {
-            response.AddError("Insertions", "Brak wstawień do wysłania");
+            response.AddError("Sales", "Brak wstawień do wysłania");
             return response;
         }
 
-        var hasDifferentFarms = insertionsToSend.Select(x => x.FarmId).Distinct().Skip(1).Any();
-        var hasDifferentCycles = insertionsToSend.Select(x => x.CycleId).Distinct().Skip(1).Any();
+        var hasDifferentFarms = salesToSend.Select(x => x.FarmId).Distinct().Skip(1).Any();
+        var hasDifferentCycles = salesToSend.Select(x => x.CycleId).Distinct().Skip(1).Any();
 
         if (hasDifferentFarms || hasDifferentCycles)
         {
@@ -93,7 +93,7 @@ public class SendToIrzCommandHandler : IRequestHandler<SendToIrzCommand, EmptyBa
         }
 
 
-        var dispositionResponse = await _irzplusService.SendInsertionsAsync(insertionsToSend, ct);
+        var dispositionResponse = await _irzplusService.SendSalesAsync(salesToSend, ct);
         if (dispositionResponse.Bledy.Count != 0)
         {
             foreach (var bladWalidacjiDto in dispositionResponse.Bledy)
@@ -104,34 +104,34 @@ public class SendToIrzCommandHandler : IRequestHandler<SendToIrzCommand, EmptyBa
             return response;
         }
 
-        insertionsToSend.ForEach(t => t.MarkAsSentToIrz(dispositionResponse.NumerDokumentu, userId));
-        await _insertionRepository.UpdateRangeAsync(insertionsToSend, ct);
+        salesToSend.ForEach(t => t.MarkAsSentToIrz(dispositionResponse.NumerDokumentu, userId));
+        await _saleRepository.UpdateRangeAsync(salesToSend, ct);
 
         return response;
     }
 }
 
-public sealed class GetInsertionsToSendByInternalGroupId : BaseSpecification<InsertionEntity>
+public sealed class GetSalesToSendByInternalGroupId : BaseSpecification<SaleEntity>
 {
-    public GetInsertionsToSendByInternalGroupId(Guid internalGroupId)
+    public GetSalesToSendByInternalGroupId(Guid internalGroupId)
     {
         EnsureExists();
         Query.Where(t => t.InternalGroupId == internalGroupId);
         Query.Where(t => t.DateIrzSentUtc.HasValue == false);
         Query.Where(t => t.IsSentToIrz == false);
         Query.Include(t => t.Farm);
-        Query.Include(t => t.Hatchery);
+        Query.Include(t => t.Slaughterhouse);
         Query.Include(t => t.Cycle);
         Query.Include(t => t.Henhouse);
     }
 }
 
-public class SendToIrzCommandValidator : AbstractValidator<SendToIrzCommand>
+public class SendSaleToIrzCommandValidator : AbstractValidator<SendSaleToIrzCommand>
 {
-    public SendToIrzCommandValidator()
+    public SendSaleToIrzCommandValidator()
     {
         RuleFor(x => x)
-            .Must(x => x.InsertionId.HasValue || x.InternalGroupId.HasValue)
-            .WithMessage("Musi być podane 'InsertionId' lub 'InternalGroupId'");
+            .Must(x => x.SaleId.HasValue || x.InternalGroupId.HasValue)
+            .WithMessage("Musi być podane 'SaleId' lub 'InternalGroupId'");
     }
 }

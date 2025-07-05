@@ -94,6 +94,11 @@ public class IrzplusService : IIrzplusService
         return responseModel;
     }
 
+    public Task<ZlozenieDyspozycjiResponse> SendSalesAsync(IList<SaleEntity> insertions, CancellationToken ct = default)
+    {
+        throw new NotImplementedException();
+    }
+
     private static DyspozycjaZZSSD MapDispositionZzssd(IList<InsertionEntity> insertions)
     {
         var firstInsertion = insertions.First();

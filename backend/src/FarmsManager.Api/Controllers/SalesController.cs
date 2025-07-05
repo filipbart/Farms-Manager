@@ -21,7 +21,7 @@ public class SalesController(IMediator mediator) : BaseController
     {
         return Ok(await mediator.Send(new GetSalesDictionaryQuery()));
     }
-    
+
     /// <summary>
     /// Zwraca sprzedaże według podanych filtrów
     /// </summary>
@@ -34,7 +34,7 @@ public class SalesController(IMediator mediator) : BaseController
     {
         return Ok(await mediator.Send(new GetSalesQuery(filters)));
     }
-    
+
     /// <summary>
     /// Dodaje nową sprzedaz
     /// </summary>
@@ -44,6 +44,33 @@ public class SalesController(IMediator mediator) : BaseController
     [ProducesResponseType(typeof(BaseResponse<AddNewSaleCommandResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> AddNewInsertion(AddNewSaleCommand command)
+    {
+        return Ok(await mediator.Send(command));
+    }
+
+    /// <summary>
+    /// Aktualizuje dane sprzedaży
+    /// </summary>
+    /// <param name="id"></param>
+    /// <param name="payload"></param>
+    /// <returns></returns>
+    [HttpPatch("update/{id:guid}")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> UpdateInsertin([FromRoute] Guid id, [FromBody] UpdateSaleCommandDto payload)
+    {
+        return Ok(await mediator.Send(new UpdateSaleCommand(id, payload)));
+    }
+
+    /// <summary>
+    /// Wysyła sprzedaż do systemu IRZplus
+    /// </summary>
+    /// <param name="command"></param>
+    /// <returns></returns>
+    [HttpPost("send-to-irz")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> SendToIrzPlus(SendSaleToIrzCommand command)
     {
         return Ok(await mediator.Send(command));
     }
