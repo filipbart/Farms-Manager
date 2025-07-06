@@ -34,6 +34,10 @@ const SalesPage: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [loadingExport, setLoadingExport] = useState(false);
   const { sales, totalRows, loading, refetch: fetchSales } = useSales(filters);
+  const [visibilityModel, setVisibilityModel] = useState(() => {
+    const saved = localStorage.getItem("columnVisibilityModelSales");
+    return saved ? JSON.parse(saved) : {};
+  });
 
   const columns = useMemo(
     () =>
@@ -149,6 +153,14 @@ const SalesPage: React.FC = () => {
           loading={loading}
           rows={sales}
           columns={columns}
+          columnVisibilityModel={visibilityModel}
+          onColumnVisibilityModelChange={(model) => {
+            setVisibilityModel(model);
+            localStorage.setItem(
+              "columnVisibilityModel",
+              JSON.stringify(model)
+            );
+          }}
           initialState={{
             columns: {
               columnVisibilityModel: { id: false, dateCreatedUtc: false },

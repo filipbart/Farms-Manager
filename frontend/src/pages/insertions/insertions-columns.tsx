@@ -1,53 +1,19 @@
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Typography,
-} from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 import type { GridColDef } from "@mui/x-data-grid";
 import dayjs from "dayjs";
 import { toast } from "react-toastify";
-import { SalesService } from "../../services/sales-service";
 import { handleApiResponse } from "../../utils/axios/handle-api-response";
 import Loading from "../../components/loading/loading";
-import { OtherExtrasCell } from "../../models/sales/sale-other-extras-cell";
 import { useState } from "react";
+import { InsertionsService } from "../../services/insertions-service";
 
-const SaleCommentCell: React.FC<{ value: string }> = ({ value }) => {
-  const [open, setOpen] = useState(false);
-
-  if (!value) return null;
-
-  const preview = value.length > 20 ? `${value.slice(0, 20)}...` : value;
-
-  return (
-    <>
-      <Button variant="text" onClick={() => setOpen(true)}>
-        {preview}
-      </Button>
-      <Dialog open={open} onClose={() => setOpen(false)}>
-        <DialogTitle>Zawartość komentarza</DialogTitle>
-        <DialogContent>
-          <Typography>{value}</Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpen(false)}>Zamknij</Button>
-        </DialogActions>
-      </Dialog>
-    </>
-  );
-};
-
-export const getSalesColumns = ({
-  setSelectedSale,
+export const getInsertionsColumns = ({
+  setSelectedInsertion,
   setIsEditModalOpen,
   dispatch,
   filters,
 }: {
-  setSelectedSale: (s: any) => void;
+  setSelectedInsertion: (s: any) => void;
   setIsEditModalOpen: (v: boolean) => void;
   dispatch: any;
   filters: any;
@@ -57,66 +23,46 @@ export const getSalesColumns = ({
     { field: "cycleText", headerName: "Identyfikator", flex: 1 },
     { field: "farmName", headerName: "Ferma", flex: 1 },
     { field: "henhouseName", headerName: "Kurnik", flex: 1 },
-    { field: "slaughterhouseName", headerName: "Ubojnia", flex: 1 },
     {
-      field: "saleDate",
-      headerName: "Data sprzedaży",
+      field: "insertionDate",
+      headerName: "Data wstawienia",
       flex: 1,
       type: "string",
       valueGetter: (params: any) => dayjs(params.value).format("YYYY-MM-DD"),
     },
-    { field: "typeDesc", headerName: "Typ sprzedaży", flex: 1 },
-    { field: "weight", headerName: "Waga ubojni [kg]", flex: 1 },
-    { field: "quantity", headerName: "Ilość sztuk ubojnia [szt]", flex: 1 },
-    { field: "confiscatedWeight", headerName: "Konfiskaty [kg]", flex: 1 },
-    { field: "confiscatedCount", headerName: "Konfiskaty [szt]", flex: 1 },
-    { field: "deadWeight", headerName: "Kurczęta martwe [kg]", flex: 1 },
-    { field: "deadCount", headerName: "Kurczęta martwe [szt]", flex: 1 },
-    { field: "farmerWeight", headerName: "Waga producenta [kg]", flex: 1 },
-    { field: "basePrice", headerName: "Cena bazowa [zł]", flex: 1 },
-    { field: "priceWithExtras", headerName: "Cena z dodatkami [zł]", flex: 1 },
-    {
-      field: "otherExtras",
-      headerName: "Inne dodatki",
-      flex: 1,
-      renderCell: (params) => <OtherExtrasCell value={params.value} />,
-    },
-    {
-      field: "comment",
-      headerName: "Komentarz",
-      flex: 1,
-      renderCell: (params) => <SaleCommentCell value={params.value} />,
-    },
+    { field: "quantity", headerName: "Sztuki wstawione", flex: 1 },
+    { field: "hatcheryName", headerName: "Wylęgarnia", flex: 1 },
+    { field: "bodyWeight", headerName: "Śr. masa ciała", flex: 1 },
     {
       field: "sendToIrz",
       headerName: "Wyślij do IRZplus",
       flex: 1,
+
       minWidth: 200,
       type: "actions",
       renderCell: (params) => {
         const { isSentToIrz, dateIrzSentUtc } = params.row;
         const [loadingSendToIrz, setLoadingSendToIrz] = useState(false);
-
         const handleSendToIrz = async (data: {
           internalGroupId?: string;
-          saleId?: string;
+          insertionId?: string;
         }) => {
           setLoadingSendToIrz(true);
           await handleApiResponse(
-            () => SalesService.sendToIrzPlus(data),
+            () => InsertionsService.sendToIrzPlus(data),
             async () => {
               toast.success("Wysłano do IRZplus");
               dispatch({
                 type: "setMultiple",
                 payload: { page: filters.page },
               });
+              setLoadingSendToIrz(false);
             },
             undefined,
             "Wystąpił błąd podczas wysyłania do IRZplus"
           );
           setLoadingSendToIrz(false);
         };
-
         if (dateIrzSentUtc) {
           const formattedDate = new Date(dateIrzSentUtc).toLocaleString(
             "pl-PL",
@@ -155,7 +101,9 @@ export const getSalesColumns = ({
                   variant="contained"
                   color="error"
                   size="small"
-                  onClick={() => handleSendToIrz({ saleId: params.row.id })}
+                  onClick={() =>
+                    handleSendToIrz({ insertionId: params.row.id })
+                  }
                 >
                   Osobno
                 </Button>
@@ -189,7 +137,7 @@ export const getSalesColumns = ({
           variant="outlined"
           size="small"
           onClick={() => {
-            setSelectedSale(params.row);
+            setSelectedInsertion(params.row);
             setIsEditModalOpen(true);
           }}
         >
@@ -197,16 +145,15 @@ export const getSalesColumns = ({
         </Button>,
       ],
     },
+
     {
       field: "documentNumber",
       headerName: "Numer dokumentu IRZplus",
       flex: 1,
-      renderCell: (params) => (params.value ? params.value : "Brak numeru"),
+      renderCell: (params) => {
+        return params.value ? params.value : "Brak numeru";
+      },
     },
-    {
-      field: "dateCreatedUtc",
-      headerName: "Data utworzenia wpisu",
-      flex: 1,
-    },
+    { field: "dateCreatedUtc", headerName: "Data utworzenia wpisu", flex: 1 },
   ];
 };

@@ -28,7 +28,7 @@ const CustomToolbar: React.FC<CustomToolbarProps> = ({
   return (
     <Toolbar>
       {withExport && (
-        <Tooltip title="Eksport do CSV">
+        <Tooltip title="Eksport do XLSX">
           {loadingExport ? (
             <Loading height="0" size={5} />
           ) : (

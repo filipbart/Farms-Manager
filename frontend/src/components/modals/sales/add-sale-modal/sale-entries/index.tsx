@@ -137,21 +137,6 @@ const SaleEntriesSection: React.FC<SaleEntriesSectionProps> = ({
 
               <Grid size={{ xs: 12, sm: 3 }}>
                 <TextField
-                  label="Sztuki"
-                  type="number"
-                  value={entry.quantity}
-                  onChange={(e) =>
-                    handleFieldChange(index, "quantity", e.target.value)
-                  }
-                  slotProps={{ htmlInput: { min: 1, step: 1 } }}
-                  error={!!errors?.[index]?.quantity}
-                  helperText={errors?.[index]?.quantity}
-                  fullWidth
-                />
-              </Grid>
-
-              <Grid size={{ xs: 12, sm: 3 }}>
-                <TextField
                   label="Waga (kg)"
                   type="number"
                   value={entry.weight}
@@ -161,6 +146,21 @@ const SaleEntriesSection: React.FC<SaleEntriesSectionProps> = ({
                   slotProps={{ htmlInput: { min: 0, step: 0.01 } }}
                   error={!!errors?.[index]?.weight}
                   helperText={errors?.[index]?.weight}
+                  fullWidth
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12, sm: 3 }}>
+                <TextField
+                  label="Sztuki"
+                  type="number"
+                  value={entry.quantity}
+                  onChange={(e) =>
+                    handleFieldChange(index, "quantity", e.target.value)
+                  }
+                  slotProps={{ htmlInput: { min: 1, step: 1 } }}
+                  error={!!errors?.[index]?.quantity}
+                  helperText={errors?.[index]?.quantity}
                   fullWidth
                 />
               </Grid>
