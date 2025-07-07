@@ -4,7 +4,7 @@ import React from "react";
 
 interface LoadingTextFieldProps extends Omit<TextFieldProps, "value"> {
   loading: boolean;
-  value: string;
+  value?: string;
   children?: React.ReactNode;
 }
 

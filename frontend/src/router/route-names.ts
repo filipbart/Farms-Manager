@@ -9,6 +9,7 @@ export enum RouteName {
   Houses = "data/houses",
   Hatcheries = "data/hatcheries",
   Slaughterhouses = "data/slaughterhouses",
+  FeedsStock = "feeds/stock",
   Settings = "settings",
   Users = "users",
   UserProfile = "user-profile",
