@@ -7,7 +7,7 @@ import {
   useMediaQuery,
   Avatar,
 } from "@mui/material";
-import logo_dark_trans from "../../assets/logo-dark-trans.png";
+import LogoWhite from "../../assets/logo_white.png";
 import SidebarMenuItem from "./sidebar-menu-item";
 import { IoCard, IoHome, IoSettings } from "react-icons/io5";
 import {
@@ -149,7 +149,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           <Box sx={{ p: 3 }}>
             <img
               className="justify-center mx-auto"
-              src={logo_dark_trans}
+              src={LogoWhite}
               alt="Logo"
               style={{ width: "100px", height: "auto" }}
             />

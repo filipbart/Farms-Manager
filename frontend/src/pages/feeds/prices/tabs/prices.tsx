@@ -37,15 +37,15 @@ const FeedsPricesTab: React.FC = () => {
   const deleteFeedPrice = async (id: string) => {
     try {
       setLoading(true);
-      // await handleApiResponse(
-      //   () => FeedsService.deleteFeedPrice(id),
-      //   () => {
-      //     toast.success("Cena paszy została usunięta");
-      //     dispatch({ type: "setMultiple", payload: { page: 0 } });
-      //   },
-      //   undefined,
-      //   "Błąd podczas usuwania ceny paszy"
-      // );
+      await handleApiResponse(
+        () => FeedsService.deleteFeedPrice(id),
+        () => {
+          toast.success("Cena paszy została usunięta");
+          dispatch({ type: "setMultiple", payload: { page: 0 } });
+        },
+        undefined,
+        "Błąd podczas usuwania ceny paszy"
+      );
     } catch {
       toast.error("Błąd podczas usuwania ceny paszy");
     } finally {

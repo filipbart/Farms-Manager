@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import logo from "../assets/logo-full.png";
+import logo from "../assets/logo.png";
 
 import { TextField, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
