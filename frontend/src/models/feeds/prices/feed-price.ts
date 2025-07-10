@@ -7,3 +7,18 @@ export interface FeedPriceListModel {
   price: number;
   dateCreatedUtc: string;
 }
+
+export interface AddFeedPriceFormData {
+  farmId: string;
+  identifierId: string;
+  identifierDisplay?: string;
+  priceDate: string;
+  nameId: string;
+  price: number;
+}
+
+export interface UpdateFeedPriceFormData {
+  priceDate: string;
+  nameId: string;
+  price: number;
+}

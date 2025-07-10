@@ -85,4 +85,31 @@ public class FeedsController(IMediator mediator) : BaseController
     {
         return Ok(await mediator.Send(command));
     }
+
+    /// <summary>
+    /// Aktualizuje dane ceny paszy
+    /// </summary>
+    /// <param name="id"></param>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    [HttpPatch("update-price/{id:guid}")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> UpdateFeedPrice([FromRoute] Guid id, [FromBody] UpdateFeedPriceCommandDto data)
+    {
+        return Ok(await mediator.Send(new UpdateFeedPriceCommand(id, data)));
+    }
+
+    /// <summary>
+    /// Usuwa cene paszy
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    [HttpDelete("delete-price/{id:guid}")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> DeleteFeedPrice([FromRoute] Guid id)
+    {
+        return Ok(await mediator.Send(new DeleteFeedPriceCommand(id)));
+    }
 }

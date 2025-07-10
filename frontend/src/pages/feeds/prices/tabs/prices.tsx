@@ -20,6 +20,7 @@ import { getFeedsFiltersConfig } from "./filter-config.feeds-prices";
 import { getFeedsPriceColumns } from "../price-columns";
 import type { FeedPriceListModel } from "../../../../models/feeds/prices/feed-price";
 import type { PaginateModel } from "../../../../common/interfaces/paginate";
+import EditFeedPriceModal from "../../../../components/modals/feeds/prices/edit-feed-price-modal";
 
 const FeedsPricesTab: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -202,19 +203,19 @@ const FeedsPricesTab: React.FC = () => {
           }}
         />
       </Box>
-      {/* <EditInsertionModal
+      <EditFeedPriceModal
         open={isEditModalOpen}
         onClose={() => {
           setIsEditModalOpen(false);
-          setSelectedInsertion(null);
+          setSelectedFeedPrice(null);
         }}
         onSave={() => {
           setIsEditModalOpen(false);
-          setSelectedInsertion(null);
+          setSelectedFeedPrice(null);
           dispatch({ type: "setMultiple", payload: { page: filters.page } });
         }}
-        insertion={selectedInsertion}
-      /> */}
+        feedPrice={selectedFeedPrice}
+      />
 
       <AddFeedPriceModal
         open={openModal}

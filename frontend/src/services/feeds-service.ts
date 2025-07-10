@@ -2,18 +2,13 @@ import ApiUrl from "../common/ApiUrl";
 import type { PaginateModel } from "../common/interfaces/paginate";
 import type { FeedsDictionary } from "../models/feeds/feeds-dictionary";
 import type { FeedsNamesQueryResponse } from "../models/feeds/feeds-names";
-import type { FeedPriceListModel } from "../models/feeds/prices/feed-price";
+import type {
+  AddFeedPriceFormData,
+  FeedPriceListModel,
+  UpdateFeedPriceFormData,
+} from "../models/feeds/prices/feed-price";
 import type { FeedsPricesFilterPaginationModel } from "../models/feeds/prices/price-filters";
 import AxiosWrapper from "../utils/axios/wrapper";
-
-export interface AddFeedPriceFormData {
-  farmId: string;
-  identifierId: string;
-  identifierDisplay?: string;
-  priceDate: string;
-  nameId: string;
-  price: number;
-}
 
 export class FeedsService {
   public static async getDictionaries() {
@@ -47,5 +42,16 @@ export class FeedsService {
         ...filters,
       }
     );
+  }
+
+  public static async updateFeedPrice(
+    id: string,
+    data: UpdateFeedPriceFormData
+  ) {
+    return await AxiosWrapper.patch(ApiUrl.UpdateFeedPrice + "/" + id, data);
+  }
+
+  public static async deleteFeedPrice(id: string) {
+    return await AxiosWrapper.delete(ApiUrl.DeleteFeedPrice + "/" + id);
   }
 }

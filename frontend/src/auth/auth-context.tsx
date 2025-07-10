@@ -131,7 +131,6 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
 
   useEffect(() => {
     if (!authToken && location.pathname !== "/login") {
-      console.log("wywołało");
       toast.warning("Musisz być zalogowany");
       nav(getRoute(RouteName.Login));
     }

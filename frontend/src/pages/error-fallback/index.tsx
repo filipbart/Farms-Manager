@@ -14,7 +14,7 @@ const ErrorFallback: React.FC<FallbackProps> = ({
 
   useEffect(() => {
     if (location.pathname == originalLocation.current) return;
-    console.log(error);
+
     resetErrorBoundary();
   }, [location.pathname]);
 

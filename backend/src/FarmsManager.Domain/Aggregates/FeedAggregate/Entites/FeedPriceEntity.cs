@@ -30,4 +30,11 @@ public class FeedPriceEntity : Entity
             CreatedBy = userId
         };
     }
+
+    public void Update(DateOnly priceDate, string name, decimal price)
+    {
+        PriceDate = priceDate;
+        Name = name;
+        Price = price;
+    }
 }

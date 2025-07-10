@@ -65,7 +65,7 @@ const AddFeedPriceModal: React.FC<AddHatcheryModalProps> = ({
       undefined,
       "Wystąpił błąd podczas zapisywania ceny paszy"
     );
-    console.log("Saving feed price:", data);
+
     setLoading(false);
   };
 
@@ -192,10 +192,13 @@ const AddFeedPriceModal: React.FC<AddHatcheryModalProps> = ({
             <TextField
               label="Cena [zł]"
               type="number"
+              inputMode="decimal"
+              slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
               error={!!errors.price}
               helperText={errors.price?.message}
               {...register("price", {
                 required: "Cena [zł] jest wymagana",
+                valueAsNumber: true,
               })}
               fullWidth
             />
