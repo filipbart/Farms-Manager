@@ -31,6 +31,7 @@ import { validateEntry } from "./validation/validate-entry";
 import type { SaleFormErrors } from "../../../../models/sales/sale-form-states";
 import { toast } from "react-toastify";
 import { SalesService } from "../../../../services/sales-service";
+import { useLatestCycle } from "../../../../hooks/useLatestCycle";
 
 interface AddSaleModalProps {
   open: boolean;
@@ -170,9 +171,9 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
 
   const handleClose = () => {
     onClose();
-    dispatch({ type: "RESET" });
     setErrors({});
     setHenhouses([]);
+    dispatch({ type: "RESET" });
   };
 
   return (
@@ -415,6 +416,3 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
 };
 
 export default AddSaleModal;
-function useLatestCycle(): { loadLatestCycle: any; loadingCycle: any } {
-  throw new Error("Function not implemented.");
-}

@@ -1,4 +1,4 @@
-import { Box, Button, Typography, tablePaginationClasses } from "@mui/material";
+import { Box, Button, tablePaginationClasses } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { useReducer, useState, useMemo, useEffect } from "react";
 import { toast } from "react-toastify";
@@ -18,43 +18,89 @@ import { FeedsService } from "../../../../services/feeds-service";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import { getFeedsFiltersConfig } from "./filter-config.feeds-prices";
 import { getFeedsPriceColumns } from "../price-columns";
+import type { FeedPriceListModel } from "../../../../models/feeds/prices/feed-price";
+import type { PaginateModel } from "../../../../common/interfaces/paginate";
 
 const FeedsPricesTab: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
   const [dictionary, setDictionary] = useState<FeedsDictionary>();
 
   const [loading, setLoading] = useState(false);
-  const [feedsPrices, setFeedsPrices] = useState<[]>([]);
+  const [feedsPrices, setFeedsPrices] = useState<FeedPriceListModel[]>([]);
   const [totalRows, setTotalRows] = useState(0);
 
   const [openModal, setOpenModal] = useState(false);
   const [selectedFeedPrice, setSelectedFeedPrice] = useState<null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
+  const deleteFeedPrice = async (id: string) => {
+    try {
+      setLoading(true);
+      // await handleApiResponse(
+      //   () => FeedsService.deleteFeedPrice(id),
+      //   () => {
+      //     toast.success("Cena paszy została usunięta");
+      //     dispatch({ type: "setMultiple", payload: { page: 0 } });
+      //   },
+      //   undefined,
+      //   "Błąd podczas usuwania ceny paszy"
+      // );
+    } catch {
+      toast.error("Błąd podczas usuwania ceny paszy");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const columns = useMemo(
     () =>
       getFeedsPriceColumns({
         setSelectedFeedPrice,
         setIsEditModalOpen,
+        deleteFeedPrice,
       }),
     []
   );
 
+  const fetchDictionaries = async () => {
+    try {
+      await handleApiResponse(
+        () => FeedsService.getDictionaries(),
+        (data) => setDictionary(data.responseData),
+        undefined,
+        "Błąd podczas pobierania słowników filtrów"
+      );
+    } catch {
+      toast.error("Błąd podczas pobierania słowników filtrów");
+    }
+  };
+
+  const fetchFeedsPrices = async () => {
+    try {
+      setLoading(true);
+      await handleApiResponse<PaginateModel<FeedPriceListModel>>(
+        () => FeedsService.getFeedsPrices(filters),
+        (data) => {
+          setFeedsPrices(data.responseData?.items ?? []);
+          setTotalRows(data.responseData?.totalRows ?? 0);
+        },
+        undefined,
+        "Błąd podczas pobierania cen pasz"
+      );
+    } catch {
+      toast.error("Błąd podczas pobierania cen pasz");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchDictionaries = async () => {
-      try {
-        await handleApiResponse(
-          () => FeedsService.getDictionaries(),
-          (data) => setDictionary(data.responseData),
-          undefined,
-          "Błąd podczas pobierania słowników filtrów"
-        );
-      } catch {
-        toast.error("Błąd podczas pobierania słowników filtrów");
-      }
-    };
     fetchDictionaries();
   }, []);
+
+  useEffect(() => {
+    fetchFeedsPrices();
+  }, [filters]);
 
   const uniqueCycles = useMemo(() => {
     if (!dictionary) return [];

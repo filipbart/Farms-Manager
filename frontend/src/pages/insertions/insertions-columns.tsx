@@ -28,7 +28,9 @@ export const getInsertionsColumns = ({
       headerName: "Data wstawienia",
       flex: 1,
       type: "string",
-      valueGetter: (params: any) => dayjs(params.value).format("YYYY-MM-DD"),
+      valueGetter: (date: any) => {
+        return date ? dayjs(date).format("YYYY-MM-DD") : "";
+      },
     },
     { field: "quantity", headerName: "Sztuki wstawione", flex: 1 },
     { field: "hatcheryName", headerName: "Wylęgarnia", flex: 1 },

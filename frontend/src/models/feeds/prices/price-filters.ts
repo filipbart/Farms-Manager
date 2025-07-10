@@ -33,6 +33,8 @@ export enum FeedsPricesOrderType {
   Cycle = "Cycle",
   Farm = "Farm",
   PriceDate = "PriceDate",
+  Price = "Price",
+  Name = "Name",
   DateCreatedUtc = "DateCreatedUtc",
 }
 

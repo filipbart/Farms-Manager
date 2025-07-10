@@ -63,13 +63,14 @@ public class FeedsController(IMediator mediator) : BaseController
     /// <summary>
     /// Zwraca ceny pasz
     /// </summary>
+    /// <param name="filters"></param>
     /// <returns></returns>
     [HttpGet("prices")]
-    [ProducesResponseType(typeof(BaseResponse<GetFeedsDictionaryQueryResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(BaseResponse<GetFeedsPricesQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetFeedsPrices()
+    public async Task<IActionResult> GetFeedsPrices([FromQuery] GetFeedsPricesQueryFilters filters)
     {
-        return Ok(await mediator.Send(new GetFeedsDictionaryQuery()));//TODO 
+        return Ok(await mediator.Send(new GetFeedsPricesQuery(filters)));
     }
 
     /// <summary>

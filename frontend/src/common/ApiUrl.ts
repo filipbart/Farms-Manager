@@ -48,6 +48,7 @@ export default class ApiUrl {
   public static FeedsDict = this.Feeds + "/dictionary";
   public static FeedsNames = this.Feeds + "/names";
   public static AddFeedName = this.FeedsNames + "/add";
+  public static FeedsPrices = this.Feeds + "/prices";
   public static DeleteFeedName = this.FeedsNames + "/delete";
   public static AddFeedPrice = this.Feeds + "/add-price";
 }

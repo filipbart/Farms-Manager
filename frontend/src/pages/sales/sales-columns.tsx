@@ -63,7 +63,9 @@ export const getSalesColumns = ({
       headerName: "Data sprzedaży",
       flex: 1,
       type: "string",
-      valueGetter: (params: any) => dayjs(params.value).format("YYYY-MM-DD"),
+      valueGetter: (date: any) => {
+        return date ? dayjs(date).format("YYYY-MM-DD") : "";
+      },
     },
     { field: "typeDesc", headerName: "Typ sprzedaży", flex: 1 },
     { field: "weight", headerName: "Waga ubojni [kg]", flex: 1 },

@@ -5,9 +5,11 @@ import dayjs from "dayjs";
 export const getFeedsPriceColumns = ({
   setSelectedFeedPrice,
   setIsEditModalOpen,
+  deleteFeedPrice,
 }: {
   setSelectedFeedPrice: (s: any) => void;
   setIsEditModalOpen: (v: boolean) => void;
+  deleteFeedPrice: (id: string) => void;
 }): GridColDef[] => {
   return [
     { field: "id", headerName: "Id", width: 70 },
@@ -18,7 +20,9 @@ export const getFeedsPriceColumns = ({
       headerName: "Data publikacji",
       flex: 1,
       type: "string",
-      valueGetter: (params: any) => dayjs(params.value).format("YYYY-MM-DD"),
+      valueGetter: (date: any) => {
+        return date ? dayjs(date).format("YYYY-MM-DD") : "";
+      },
     },
     { field: "name", headerName: "Typ (nazwa) paszy", flex: 1 },
     { field: "price", headerName: "Cena [zł]", flex: 1 },
@@ -38,6 +42,18 @@ export const getFeedsPriceColumns = ({
           }}
         >
           Edytuj
+        </Button>,
+
+        <Button
+          key="delete"
+          variant="outlined"
+          size="small"
+          color="error"
+          onClick={() => {
+            deleteFeedPrice(params.row.id);
+          }}
+        >
+          Usuń
         </Button>,
       ],
     },
