@@ -14,7 +14,6 @@ import {
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { useFarms } from "../../../../hooks/useFarms";
-import { FarmsService } from "../../../../services/farms-service";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import LoadingTextField from "../../../common/loading-textfield";
 import LoadingButton from "../../../common/loading-button";
@@ -49,7 +48,8 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
     useSlaughterhouses();
   const { saleFieldsExtra, fetchSaleFieldsExtra } = useSaleFieldsExtra();
   const [henhouses, setHenhouses] = useState<HouseRowModel[]>([]);
-  const [loadingLatestCycle, setLoadingLatestCycle] = useState(false);
+  const { loadLatestCycle, loadingCycle: loadingLatestCycle } =
+    useLatestCycle();
   const [loading, setLoading] = useState(false);
   const [form, dispatch] = useReducer(formReducer, initialState);
   const [errors, setErrors] = useState<SaleFormErrors>({});
@@ -75,31 +75,21 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
     setHenhouses(farms.find((f) => f.id === farmId)?.henhouses || []);
     setErrors({});
 
-    console.log(henhouses);
+    const cycle = await loadLatestCycle(farmId);
+    if (!cycle) {
+      setErrors((prev) => ({
+        ...prev,
+        identifierId: "Brak aktywnego cyklu",
+      }));
+      return;
+    }
 
-    setLoadingLatestCycle(true);
-    await handleApiResponse(
-      () => FarmsService.getLatestCycle(farmId),
-      (data) => {
-        if (!data?.responseData) {
-          setErrors((prev) => ({
-            ...prev,
-            identifierId: "Brak aktywnego cyklu",
-          }));
-          return;
-        }
-        const cycle = data.responseData;
-        dispatch({ type: "SET_FIELD", name: "identifierId", value: cycle.id });
-        dispatch({
-          type: "SET_FIELD",
-          name: "identifierDisplay",
-          value: `${cycle.identifier}/${cycle.year}`,
-        });
-      },
-      undefined,
-      "Nie udało się pobrać ostatniego cyklu"
-    );
-    setLoadingLatestCycle(false);
+    dispatch({ type: "SET_FIELD", name: "identifierId", value: cycle.id });
+    dispatch({
+      type: "SET_FIELD",
+      name: "identifierDisplay",
+      value: `${cycle.identifier}/${cycle.year}`,
+    });
   };
 
   const setEntryErrors = (index: number, entryErrors: SaleEntryErrors) => {
@@ -425,3 +415,6 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
 };
 
 export default AddSaleModal;
+function useLatestCycle(): { loadLatestCycle: any; loadingCycle: any } {
+  throw new Error("Function not implemented.");
+}

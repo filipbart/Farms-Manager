@@ -49,8 +49,15 @@ if (!webAppBuilder.Environment.IsProduction())
 webAppBuilder.Services
     .AddRouting(options => options.LowercaseUrls = true)
     .AddResponseCompression()
+    .AddEndpointsApiExplorer()
     .AddSwaggerGen(options =>
     {
+        var filePath = Path.Combine(AppContext.BaseDirectory, "FarmsManager.Api.xml");
+        if (File.Exists(filePath))
+        {
+            options.IncludeXmlComments(filePath);
+        }
+
         options.MapType<TimeSpan>(() => new OpenApiSchema
         {
             Type = "string",

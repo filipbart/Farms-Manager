@@ -59,7 +59,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             icon={<FaTruck />}
           />
           <SidebarMenuItem
-            to="/feeds/stock"
+            to="/feeds/prices"
             title="Ceny pasz"
             icon={<FaArrowTrendUp />}
           />

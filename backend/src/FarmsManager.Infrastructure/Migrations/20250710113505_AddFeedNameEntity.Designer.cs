@@ -4,6 +4,7 @@ using FarmsManager.Domain.Aggregates.UserAggregate.Models;
 using FarmsManager.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FarmsManager.Infrastructure.Migrations
 {
     [DbContext(typeof(FarmsManagerContext))]
-    partial class FarmsManagerContextModelSnapshot : ModelSnapshot
+    [Migration("20250710113505_AddFeedNameEntity")]
+    partial class AddFeedNameEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -518,69 +521,6 @@ namespace FarmsManager.Infrastructure.Migrations
                     b.ToTable("feed_name", "farms_manager");
                 });
 
-            modelBuilder.Entity("FarmsManager.Domain.Aggregates.FeedAggregate.Entites.FeedPriceEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
-
-                    b.Property<Guid>("CycleId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("cycle_id");
-
-                    b.Property<DateTime>("DateCreatedUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("date_created_utc");
-
-                    b.Property<DateTime?>("DateDeletedUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("date_deleted_utc");
-
-                    b.Property<DateTime?>("DateModifiedUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("date_modified_utc");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("deleted_by");
-
-                    b.Property<Guid>("FarmId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("farm_id");
-
-                    b.Property<Guid?>("ModifiedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("modified_by");
-
-                    b.Property<string>("Name")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("name");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("numeric")
-                        .HasColumnName("price");
-
-                    b.Property<DateOnly>("PriceDate")
-                        .HasColumnType("date")
-                        .HasColumnName("price_date");
-
-                    b.HasKey("Id")
-                        .HasName("pk_feed_price");
-
-                    b.HasIndex("CycleId")
-                        .HasDatabaseName("ix_feed_price_cycle_id");
-
-                    b.HasIndex("FarmId")
-                        .HasDatabaseName("ix_feed_price_farm_id");
-
-                    b.ToTable("feed_price", "farms_manager");
-                });
-
             modelBuilder.Entity("FarmsManager.Domain.Aggregates.HatcheryAggregate.Entities.HatcheryEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -910,27 +850,6 @@ namespace FarmsManager.Infrastructure.Migrations
                     b.Navigation("Henhouse");
 
                     b.Navigation("Slaughterhouse");
-                });
-
-            modelBuilder.Entity("FarmsManager.Domain.Aggregates.FeedAggregate.Entites.FeedPriceEntity", b =>
-                {
-                    b.HasOne("FarmsManager.Domain.Aggregates.FarmAggregate.Entities.CycleEntity", "Cycle")
-                        .WithMany()
-                        .HasForeignKey("CycleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_feed_price_cycle_cycle_id");
-
-                    b.HasOne("FarmsManager.Domain.Aggregates.FarmAggregate.Entities.FarmEntity", "Farm")
-                        .WithMany()
-                        .HasForeignKey("FarmId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_feed_price_farm_farm_id");
-
-                    b.Navigation("Cycle");
-
-                    b.Navigation("Farm");
                 });
 
             modelBuilder.Entity("FarmsManager.Domain.Aggregates.FarmAggregate.Entities.FarmEntity", b =>

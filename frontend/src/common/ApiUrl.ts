@@ -43,4 +43,11 @@ export default class ApiUrl {
   public static SalesSettings = this.BaseUrl + "sales-settings";
   public static AddSaleFieldExtra = this.SalesSettings + "/add";
   public static DeleteSaleFieldExtra = this.SalesSettings + "/delete";
+
+  public static Feeds = this.BaseUrl + "feeds";
+  public static FeedsDict = this.Feeds + "/dictionary";
+  public static FeedsNames = this.Feeds + "/names";
+  public static AddFeedName = this.FeedsNames + "/add";
+  public static DeleteFeedName = this.FeedsNames + "/delete";
+  public static AddFeedPrice = this.Feeds + "/add-price";
 }

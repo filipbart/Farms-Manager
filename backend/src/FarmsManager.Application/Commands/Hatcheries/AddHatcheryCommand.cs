@@ -10,10 +10,29 @@ namespace FarmsManager.Application.Commands.Hatcheries;
 
 public class AddHatcheryCommand : IRequest<EmptyBaseResponse>
 {
+    /// <summary>
+    /// Nazwa
+    /// </summary>
     public string Name { get; init; }
+    
+    /// <summary>
+    /// Numer producenta
+    /// </summary>
     public string ProdNumber { get; init; }
+    
+    /// <summary>
+    /// Pełna nazwa
+    /// </summary>
     public string FullName { get; init; }
+    
+    /// <summary>
+    /// NIP
+    /// </summary>
     public string Nip { get; init; }
+    
+    /// <summary>
+    /// Adres
+    /// </summary>
     public string Address { get; init; }
 }
 

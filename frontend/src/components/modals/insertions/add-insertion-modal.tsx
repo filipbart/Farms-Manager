@@ -13,16 +13,12 @@ import {
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { toast } from "react-toastify";
-
 import { useFarms } from "../../../hooks/useFarms";
 import { useHatcheries } from "../../../hooks/useHatcheries";
-import { FarmsService } from "../../../services/farms-service";
 import { InsertionsService } from "../../../services/insertions-service";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
-
 import LoadingTextField from "../../common/loading-textfield";
 import LoadingButton from "../../common/loading-button";
-
 import type { Dayjs } from "dayjs";
 import type { HouseRowModel } from "../../../models/farms/house-row-model";
 import InsertionEntriesTable from "./insertions-entry-table";
@@ -31,6 +27,7 @@ import type {
   InsertionEntryErrors,
 } from "../../../models/insertions/insertion-entry";
 import { MdSave } from "react-icons/md";
+import { useLatestCycle } from "../../../hooks/useLatestCycle";
 
 interface AddInsertionModalProps {
   open: boolean;
@@ -114,7 +111,8 @@ const AddInsertionModal: React.FC<AddInsertionModalProps> = ({
   const { hatcheries, loadingHatcheries, fetchHatcheries } = useHatcheries();
   const [henhouses, setHenhouses] = useState<HouseRowModel[]>([]);
   const [loadingHenhouses, setLoadingHenhouses] = useState(false);
-  const [loadingLatestCycle, setLoadingLatestCycle] = useState(false);
+  const { loadLatestCycle, loadingCycle: loadingLatestCycle } =
+    useLatestCycle();
   const [loading, setLoading] = useState(false);
   const [form, dispatch] = useReducer(formReducer, initialState);
   const [errors, setErrors] = useState<InsertionFormErrors>({});
@@ -147,29 +145,21 @@ const AddInsertionModal: React.FC<AddInsertionModalProps> = ({
     );
     setLoadingHenhouses(false);
 
-    setLoadingLatestCycle(true);
-    await handleApiResponse(
-      () => FarmsService.getLatestCycle(farmId),
-      (data) => {
-        if (!data?.responseData) {
-          setErrors((prev) => ({
-            ...prev,
-            identifierId: "Brak aktywnego cyklu",
-          }));
-          return;
-        }
-        const cycle = data.responseData;
-        dispatch({ type: "SET_FIELD", name: "identifierId", value: cycle.id });
-        dispatch({
-          type: "SET_FIELD",
-          name: "identifierDisplay",
-          value: `${cycle.identifier}/${cycle.year}`,
-        });
-      },
-      undefined,
-      "Nie udało się pobrać ostatniego cyklu"
-    );
-    setLoadingLatestCycle(false);
+    const cycle = await loadLatestCycle(farmId);
+    if (!cycle) {
+      setErrors((prev) => ({
+        ...prev,
+        identifierId: "Brak aktywnego cyklu",
+      }));
+      return;
+    }
+
+    dispatch({ type: "SET_FIELD", name: "identifierId", value: cycle.id });
+    dispatch({
+      type: "SET_FIELD",
+      name: "identifierDisplay",
+      value: `${cycle.identifier}/${cycle.year}`,
+    });
   };
 
   const validateEntry = (entry: InsertionEntry): InsertionEntryErrors => {

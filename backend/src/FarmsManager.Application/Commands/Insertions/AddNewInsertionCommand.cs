@@ -20,9 +20,12 @@ public record AddNewInsertionCommand : IRequest<BaseResponse<AddNewInsertionComm
     public Guid FarmId { get; init; }
     public Guid CycleId { get; init; }
     public DateOnly InsertionDate { get; init; }
-    public List<Entry> Entries { get; init; } = [];
+    public List<InsertionEntry> Entries { get; init; } = [];
 
-    public record Entry
+    /// <summary>
+    /// Entries
+    /// </summary>
+    public record InsertionEntry
     {
         public Guid HenhouseId { get; init; }
         public Guid HatcheryId { get; init; }

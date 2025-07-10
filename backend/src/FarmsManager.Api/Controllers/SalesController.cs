@@ -2,8 +2,8 @@
 using FarmsManager.Application.Commands.Sales;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Queries.Sales;
+using FarmsManager.Application.Queries.Sales.Dictionary;
 using FarmsManager.Application.Queries.Sales.ExportFile;
-using FarmsManager.Application.Queries.Slaughterhouses.Dictionary;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 

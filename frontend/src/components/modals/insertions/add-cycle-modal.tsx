@@ -11,8 +11,6 @@ import { useCallback, useEffect, useState } from "react";
 import { useFarms } from "../../../hooks/useFarms";
 import type FarmRowModel from "../../../models/farms/farm-row-model";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
-import type LatestCycle from "../../../models/farms/latest-cycle";
-import { FarmsService } from "../../../services/farms-service";
 import {
   InsertionsService,
   type AddCycleData,
@@ -21,6 +19,7 @@ import { toast } from "react-toastify";
 import LoadingButton from "../../common/loading-button";
 import LoadingTextField from "../../common/loading-textfield";
 import { MdSave } from "react-icons/md";
+import { useLatestCycle } from "../../../hooks/useLatestCycle";
 
 interface SetCycleModalProps {
   open: boolean;
@@ -28,7 +27,6 @@ interface SetCycleModalProps {
 }
 
 const SetCycleModal: React.FC<SetCycleModalProps> = ({ open, onClose }) => {
-  const [loading, setLoading] = useState(false);
   const [loadingNewCycle, setLoadingNewCycle] = useState(false);
   const [chosenFarm, setChosenFarm] = useState<FarmRowModel>();
   const setChosenFarmCallback = useCallback(
@@ -39,29 +37,22 @@ const SetCycleModal: React.FC<SetCycleModalProps> = ({ open, onClose }) => {
     []
   );
 
+  const { loadLatestCycle, loadingCycle } = useLatestCycle();
+
   const [cycle, setCycle] = useState<AddCycleData>();
   const [cycleText, setCycleText] = useState<string>("");
 
   const getLatestCycle = async (farmId: string) => {
-    setLoading(true);
+    const latest = await loadLatestCycle(farmId);
+    const now = new Date();
 
-    await handleApiResponse<LatestCycle>(
-      () => FarmsService.getLatestCycle(farmId),
-      (data) => {
-        const now = new Date();
-        const latest = data.responseData;
-        const identifier = latest ? latest.identifier + 1 : 1;
-        const year =
-          latest?.year !== now.getFullYear() ? now.getFullYear() : latest?.year;
+    const identifier = latest ? latest.identifier + 1 : 1;
+    const year =
+      latest?.year !== now.getFullYear() ? now.getFullYear() : latest?.year;
 
-        const newCycle = { farmId, identifier, year };
-        setCycle(newCycle);
-        setCycleText(`${newCycle.identifier}/${newCycle.year}`);
-      },
-      undefined,
-      "Nie udało się pobrać ostatniego cyklu"
-    );
-    setLoading(false);
+    const newCycle = { farmId, identifier, year };
+    setCycle(newCycle);
+    setCycleText(`${newCycle.identifier}/${newCycle.year}`);
   };
 
   const handleClose = () => {
@@ -125,7 +116,7 @@ const SetCycleModal: React.FC<SetCycleModalProps> = ({ open, onClose }) => {
 
           <Box>
             <LoadingTextField
-              loading={loading}
+              loading={loadingCycle}
               name="identifier"
               label="Nowy cykl"
               value={cycleText}
