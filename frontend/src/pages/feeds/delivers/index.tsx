@@ -1,28 +1,29 @@
-import { Box, Button, tablePaginationClasses } from "@mui/material";
+import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { useReducer, useState, useMemo, useEffect } from "react";
 import { toast } from "react-toastify";
-import { mapFeedsPricesOrderTypeToField } from "../../../../common/helpers/feeds-price-order-type-helper";
-import NoRowsOverlay from "../../../../components/datagrid/custom-norows";
-import CustomToolbar from "../../../../components/datagrid/custom-toolbar";
-import FiltersForm from "../../../../components/filters/filters-form";
-import AddFeedPriceModal from "../../../../components/modals/feeds/prices/add-feed-price-modal";
-import type { CycleDictModel } from "../../../../models/common/dictionaries";
-import type { FeedsDictionary } from "../../../../models/feeds/feeds-dictionary";
+import { mapFeedsPricesOrderTypeToField } from "../../../common/helpers/feeds-price-order-type-helper";
+import NoRowsOverlay from "../../../components/datagrid/custom-norows";
+import CustomToolbar from "../../../components/datagrid/custom-toolbar";
+import FiltersForm from "../../../components/filters/filters-form";
+import AddFeedPriceModal from "../../../components/modals/feeds/prices/add-feed-price-modal";
+import EditFeedPriceModal from "../../../components/modals/feeds/prices/edit-feed-price-modal";
+import type { CycleDictModel } from "../../../models/common/dictionaries";
+import type { FeedsDictionary } from "../../../models/feeds/feeds-dictionary";
+import type { FeedPriceListModel } from "../../../models/feeds/prices/feed-price";
+import { FeedsPricesOrderType } from "../../../models/feeds/prices/price-filters";
+import { FeedsService } from "../../../services/feeds-service";
+import { handleApiResponse } from "../../../utils/axios/handle-api-response";
+import { getFeedsDeliversFiltersConfig } from "./filter-config.feeds-delivers";
+import { getFeedsDeliversColumns } from "./delivers-columns";
 import {
-  FeedsPricesOrderType,
+  FeedsDeliversOrderType,
   filterReducer,
   initialFilters,
-} from "../../../../models/feeds/prices/price-filters";
-import { FeedsService } from "../../../../services/feeds-service";
-import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
-import { getFeedsPricesFiltersConfig } from "./filter-config.feeds-prices";
-import { getFeedsPriceColumns } from "../price-columns";
-import type { FeedPriceListModel } from "../../../../models/feeds/prices/feed-price";
-import type { PaginateModel } from "../../../../common/interfaces/paginate";
-import EditFeedPriceModal from "../../../../components/modals/feeds/prices/edit-feed-price-modal";
+} from "../../../models/feeds/delivers/delivers-filters";
+import { mapFeedsDeliversOrderTypeToField } from "../../../common/helpers/feeds-delivery-order-type-helper";
 
-const FeedsPricesTab: React.FC = () => {
+const FeedsDeliversPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
   const [dictionary, setDictionary] = useState<FeedsDictionary>();
 
@@ -31,23 +32,23 @@ const FeedsPricesTab: React.FC = () => {
   const [totalRows, setTotalRows] = useState(0);
 
   const [openModal, setOpenModal] = useState(false);
-  const [selectedFeedPrice, setSelectedFeedPrice] = useState<null>(null);
+  const [selectedFeedDelivery, setSelectedFeedDelivery] = useState<null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  const deleteFeedPrice = async (id: string) => {
+  const deleteFeedDelivery = async (id: string) => {
     try {
       setLoading(true);
-      await handleApiResponse(
-        () => FeedsService.deleteFeedPrice(id),
-        () => {
-          toast.success("Cena paszy została usunięta");
-          dispatch({ type: "setMultiple", payload: { page: 0 } });
-        },
-        undefined,
-        "Błąd podczas usuwania ceny paszy"
-      );
+      // await handleApiResponse(
+      //   () => FeedsService.deleteFeedPrice(id),
+      //   () => {
+      //     toast.success("Cena paszy została usunięta");
+      //     dispatch({ type: "setMultiple", payload: { page: 0 } });
+      //   },
+      //   undefined,
+      //   "Błąd podczas usuwania ceny paszy"
+      // );
     } catch {
-      toast.error("Błąd podczas usuwania ceny paszy");
+      toast.error("Błąd podczas usuwania faktury paszy");
     } finally {
       setLoading(false);
     }
@@ -55,10 +56,10 @@ const FeedsPricesTab: React.FC = () => {
 
   const columns = useMemo(
     () =>
-      getFeedsPriceColumns({
-        setSelectedFeedPrice,
+      getFeedsDeliversColumns({
+        setSelectedFeedDelivery,
         setIsEditModalOpen,
-        deleteFeedPrice,
+        deleteFeedDelivery,
       }),
     []
   );
@@ -76,31 +77,31 @@ const FeedsPricesTab: React.FC = () => {
     }
   };
 
-  const fetchFeedsPrices = async () => {
-    try {
-      setLoading(true);
-      await handleApiResponse<PaginateModel<FeedPriceListModel>>(
-        () => FeedsService.getFeedsPrices(filters),
-        (data) => {
-          setFeedsPrices(data.responseData?.items ?? []);
-          setTotalRows(data.responseData?.totalRows ?? 0);
-        },
-        undefined,
-        "Błąd podczas pobierania cen pasz"
-      );
-    } catch {
-      toast.error("Błąd podczas pobierania cen pasz");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const fetchFeedsPrices = async () => {
+  //   try {
+  //     setLoading(true);
+  //     // await handleApiResponse<PaginateModel<FeedPriceListModel>>(
+  //     //   () => FeedsService.getFeedsPrices(filters),
+  //     //   (data) => {
+  //     //     setFeedsPrices(data.responseData?.items ?? []);
+  //     //     setTotalRows(data.responseData?.totalRows ?? 0);
+  //     //   },
+  //     //   undefined,
+  //     //   "Błąd podczas pobierania cen pasz"
+  //     // );
+  //   } catch {
+  //     toast.error("Błąd podczas pobierania cen pasz");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   useEffect(() => {
     fetchDictionaries();
   }, []);
 
   useEffect(() => {
-    fetchFeedsPrices();
+    //fetchFeedsPrices();
   }, [filters]);
 
   const uniqueCycles = useMemo(() => {
@@ -125,20 +126,20 @@ const FeedsPricesTab: React.FC = () => {
         alignItems={{ xs: "flex-start", sm: "center" }}
         gap={2}
       >
-        <Box></Box>
+        <Typography variant="h4">Dostawy pasz</Typography>
         <Box display="flex" gap={2}>
           <Button
             variant="contained"
             color="primary"
             onClick={() => setOpenModal(true)}
           >
-            Wprowadź cenę
+            Wprowadź fakturę
           </Button>
         </Box>
       </Box>
 
       <FiltersForm
-        config={getFeedsPricesFiltersConfig(dictionary, uniqueCycles)}
+        config={getFeedsDeliversFiltersConfig(dictionary, uniqueCycles)}
         filters={filters}
         dispatch={dispatch}
       />
@@ -182,9 +183,9 @@ const FeedsPricesTab: React.FC = () => {
           onSortModelChange={(model) => {
             if (model.length > 0) {
               const sortField = model[0].field;
-              const foundOrderBy = Object.values(FeedsPricesOrderType).find(
+              const foundOrderBy = Object.values(FeedsDeliversOrderType).find(
                 (orderType) =>
-                  mapFeedsPricesOrderTypeToField(orderType) === sortField
+                  mapFeedsDeliversOrderTypeToField(orderType) === sortField
               );
               dispatch({
                 type: "setMultiple",
@@ -203,7 +204,7 @@ const FeedsPricesTab: React.FC = () => {
           }}
         />
       </Box>
-      <EditFeedPriceModal
+      {/* <EditFeedPriceModal
         open={isEditModalOpen}
         onClose={() => {
           setIsEditModalOpen(false);
@@ -214,7 +215,7 @@ const FeedsPricesTab: React.FC = () => {
           setSelectedFeedPrice(null);
           dispatch({ type: "setMultiple", payload: { page: filters.page } });
         }}
-        feedPrice={selectedFeedPrice}
+        feedPrice={selectedFeedDelivery}
       />
 
       <AddFeedPriceModal
@@ -224,9 +225,9 @@ const FeedsPricesTab: React.FC = () => {
           setOpenModal(false);
           dispatch({ type: "setMultiple", payload: { page: 0 } });
         }}
-      />
+      /> */}
     </Box>
   );
 };
 
-export default FeedsPricesTab;
+export default FeedsDeliversPage;

@@ -15,6 +15,7 @@ import SalesPage from "../pages/sales";
 import SlaughterhousesPage from "../pages/data/slaughterhouse";
 import SaleFieldsSettingsPage from "../pages/sales/fields-settings";
 import FeedsPricePage from "../pages/feeds/prices";
+import FeedsDeliversPage from "../pages/feeds/delivers";
 
 const DefaultRouter: React.FC = () => {
   const { getRoute } = useRouter();
@@ -53,6 +54,10 @@ const DefaultRouter: React.FC = () => {
         <Route
           path={getRoute(RouteName.SalesFieldsSettings)}
           element={<SaleFieldsSettingsPage />}
+        />
+        <Route
+          path={getRoute(RouteName.FeedsDelivers)}
+          element={<FeedsDeliversPage />}
         />
         <Route
           path={getRoute(RouteName.FeedsPrices)}

@@ -36,8 +36,20 @@ const SettingsPage: React.FC = () => {
       </Typography>
       <Box position="static" sx={{ borderBottom: 1, borderColor: "divider" }}>
         <Tabs value={value} onChange={handleChange} variant="fullWidth">
-          <Tab label="Ceny" />
-          <Tab label="Nazwy pasz" />
+          <Tab
+            label={
+              <Typography variant="subtitle1" fontWeight={600}>
+                Ceny
+              </Typography>
+            }
+          />
+          <Tab
+            label={
+              <Typography variant="subtitle1" fontWeight={600}>
+                Nazwy pasz
+              </Typography>
+            }
+          />
         </Tabs>
       </Box>
       <TabPanel value={value} index={0}>
