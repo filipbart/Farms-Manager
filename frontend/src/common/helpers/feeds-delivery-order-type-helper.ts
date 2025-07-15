@@ -1,16 +1,16 @@
-import { FeedsDeliversOrderType } from "../../models/feeds/delivers/delivers-filters";
+import { FeedsDeliveriesOrderType } from "../../models/feeds/deliveries/deliveries-filters";
 
-export const mapFeedsDeliversOrderTypeToField = (
-  orderType: FeedsDeliversOrderType
+export const mapFeedsDeliveriesOrderTypeToField = (
+  orderType: FeedsDeliveriesOrderType
 ): string => {
   switch (orderType) {
-    case FeedsDeliversOrderType.Cycle:
+    case FeedsDeliveriesOrderType.Cycle:
       return "cycleText";
-    case FeedsDeliversOrderType.Farm:
+    case FeedsDeliveriesOrderType.Farm:
       return "farmName";
-    case FeedsDeliversOrderType.PriceDate:
+    case FeedsDeliveriesOrderType.PriceDate:
       return "priceDate";
-    case FeedsDeliversOrderType.DateCreatedUtc:
+    case FeedsDeliveriesOrderType.DateCreatedUtc:
       return "dateCreatedUtc";
     default:
       return "";

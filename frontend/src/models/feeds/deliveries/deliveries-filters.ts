@@ -1,7 +1,7 @@
 import type { CycleDictModel } from "../../common/dictionaries";
 import type { OrderedPaginationParams } from "../../common/pagination-params";
 
-export const initialFilters: FeedsDeliversFilterPaginationModel = {
+export const initialFilters: FeedsDeliveriesFilterPaginationModel = {
   farmIds: [],
   cycles: [],
   dateSince: "",
@@ -11,14 +11,18 @@ export const initialFilters: FeedsDeliversFilterPaginationModel = {
 };
 
 export function filterReducer(
-  state: FeedsDeliversFilterPaginationModel,
+  state: FeedsDeliveriesFilterPaginationModel,
   action:
-    | { type: "set"; key: keyof FeedsDeliversFilterPaginationModel; value: any }
+    | {
+        type: "set";
+        key: keyof FeedsDeliveriesFilterPaginationModel;
+        value: any;
+      }
     | {
         type: "setMultiple";
-        payload: Partial<FeedsDeliversFilterPaginationModel>;
+        payload: Partial<FeedsDeliveriesFilterPaginationModel>;
       }
-): FeedsDeliversFilterPaginationModel {
+): FeedsDeliveriesFilterPaginationModel {
   switch (action.type) {
     case "set":
       return { ...state, [action.key]: action.value };
@@ -29,7 +33,7 @@ export function filterReducer(
   }
 }
 
-export enum FeedsDeliversOrderType {
+export enum FeedsDeliveriesOrderType {
   Cycle = "Cycle",
   Farm = "Farm",
   PriceDate = "PriceDate",
@@ -38,13 +42,13 @@ export enum FeedsDeliversOrderType {
   DateCreatedUtc = "DateCreatedUtc",
 }
 
-export default interface FeedsDeliversFilter {
+export default interface FeedsDeliveriesFilter {
   farmIds: string[];
   cycles: CycleDictModel[];
   dateSince: string;
   dateTo: string;
 }
 
-export interface FeedsDeliversFilterPaginationModel
-  extends FeedsDeliversFilter,
-    OrderedPaginationParams<FeedsDeliversOrderType> {}
+export interface FeedsDeliveriesFilterPaginationModel
+  extends FeedsDeliveriesFilter,
+    OrderedPaginationParams<FeedsDeliveriesOrderType> {}

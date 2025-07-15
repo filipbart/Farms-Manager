@@ -54,7 +54,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
 
         <SidebarMenuItem to="/feeds" title="Pasze" icon={<FaJarWheat />}>
           <SidebarMenuItem
-            to="/feeds/delivers"
+            to="/feeds/deliveries"
             title="Dostawy pasz"
             icon={<FaTruck />}
           />

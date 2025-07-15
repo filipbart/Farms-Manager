@@ -1,12 +1,12 @@
 import type { FilterConfig } from "../../../components/filters/filter-types";
 import type { CycleDictModel } from "../../../models/common/dictionaries";
-import type { FeedsDeliversFilterPaginationModel } from "../../../models/feeds/delivers/delivers-filters";
+import type { FeedsDeliveriesFilterPaginationModel } from "../../../models/feeds/deliveries/deliveries-filters";
 import type { FeedsDictionary } from "../../../models/feeds/feeds-dictionary";
 
-export const getFeedsDeliversFiltersConfig = (
+export const getFeedsDeliveriesFiltersConfig = (
   dictionary: FeedsDictionary | undefined,
   uniqueCycles: CycleDictModel[]
-): FilterConfig<keyof FeedsDeliversFilterPaginationModel>[] => [
+): FilterConfig<keyof FeedsDeliveriesFilterPaginationModel>[] => [
   {
     key: "farmIds",
     label: "Ferma",

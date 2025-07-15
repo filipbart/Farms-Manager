@@ -2,28 +2,25 @@ import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { useReducer, useState, useMemo, useEffect } from "react";
 import { toast } from "react-toastify";
-import { mapFeedsPricesOrderTypeToField } from "../../../common/helpers/feeds-price-order-type-helper";
 import NoRowsOverlay from "../../../components/datagrid/custom-norows";
 import CustomToolbar from "../../../components/datagrid/custom-toolbar";
 import FiltersForm from "../../../components/filters/filters-form";
-import AddFeedPriceModal from "../../../components/modals/feeds/prices/add-feed-price-modal";
-import EditFeedPriceModal from "../../../components/modals/feeds/prices/edit-feed-price-modal";
 import type { CycleDictModel } from "../../../models/common/dictionaries";
 import type { FeedsDictionary } from "../../../models/feeds/feeds-dictionary";
 import type { FeedPriceListModel } from "../../../models/feeds/prices/feed-price";
-import { FeedsPricesOrderType } from "../../../models/feeds/prices/price-filters";
 import { FeedsService } from "../../../services/feeds-service";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
-import { getFeedsDeliversFiltersConfig } from "./filter-config.feeds-delivers";
-import { getFeedsDeliversColumns } from "./delivers-columns";
+import { getFeedsDeliveriesFiltersConfig } from "./filter-config.feeds-deliveries";
+import { mapFeedsDeliveriesOrderTypeToField } from "../../../common/helpers/feeds-delivery-order-type-helper";
 import {
-  FeedsDeliversOrderType,
+  FeedsDeliveriesOrderType,
   filterReducer,
   initialFilters,
-} from "../../../models/feeds/delivers/delivers-filters";
-import { mapFeedsDeliversOrderTypeToField } from "../../../common/helpers/feeds-delivery-order-type-helper";
+} from "../../../models/feeds/deliveries/deliveries-filters";
+import { getFeedsDeliveriesColumns } from "./deliveries-columns";
+import UploadInvoicesModal from "../../../components/modals/feeds/deliveries/upload-invoices-modal";
 
-const FeedsDeliversPage: React.FC = () => {
+const FeedsDeliveriesPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
   const [dictionary, setDictionary] = useState<FeedsDictionary>();
 
@@ -31,9 +28,13 @@ const FeedsDeliversPage: React.FC = () => {
   const [feedsPrices, setFeedsPrices] = useState<FeedPriceListModel[]>([]);
   const [totalRows, setTotalRows] = useState(0);
 
-  const [openModal, setOpenModal] = useState(false);
+  const [openUploadModal, setUploadOpenModal] = useState(false);
   const [selectedFeedDelivery, setSelectedFeedDelivery] = useState<null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const uploadFiles = async (files: File[]) => {
+    dispatch({ type: "setMultiple", payload: { page: 0 } });
+  };
 
   const deleteFeedDelivery = async (id: string) => {
     try {
@@ -56,7 +57,7 @@ const FeedsDeliversPage: React.FC = () => {
 
   const columns = useMemo(
     () =>
-      getFeedsDeliversColumns({
+      getFeedsDeliveriesColumns({
         setSelectedFeedDelivery,
         setIsEditModalOpen,
         deleteFeedDelivery,
@@ -131,7 +132,7 @@ const FeedsDeliversPage: React.FC = () => {
           <Button
             variant="contained"
             color="primary"
-            onClick={() => setOpenModal(true)}
+            onClick={() => setUploadOpenModal(true)}
           >
             Wprowadź fakturę
           </Button>
@@ -139,7 +140,7 @@ const FeedsDeliversPage: React.FC = () => {
       </Box>
 
       <FiltersForm
-        config={getFeedsDeliversFiltersConfig(dictionary, uniqueCycles)}
+        config={getFeedsDeliveriesFiltersConfig(dictionary, uniqueCycles)}
         filters={filters}
         dispatch={dispatch}
       />
@@ -183,9 +184,9 @@ const FeedsDeliversPage: React.FC = () => {
           onSortModelChange={(model) => {
             if (model.length > 0) {
               const sortField = model[0].field;
-              const foundOrderBy = Object.values(FeedsDeliversOrderType).find(
+              const foundOrderBy = Object.values(FeedsDeliveriesOrderType).find(
                 (orderType) =>
-                  mapFeedsDeliversOrderTypeToField(orderType) === sortField
+                  mapFeedsDeliveriesOrderTypeToField(orderType) === sortField
               );
               dispatch({
                 type: "setMultiple",
@@ -216,18 +217,15 @@ const FeedsDeliversPage: React.FC = () => {
           dispatch({ type: "setMultiple", payload: { page: filters.page } });
         }}
         feedPrice={selectedFeedDelivery}
-      />
+      />*/}
 
-      <AddFeedPriceModal
-        open={openModal}
-        onClose={() => setOpenModal(false)}
-        onSave={() => {
-          setOpenModal(false);
-          dispatch({ type: "setMultiple", payload: { page: 0 } });
-        }}
-      /> */}
+      <UploadInvoicesModal
+        open={openUploadModal}
+        onClose={() => setUploadOpenModal(false)}
+        onUpload={uploadFiles}
+      />
     </Box>
   );
 };
 
-export default FeedsDeliversPage;
+export default FeedsDeliveriesPage;

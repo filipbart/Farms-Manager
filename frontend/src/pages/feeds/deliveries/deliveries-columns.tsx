@@ -2,7 +2,7 @@ import { Button } from "@mui/material";
 import type { GridColDef } from "@mui/x-data-grid";
 import dayjs from "dayjs";
 
-export const getFeedsDeliversColumns = ({
+export const getFeedsDeliveriesColumns = ({
   setSelectedFeedDelivery,
   setIsEditModalOpen,
   deleteFeedDelivery,
