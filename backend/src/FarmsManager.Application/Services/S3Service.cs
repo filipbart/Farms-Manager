@@ -1,22 +1,136 @@
-﻿using Amazon.S3.Model;
+﻿using System.Net;
+using System.Text;
+using Amazon.S3;
+using Amazon.S3.Model;
+using FarmsManager.Application.FileSystem;
 using FarmsManager.Application.Interfaces;
-using Microsoft.AspNetCore.Http;
+using FarmsManager.Shared.Extensions;
+using Microsoft.Extensions.Configuration;
 
 namespace FarmsManager.Application.Services;
 
 public class S3Service : IS3Service
 {
-    const decimal ExpiresInMinutes = 10;
-    public Task<string> UploadFileAsync(IFormFile file, string key)
+    private const double ExpiresInMinutes = 10;
+    private readonly string _bucketName;
+    private readonly IAmazonS3 _s3Client;
+
+    private bool _bucketExists;
+
+    public S3Service(IAmazonS3 s3Client, IConfiguration configuration)
     {
-        throw new NotImplementedException();
+        _s3Client = s3Client;
+        _bucketName = configuration.GetValue<string>("S3:BucketName");
     }
 
-    public string GeneratePreSignedUrl(string key)
+    private async Task EnsureBucketExistsAsync()
     {
+        if (_bucketExists)
+            return;
+
+        var request = new ListBucketsRequest();
+        var response = await _s3Client.ListBucketsAsync(request);
+
+        if (response.Buckets.All(t => t.BucketName != _bucketName))
+        {
+            await _s3Client.PutBucketAsync(new PutBucketRequest
+            {
+                BucketName = _bucketName,
+                UseClientRegion = true,
+                ObjectLockEnabledForBucket = false
+            });
+
+            var createBucketRequest = new PutBucketVersioningRequest
+            {
+                BucketName = _bucketName,
+                VersioningConfig = new S3BucketVersioningConfig
+                {
+                    Status = VersionStatus.Enabled,
+                    EnableMfaDelete = false
+                },
+                ChecksumAlgorithm = ChecksumAlgorithm.SHA256
+            };
+
+            await _s3Client.PutBucketVersioningAsync(createBucketRequest);
+        }
+
+        _bucketExists = true;
+    }
+
+    public async Task<string> UploadFileAsync(byte[] fileBytes, FileType fileType, string path, bool publicRead = false)
+    {
+        await EnsureBucketExistsAsync();
+
+        using var ms = new MemoryStream(fileBytes);
+        var key = GetPath(fileType, path);
+
+        var request = new PutObjectRequest
+        {
+            BucketName = _bucketName,
+            Key = key,
+            CannedACL = publicRead ? S3CannedACL.PublicRead : S3CannedACL.Private,
+            InputStream = ms
+        };
+
+        try
+        {
+            var s3Response = await _s3Client.PutObjectAsync(request);
+            if (s3Response.HttpStatusCode != HttpStatusCode.OK)
+            {
+                throw new Exception("Błąd podczas zapisywania pliku do S3");
+            }
+        }
+        catch (AmazonS3Exception e)
+        {
+            throw new Exception($"Błąd podczas próby zapisania pliku do S3: {e.Message}");
+        }
+
+        return key;
+    }
+
+    public async Task DeleteFileAsync(FileType fileType, string path)
+    {
+        await EnsureBucketExistsAsync();
+
+        var key = GetPath(fileType, path);
+        var request = new DeleteObjectRequest
+        {
+            BucketName = _bucketName,
+            Key = key
+        };
+
+        await _s3Client.DeleteObjectAsync(request);
+    }
+
+    public async Task<string> GeneratePreSignedUrlAsync(FileType fileType, string path, string fileName = null)
+    {
+        var key = GetPath(fileType, path);
+
         var request = new GetPreSignedUrlRequest
         {
-            
+            BucketName = _bucketName,
+            Key = key,
+            Expires = DateTime.Now + TimeSpan.FromMinutes(ExpiresInMinutes)
+        };
+
+        if (fileName.IsNotEmpty())
+        {
+            request.ResponseHeaderOverrides = new ResponseHeaderOverrides
+            {
+                ContentDisposition = $"attachment; filename={fileName}"
+            };
         }
+
+        return await _s3Client.GetPreSignedURLAsync(request);
+    }
+
+
+    private static string GetPath(FileType fileType, string path)
+    {
+        var pathBuilder = new StringBuilder();
+        pathBuilder.Append(fileType.ToString());
+        pathBuilder.Append('/');
+        pathBuilder.Append(path);
+        return pathBuilder.ToString();
     }
 }

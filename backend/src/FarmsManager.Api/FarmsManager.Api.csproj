@@ -22,4 +22,10 @@
         <ProjectReference Include="..\FarmsManager.Shared\FarmsManager.Shared.csproj"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <None Update="config.toml">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
 </Project>
