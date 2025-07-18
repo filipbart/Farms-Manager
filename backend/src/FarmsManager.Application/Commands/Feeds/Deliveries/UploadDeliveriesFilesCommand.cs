@@ -51,13 +51,12 @@ public class UploadDeliveriesFilesCommandHandler : IRequestHandler<UploadDeliver
             var extension = Path.GetExtension(file.FileName);
             var filePath = "draft/" + fileId + extension;
 
-            var preSignedUrl =
-                await _s3Service.GeneratePreSignedUrlAsync(FileType.FeedDeliveryInvoice, filePath, file.FileName);
-
             using var memoryStream = new MemoryStream();
             await file.CopyToAsync(memoryStream, cancellationToken);
             var fileBytes = memoryStream.ToArray();
             var fileUrl = await _s3Service.UploadFileAsync(fileBytes, FileType.FeedDeliveryInvoice, filePath);
+
+            var preSignedUrl = _s3Service.GeneratePreSignedUrl(FileType.FeedDeliveryInvoice, filePath, file.FileName);
 
             var feedDeliveryInvoiceModels = await _azureDiService.AnalyzeFeedDeliveryInvoiceAsync(preSignedUrl);
 
