@@ -11,9 +11,11 @@ namespace FarmsManager.Application.Services;
 
 public class S3Service : IS3Service
 {
-    private const double ExpiresInMinutes = 10;
+    private const double ExpiresInMinutes = 20;
     private readonly string _bucketName;
     private readonly IAmazonS3 _s3Client;
+    private readonly bool _isDevelopment =
+        Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
 
     private bool _bucketExists;
 
@@ -102,7 +104,7 @@ public class S3Service : IS3Service
         await _s3Client.DeleteObjectAsync(request);
     }
 
-    public async Task<string> GeneratePreSignedUrlAsync(FileType fileType, string path, string fileName = null)
+    public string GeneratePreSignedUrl(FileType fileType, string path, string fileName = null)
     {
         var key = GetPath(fileType, path);
 
@@ -110,19 +112,24 @@ public class S3Service : IS3Service
         {
             BucketName = _bucketName,
             Key = key,
-            Expires = DateTime.Now + TimeSpan.FromMinutes(ExpiresInMinutes),
+            Expires = DateTime.Now.AddMinutes(ExpiresInMinutes),
             Protocol = Protocol.HTTP,
         };
 
         if (fileName.IsNotEmpty())
         {
+            if (_isDevelopment)
+                return _s3Client.GetPreSignedURL(request);
+
+            var contentDisposition = $"attachment; filename={fileName}";
+
             request.ResponseHeaderOverrides = new ResponseHeaderOverrides
             {
-                ContentDisposition = $"attachment; filename={fileName}"
+                ContentDisposition = contentDisposition
             };
         }
 
-        return await _s3Client.GetPreSignedURLAsync(request);
+        return _s3Client.GetPreSignedURL(request);
     }
 
 

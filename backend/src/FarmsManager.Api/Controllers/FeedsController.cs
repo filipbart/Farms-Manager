@@ -123,7 +123,7 @@ public class FeedsController(IMediator mediator) : BaseController
     [Consumes("multipart/form-data")]
     [ProducesResponseType(typeof(BaseResponse<UploadDeliveriesFilesCommandResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> UploadDeliveriesInvoices([FromForm]UploadDeliveriesFilesCommandDto dto)
+    public async Task<IActionResult> UploadDeliveriesInvoices([FromForm] UploadDeliveriesFilesCommandDto dto)
     {
         return Ok(await mediator.Send(new UploadDeliveriesFilesCommand(dto)));
     }

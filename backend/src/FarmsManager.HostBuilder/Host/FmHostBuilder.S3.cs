@@ -29,12 +29,8 @@ public partial class FmHostBuilder
                     ServiceURL = url,
                     UseHttp = true,
                     ForcePathStyle = true,
-                    RegionEndpoint = RegionEndpoint.USEast1,
                     AuthenticationRegion = authRegion,
-                    SignatureMethod = SigningAlgorithm.HmacSHA256,
                 };
-                
-                config.ServiceURL = url;
 
                 return new AmazonS3Client(accessKey, secretKey, config);
             }).AsSelf().AsImplementedInterfaces().SingleInstance();
