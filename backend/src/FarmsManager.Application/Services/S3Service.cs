@@ -31,7 +31,7 @@ public class S3Service : IS3Service
         var request = new ListBucketsRequest();
         var response = await _s3Client.ListBucketsAsync(request);
 
-        if (response.Buckets.All(t => t.BucketName != _bucketName))
+        if (response.Buckets?.All(t => t.BucketName != _bucketName) ?? true)
         {
             await _s3Client.PutBucketAsync(new PutBucketRequest
             {
@@ -110,7 +110,8 @@ public class S3Service : IS3Service
         {
             BucketName = _bucketName,
             Key = key,
-            Expires = DateTime.Now + TimeSpan.FromMinutes(ExpiresInMinutes)
+            Expires = DateTime.Now + TimeSpan.FromMinutes(ExpiresInMinutes),
+            Protocol = Protocol.HTTP,
         };
 
         if (fileName.IsNotEmpty())

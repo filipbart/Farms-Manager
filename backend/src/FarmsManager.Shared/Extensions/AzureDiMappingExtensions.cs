@@ -69,8 +69,9 @@ public static class AzureDiMappingExtensions
 
         if (fieldValue.FieldType == DocumentFieldType.Date)
         {
-            if (DateTime.TryParse(fieldValue.Content, out var date))
+            if (fieldValue.ValueDate.HasValue)
             {
+                var date = fieldValue.ValueDate.Value.DateTime;
                 if (propType == typeof(DateOnly) || propType == typeof(DateOnly?))
                 {
                     return DateOnly.FromDateTime(date);

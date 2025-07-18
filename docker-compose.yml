@@ -46,8 +46,8 @@ services:
     volumes:
       - ./minio-data:/data
     environment:
-      MINIO_ROOT_USER: AKIAWBCD
-      MINIO_ROOT_PASSWORD: m9WNt5ao6xdSKaqqyFlWenJ32/m
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: admin123
     command: server /data --console-address ":9001"
 
 volumes:

@@ -54,4 +54,17 @@ export class FeedsService {
   public static async deleteFeedPrice(id: string) {
     return await AxiosWrapper.delete(ApiUrl.DeleteFeedPrice + "/" + id);
   }
+
+  public static async uploadInvoices(files: File[]) {
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append("files", file);
+    });
+
+    return await AxiosWrapper.post(ApiUrl.UploadDeliveries, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  }
 }

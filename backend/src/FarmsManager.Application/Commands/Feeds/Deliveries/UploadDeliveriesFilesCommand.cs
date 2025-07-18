@@ -22,7 +22,7 @@ public record UploadDeliveryFileData
 
 public record UploadDeliveriesFilesCommandResponse
 {
-    public List<UploadDeliveryFileData> Files { get; set; }
+    public List<UploadDeliveryFileData> Files { get; set; } = [];
 }
 
 public record UploadDeliveriesFilesCommand(UploadDeliveriesFilesCommandDto Data)
@@ -48,7 +48,8 @@ public class UploadDeliveriesFilesCommandHandler : IRequestHandler<UploadDeliver
         foreach (var file in request.Data.Files)
         {
             var fileId = Guid.NewGuid();
-            var filePath = "draft/" + fileId;
+            var extension = Path.GetExtension(file.FileName);
+            var filePath = "draft/" + fileId + extension;
 
             var preSignedUrl =
                 await _s3Service.GeneratePreSignedUrlAsync(FileType.FeedDeliveryInvoice, filePath, file.FileName);

@@ -11,6 +11,10 @@ import {
   Box,
 } from "@mui/material";
 import LoadingButton from "../../../common/loading-button";
+import { toast } from "react-toastify";
+import { FeedsService } from "../../../../services/feeds-service";
+import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
+import { MdFileUpload } from "react-icons/md";
 
 interface UploadInvoicesModalProps {
   open: boolean;
@@ -38,7 +42,7 @@ const UploadInvoicesModal: React.FC<UploadInvoicesModalProps> = ({
       try {
         setLoading(true);
         await handleApiResponse(
-          () => FeedsService.uploadInvoices(files),
+          () => FeedsService.uploadInvoices(selectedFiles),
           () => {
             toast.success("Faktury zostały wgrane pomyślnie");
           },
@@ -105,6 +109,7 @@ const UploadInvoicesModal: React.FC<UploadInvoicesModalProps> = ({
           variant="contained"
           color="primary"
           loading={loading}
+          startIcon={<MdFileUpload />}
         >
           Prześlij
         </LoadingButton>

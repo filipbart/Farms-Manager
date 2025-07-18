@@ -1,4 +1,6 @@
-﻿using Amazon.S3;
+﻿using Amazon;
+using Amazon.Runtime;
+using Amazon.S3;
 using Autofac;
 using Microsoft.Extensions.Configuration;
 
@@ -22,13 +24,17 @@ public partial class FmHostBuilder
                 var secretKey = configuration.GetValue<string>("S3:SecretKey");
                 var authRegion = configuration.GetValue<string>("S3:AuthRegion");
 
-                var config = new AmazonS3Config()
+                var config = new AmazonS3Config
                 {
                     ServiceURL = url,
                     UseHttp = true,
                     ForcePathStyle = true,
-                    AuthenticationRegion = authRegion
+                    RegionEndpoint = RegionEndpoint.USEast1,
+                    AuthenticationRegion = authRegion,
+                    SignatureMethod = SigningAlgorithm.HmacSHA256,
                 };
+                
+                config.ServiceURL = url;
 
                 return new AmazonS3Client(accessKey, secretKey, config);
             }).AsSelf().AsImplementedInterfaces().SingleInstance();
