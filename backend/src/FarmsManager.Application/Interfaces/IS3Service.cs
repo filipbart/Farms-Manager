@@ -5,6 +5,7 @@ namespace FarmsManager.Application.Interfaces;
 
 public interface IS3Service : IService
 {
+    Task<FileModel> GetFileAsync(FileType fileType, string path);
     Task<bool> FileExistsAsync(FileType fileType, string path);
     Task MoveFileAsync(FileType fileType, string sourcePath, string destinationPath);
     Task<string> UploadFileAsync(byte[] fileBytes, FileType fileType, string path, bool publicRead = false);

@@ -1,7 +1,11 @@
 import ApiUrl from "../common/ApiUrl";
 import type { PaginateModel } from "../common/interfaces/paginate";
+import type { FeedsDeliveriesFilterPaginationModel } from "../models/feeds/deliveries/deliveries-filters";
 import type { DraftFeedInvoice } from "../models/feeds/deliveries/draft-feed-invoice";
-import type { FeedInvoiceData } from "../models/feeds/deliveries/feed-invoice";
+import type {
+  FeedDeliveryListModel,
+  FeedInvoiceData,
+} from "../models/feeds/deliveries/feed-invoice";
 import type { FeedsDictionary } from "../models/feeds/feeds-dictionary";
 import type { FeedsNamesQueryResponse } from "../models/feeds/feeds-names";
 import type {
@@ -86,5 +90,20 @@ export class FeedsService {
 
   public static async saveFeedInvoice(invoiceData: SaveFeedInvoiceData) {
     return await AxiosWrapper.post(ApiUrl.SaveInvoiceData, invoiceData);
+  }
+
+  public static async getFeedsDeliveries(
+    filters: FeedsDeliveriesFilterPaginationModel
+  ) {
+    return await AxiosWrapper.get<PaginateModel<FeedDeliveryListModel>>(
+      ApiUrl.FeedsDeliveries,
+      {
+        ...filters,
+      }
+    );
+  }
+
+  public static async deleteFeedDelivery(id: string) {
+    return await AxiosWrapper.delete(ApiUrl.DeleteFeedPrice + "/" + id);
   }
 }

@@ -68,7 +68,6 @@ public class SaveFeedInvoiceDataCommandHandler : IRequestHandler<SaveFeedInvoice
             return response;
         }
 
-
         var newFeedInvoice = FeedInvoiceEntity.CreateNew(
             farm.Id,
             cycle.Id,
@@ -87,10 +86,12 @@ public class SaveFeedInvoiceDataCommandHandler : IRequestHandler<SaveFeedInvoice
             request.Data.Comment,
             userId);
 
-        await _feedInvoiceRepository.AddAsync(newFeedInvoice, ct);
-
         var newPath = request.FilePath.Replace(request.DraftId.ToString(), newFeedInvoice.Id.ToString())
             .Replace("draft", "saved");
+        newFeedInvoice.SetFilePath(newPath);
+
+        await _feedInvoiceRepository.AddAsync(newFeedInvoice, ct);
+
         await _s3Service.MoveFileAsync(FileType.FeedDeliveryInvoice, request.FilePath, newPath);
 
         return response;

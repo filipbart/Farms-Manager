@@ -33,4 +33,7 @@
     <data name="InsertionExists" xml:space="preserve">
         <value>Wstawienie dla kurnika '{0}' oraz tego cyklu już istnieje</value>
     </data>
+    <data name="FileNotFound" xml:space="preserve">
+        <value>Nie znaleziono pliku</value>
+    </data>
 </root>

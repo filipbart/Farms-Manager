@@ -7,4 +7,5 @@ public abstract partial class DomainException
     public static DomainException Unauthorized() => new UnauthorizedException(null);
     public static DomainException UserNotFound() => new UserNotFoundDomainException(null);
     public static DomainException InsertionExists(string henhouseName) => new InsertionExistsDomainException(henhouseName, null);
+    public static DomainException FileNotFound() => new FileNotFoundDomainException(null);
 }

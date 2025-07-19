@@ -36,9 +36,8 @@ export function filterReducer(
 export enum FeedsDeliveriesOrderType {
   Cycle = "Cycle",
   Farm = "Farm",
-  PriceDate = "PriceDate",
-  Price = "Price",
-  Name = "Name",
+  ItemName = "ItemName",
+  VendorName = "VendorName",
   DateCreatedUtc = "DateCreatedUtc",
 }
 

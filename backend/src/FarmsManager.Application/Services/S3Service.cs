@@ -4,6 +4,7 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using FarmsManager.Application.FileSystem;
 using FarmsManager.Application.Interfaces;
+using FarmsManager.Domain.Exceptions;
 using FarmsManager.Shared.Extensions;
 using Microsoft.Extensions.Configuration;
 
@@ -87,6 +88,37 @@ public class S3Service : IS3Service
         }
     }
 
+    public async Task<FileModel> GetFileAsync(FileType fileType, string path)
+    {
+        await EnsureBucketExistsAsync();
+
+        var key = path.Contains(fileType + "/") ? path : GetPath(fileType, path);
+
+        var request = new GetObjectRequest
+        {
+            BucketName = _bucketName,
+            Key = key
+        };
+
+        var obj = await _s3Client.GetObjectAsync(request);
+        if (obj.HttpStatusCode != HttpStatusCode.OK)
+        {
+            throw DomainException.FileNotFound();
+        }
+
+        using var ms = new MemoryStream();
+        await obj.ResponseStream.CopyToAsync(ms);
+
+        return new FileModel
+        {
+            IsFile = true,
+            IsDirectory = false,
+            LastModifyDate = obj.LastModified,
+            ContentType = obj.Headers.ContentType,
+            Data = ms.ToArray()
+        };
+    }
+
     public async Task MoveFileAsync(FileType fileType, string sourcePath, string destinationPath)
     {
         await EnsureBucketExistsAsync();
@@ -162,7 +194,7 @@ public class S3Service : IS3Service
     {
         await EnsureBucketExistsAsync();
 
-        var key = GetPath(fileType, path);
+        var key = path.Contains(fileType + "/") ? path : GetPath(fileType, path);
         var request = new DeleteObjectRequest
         {
             BucketName = _bucketName,

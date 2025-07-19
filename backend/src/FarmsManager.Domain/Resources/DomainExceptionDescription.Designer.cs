@@ -60,6 +60,15 @@ namespace FarmsManager.Domain.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Nie znaleziono pliku.
+        /// </summary>
+        internal static string FileNotFound {
+            get {
+                return ResourceManager.GetString("FileNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Wstawienie dla kurnika &apos;{0}&apos; oraz tego cyklu już istnieje.
         /// </summary>
         internal static string InsertionExists {

@@ -141,12 +141,58 @@ public class FeedsController(IMediator mediator) : BaseController
         return Ok(await mediator.Send(command));
     }
 
+    /// <summary>
+    /// Zwraca faktury dostaw pasz
+    /// </summary>
+    /// <param name="filters"></param>
+    /// <returns></returns>
+    [HttpGet("deliveries")]
+    [ProducesResponseType(typeof(BaseResponse<GetFeedsDeliveriesQueryResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetFeedsDeliveries([FromQuery] GetFeedsDeliveriesQueryFilters filters)
+    {
+        return Ok(await mediator.Send(new GetFeedsDeliveriesQuery(filters)));
+    }
+
+    /// <summary>
+    /// Zwraca plik faktury
+    /// </summary>
+    /// <param name="feedDeliveryId"></param>
+    /// <returns></returns>
+    [HttpGet("download-file/{feedDeliveryId:guid}")]
+    [ProducesResponseType(typeof(File), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetFeedInvoiceFile([FromRoute] Guid feedDeliveryId)
+    {
+        var file = await mediator.Send(new GetFeedDeliveryFileQuery(feedDeliveryId));
+
+        return file is null ? NoContent() : File(file.Data, file.ContentType, file.FileName);
+    }
     
-    // [HttpGet]
-    // [ProducesResponseType(typeof(), StatusCodes.Status200OK)]
+    /// <summary>
+    /// Aktualizuje dane ceny paszy
+    /// </summary>
+    /// <param name="id"></param>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    // [HttpPatch("update-price/{id:guid}")]
+    // [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     // [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    // public async Task<IActionResult> GetFeedsDeliveries([FromQuery] GetFeedsDeliveriesFilters filters)
+    // public async Task<IActionResult> UpdateFeedPrice([FromRoute] Guid id, [FromBody] UpdateFeedPriceCommandDto data)
     // {
-    //     return Ok(await mediator.Send());
+    //     return Ok(await mediator.Send(new UpdateFeedPriceCommand(id, data)));
     // }
+
+    /// <summary>
+    /// Usuwa cene paszy
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    [HttpDelete("delete-delivery/{id:guid}")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> DeleteFeedDelivery([FromRoute] Guid id)
+    {
+        return Ok(await mediator.Send(new DeleteFeedPriceCommand(id)));
+    }
 }
