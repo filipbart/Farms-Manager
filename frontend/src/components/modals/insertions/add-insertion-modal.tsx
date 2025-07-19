@@ -66,7 +66,7 @@ function formReducer(
   switch (action.type) {
     case "SET_FIELD":
       return { ...state, [action.name]: action.value };
-    case "UPDATE_ENTRY":
+    case "UPDATE_ENTRY": {
       const updatedEntries = [...state.entries];
       updatedEntries[action.index] = {
         ...updatedEntries[action.index],
@@ -76,6 +76,7 @@ function formReducer(
         ...state,
         entries: updatedEntries,
       };
+    }
     case "ADD_ENTRY":
       return {
         ...state,

@@ -5,6 +5,8 @@ public class AddFeedDeliveryInvoiceDto
     public Guid? FarmId { get; init; }
     public Guid? CycleId { get; init; }
     public Guid? HenhouseId { get; init; }
+    public string InvoiceNumber { get; init; }
+    public string BankAccountNumber { get; init; }
     public string VendorName { get; init; }
     public string ItemName { get; init; }
     public decimal? Quantity { get; init; }

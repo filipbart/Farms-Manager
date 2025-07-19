@@ -19,6 +19,8 @@ import {
 } from "../../../models/feeds/deliveries/deliveries-filters";
 import { getFeedsDeliveriesColumns } from "./deliveries-columns";
 import UploadInvoicesModal from "../../../components/modals/feeds/deliveries/upload-invoices-modal";
+import SaveInvoiceModal from "../../../components/modals/feeds/deliveries/save-invoice-modal";
+import type { DraftFeedInvoice } from "../../../models/feeds/deliveries/draft-feed-invoice";
 
 const FeedsDeliveriesPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -28,12 +30,22 @@ const FeedsDeliveriesPage: React.FC = () => {
   const [feedsPrices, setFeedsPrices] = useState<FeedPriceListModel[]>([]);
   const [totalRows, setTotalRows] = useState(0);
 
-  const [openUploadModal, setUploadOpenModal] = useState(false);
-  const [selectedFeedDelivery, setSelectedFeedDelivery] = useState<null>(null);
+  const [openUploadModal, setOpenUploadModal] = useState(false);
+  const [openSaveDataModal, setOpenSaveDataModal] = useState(false);
+  const [draftFeedInvoices, setDraftFeedInvoices] = useState<
+    DraftFeedInvoice[]
+  >([]);
+
+  const [selectedFeedDelivery, setSelectedFeedDelivery] = useState();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  const uploadFiles = async (files: File[]) => {
-    dispatch({ type: "setMultiple", payload: { page: 0 } });
+  const uploadFiles = async (draftFiles: DraftFeedInvoice[]) => {
+    if (draftFiles.length === 0) {
+      toast.error("Brak plików do przetworzenia");
+      return;
+    }
+    setDraftFeedInvoices(draftFiles);
+    setOpenSaveDataModal(true);
   };
 
   const deleteFeedDelivery = async (id: string) => {
@@ -77,6 +89,12 @@ const FeedsDeliveriesPage: React.FC = () => {
       toast.error("Błąd podczas pobierania słowników filtrów");
     }
   };
+
+  const handleCloseSaveDataModal = () => {
+    setOpenSaveDataModal(false);
+  };
+
+  const handleSaveInvoiceData = (feedInvoiceData: DraftFeedInvoice) => {};
 
   // const fetchFeedsPrices = async () => {
   //   try {
@@ -130,9 +148,16 @@ const FeedsDeliveriesPage: React.FC = () => {
         <Typography variant="h4">Dostawy pasz</Typography>
         <Box display="flex" gap={2}>
           <Button
+            variant="outlined"
+            color="secondary"
+            onClick={() => setOpenSaveDataModal(true)}
+          >
+            Test zapisywania faktury
+          </Button>
+          <Button
             variant="contained"
             color="primary"
-            onClick={() => setUploadOpenModal(true)}
+            onClick={() => setOpenUploadModal(true)}
           >
             Wprowadź fakturę
           </Button>
@@ -205,23 +230,18 @@ const FeedsDeliveriesPage: React.FC = () => {
           }}
         />
       </Box>
-      {/* <EditFeedPriceModal
-        open={isEditModalOpen}
-        onClose={() => {
-          setIsEditModalOpen(false);
-          setSelectedFeedPrice(null);
-        }}
-        onSave={() => {
-          setIsEditModalOpen(false);
-          setSelectedFeedPrice(null);
-          dispatch({ type: "setMultiple", payload: { page: filters.page } });
-        }}
-        feedPrice={selectedFeedDelivery}
-      />*/}
+      {draftFeedInvoices.length > 0 && (
+        <SaveInvoiceModal
+          open={openSaveDataModal}
+          onClose={handleCloseSaveDataModal}
+          draftFeedInvoices={draftFeedInvoices}
+          onSave={handleSaveInvoiceData}
+        />
+      )}
 
       <UploadInvoicesModal
         open={openUploadModal}
-        onClose={() => setUploadOpenModal(false)}
+        onClose={() => setOpenUploadModal(false)}
         onUpload={uploadFiles}
       />
     </Box>

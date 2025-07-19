@@ -67,7 +67,9 @@ public class UploadDeliveriesFilesCommandHandler : IRequestHandler<UploadDeliver
 
             var extractedFields = new AddFeedDeliveryInvoiceDto
             {
-                VendorName = "WIPASZ SPÓŁKA",
+                InvoiceNumber = "370/01/25/FV/K",
+                BankAccountNumber = "11002233445566778899001122",
+                VendorName = "WIPASZ SPÓŁKA AKCYJNA",
                 ItemName = "WIK N4",
                 Quantity = (decimal?)21.37,
                 UnitPrice = (decimal?)1.34,
@@ -76,7 +78,7 @@ public class UploadDeliveriesFilesCommandHandler : IRequestHandler<UploadDeliver
                 InvoiceTotal = (decimal?)21334.12,
                 SubTotal = (decimal?)20112.23,
                 VatAmount = 1222
-            };//TODO dane do testow
+            }; //TODO dane do testow
 
             response.Files.Add(new UploadDeliveryFileData
             {

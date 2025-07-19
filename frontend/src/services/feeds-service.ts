@@ -1,5 +1,6 @@
 import ApiUrl from "../common/ApiUrl";
 import type { PaginateModel } from "../common/interfaces/paginate";
+import type { DraftFeedInvoice } from "../models/feeds/deliveries/draft-feed-invoice";
 import type { FeedsDictionary } from "../models/feeds/feeds-dictionary";
 import type { FeedsNamesQueryResponse } from "../models/feeds/feeds-names";
 import type {
@@ -9,6 +10,10 @@ import type {
 } from "../models/feeds/prices/feed-price";
 import type { FeedsPricesFilterPaginationModel } from "../models/feeds/prices/price-filters";
 import AxiosWrapper from "../utils/axios/wrapper";
+
+export interface UploadDeliveriesFilesResponse {
+  files: DraftFeedInvoice[];
+}
 
 export class FeedsService {
   public static async getDictionaries() {
@@ -61,10 +66,14 @@ export class FeedsService {
       formData.append("files", file);
     });
 
-    return await AxiosWrapper.post(ApiUrl.UploadDeliveries, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    return await AxiosWrapper.post<UploadDeliveriesFilesResponse>(
+      ApiUrl.UploadDeliveries,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
   }
 }

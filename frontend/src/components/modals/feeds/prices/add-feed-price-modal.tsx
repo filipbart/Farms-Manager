@@ -12,10 +12,7 @@ import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { MdSave } from "react-icons/md";
 import { useFarms } from "../../../../hooks/useFarms";
-import {
-  FeedsService,
-  type AddFeedPriceFormData,
-} from "../../../../services/feeds-service";
+import { FeedsService } from "../../../../services/feeds-service";
 import LoadingButton from "../../../common/loading-button";
 import LoadingTextField from "../../../common/loading-textfield";
 import { DatePicker } from "@mui/x-date-pickers";
@@ -23,6 +20,7 @@ import dayjs from "dayjs";
 import { useLatestCycle } from "../../../../hooks/useLatestCycle";
 import { useFeedsNames } from "../../../../hooks/feeds/useFeedsNames";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
+import type { AddFeedPriceFormData } from "../../../../models/feeds/prices/feed-price";
 
 interface AddHatcheryModalProps {
   open: boolean;
@@ -72,7 +70,7 @@ const AddFeedPriceModal: React.FC<AddHatcheryModalProps> = ({
   useEffect(() => {
     fetchFarms();
     fetchFeedsNames();
-  }, []);
+  }, [fetchFarms, fetchFeedsNames]);
 
   const handleFarmChange = async (farmId: string) => {
     const cycle = await loadLatestCycle(farmId);

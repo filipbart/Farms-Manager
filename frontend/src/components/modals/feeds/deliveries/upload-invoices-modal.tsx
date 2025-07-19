@@ -15,11 +15,12 @@ import { toast } from "react-toastify";
 import { FeedsService } from "../../../../services/feeds-service";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import { MdFileUpload } from "react-icons/md";
+import type { DraftFeedInvoice } from "../../../../models/feeds/deliveries/draft-feed-invoice";
 
 interface UploadInvoicesModalProps {
   open: boolean;
   onClose: () => void;
-  onUpload: (files: File[]) => void;
+  onUpload: (files: DraftFeedInvoice[]) => void;
 }
 
 const UploadInvoicesModal: React.FC<UploadInvoicesModalProps> = ({
@@ -43,7 +44,10 @@ const UploadInvoicesModal: React.FC<UploadInvoicesModalProps> = ({
         setLoading(true);
         await handleApiResponse(
           () => FeedsService.uploadInvoices(selectedFiles),
-          () => {
+          (data) => {
+            if (data && data.responseData) {
+              onUpload(data.responseData.files);
+            }
             toast.success("Faktury zostały wgrane pomyślnie");
           },
           undefined,
@@ -55,7 +59,6 @@ const UploadInvoicesModal: React.FC<UploadInvoicesModalProps> = ({
         setLoading(false);
       }
 
-      onUpload(selectedFiles);
       setSelectedFiles([]);
       onClose();
     }

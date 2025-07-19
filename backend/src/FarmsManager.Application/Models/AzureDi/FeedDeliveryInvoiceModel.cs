@@ -5,6 +5,12 @@ namespace FarmsManager.Application.Models.AzureDi;
 
 public class FeedDeliveryInvoiceModel
 {
+    [AzureDiField("InvoiceId")]
+    public string InvoiceNumber { get; init; }
+    
+    [AzureDiField("IBAN")]
+    public string BankAccountNumber { get; init; }
+    
     [AzureDiField("vendorName", customField: true)]
     public string VendorName { get; init; }
 
