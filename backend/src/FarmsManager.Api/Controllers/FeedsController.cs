@@ -127,4 +127,26 @@ public class FeedsController(IMediator mediator) : BaseController
     {
         return Ok(await mediator.Send(new UploadDeliveriesFilesCommand(dto)));
     }
+
+    /// <summary>
+    /// Zapisuje dane z faktury
+    /// </summary>
+    /// <param name="command"></param>
+    /// <returns></returns>
+    [HttpPost("save-invoice")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> SaveInvoiceData(SaveFeedInvoiceDataCommand command)
+    {
+        return Ok(await mediator.Send(command));
+    }
+
+    
+    // [HttpGet]
+    // [ProducesResponseType(typeof(), StatusCodes.Status200OK)]
+    // [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    // public async Task<IActionResult> GetFeedsDeliveries([FromQuery] GetFeedsDeliveriesFilters filters)
+    // {
+    //     return Ok(await mediator.Send());
+    // }
 }

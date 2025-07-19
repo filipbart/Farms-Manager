@@ -25,6 +25,9 @@ import { Controller, useForm } from "react-hook-form";
 import LoadingButton from "../../../common/loading-button";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
+import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
+import { FeedsService } from "../../../../services/feeds-service";
+import { toast } from "react-toastify";
 
 interface SaveInvoiceModalProps {
   open: boolean;
@@ -84,10 +87,31 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
     }
   };
 
-  const handleSave = (formData: FeedInvoiceData) => {
-    console.log("Zapisz:", formData);
-    onSave(draftFeed);
-    handleClose();
+  useEffect(() => {
+    if (draftFeedInvoices.length > 0) {
+      setDraftFeed(draftFeedInvoices[0]);
+      reset(draftFeedInvoices[0].extractedFields);
+    }
+  }, [draftFeedInvoices, reset]);
+
+  const handleSave = async (formData: FeedInvoiceData) => {
+    setLoading(true);
+    await handleApiResponse(
+      () =>
+        FeedsService.saveFeedInvoice({
+          filePath: draftFeed.filePath,
+          draftId: draftFeed.draftId,
+          data: formData,
+        }),
+      () => {
+        toast.success(`Pomyślnie zapisano fakturę: ${formData.invoiceNumber}`);
+        onSave(draftFeed);
+      },
+      undefined,
+      "Wystąpił błąd podczas zapisywania danych faktury"
+    );
+
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -167,7 +191,7 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
               </Grid>
 
               <Grid size={{ md: 12, lg: 7, xl: 6 }}>
-                <Grid container spacing={3} alignItems={"center"}>
+                <Grid container spacing={3} alignItems={"top"}>
                   <Grid size={12}>
                     <Typography variant="h6">Dane na fakturze</Typography>
                   </Grid>
@@ -209,8 +233,10 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
                     <TextField
                       select
                       label="Kurnik"
-                      {...register("farmId", {
-                        required: "Farma jest wymagana",
+                      error={!!errors.henhouseId}
+                      helperText={errors.henhouseId?.message}
+                      {...register("henhouseId", {
+                        required: "Kurnik jest wymagany",
                       })}
                       fullWidth
                       disabled={!watch("farmId") || watch("farmId") === ""}
@@ -413,27 +439,38 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
                       fullWidth
                     />
                   </Grid>
+                  <Grid size={12}>
+                    <TextField
+                      label="Notatka"
+                      error={!!errors.comment}
+                      helperText={errors.comment?.message}
+                      {...register("comment")}
+                      fullWidth
+                      multiline
+                      rows={2}
+                    />
+                  </Grid>
                 </Grid>
               </Grid>
             </Grid>
           </DialogContent>
-        </form>
 
-        <DialogActions>
-          <Button onClick={handleClose} color="secondary" variant="outlined">
-            Anuluj
-          </Button>
-          <LoadingButton
-            type="submit"
-            variant="contained"
-            color="primary"
-            startIcon={<MdSave />}
-            disabled={loading}
-            loading={loading}
-          >
-            Zapisz
-          </LoadingButton>
-        </DialogActions>
+          <DialogActions>
+            <Button onClick={handleClose} color="secondary" variant="outlined">
+              Anuluj
+            </Button>
+            <LoadingButton
+              type="submit"
+              variant="contained"
+              color="primary"
+              startIcon={<MdSave />}
+              disabled={loading}
+              loading={loading}
+            >
+              Zapisz
+            </LoadingButton>
+          </DialogActions>
+        </form>
       </Dialog>
 
       {/* DIALOG PODGLĄDU */}

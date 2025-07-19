@@ -54,4 +54,5 @@ export default class ApiUrl {
   public static UpdateFeedPrice = this.Feeds + "/update-price";
   public static DeleteFeedPrice = this.Feeds + "/delete-price";
   public static UploadDeliveries = this.Feeds + "/upload-deliveries";
+  public static SaveInvoiceData = this.Feeds + "/save-invoice";
 }

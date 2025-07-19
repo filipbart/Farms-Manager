@@ -91,11 +91,22 @@ const FeedsDeliveriesPage: React.FC = () => {
   };
 
   const handleCloseSaveDataModal = () => {
+    setDraftFeedInvoices([]);
     setOpenSaveDataModal(false);
   };
 
-  const handleSaveInvoiceData = (feedInvoiceData: DraftFeedInvoice) => {};
+  const handleSaveInvoiceData = (feedInvoiceData: DraftFeedInvoice) => {
+    const filteredInvoices = draftFeedInvoices.filter(
+      (t) => t.draftId !== feedInvoiceData.draftId
+    );
 
+    if (filteredInvoices.length === 0) {
+      setDraftFeedInvoices([]);
+      setOpenSaveDataModal(false);
+    }
+
+    setDraftFeedInvoices(filteredInvoices);
+  };
   // const fetchFeedsPrices = async () => {
   //   try {
   //     setLoading(true);

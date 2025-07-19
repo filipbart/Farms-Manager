@@ -14,4 +14,11 @@ export interface FeedInvoiceData {
   invoiceTotal?: number;
   subTotal?: number;
   vatAmount?: number;
+  comment?: string;
+}
+
+export interface SaveFeedInvoiceDto {
+  fileUrl: string;
+  draftId: string;
+  data: FeedInvoiceData;
 }

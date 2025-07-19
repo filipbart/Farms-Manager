@@ -15,7 +15,17 @@ const LoadingTextField: React.FC<LoadingTextFieldProps> = ({
   ...textFieldProps
 }) => {
   return loading ? (
-    <Loading height="0" size={10} />
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100%",
+        width: "100%",
+      }}
+    >
+      <Loading height="0" size={10} />
+    </div>
   ) : (
     <TextField {...textFieldProps} value={value}>
       {children}

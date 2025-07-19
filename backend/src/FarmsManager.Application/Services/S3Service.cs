@@ -14,6 +14,7 @@ public class S3Service : IS3Service
     private const double ExpiresInMinutes = 20;
     private readonly string _bucketName;
     private readonly IAmazonS3 _s3Client;
+
     private readonly bool _isDevelopment =
         Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
 
@@ -58,6 +59,73 @@ public class S3Service : IS3Service
 
         _bucketExists = true;
     }
+
+    public async Task<bool> FileExistsAsync(FileType fileType, string path)
+    {
+        await EnsureBucketExistsAsync();
+        var key = path.Contains(fileType + "/") ? path : GetPath(fileType, path);
+
+        try
+        {
+            var request = new GetObjectMetadataRequest
+            {
+                BucketName = _bucketName,
+                Key = key
+            };
+
+            var response = await _s3Client.GetObjectMetadataAsync(request);
+            return response.HttpStatusCode == HttpStatusCode.OK;
+        }
+        catch (AmazonS3Exception ex)
+        {
+            if (ex.StatusCode == HttpStatusCode.NotFound)
+            {
+                return false;
+            }
+
+            throw new Exception($"Błąd podczas sprawdzania istnienia pliku w S3: {ex.Message}", ex);
+        }
+    }
+
+    public async Task MoveFileAsync(FileType fileType, string sourcePath, string destinationPath)
+    {
+        await EnsureBucketExistsAsync();
+
+        var sourceKey = sourcePath.Contains(fileType + "/") ? sourcePath : GetPath(fileType, sourcePath);
+        var destinationKey = destinationPath.Contains(fileType + "/")
+            ? destinationPath
+            : GetPath(fileType, destinationPath);
+
+        var copyRequest = new CopyObjectRequest
+        {
+            SourceBucket = _bucketName,
+            SourceKey = sourceKey,
+            DestinationBucket = _bucketName,
+            DestinationKey = destinationKey
+        };
+
+        try
+        {
+            var copyResponse = await _s3Client.CopyObjectAsync(copyRequest);
+            if (copyResponse.HttpStatusCode != HttpStatusCode.OK)
+            {
+                throw new Exception("Błąd podczas kopiowania pliku w S3.");
+            }
+
+            var deleteRequest = new DeleteObjectRequest
+            {
+                BucketName = _bucketName,
+                Key = sourceKey
+            };
+
+            await _s3Client.DeleteObjectAsync(deleteRequest);
+        }
+        catch (AmazonS3Exception ex)
+        {
+            throw new Exception($"Błąd podczas przenoszenia pliku w S3: {ex.Message}", ex);
+        }
+    }
+
 
     public async Task<string> UploadFileAsync(byte[] fileBytes, FileType fileType, string path, bool publicRead = false)
     {

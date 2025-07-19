@@ -19,6 +19,7 @@ public record UploadDeliveryFileData
 {
     public Guid DraftId { get; init; }
     public string FileUrl { get; init; }
+    public string FilePath { get; init; }
     public AddFeedDeliveryInvoiceDto ExtractedFields { get; init; }
 }
 
@@ -58,7 +59,7 @@ public class UploadDeliveriesFilesCommandHandler : IRequestHandler<UploadDeliver
             using var memoryStream = new MemoryStream();
             await file.CopyToAsync(memoryStream, cancellationToken);
             var fileBytes = memoryStream.ToArray();
-            var fileUrl = await _s3Service.UploadFileAsync(fileBytes, FileType.FeedDeliveryInvoice, filePath);
+            var key = await _s3Service.UploadFileAsync(fileBytes, FileType.FeedDeliveryInvoice, filePath);
 
             var preSignedUrl = _s3Service.GeneratePreSignedUrl(FileType.FeedDeliveryInvoice, filePath, file.FileName);
 
@@ -83,6 +84,7 @@ public class UploadDeliveriesFilesCommandHandler : IRequestHandler<UploadDeliver
             response.Files.Add(new UploadDeliveryFileData
             {
                 DraftId = fileId,
+                FilePath = key,
                 FileUrl = preSignedUrl,
                 ExtractedFields = extractedFields
             });

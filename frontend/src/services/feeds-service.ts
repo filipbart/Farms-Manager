@@ -1,6 +1,7 @@
 import ApiUrl from "../common/ApiUrl";
 import type { PaginateModel } from "../common/interfaces/paginate";
 import type { DraftFeedInvoice } from "../models/feeds/deliveries/draft-feed-invoice";
+import type { FeedInvoiceData } from "../models/feeds/deliveries/feed-invoice";
 import type { FeedsDictionary } from "../models/feeds/feeds-dictionary";
 import type { FeedsNamesQueryResponse } from "../models/feeds/feeds-names";
 import type {
@@ -13,6 +14,12 @@ import AxiosWrapper from "../utils/axios/wrapper";
 
 export interface UploadDeliveriesFilesResponse {
   files: DraftFeedInvoice[];
+}
+
+export interface SaveFeedInvoiceData {
+  filePath: string;
+  draftId: string;
+  data: FeedInvoiceData;
 }
 
 export class FeedsService {
@@ -75,5 +82,9 @@ export class FeedsService {
         },
       }
     );
+  }
+
+  public static async saveFeedInvoice(invoiceData: SaveFeedInvoiceData) {
+    return await AxiosWrapper.post(ApiUrl.SaveInvoiceData, invoiceData);
   }
 }

@@ -16,4 +16,5 @@ public class AddFeedDeliveryInvoiceDto
     public decimal? InvoiceTotal { get; init; }
     public decimal? SubTotal { get; init; }
     public decimal? VatAmount { get; init; }
+    public string Comment { get; init; }
 }
