@@ -58,7 +58,7 @@ public class SaveFeedInvoiceDataCommandHandler : IRequestHandler<SaveFeedInvoice
             await _feedNameRepository.FirstOrDefaultAsync(new GetFeedNameByNameSpec(request.Data.ItemName!), ct);
         if (feedName is null)
         {
-            response.AddError("FeedName", "Nie znaleziono nazwy produktu w słowniku");
+            response.AddError("FeedName", "Nie znaleziono nazwy paszy w słowniku");
             return response;
         }
 
@@ -86,6 +86,7 @@ public class SaveFeedInvoiceDataCommandHandler : IRequestHandler<SaveFeedInvoice
             request.Data.Comment,
             userId);
 
+        //TODO sprawdzenie ceny jednostkowej
         var newPath = request.FilePath.Replace(request.DraftId.ToString(), newFeedInvoice.Id.ToString())
             .Replace("draft", "saved");
         newFeedInvoice.SetFilePath(newPath);

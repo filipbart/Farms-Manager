@@ -64,7 +64,7 @@ public class S3Service : IS3Service
     public async Task<bool> FileExistsAsync(FileType fileType, string path)
     {
         await EnsureBucketExistsAsync();
-        var key = path.Contains(fileType + "/") ? path : GetPath(fileType, path);
+        var key = GetPath(fileType, path);
 
         try
         {
@@ -92,7 +92,7 @@ public class S3Service : IS3Service
     {
         await EnsureBucketExistsAsync();
 
-        var key = path.Contains(fileType + "/") ? path : GetPath(fileType, path);
+        var key = GetPath(fileType, path);
 
         var request = new GetObjectRequest
         {
@@ -123,10 +123,8 @@ public class S3Service : IS3Service
     {
         await EnsureBucketExistsAsync();
 
-        var sourceKey = sourcePath.Contains(fileType + "/") ? sourcePath : GetPath(fileType, sourcePath);
-        var destinationKey = destinationPath.Contains(fileType + "/")
-            ? destinationPath
-            : GetPath(fileType, destinationPath);
+        var sourceKey = GetPath(fileType, sourcePath);
+        var destinationKey = GetPath(fileType, destinationPath);
 
         var copyRequest = new CopyObjectRequest
         {
@@ -194,7 +192,7 @@ public class S3Service : IS3Service
     {
         await EnsureBucketExistsAsync();
 
-        var key = path.Contains(fileType + "/") ? path : GetPath(fileType, path);
+        var key = GetPath(fileType, path);
         var request = new DeleteObjectRequest
         {
             BucketName = _bucketName,
@@ -235,6 +233,9 @@ public class S3Service : IS3Service
 
     private static string GetPath(FileType fileType, string path)
     {
+        if (path.Contains(fileType + "/"))
+            return path;
+
         var pathBuilder = new StringBuilder();
         pathBuilder.Append(fileType.ToString());
         pathBuilder.Append('/');
