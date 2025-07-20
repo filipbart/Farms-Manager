@@ -13,18 +13,18 @@ public class FeedInvoiceEntity : Entity
     public Guid CycleId { get; init; }
     public Guid HenhouseId { get; init; }
 
-    public string InvoiceNumber { get; init; }
-    public string BankAccountNumber { get; init; }
-    public string VendorName { get; init; }
-    public string ItemName { get; init; }
-    public decimal Quantity { get; init; }
-    public decimal UnitPrice { get; init; }
-    public DateOnly InvoiceDate { get; init; }
-    public DateOnly DueDate { get; init; }
-    public decimal InvoiceTotal { get; init; }
-    public decimal SubTotal { get; init; }
-    public decimal VatAmount { get; init; }
-    public string Comment { get; init; }
+    public string InvoiceNumber { get; protected internal set; }
+    public string BankAccountNumber { get; protected internal set; }
+    public string VendorName { get; protected internal set; }
+    public string ItemName { get; protected internal set; }
+    public decimal Quantity { get; protected internal set; }
+    public decimal UnitPrice { get; protected internal set; }
+    public DateOnly InvoiceDate { get; protected internal set; }
+    public DateOnly DueDate { get; protected internal set; }
+    public decimal InvoiceTotal { get; protected internal set; }
+    public decimal SubTotal { get; protected internal set; }
+    public decimal VatAmount { get; protected internal set; }
+    public string Comment { get; protected internal set; }
 
     public virtual CycleEntity Cycle { get; init; }
     public virtual HenhouseEntity Henhouse { get; init; }
@@ -73,4 +73,33 @@ public class FeedInvoiceEntity : Entity
     }
 
     public void SetFilePath(string filePath) => FilePath = filePath;
+    
+    public void Update(
+        string invoiceNumber,
+        string bankAccountNumber,
+        string itemName,
+        string vendorName,
+        decimal quantity,
+        decimal unitPrice,
+        DateOnly invoiceDate,
+        DateOnly dueDate,
+        decimal invoiceTotal,
+        decimal subTotal,
+        decimal vatAmount,
+        string comment)
+    {
+        InvoiceNumber = invoiceNumber;
+        BankAccountNumber = bankAccountNumber;
+        ItemName = itemName;
+        VendorName = vendorName;
+        Quantity = quantity;
+        UnitPrice = unitPrice;
+        InvoiceDate = invoiceDate;
+        DueDate = dueDate;
+        InvoiceTotal = invoiceTotal;
+        SubTotal = subTotal;
+        VatAmount = vatAmount;
+        Comment = comment;
+    }
+
 }

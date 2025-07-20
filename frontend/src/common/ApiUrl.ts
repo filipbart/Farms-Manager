@@ -58,4 +58,5 @@ export default class ApiUrl {
   public static FeedsDeliveries = this.Feeds + "/deliveries";
   public static DownloadFeedDeliveryFile = this.Feeds + "/download-file";
   public static DeleteFeedDelivery = this.Feeds + "/delete-delivery";
+  public static UpdateFeedDelivery = this.Feeds + "/update-delivery";
 }

@@ -25,6 +25,7 @@ import type { PaginateModel } from "../../../common/interfaces/paginate";
 import axios from "axios";
 import qs from "qs";
 import ApiUrl from "../../../common/ApiUrl";
+import EditFeedDeliveryModal from "../../../components/modals/feeds/deliveries/edit-feed-delivery-modal";
 
 const FeedsDeliveriesPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -43,7 +44,8 @@ const FeedsDeliveriesPage: React.FC = () => {
   >([]);
 
   const [loadingFileId, setLoadingFileId] = useState<string | null>(null);
-  const [selectedFeedDelivery, setSelectedFeedDelivery] = useState();
+  const [selectedFeedDelivery, setSelectedFeedDelivery] =
+    useState<FeedDeliveryListModel | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const uploadFiles = async (draftFiles: DraftFeedInvoice[]) => {
@@ -304,6 +306,20 @@ const FeedsDeliveriesPage: React.FC = () => {
         open={openUploadModal}
         onClose={() => setOpenUploadModal(false)}
         onUpload={uploadFiles}
+      />
+
+      <EditFeedDeliveryModal
+        open={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setSelectedFeedDelivery(null);
+        }}
+        onSave={() => {
+          setIsEditModalOpen(false);
+          setSelectedFeedDelivery(null);
+          dispatch({ type: "setMultiple", payload: { page: filters.page } });
+        }}
+        feedDelivery={selectedFeedDelivery}
       />
     </Box>
   );

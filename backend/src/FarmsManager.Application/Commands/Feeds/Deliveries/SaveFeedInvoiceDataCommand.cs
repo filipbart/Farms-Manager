@@ -114,12 +114,12 @@ public class SaveFeedInvoiceDataCommandValidator : AbstractValidator<SaveFeedInv
         RuleFor(t => t.Data.BankAccountNumber).NotEmpty();
         RuleFor(t => t.Data.VendorName).NotEmpty();
         RuleFor(t => t.Data.ItemName).NotEmpty();
-        RuleFor(t => t.Data.Quantity).NotEmpty();
-        RuleFor(t => t.Data.UnitPrice).NotEmpty();
+        RuleFor(t => t.Data.Quantity).NotEmpty().GreaterThanOrEqualTo(0);
+        RuleFor(t => t.Data.UnitPrice).NotEmpty().GreaterThanOrEqualTo(0);
         RuleFor(t => t.Data.InvoiceDate).NotEmpty();
         RuleFor(t => t.Data.DueDate).NotEmpty();
-        RuleFor(t => t.Data.InvoiceTotal).NotEmpty();
-        RuleFor(t => t.Data.SubTotal).NotEmpty();
-        RuleFor(t => t.Data.VatAmount).NotEmpty();
+        RuleFor(t => t.Data.InvoiceTotal).NotEmpty().GreaterThanOrEqualTo(0);
+        RuleFor(t => t.Data.SubTotal).NotEmpty().GreaterThanOrEqualTo(0);
+        RuleFor(t => t.Data.VatAmount).NotEmpty().GreaterThanOrEqualTo(0);
     }
 }

@@ -39,4 +39,7 @@ export interface FeedDeliveryListModel {
   vatAmount: number;
   comment: string;
   dateCreatedUtc: string;
+
+  invoiceNumber: string;
+  bankAccountNumber: string;
 }

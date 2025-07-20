@@ -104,6 +104,13 @@ export class FeedsService {
   }
 
   public static async deleteFeedDelivery(id: string) {
-    return await AxiosWrapper.delete(ApiUrl.DeleteFeedPrice + "/" + id);
+    return await AxiosWrapper.delete(ApiUrl.DeleteFeedDelivery + "/" + id);
+  }
+
+  public static async updateFeedDelivery(
+    id: string,
+    data: FeedDeliveryListModel
+  ) {
+    return await AxiosWrapper.patch(ApiUrl.UpdateFeedDelivery + "/" + id, data);
   }
 }

@@ -32,20 +32,12 @@ public class UpdateFeedPriceCommandHandler : IRequestHandler<UpdateFeedPriceComm
         _feedPriceRepository = feedPriceRepository;
     }
 
-
     public async Task<EmptyBaseResponse> Handle(UpdateFeedPriceCommand request, CancellationToken cancellationToken)
     {
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var feedPrice = await _feedPriceRepository.GetAsync(new FeedPriceByIdSpec(request.Id), cancellationToken);
         var feedName =
             await _feedNameRepository.GetAsync(new GetFeedNameByIdSpec(request.Data.NameId), cancellationToken);
-
-
-        if (feedPrice.Price == request.Data.Price && feedPrice.Name == feedName.Name &&
-            feedPrice.PriceDate == request.Data.PriceDate)
-        {
-            return new EmptyBaseResponse();
-        }
 
         feedPrice.Update(request.Data.PriceDate, feedName.Name, request.Data.Price);
         feedPrice.SetModified(userId);

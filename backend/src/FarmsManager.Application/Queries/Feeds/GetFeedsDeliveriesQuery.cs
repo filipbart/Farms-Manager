@@ -48,6 +48,8 @@ public record FeedDeliveryRowDto
     public decimal VatAmount { get; init; }
     public string Comment { get; init; }
     public DateTime DateCreatedUtc { get; init; }
+    public string InvoiceNumber { get; init; }
+    public string BankAccountNumber { get; init; }
 }
 
 public class

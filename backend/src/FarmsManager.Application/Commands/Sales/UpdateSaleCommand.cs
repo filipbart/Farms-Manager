@@ -90,22 +90,6 @@ public class UpdateSaleCommandHandler : IRequestHandler<UpdateSaleCommand, Empty
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var sale = await _saleRepository.GetAsync(new SaleByIdSpec(request.Id), cancellationToken);
 
-        if (request.Data.SaleDate == sale.SaleDate &&
-            request.Data.Weight == sale.Weight &&
-            request.Data.Quantity == sale.Quantity &&
-            request.Data.ConfiscatedWeight == sale.ConfiscatedWeight &&
-            request.Data.ConfiscatedCount == sale.ConfiscatedCount &&
-            request.Data.DeadWeight == sale.DeadWeight &&
-            request.Data.DeadCount == sale.DeadCount &&
-            request.Data.FarmerWeight == sale.FarmerWeight &&
-            request.Data.BasePrice == sale.BasePrice &&
-            request.Data.PriceWithExtras == sale.PriceWithExtras &&
-            AreExtrasEqual(request.Data.OtherExtras.ToList(), sale.OtherExtras))
-        {
-            return new EmptyBaseResponse();
-        }
-
-
         sale.Update(
             request.Data.SaleDate,
             request.Data.Weight,
