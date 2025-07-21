@@ -1,6 +1,8 @@
-﻿using FarmsManager.Application.Commands.Feeds.Names;
+﻿using Ardalis.Specification;
+using FarmsManager.Application.Commands.Feeds.Names;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
+using FarmsManager.Application.Specifications;
 using FarmsManager.Application.Specifications.Cycle;
 using FarmsManager.Application.Specifications.Farms;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
@@ -28,17 +30,19 @@ public class AddFeedPriceCommandHandler : IRequestHandler<AddFeedPriceCommand, E
     private readonly ICycleRepository _cycleRepository;
     private readonly IFeedNameRepository _feedNameRepository;
     private readonly IFeedPriceRepository _feedPriceRepository;
+    private readonly IFeedInvoiceRepository _feedInvoiceRepository;
 
 
     public AddFeedPriceCommandHandler(IUserDataResolver userDataResolver, IFarmRepository farmRepository,
         ICycleRepository cycleRepository, IFeedNameRepository feedNameRepository,
-        IFeedPriceRepository feedPriceRepository)
+        IFeedPriceRepository feedPriceRepository, IFeedInvoiceRepository feedInvoiceRepository)
     {
         _userDataResolver = userDataResolver;
         _farmRepository = farmRepository;
         _cycleRepository = cycleRepository;
         _feedNameRepository = feedNameRepository;
         _feedPriceRepository = feedPriceRepository;
+        _feedInvoiceRepository = feedInvoiceRepository;
     }
 
     public async Task<EmptyBaseResponse> Handle(AddFeedPriceCommand request, CancellationToken ct)
@@ -52,8 +56,33 @@ public class AddFeedPriceCommandHandler : IRequestHandler<AddFeedPriceCommand, E
         var newFeedPrice =
             FeedPriceEntity.CreateNew(farm.Id, cycle.Id, request.PriceDate, feedNameEntity.Name, request.Price, userId);
 
+        var feedsInvoices =
+            await _feedInvoiceRepository.ListAsync(
+                new GetFeedsInvoicesByDateAndNameSpec(request.PriceDate, feedNameEntity.Name), ct);
+        if (feedsInvoices.Count != 0)
+        {
+            foreach (var feedInvoiceEntity in feedsInvoices.Where(feedInvoiceEntity =>
+                         feedInvoiceEntity.UnitPrice != newFeedPrice.Price))
+            {
+                feedInvoiceEntity.SetCorrectUnitPrice(newFeedPrice.Price);
+            }
+
+            await _feedInvoiceRepository.UpdateRangeAsync(feedsInvoices, ct);
+        }
+
         await _feedPriceRepository.AddAsync(newFeedPrice, ct);
         return new EmptyBaseResponse();
+    }
+}
+
+public sealed class GetFeedsInvoicesByDateAndNameSpec : BaseSpecification<FeedInvoiceEntity>
+{
+    public GetFeedsInvoicesByDateAndNameSpec(DateOnly date, string feedName)
+    {
+        EnsureExists();
+
+        Query.Where(t => t.InvoiceDate >= date);
+        Query.Where(t => t.ItemName == feedName);
     }
 }
 

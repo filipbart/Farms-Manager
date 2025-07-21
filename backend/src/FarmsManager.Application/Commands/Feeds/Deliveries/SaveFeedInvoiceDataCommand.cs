@@ -26,7 +26,8 @@ public class SaveFeedInvoiceDataCommandHandler : IRequestHandler<SaveFeedInvoice
 {
     public SaveFeedInvoiceDataCommandHandler(IUserDataResolver userDataResolver, IFarmRepository farmRepository,
         ICycleRepository cycleRepository, IHenhouseRepository henhouseRepository,
-        IFeedNameRepository feedNameRepository, IFeedInvoiceRepository feedInvoiceRepository, IS3Service s3Service)
+        IFeedNameRepository feedNameRepository, IFeedInvoiceRepository feedInvoiceRepository, IS3Service s3Service,
+        IFeedPriceRepository feedPriceRepository)
     {
         _userDataResolver = userDataResolver;
         _farmRepository = farmRepository;
@@ -35,6 +36,7 @@ public class SaveFeedInvoiceDataCommandHandler : IRequestHandler<SaveFeedInvoice
         _feedNameRepository = feedNameRepository;
         _feedInvoiceRepository = feedInvoiceRepository;
         _s3Service = s3Service;
+        _feedPriceRepository = feedPriceRepository;
     }
 
     private readonly IUserDataResolver _userDataResolver;
@@ -43,6 +45,7 @@ public class SaveFeedInvoiceDataCommandHandler : IRequestHandler<SaveFeedInvoice
     private readonly IHenhouseRepository _henhouseRepository;
     private readonly IFeedNameRepository _feedNameRepository;
     private readonly IFeedInvoiceRepository _feedInvoiceRepository;
+    private readonly IFeedPriceRepository _feedPriceRepository;
     private readonly IS3Service _s3Service;
 
     public async Task<EmptyBaseResponse> Handle(SaveFeedInvoiceDataCommand request, CancellationToken ct)
@@ -86,7 +89,8 @@ public class SaveFeedInvoiceDataCommandHandler : IRequestHandler<SaveFeedInvoice
             request.Data.Comment,
             userId);
 
-        //TODO sprawdzenie ceny jednostkowej
+        await CheckFeedInvoiceUnitPrice(newFeedInvoice, ct);
+
         var newPath = request.FilePath.Replace(request.DraftId.ToString(), newFeedInvoice.Id.ToString())
             .Replace("draft", "saved");
         newFeedInvoice.SetFilePath(newPath);
@@ -96,6 +100,19 @@ public class SaveFeedInvoiceDataCommandHandler : IRequestHandler<SaveFeedInvoice
         await _s3Service.MoveFileAsync(FileType.FeedDeliveryInvoice, request.FilePath, newPath);
 
         return response;
+    }
+
+    private async Task CheckFeedInvoiceUnitPrice(FeedInvoiceEntity feedInvoice, CancellationToken ct)
+    {
+        var feedPrice =
+            await _feedPriceRepository.FirstOrDefaultAsync(
+                new GetFeedPriceForFeedInvoiceSpec(feedInvoice.FarmId, feedInvoice.ItemName, feedInvoice.InvoiceDate),
+                ct);
+
+        if (feedPrice is not null && feedInvoice.UnitPrice != feedPrice.Price)
+        {
+            feedInvoice.SetCorrectUnitPrice(feedPrice.Price);
+        }
     }
 }
 

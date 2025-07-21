@@ -15,6 +15,7 @@ using FarmsManager.Infrastructure.Autofac;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
+using QuestPDF.Infrastructure;
 
 var webAppBuilder = WebApplication.CreateBuilder(args);
 
@@ -102,6 +103,7 @@ webAppBuilder.Services
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 
+QuestPDF.Settings.License = LicenseType.Community;
 
 var app = webAppBuilder.Build();
 

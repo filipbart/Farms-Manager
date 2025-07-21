@@ -1,8 +1,9 @@
-import { Box, Button, IconButton } from "@mui/material";
+import { Box, Button, IconButton, Tooltip } from "@mui/material";
 import type { GridColDef } from "@mui/x-data-grid";
 import dayjs from "dayjs";
-import { MdFileDownload } from "react-icons/md";
+import { MdFileDownload, MdWarningAmber } from "react-icons/md";
 import Loading from "../../../components/loading/loading";
+import { red } from "@mui/material/colors";
 
 export const getFeedsDeliveriesColumns = ({
   setSelectedFeedDelivery,
@@ -29,7 +30,24 @@ export const getFeedsDeliveriesColumns = ({
       field: "unitPrice",
       headerName: "Cena jednostkowa netto [zł]",
       flex: 1,
+      renderCell: (params) => {
+        const correctUnitPrice = params.row.correctUnitPrice;
+
+        return (
+          <Box display="flex" alignItems="center">
+            <span>{params.value}</span>
+            {correctUnitPrice && (
+              <Tooltip title={`Prawidłowa cena: ${correctUnitPrice} zł`}>
+                <MdWarningAmber
+                  style={{ marginLeft: 8, fontSize: 20, color: red[900] }}
+                />
+              </Tooltip>
+            )}
+          </Box>
+        );
+      },
     },
+
     {
       field: "invoiceDate",
       headerName: "Data wystawienia faktury",
@@ -51,6 +69,18 @@ export const getFeedsDeliveriesColumns = ({
     { field: "invoiceTotal", headerName: "Wartość brutto [zł]", flex: 1 },
     { field: "subTotal", headerName: "Wartość netto [zł]", flex: 1 },
     { field: "vatAmount", headerName: "VAT [zł]", flex: 1 },
+    {
+      field: "paymentDateUtc",
+      headerName: "Data opłacenia",
+      flex: 1,
+      renderCell: (params) => {
+        const date = params.row.paymentDateUtc;
+        return date
+          ? `Opłacono dnia: ${new Date(date).toLocaleString()}`
+          : "Nie opłacono";
+      },
+    },
+
     {
       field: "invoiceFile",
       headerName: "Plik faktury",

@@ -1,5 +1,5 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
-import { DataGrid } from "@mui/x-data-grid";
+import { DataGrid, type GridRowSelectionModel } from "@mui/x-data-grid";
 import { useReducer, useState, useMemo, useEffect } from "react";
 import { toast } from "react-toastify";
 import NoRowsOverlay from "../../../components/datagrid/custom-norows";
@@ -22,10 +22,11 @@ import SaveInvoiceModal from "../../../components/modals/feeds/deliveries/save-i
 import type { DraftFeedInvoice } from "../../../models/feeds/deliveries/draft-feed-invoice";
 import type { FeedDeliveryListModel } from "../../../models/feeds/deliveries/feed-invoice";
 import type { PaginateModel } from "../../../common/interfaces/paginate";
-import axios from "axios";
-import qs from "qs";
 import ApiUrl from "../../../common/ApiUrl";
 import EditFeedDeliveryModal from "../../../components/modals/feeds/deliveries/edit-feed-delivery-modal";
+import LoadingButton from "../../../components/common/loading-button";
+import GeneratePaymentModal from "../../../components/modals/feeds/deliveries/generate-paymet-modal";
+import { downloadFile } from "../../../utils/download-file";
 
 const FeedsDeliveriesPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -47,6 +48,19 @@ const FeedsDeliveriesPage: React.FC = () => {
   const [selectedFeedDelivery, setSelectedFeedDelivery] =
     useState<FeedDeliveryListModel | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const [selectedRows, setSelectedRows] = useState<GridRowSelectionModel>({
+    type: "include",
+    ids: new Set(),
+  });
+
+  const [visibilityModel, setVisibilityModel] = useState(() => {
+    const saved = localStorage.getItem("columnVisibilityModelDeliveries");
+    return saved ? JSON.parse(saved) : {};
+  });
+
+  const [openPaymentModal, setOpenPaymentModal] = useState(false);
+  const [loadingPaymentFile, setLoadingPaymentFile] = useState(false);
 
   const uploadFiles = async (draftFiles: DraftFeedInvoice[]) => {
     if (draftFiles.length === 0) {
@@ -77,49 +91,26 @@ const FeedsDeliveriesPage: React.FC = () => {
   };
 
   const downloadInvoiceFile = async (id: string) => {
-    try {
-      setLoadingFileId(id);
+    await downloadFile({
+      url: `${ApiUrl.DownloadFeedDeliveryFile}/${id}`,
+      defaultFilename: "faktura",
+      setLoading: (value) => setLoadingFileId(value ? id : null),
+      errorMessage: "Błąd podczas pobierania faktury dostawy",
+    });
+  };
 
-      const response = await axios({
-        method: "get",
-        url: ApiUrl.DownloadFeedDeliveryFile + "/" + id,
-        responseType: "blob",
-        paramsSerializer: (params: any) => {
-          return qs.stringify(params, { arrayFormat: "repeat" });
-        },
-      });
-
-      const blob = new Blob([response.data]);
-
-      if (blob.size === 0) {
-        toast.warning("Brak pliku w repozytorium plików");
-        return;
-      }
-
-      const disposition = response.headers["content-disposition"];
-      let filename = `faktura_${new Date().toISOString()}.pdf`;
-
-      if (disposition && disposition.includes("filename=")) {
-        const fileNameMatch = disposition.match(
-          /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
-        );
-        if (fileNameMatch?.length >= 2) {
-          filename = fileNameMatch[1].replace(/['"]/g, "");
-        }
-      }
-
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", filename);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    } catch {
-      toast.error("Błąd podczas pobierania faktury dostawy");
-    } finally {
-      setLoadingFileId(null);
-    }
+  const generatePaymentWithComment = async (comment: string) => {
+    setOpenPaymentModal(false);
+    await downloadFile({
+      url: ApiUrl.DownloadPaymentFile,
+      params: {
+        ids: [...selectedRows.ids],
+        comment,
+      },
+      defaultFilename: "przelew",
+      setLoading: setLoadingPaymentFile,
+      errorMessage: "Błąd podczas pobierania pliku przelewu",
+    });
   };
 
   const columns = useMemo(
@@ -216,7 +207,17 @@ const FeedsDeliveriesPage: React.FC = () => {
         gap={2}
       >
         <Typography variant="h4">Dostawy pasz</Typography>
-        <Box display="flex" gap={2}>
+        <Box display="flex" gap={2} alignItems="center">
+          {selectedRows.ids.size > 0 && (
+            <LoadingButton
+              loading={loadingPaymentFile}
+              variant="outlined"
+              color="primary"
+              onClick={() => setOpenPaymentModal(true)}
+            >
+              Przelew
+            </LoadingButton>
+          )}
           <Button
             variant="contained"
             color="primary"
@@ -243,11 +244,32 @@ const FeedsDeliveriesPage: React.FC = () => {
               columnVisibilityModel: { id: false, dateCreatedUtc: false },
             },
           }}
+          columnVisibilityModel={visibilityModel}
+          onColumnVisibilityModelChange={(model) => {
+            setVisibilityModel(model);
+            localStorage.setItem(
+              "columnVisibilityModel",
+              JSON.stringify(model)
+            );
+          }}
           localeText={{
+            footerRowSelected: (count) => {
+              if (count === 1) return "1 wiersz zaznaczony";
+              if (count >= 2 && count <= 4)
+                return `${count} wiersze zaznaczone`;
+              return `${count} wierszy zaznaczonych`;
+            },
+            checkboxSelectionHeaderName: "Zaznaczanie wierszy",
             paginationRowsPerPage: "Wierszy na stronę:",
             paginationDisplayedRows: ({ from, to, count }) =>
               `${from} do ${to} z ${count}`,
           }}
+          checkboxSelection
+          isRowSelectable={(params) => !params.row.paymentDateUtc}
+          onRowSelectionModelChange={(newSelection) => {
+            setSelectedRows(newSelection);
+          }}
+          rowSelectionModel={selectedRows}
           paginationMode="server"
           paginationModel={{
             pageSize: filters.pageSize ?? 10,
@@ -260,7 +282,7 @@ const FeedsDeliveriesPage: React.FC = () => {
             })
           }
           rowCount={totalRows}
-          rowSelection={false}
+          rowSelection
           pageSizeOptions={[5, 10, 25, { value: -1, label: "Wszystkie" }]}
           slots={{ toolbar: CustomToolbar, noRowsOverlay: NoRowsOverlay }}
           showToolbar
@@ -320,6 +342,12 @@ const FeedsDeliveriesPage: React.FC = () => {
           dispatch({ type: "setMultiple", payload: { page: filters.page } });
         }}
         feedDelivery={selectedFeedDelivery}
+      />
+
+      <GeneratePaymentModal
+        open={openPaymentModal}
+        onClose={() => setOpenPaymentModal(false)}
+        onGenerate={generatePaymentWithComment}
       />
     </Box>
   );

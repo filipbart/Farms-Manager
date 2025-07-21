@@ -42,4 +42,7 @@ export interface FeedDeliveryListModel {
 
   invoiceNumber: string;
   bankAccountNumber: string;
+
+  correctUnitPrice?: number;
+  paymentDateUtc?: string;
 }

@@ -28,6 +28,7 @@ import dayjs from "dayjs";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import { FeedsService } from "../../../../services/feeds-service";
 import { toast } from "react-toastify";
+import { useFeedsNames } from "../../../../hooks/feeds/useFeedsNames";
 
 interface SaveInvoiceModalProps {
   open: boolean;
@@ -51,6 +52,7 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
 
   const [henhouses, setHenhouses] = useState<HouseRowModel[]>([]);
   const { loadLatestCycle, loadingCycle } = useLatestCycle();
+  const { feedsNames, loadingFeedsNames, fetchFeedsNames } = useFeedsNames();
 
   const [draftFeed, setDraftFeed] = useState<DraftFeedInvoice>(
     draftFeedInvoices[0]
@@ -116,7 +118,24 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
 
   useEffect(() => {
     fetchFarms();
+    fetchFeedsNames();
   }, []);
+
+  useEffect(() => {
+    if (draftFeedInvoices.length > 0) {
+      const initialData = draftFeedInvoices[0].extractedFields;
+      if (feedsNames.length > 0 && initialData.itemName) {
+        const matchedFeed = feedsNames.find(
+          (feed) => feed.name === initialData.itemName
+        );
+        if (matchedFeed) {
+          initialData.itemName = matchedFeed.id;
+        }
+      }
+      setDraftFeed(draftFeedInvoices[0]);
+      reset(initialData);
+    }
+  }, [draftFeedInvoices, feedsNames, reset]);
 
   const fileType = getFileTypeFromUrl(draftFeed.fileUrl ?? "");
 
@@ -278,16 +297,22 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
                   </Grid>
 
                   <Grid size={{ xs: 12, sm: 12, md: 6 }}>
-                    <TextField
-                      label="Nazwa paszy"
+                    <LoadingTextField
+                      value={watch("itemName")}
+                      onChange={(e) => setValue("itemName", e.target.value)}
+                      loading={loadingFeedsNames}
+                      select
+                      label="Typ (nazwa) paszy"
+                      fullWidth
                       error={!!errors.itemName}
                       helperText={errors.itemName?.message}
-                      {...register("itemName", {
-                        required: "Nazwa paszy jest wymagana",
-                      })}
-                      fullWidth
-                    />
-                    {/*TODO: nazwa paszy zrobić listę wybieraną z backendu */}
+                    >
+                      {feedsNames.map((feedName) => (
+                        <MenuItem key={feedName.id} value={feedName.id}>
+                          {feedName.name}
+                        </MenuItem>
+                      ))}
+                    </LoadingTextField>
                   </Grid>
 
                   <Grid size={{ xs: 12, sm: 12, md: 6 }}>

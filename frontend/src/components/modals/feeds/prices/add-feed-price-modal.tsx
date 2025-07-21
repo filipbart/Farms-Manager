@@ -171,9 +171,6 @@ const AddFeedPriceModal: React.FC<AddHatcheryModalProps> = ({
               helperText={errors.nameId?.message}
               {...register("nameId", {
                 required: "Typ (nazwa) paszy jest wymagany",
-              })}
-              {...register("nameId", {
-                required: "Typ (nazwa) paszy jest wymagany",
                 onChange: (e) => {
                   const value = e.target.value;
                   handleFeedsNameChange(value);

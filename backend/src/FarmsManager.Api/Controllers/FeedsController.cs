@@ -196,4 +196,20 @@ public class FeedsController(IMediator mediator) : BaseController
     {
         return Ok(await mediator.Send(new DeleteFeedPriceCommand(id)));
     }
+
+    /// <summary>
+    /// Zwraca dokument płatności wybranych faktur 
+    /// </summary>
+    /// <param name="ids"></param>
+    /// <param name="comment"></param>
+    /// <returns></returns>
+    [HttpGet("payment-file")]
+    [ProducesResponseType(typeof(File), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetFeedPaymentFile([FromQuery] List<Guid> ids, [FromQuery] string comment)
+    {
+        var file = await mediator.Send(new GetFeedDeliveryPaymentFileQuery(ids, comment));
+
+        return file is null ? NoContent() : File(file.Data, file.ContentType, file.FileName);
+    }
 }

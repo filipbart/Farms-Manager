@@ -31,7 +31,11 @@ public class FeedInvoiceEntity : Entity
     public virtual FarmEntity Farm { get; init; }
 
     public string FilePath { get; protected internal set; }
+    public decimal? CorrectUnitPrice { get; protected internal set; }
+    public DateTime? PaymentDateUtc { get; protected internal set; }
 
+    public void SetCorrectUnitPrice(decimal correctUnitPrice) => CorrectUnitPrice = correctUnitPrice;
+    public void MarkAsPaid() => PaymentDateUtc = DateTime.UtcNow;
 
     public static FeedInvoiceEntity CreateNew(
         Guid farmId,
@@ -73,7 +77,7 @@ public class FeedInvoiceEntity : Entity
     }
 
     public void SetFilePath(string filePath) => FilePath = filePath;
-    
+
     public void Update(
         string invoiceNumber,
         string bankAccountNumber,
@@ -101,5 +105,4 @@ public class FeedInvoiceEntity : Entity
         VatAmount = vatAmount;
         Comment = comment;
     }
-
 }

@@ -2,5 +2,6 @@
 
 public enum FileType
 {
-    FeedDeliveryInvoice
+    FeedDeliveryInvoice,
+    FeedDeliveryPayment,
 }

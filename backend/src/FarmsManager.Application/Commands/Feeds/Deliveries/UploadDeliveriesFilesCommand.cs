@@ -71,7 +71,7 @@ public class UploadDeliveriesFilesCommandHandler : IRequestHandler<UploadDeliver
                 InvoiceNumber = "370/01/25/FV/K",
                 BankAccountNumber = "11002233445566778899001122",
                 VendorName = "WIPASZ SPÓŁKA AKCYJNA",
-                ItemName = "WIK N4",
+                ItemName = "WIK K4",
                 Quantity = (decimal?)21.37,
                 UnitPrice = (decimal?)1.34,
                 InvoiceDate = DateOnly.FromDateTime(DateTime.Now),

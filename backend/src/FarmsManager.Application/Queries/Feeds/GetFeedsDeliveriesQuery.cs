@@ -50,6 +50,8 @@ public record FeedDeliveryRowDto
     public DateTime DateCreatedUtc { get; init; }
     public string InvoiceNumber { get; init; }
     public string BankAccountNumber { get; init; }
+    public decimal? CorrectUnitPrice { get; init; }
+    public DateTime? PaymentDateUtc { get; init; }
 }
 
 public class
