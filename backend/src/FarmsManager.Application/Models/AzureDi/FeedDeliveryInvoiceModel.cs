@@ -8,10 +8,10 @@ public class FeedDeliveryInvoiceModel
     [AzureDiField("InvoiceId")]
     public string InvoiceNumber { get; init; }
     
-    [AzureDiField("IBAN")]
+    [AzureDiField("BankAccountNumber", customField: true)]
     public string BankAccountNumber { get; init; }
     
-    [AzureDiField("vendorName", customField: true)]
+    [AzureDiField("vendorNameSpółka", customField: true)]
     public string VendorName { get; init; }
 
     [AzureDiField("InvoiceDate")]
@@ -31,4 +31,13 @@ public class FeedDeliveryInvoiceModel
 
     [AzureDiField("Items")]
     public List<InvoiceItem> Items { get; init; }
+    
+    [AzureDiField("CustomerName")]
+    public string CustomerName { get; init; }
+    
+    [AzureDiField("CustomerTaxId")]
+    public string Nip { get; init; }
+    
+    [AzureDiField("MiejsceRozładunku", customField: true)]
+    public string HenhouseName { get; init; }
 }

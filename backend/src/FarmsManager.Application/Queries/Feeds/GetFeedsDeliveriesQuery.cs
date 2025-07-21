@@ -16,6 +16,7 @@ public enum FeedsDeliveriesOrderBy
     Farm,
     ItemName,
     VendorName,
+    UnitPrice
 }
 
 public record GetFeedsDeliveriesQueryFilters : OrderedPaginationParams<FeedsDeliveriesOrderBy>

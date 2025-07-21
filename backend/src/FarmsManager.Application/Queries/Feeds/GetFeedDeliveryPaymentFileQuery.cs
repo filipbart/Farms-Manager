@@ -63,7 +63,7 @@ public class GetFeedDeliveryPaymentFileQueryHandler : IRequestHandler<GetFeedDel
         }
 
         var fileBytes = GeneratePdf(invoices, request.Comment);
-        var fileName = $"Przelew_{DateTime.Now:yyyyMMdd_HHmm}{Extension}";
+        var fileName = $"Przelew_{DateTime.Now:yyyyMMdd_HHmmss}{Extension}";
 
         await _s3Service.UploadFileAsync(fileBytes, FileType.FeedDeliveryPayment, fileName);
 

@@ -65,9 +65,8 @@ public class AddFeedPriceCommandHandler : IRequestHandler<AddFeedPriceCommand, E
                          feedInvoiceEntity.UnitPrice != newFeedPrice.Price))
             {
                 feedInvoiceEntity.SetCorrectUnitPrice(newFeedPrice.Price);
+                await _feedInvoiceRepository.UpdateAsync(feedInvoiceEntity, ct);
             }
-
-            await _feedInvoiceRepository.UpdateRangeAsync(feedsInvoices, ct);
         }
 
         await _feedPriceRepository.AddAsync(newFeedPrice, ct);

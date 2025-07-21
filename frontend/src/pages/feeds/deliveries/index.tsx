@@ -248,7 +248,7 @@ const FeedsDeliveriesPage: React.FC = () => {
           onColumnVisibilityModelChange={(model) => {
             setVisibilityModel(model);
             localStorage.setItem(
-              "columnVisibilityModel",
+              "columnVisibilityModelDeliveries",
               JSON.stringify(model)
             );
           }}

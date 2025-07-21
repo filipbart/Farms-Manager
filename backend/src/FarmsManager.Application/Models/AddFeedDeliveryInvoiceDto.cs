@@ -17,4 +17,9 @@ public class AddFeedDeliveryInvoiceDto
     public decimal? SubTotal { get; init; }
     public decimal? VatAmount { get; init; }
     public string Comment { get; init; }
+    
+    //Do uzupełniania pól:
+    public string CustomerName { get; init; }
+    public string Nip { get; init; }
+    public string HenhouseName { get; init; }
 }

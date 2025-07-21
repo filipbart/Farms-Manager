@@ -143,7 +143,7 @@ const InsertionsPage: React.FC = () => {
           onColumnVisibilityModelChange={(model) => {
             setVisibilityModel(model);
             localStorage.setItem(
-              "columnVisibilityModel",
+              "columnVisibilityModelInsertions",
               JSON.stringify(model)
             );
           }}

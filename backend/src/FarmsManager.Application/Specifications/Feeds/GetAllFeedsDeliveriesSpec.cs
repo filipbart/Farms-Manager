@@ -106,6 +106,20 @@ public sealed class GetAllFeedsDeliveriesSpec : BaseSpecification<FeedInvoiceEnt
 
                 break;
 
+            case FeedsDeliveriesOrderBy.UnitPrice:
+                if (isDescending)
+                {
+                    Query.OrderByDescending(t => t.CorrectUnitPrice.HasValue)
+                        .ThenByDescending(t => t.CorrectUnitPrice.Value).ThenByDescending(t => t.UnitPrice);
+                }
+                else
+                {
+                    Query.OrderByDescending(t => t.CorrectUnitPrice.HasValue)
+                        .ThenBy(t => t.CorrectUnitPrice.Value).ThenBy(t => t.UnitPrice);
+                }
+
+                break;
+
             case FeedsDeliveriesOrderBy.DateCreatedUtc:
             default:
                 if (isDescending)

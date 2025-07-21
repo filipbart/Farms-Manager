@@ -1,4 +1,5 @@
-﻿using Amazon.S3;
+﻿using Amazon;
+using Amazon.S3;
 using Autofac;
 using Microsoft.Extensions.Configuration;
 
@@ -28,6 +29,7 @@ public partial class FmHostBuilder
                     UseHttp = true,
                     ForcePathStyle = true,
                     AuthenticationRegion = authRegion,
+                    RegionEndpoint = RegionEndpoint.EUCentral1, //TODO lokalnie komentować
                 };
 
                 return new AmazonS3Client(accessKey, secretKey, config);

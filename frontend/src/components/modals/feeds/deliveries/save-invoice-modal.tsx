@@ -75,7 +75,13 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
   const [previewOpen, setPreviewOpen] = useState(false);
 
   const handleFarmChange = async (farmId: string) => {
+    setValue("cycleId", "");
+    setValue("identifierDisplay", "");
+    setValue("henhouseId", "");
+    clearErrors(["cycleId", "henhouseId"]);
+
     setHenhouses(farms.find((f) => f.id === farmId)?.henhouses || []);
+
     const cycle = await loadLatestCycle(farmId);
     if (cycle) {
       setValue("cycleId", cycle.id);
@@ -90,11 +96,42 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
   };
 
   useEffect(() => {
-    if (draftFeedInvoices.length > 0) {
+    if (draftFeedInvoices.length > 0 && farms.length > 0) {
+      const initialData = draftFeedInvoices[0].extractedFields;
+
+      const matchingFarm = farms.find(
+        (f) =>
+          f.nip === initialData.nip ||
+          f.name?.toLowerCase() === initialData.customerName?.toLowerCase()
+      );
+
+      if (matchingFarm) {
+        initialData.farmId = matchingFarm.id;
+      }
+
       setDraftFeed(draftFeedInvoices[0]);
-      reset(draftFeedInvoices[0].extractedFields);
+      reset(initialData);
+
+      if (matchingFarm) {
+        handleFarmChange(matchingFarm.id);
+      }
     }
-  }, [draftFeedInvoices, reset]);
+  }, [draftFeedInvoices, feedsNames, farms, reset]);
+
+  useEffect(() => {
+    const henhouseName = draftFeed?.extractedFields.henhouseName;
+
+    if (henhouseName && henhouses.length > 0) {
+      const matchedHenhouse = henhouses.find(
+        (h) => h.name.toLowerCase() === henhouseName.toLowerCase()
+      );
+
+      if (matchedHenhouse) {
+        setValue("henhouseId", matchedHenhouse.id);
+        clearErrors("henhouseId");
+      }
+    }
+  }, [henhouses, draftFeed, setValue, clearErrors]);
 
   const handleSave = async (formData: FeedInvoiceData) => {
     setLoading(true);
@@ -124,14 +161,7 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
   useEffect(() => {
     if (draftFeedInvoices.length > 0) {
       const initialData = draftFeedInvoices[0].extractedFields;
-      if (feedsNames.length > 0 && initialData.itemName) {
-        const matchedFeed = feedsNames.find(
-          (feed) => feed.name === initialData.itemName
-        );
-        if (matchedFeed) {
-          initialData.itemName = matchedFeed.id;
-        }
-      }
+
       setDraftFeed(draftFeedInvoices[0]);
       reset(initialData);
     }
@@ -217,6 +247,7 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
                   <Grid size={{ xs: 12, sm: 12, md: 6 }}>
                     <LoadingTextField
                       loading={loadingFarms}
+                      value={watch("farmId") || ""}
                       select
                       label="Ferma"
                       fullWidth
@@ -254,9 +285,8 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
                       label="Kurnik"
                       error={!!errors.henhouseId}
                       helperText={errors.henhouseId?.message}
-                      {...register("henhouseId", {
-                        required: "Kurnik jest wymagany",
-                      })}
+                      value={watch("henhouseId") || ""}
+                      onChange={(e) => setValue("henhouseId", e.target.value)}
                       fullWidth
                       disabled={!watch("farmId") || watch("farmId") === ""}
                     >
@@ -308,7 +338,7 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
                       helperText={errors.itemName?.message}
                     >
                       {feedsNames.map((feedName) => (
-                        <MenuItem key={feedName.id} value={feedName.id}>
+                        <MenuItem key={feedName.id} value={feedName.name}>
                           {feedName.name}
                         </MenuItem>
                       ))}

@@ -25,6 +25,7 @@ export const getFeedsDeliveriesColumns = ({
     { field: "henhouseName", headerName: "Kurnik", flex: 1 },
     { field: "vendorName", headerName: "Sprzedawca", flex: 1 },
     { field: "itemName", headerName: "Nazwa paszy", flex: 1 },
+    { field: "invoiceNumber", headerName: "Numer faktury", flex: 1 },
     { field: "quantity", headerName: "Ilość towaru", flex: 1 },
     {
       field: "unitPrice",

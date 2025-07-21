@@ -4,6 +4,8 @@ using FarmsManager.Application.FileSystem;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models;
 using FarmsManager.Application.Models.AzureDi;
+using FarmsManager.Application.Specifications.Feeds;
+using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Http;
@@ -37,12 +39,15 @@ public class UploadDeliveriesFilesCommandHandler : IRequestHandler<UploadDeliver
     private readonly IS3Service _s3Service;
     private readonly IAzureDiService _azureDiService;
     private readonly IMapper _mapper;
+    private readonly IFeedInvoiceRepository _feedInvoiceRepository;
 
-    public UploadDeliveriesFilesCommandHandler(IS3Service s3Service, IAzureDiService azureDiService, IMapper mapper)
+    public UploadDeliveriesFilesCommandHandler(IS3Service s3Service, IAzureDiService azureDiService, IMapper mapper,
+        IFeedInvoiceRepository feedInvoiceRepository)
     {
         _s3Service = s3Service;
         _azureDiService = azureDiService;
         _mapper = mapper;
+        _feedInvoiceRepository = feedInvoiceRepository;
     }
 
     public async Task<BaseResponse<UploadDeliveriesFilesCommandResponse>> Handle(UploadDeliveriesFilesCommand request,
@@ -63,23 +68,31 @@ public class UploadDeliveriesFilesCommandHandler : IRequestHandler<UploadDeliver
 
             var preSignedUrl = _s3Service.GeneratePreSignedUrl(FileType.FeedDeliveryInvoice, filePath, file.FileName);
 
-            //var feedDeliveryInvoiceModels = await _azureDiService.AnalyzeFeedDeliveryInvoiceAsync(preSignedUrl);
-            //var extractedFields = _mapper.Map<AddFeedDeliveryInvoiceDto>(feedDeliveryInvoiceModels);
+            var feedDeliveryInvoiceModels = await _azureDiService.AnalyzeFeedDeliveryInvoiceAsync(preSignedUrl);
+            var extractedFields = _mapper.Map<AddFeedDeliveryInvoiceDto>(feedDeliveryInvoiceModels);
 
-            var extractedFields = new AddFeedDeliveryInvoiceDto
+            // var extractedFields = new AddFeedDeliveryInvoiceDto
+            // {
+            //     InvoiceNumber = "370/01/25/FV/K",
+            //     BankAccountNumber = "11002233445566778899001122",
+            //     VendorName = "WIPASZ SPÓŁKA AKCYJNA",
+            //     ItemName = "WIK K4",
+            //     Quantity = (decimal?)21.37,
+            //     UnitPrice = (decimal?)1.34,
+            //     InvoiceDate = DateOnly.FromDateTime(DateTime.Now),
+            //     DueDate = DateOnly.FromDateTime(DateTime.Now.AddDays(10)),
+            //     InvoiceTotal = (decimal?)21334.12,
+            //     SubTotal = (decimal?)20112.23,
+            //     VatAmount = 1222
+            // }; //TODO dane do testow
+
+            var existedInvoice = await _feedInvoiceRepository.SingleOrDefaultAsync(
+                new GetFeedInvoiceByInvoiceNumberSpec(extractedFields.InvoiceNumber), cancellationToken);
+
+            if (existedInvoice is not null)
             {
-                InvoiceNumber = "370/01/25/FV/K",
-                BankAccountNumber = "11002233445566778899001122",
-                VendorName = "WIPASZ SPÓŁKA AKCYJNA",
-                ItemName = "WIK K4",
-                Quantity = (decimal?)21.37,
-                UnitPrice = (decimal?)1.34,
-                InvoiceDate = DateOnly.FromDateTime(DateTime.Now),
-                DueDate = DateOnly.FromDateTime(DateTime.Now.AddDays(10)),
-                InvoiceTotal = (decimal?)21334.12,
-                SubTotal = (decimal?)20112.23,
-                VatAmount = 1222
-            }; //TODO dane do testow
+                throw new Exception($"Istnieje już dostawa z tym numerem faktury: {existedInvoice.InvoiceNumber}");
+            }
 
             response.Files.Add(new UploadDeliveryFileData
             {

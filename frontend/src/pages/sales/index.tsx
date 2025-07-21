@@ -157,7 +157,7 @@ const SalesPage: React.FC = () => {
           onColumnVisibilityModelChange={(model) => {
             setVisibilityModel(model);
             localStorage.setItem(
-              "columnVisibilityModel",
+              "columnVisibilityModelSales",
               JSON.stringify(model)
             );
           }}

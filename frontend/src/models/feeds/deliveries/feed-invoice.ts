@@ -15,6 +15,10 @@ export interface FeedInvoiceData {
   subTotal?: number;
   vatAmount?: number;
   comment?: string;
+
+  customerName?: string;
+  nip?: string;
+  henhouseName?: string;
 }
 
 export interface SaveFeedInvoiceDto {

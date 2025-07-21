@@ -194,7 +194,7 @@ public class FeedsController(IMediator mediator) : BaseController
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> DeleteFeedDelivery([FromRoute] Guid id)
     {
-        return Ok(await mediator.Send(new DeleteFeedPriceCommand(id)));
+        return Ok(await mediator.Send(new DeleteFeedDeliveryCommand(id)));
     }
 
     /// <summary>
@@ -206,7 +206,7 @@ public class FeedsController(IMediator mediator) : BaseController
     [HttpGet("payment-file")]
     [ProducesResponseType(typeof(File), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetFeedPaymentFile([FromQuery] List<Guid> ids, [FromQuery] string comment)
+    public async Task<IActionResult> GetFeedPaymentFile([FromQuery] List<Guid> ids, [FromQuery] string? comment)
     {
         var file = await mediator.Send(new GetFeedDeliveryPaymentFileQuery(ids, comment));
 

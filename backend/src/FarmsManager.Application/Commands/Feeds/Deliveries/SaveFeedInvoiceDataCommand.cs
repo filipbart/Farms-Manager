@@ -71,6 +71,13 @@ public class SaveFeedInvoiceDataCommandHandler : IRequestHandler<SaveFeedInvoice
             return response;
         }
 
+        var existedInvoice = await _feedInvoiceRepository.SingleOrDefaultAsync(
+            new GetFeedInvoiceByInvoiceNumberSpec(request.Data.InvoiceNumber), ct);
+        if (existedInvoice is not null)
+        {
+            throw new Exception($"Istnieje już dostawa z tym numerem faktury: {existedInvoice.InvoiceNumber}");
+        }
+
         var newFeedInvoice = FeedInvoiceEntity.CreateNew(
             farm.Id,
             cycle.Id,
