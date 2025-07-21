@@ -48,14 +48,14 @@ public class GetFeedDeliveryPaymentFileQueryHandler : IRequestHandler<GetFeedDel
             throw new Exception("Zaznaczono faktury z różnymi numerami kont bankowych");
         }
 
-        // var hasDifferentFarms = invoices
-        //     .Select(i => i.Farm.Name)
-        //     .Distinct()
-        //     .Count() > 1;
-        // if (hasDifferentFarms)
-        // {
-        //     throw new Exception("Zaznaczono faktury z różnych farm");
-        // }
+        var hasDifferentFarms = invoices
+            .Select(i => i.Farm.Name)
+            .Distinct()
+            .Count() > 1;
+        if (hasDifferentFarms)
+        {
+            throw new Exception("Zaznaczono faktury z różnych farm");
+        }
 
         if (invoices.Any(t => t.PaymentDateUtc.HasValue))
         {
