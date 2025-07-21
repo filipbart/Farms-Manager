@@ -64,7 +64,7 @@ const AddHenhouseModal: React.FC<AddHenhouseModalProps> = ({
 
   return (
     <Dialog open={open} onClose={close} fullWidth maxWidth="sm">
-      <DialogTitle>Wprowadź dane nowej fermy</DialogTitle>
+      <DialogTitle>Wprowadź dane nowego kurnika</DialogTitle>
       <form onSubmit={handleSubmit(handleSave)}>
         <DialogContent>
           <Box display="flex" flexDirection="column" gap={2} mt={1}>
