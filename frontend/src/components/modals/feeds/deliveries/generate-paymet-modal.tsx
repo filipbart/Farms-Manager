@@ -32,7 +32,16 @@ const GeneratePaymentModal: React.FC<GeneratePaymentModalProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+    <Dialog
+      open={open}
+      onClose={(_event, reason) => {
+        if (reason !== "backdropClick") {
+          handleClose();
+        }
+      }}
+      maxWidth="sm"
+      fullWidth
+    >
       <DialogTitle>Komentarz do przelewu (opcjonalny)</DialogTitle>
       <DialogContent>
         <TextField

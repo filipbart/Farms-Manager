@@ -29,13 +29,18 @@ public class FeedInvoiceEntity : Entity
     public virtual CycleEntity Cycle { get; init; }
     public virtual HenhouseEntity Henhouse { get; init; }
     public virtual FarmEntity Farm { get; init; }
+    public virtual FeedInvoiceCorrectionEntity InvoiceCorrection { get; init; }
 
     public string FilePath { get; protected internal set; }
-    public decimal? CorrectUnitPrice { get; protected internal set; }
-    public DateTime? PaymentDateUtc { get; protected internal set; }
+    public decimal? CorrectUnitPrice { get; private set; }
+    public DateTime? PaymentDateUtc { get; private set; }
 
-    public void SetCorrectUnitPrice(decimal correctUnitPrice) => CorrectUnitPrice = correctUnitPrice;
+    public Guid? InvoiceCorrectionId { get; private set; }
+
+    public void SetCorrectUnitPrice(decimal? correctUnitPrice) => CorrectUnitPrice = correctUnitPrice;
     public void MarkAsPaid() => PaymentDateUtc = DateTime.UtcNow;
+    public void SetInvoiceCorrectionId(Guid invoiceCorrectionId) => InvoiceCorrectionId = invoiceCorrectionId;
+    public void SetComment(string comment) => Comment = comment;
 
     public static FeedInvoiceEntity CreateNew(
         Guid farmId,

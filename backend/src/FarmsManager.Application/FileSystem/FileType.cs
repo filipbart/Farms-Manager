@@ -4,4 +4,5 @@ public enum FileType
 {
     FeedDeliveryInvoice,
     FeedDeliveryPayment,
+    FeedDeliveryCorrection,
 }

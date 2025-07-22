@@ -27,6 +27,7 @@ import EditFeedDeliveryModal from "../../../components/modals/feeds/deliveries/e
 import LoadingButton from "../../../components/common/loading-button";
 import GeneratePaymentModal from "../../../components/modals/feeds/deliveries/generate-paymet-modal";
 import { downloadFile } from "../../../utils/download-file";
+import AddCorrectionModal from "../../../components/modals/feeds/deliveries/add-correction-modal";
 
 const FeedsDeliveriesPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -61,6 +62,8 @@ const FeedsDeliveriesPage: React.FC = () => {
 
   const [openPaymentModal, setOpenPaymentModal] = useState(false);
   const [loadingPaymentFile, setLoadingPaymentFile] = useState(false);
+
+  const [openCorrectionModal, setOpenCorrectionModal] = useState(false);
 
   const uploadFiles = async (draftFiles: DraftFeedInvoice[]) => {
     if (draftFiles.length === 0) {
@@ -111,6 +114,7 @@ const FeedsDeliveriesPage: React.FC = () => {
       setLoading: setLoadingPaymentFile,
       errorMessage: "Błąd podczas pobierania pliku przelewu",
     });
+    dispatch({ type: "setMultiple", payload: { page: filters.page } });
   };
 
   const columns = useMemo(
@@ -209,14 +213,23 @@ const FeedsDeliveriesPage: React.FC = () => {
         <Typography variant="h4">Dostawy pasz</Typography>
         <Box display="flex" gap={2} alignItems="center">
           {selectedRows.ids.size > 0 && (
-            <LoadingButton
-              loading={loadingPaymentFile}
-              variant="outlined"
-              color="primary"
-              onClick={() => setOpenPaymentModal(true)}
-            >
-              Przelew
-            </LoadingButton>
+            <>
+              <Button
+                variant="outlined"
+                color="primary"
+                onClick={() => setOpenCorrectionModal(true)}
+              >
+                Utwórz korektę
+              </Button>
+              <LoadingButton
+                loading={loadingPaymentFile}
+                variant="outlined"
+                color="primary"
+                onClick={() => setOpenPaymentModal(true)}
+              >
+                Przelew
+              </LoadingButton>
+            </>
           )}
           <Button
             variant="contained"
@@ -349,6 +362,20 @@ const FeedsDeliveriesPage: React.FC = () => {
         onClose={() => setOpenPaymentModal(false)}
         onGenerate={generatePaymentWithComment}
       />
+
+      {selectedRows.ids.size > 0 && (
+        <AddCorrectionModal
+          open={openCorrectionModal}
+          onClose={() => {
+            setOpenCorrectionModal(false);
+          }}
+          onSave={() => {
+            setOpenCorrectionModal(false);
+            dispatch({ type: "setMultiple", payload: { page: filters.page } });
+          }}
+          selectedDeliveries={selectedRows.ids}
+        />
+      )}
     </Box>
   );
 };

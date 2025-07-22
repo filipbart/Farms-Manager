@@ -26,6 +26,16 @@ export interface SaveFeedInvoiceData {
   data: FeedInvoiceData;
 }
 
+export interface AddFeedCorrectionData {
+  invoiceNumber: string;
+  farmId: string;
+  subTotal: number;
+  vatAmount: number;
+  invoiceTotal: number;
+  file: File | undefined;
+  feedInvoiceIds: string[];
+}
+
 export class FeedsService {
   public static async getDictionaries() {
     return await AxiosWrapper.get<FeedsDictionary>(ApiUrl.FeedsDict);
@@ -112,5 +122,26 @@ export class FeedsService {
     data: FeedDeliveryListModel
   ) {
     return await AxiosWrapper.patch(ApiUrl.UpdateFeedDelivery + "/" + id, data);
+  }
+
+  public static async addFeedCorrection(dto: AddFeedCorrectionData) {
+    const formData = new FormData();
+
+    formData.append("farmId", dto.farmId);
+    formData.append("invoiceNumber", dto.invoiceNumber);
+    formData.append("subTotal", dto.subTotal.toString());
+    formData.append("vatAmount", dto.vatAmount.toString());
+    formData.append("invoiceTotal", dto.invoiceTotal.toString());
+
+    if (dto.file) {
+      formData.append("file", dto.file);
+    }
+
+    dto.feedInvoiceIds.forEach((id: string) => {
+      formData.append("feedInvoiceIds", id);
+    });
+    return await AxiosWrapper.post(ApiUrl.AddFeedCorrection, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
   }
 }
