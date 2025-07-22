@@ -6,17 +6,18 @@ import Loading from "../../../components/loading/loading";
 
 export const getFeedsPaymentsColumns = ({
   downloadPaymentFile,
-  loadingFileName,
+  downloadFileName,
 }: {
   downloadPaymentFile: (path: string) => void;
-  loadingFileName: string | null;
+  downloadFileName: string | null;
 }): GridColDef[] => {
   return [
     { field: "id", headerName: "Id", width: 70 },
+    { field: "farmName", headerName: "Nazwa farmy", flex: 1 },
     { field: "fileName", headerName: "Nazwa pliku", flex: 1 },
     {
-      field: "lastModifyDate",
-      headerName: "Data ostatniej modyfikacji",
+      field: "dateCreatedUtc",
+      headerName: "Data utworzenia wpisu",
       flex: 1,
       type: "string",
       valueGetter: (date: any) => {
@@ -38,9 +39,9 @@ export const getFeedsPaymentsColumns = ({
           <IconButton
             onClick={() => downloadPaymentFile(params.row.fileName)}
             color="primary"
-            disabled={loadingFileName === params.row.fileName}
+            disabled={downloadFileName === params.row.fileName}
           >
-            {loadingFileName === params.row.fileName ? (
+            {downloadFileName === params.row.fileName ? (
               <Loading size={10} />
             ) : (
               <MdFileDownload />

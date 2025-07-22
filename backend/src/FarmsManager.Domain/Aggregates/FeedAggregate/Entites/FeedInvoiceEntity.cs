@@ -30,15 +30,22 @@ public class FeedInvoiceEntity : Entity
     public virtual HenhouseEntity Henhouse { get; init; }
     public virtual FarmEntity Farm { get; init; }
     public virtual FeedInvoiceCorrectionEntity InvoiceCorrection { get; init; }
+    public virtual FeedPaymentEntity Payment { get; init; }
 
     public string FilePath { get; protected internal set; }
     public decimal? CorrectUnitPrice { get; private set; }
     public DateTime? PaymentDateUtc { get; private set; }
 
     public Guid? InvoiceCorrectionId { get; private set; }
+    public Guid? PaymentId { get; private set; }
 
     public void SetCorrectUnitPrice(decimal? correctUnitPrice) => CorrectUnitPrice = correctUnitPrice;
-    public void MarkAsPaid() => PaymentDateUtc = DateTime.UtcNow;
+    public void MarkAsPaid(Guid paymentId)
+    {
+        PaymentId = paymentId;
+        PaymentDateUtc = DateTime.UtcNow;
+    }
+
     public void SetInvoiceCorrectionId(Guid invoiceCorrectionId) => InvoiceCorrectionId = invoiceCorrectionId;
     public void SetComment(string comment) => Comment = comment;
 

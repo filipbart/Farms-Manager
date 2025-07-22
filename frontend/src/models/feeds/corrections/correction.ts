@@ -10,6 +10,7 @@ export interface CorrectionData {
 export interface FeedCorrectionListModel {
   id: string;
   farmName: string;
+  filePath: string;
   invoiceNumber: string;
   dateCreatedUtc: string;
 }

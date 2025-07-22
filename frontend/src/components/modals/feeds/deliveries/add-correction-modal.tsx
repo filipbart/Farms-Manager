@@ -15,7 +15,7 @@ import LoadingTextField from "../../../common/loading-textfield";
 import LoadingButton from "../../../common/loading-button";
 import { MdSave, MdAttachFile } from "react-icons/md";
 import { useFarms } from "../../../../hooks/useFarms";
-import type { CorrectionData } from "../../../../models/feeds/deliveries/correction";
+import type { CorrectionData } from "../../../../models/feeds/corrections/correction";
 import type { GridRowId } from "@mui/x-data-grid";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import { FeedsService } from "../../../../services/feeds-service";

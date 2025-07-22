@@ -2,7 +2,6 @@
 using FarmsManager.Application.Commands.Feeds.Deliveries;
 using FarmsManager.Application.Commands.Feeds.Names;
 using FarmsManager.Application.Commands.Feeds.Prices;
-using FarmsManager.Application.Common;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Queries.Feeds;
 using MediatR;
@@ -215,6 +214,19 @@ public class FeedsController(IMediator mediator) : BaseController
     }
 
     /// <summary>
+    /// Zwraca wszystkie przelewy dla dostaw
+    /// </summary>
+    /// <param name="filters"></param>
+    /// <returns></returns>
+    [HttpGet("payments")]
+    [ProducesResponseType(typeof(BaseResponse<GetFeedsPaymentsQueryResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetFeedsPrices([FromQuery] GetFeedsPaymentsQueryFilters filters)
+    {
+        return Ok(await mediator.Send(new GetFeedsPaymentsQuery(filters)));
+    }
+
+    /// <summary>
     /// Dodaje nową korektę
     /// </summary>
     /// <param name="dto"></param>
@@ -222,7 +234,7 @@ public class FeedsController(IMediator mediator) : BaseController
     [HttpPost("add-correction")]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> AddFeedInvoiceCorrection([FromForm]AddFeedInvoiceCorrectionCommandDto dto)
+    public async Task<IActionResult> AddFeedInvoiceCorrection([FromForm] AddFeedInvoiceCorrectionCommandDto dto)
     {
         return Ok(await mediator.Send(new AddFeedInvoiceCorrectionCommand(dto)));
     }

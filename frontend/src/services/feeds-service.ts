@@ -1,5 +1,7 @@
 import ApiUrl from "../common/ApiUrl";
 import type { PaginateModel } from "../common/interfaces/paginate";
+import type { FeedCorrectionListModel } from "../models/feeds/corrections/correction";
+import type { FeedsCorrectionsFilterPaginationModel } from "../models/feeds/corrections/corrections-filters";
 import type { FeedsDeliveriesFilterPaginationModel } from "../models/feeds/deliveries/deliveries-filters";
 import type { DraftFeedInvoice } from "../models/feeds/deliveries/draft-feed-invoice";
 import type {
@@ -8,6 +10,8 @@ import type {
 } from "../models/feeds/deliveries/feed-invoice";
 import type { FeedsDictionary } from "../models/feeds/feeds-dictionary";
 import type { FeedsNamesQueryResponse } from "../models/feeds/feeds-names";
+import type { FeedPaymentListModel } from "../models/feeds/payments/payment";
+import type { FeedsPaymentsFilterPaginationModel } from "../models/feeds/payments/payments-filters";
 import type {
   AddFeedPriceFormData,
   FeedPriceListModel,
@@ -102,6 +106,15 @@ export class FeedsService {
     return await AxiosWrapper.post(ApiUrl.SaveInvoiceData, invoiceData);
   }
 
+  public static async getFeedsPayments(
+    filters: FeedsPaymentsFilterPaginationModel
+  ) {
+    return await AxiosWrapper.get<PaginateModel<FeedPaymentListModel>>(
+      ApiUrl.FeedsPayments,
+      { ...filters }
+    );
+  }
+
   public static async getFeedsDeliveries(
     filters: FeedsDeliveriesFilterPaginationModel
   ) {
@@ -143,5 +156,14 @@ export class FeedsService {
     return await AxiosWrapper.post(ApiUrl.AddFeedCorrection, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
+  }
+
+  public static async getFeedsCorrections(
+    filters: FeedsCorrectionsFilterPaginationModel
+  ) {
+    return await AxiosWrapper.get<PaginateModel<FeedCorrectionListModel>>(
+      ApiUrl.FeedsCorrections,
+      { ...filters }
+    );
   }
 }

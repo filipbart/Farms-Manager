@@ -16,5 +16,6 @@ public class FeedInvoiceEntityConfiguration : BaseConfiguration<FeedInvoiceEntit
         builder.HasOne(t => t.Cycle).WithMany().HasForeignKey(t => t.CycleId);
         builder.HasOne(t => t.Henhouse).WithMany().HasForeignKey(t => t.HenhouseId);
         builder.HasOne(t => t.InvoiceCorrection).WithMany().HasForeignKey(t => t.InvoiceCorrectionId);
+        builder.HasOne(t => t.Payment).WithMany().HasForeignKey(t => t.PaymentId);
     }
 }

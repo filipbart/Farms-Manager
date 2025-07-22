@@ -4,6 +4,7 @@ using FarmsManager.Domain.Aggregates.UserAggregate.Models;
 using FarmsManager.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FarmsManager.Infrastructure.Migrations
 {
     [DbContext(typeof(FarmsManagerContext))]
-    partial class FarmsManagerContextModelSnapshot : ModelSnapshot
+    [Migration("20250722224435_AddFeedPaymentEntity")]
+    partial class AddFeedPaymentEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -626,10 +629,6 @@ namespace FarmsManager.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("payment_date_utc");
 
-                    b.Property<Guid?>("PaymentId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("payment_id");
-
                     b.Property<decimal>("Quantity")
                         .HasColumnType("numeric")
                         .HasColumnName("quantity");
@@ -664,9 +663,6 @@ namespace FarmsManager.Infrastructure.Migrations
 
                     b.HasIndex("InvoiceCorrectionId")
                         .HasDatabaseName("ix_feed_invoice_invoice_correction_id");
-
-                    b.HasIndex("PaymentId")
-                        .HasDatabaseName("ix_feed_invoice_payment_id");
 
                     b.ToTable("feed_invoice", "farms_manager");
                 });
@@ -1197,11 +1193,6 @@ namespace FarmsManager.Infrastructure.Migrations
                         .HasForeignKey("InvoiceCorrectionId")
                         .HasConstraintName("fk_feed_invoice_feed_invoice_correction_invoice_correction_id");
 
-                    b.HasOne("FarmsManager.Domain.Aggregates.FeedAggregate.Entites.FeedPaymentEntity", "Payment")
-                        .WithMany()
-                        .HasForeignKey("PaymentId")
-                        .HasConstraintName("fk_feed_invoice_feed_payment_entity_payment_id");
-
                     b.Navigation("Cycle");
 
                     b.Navigation("Farm");
@@ -1209,8 +1200,6 @@ namespace FarmsManager.Infrastructure.Migrations
                     b.Navigation("Henhouse");
 
                     b.Navigation("InvoiceCorrection");
-
-                    b.Navigation("Payment");
                 });
 
             modelBuilder.Entity("FarmsManager.Domain.Aggregates.FeedAggregate.Entites.FeedPaymentEntity", b =>

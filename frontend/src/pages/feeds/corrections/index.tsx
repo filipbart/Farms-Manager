@@ -12,63 +12,65 @@ import NoRowsOverlay from "../../../components/datagrid/custom-norows";
 import CustomToolbar from "../../../components/datagrid/custom-toolbar";
 import { FeedsService } from "../../../services/feeds-service";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
+import type { FeedCorrectionListModel } from "../../../models/feeds/corrections/correction";
+import { getFeedsCorrectionsColumns } from "./corrections-columns";
 import { downloadFile } from "../../../utils/download-file";
 import ApiUrl from "../../../common/ApiUrl";
 import { FileType } from "../../../models/files/file-type";
-import type { FeedPaymentListModel } from "../../../models/feeds/payments/payment";
-import { getFeedsPaymentsColumns } from "./payments-columns";
 
-const FeedsPaymentsPage: React.FC = () => {
+const FeedsCorrectionsPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
 
   const [loading, setLoading] = useState(false);
-  const [feedsPayments, setFeedsPayments] = useState<FeedPaymentListModel[]>(
-    []
-  );
+  const [feedsCorrections, setFeedsCorrections] = useState<
+    FeedCorrectionListModel[]
+  >([]);
   const [totalRows, setTotalRows] = useState(0);
 
-  const [downloadFileName, setDownloadFileName] = useState<string | null>(null);
+  const [downloadFilePath, setDownloadFilePath] = useState<string | null>(null);
 
-  const fetchFeedsPayments = async () => {
+  const fetchFeedsCorrections = async () => {
     try {
       setLoading(true);
-      await handleApiResponse<PaginateModel<FeedPaymentListModel>>(
-        () => FeedsService.getFeedsPayments(filters),
+      await handleApiResponse<PaginateModel<FeedCorrectionListModel>>(
+        () => FeedsService.getFeedsCorrections(filters),
         (data) => {
-          setFeedsPayments(data.responseData?.items ?? []);
+          setFeedsCorrections(data.responseData?.items ?? []);
           setTotalRows(data.responseData?.totalRows ?? 0);
         },
         undefined,
-        "Błąd podczas pobierania przelewów"
+        "Błąd podczas pobierania korekt faktur"
       );
     } catch {
-      toast.error("Błąd podczas pobierania przelewów");
+      toast.error("Błąd podczas pobierania korekt faktur");
     } finally {
       setLoading(false);
     }
   };
 
-  const downloadPaymentFile = async (fileName: string) => {
+  const downloadCorrectionFile = async (filePath: string) => {
+    const cleanedPath = filePath.substring(filePath.indexOf("/") + 1);
+
     await downloadFile({
-      url: ApiUrl.GetFile(fileName),
-      params: { fileType: FileType.FeedDeliveryPayment },
-      defaultFilename: "Przelew",
-      setLoading: (value) => setDownloadFileName(value ? fileName : null),
-      errorMessage: "Błąd podczas pobierania przelewu",
+      url: ApiUrl.GetFile(cleanedPath),
+      params: { fileType: FileType.FeedDeliveryCorrection },
+      defaultFilename: "FakturaKorekty",
+      setLoading: (value) => setDownloadFilePath(value ? cleanedPath : null),
+      errorMessage: "Błąd podczas pobierania faktury korekty",
     });
   };
 
   const columns = useMemo(
     () =>
-      getFeedsPaymentsColumns({
-        downloadPaymentFile,
-        downloadFileName,
+      getFeedsCorrectionsColumns({
+        downloadCorrectionFile,
+        downloadFilePath,
       }),
-    [downloadFileName]
+    [downloadFilePath]
   );
 
   useEffect(() => {
-    fetchFeedsPayments();
+    fetchFeedsCorrections();
   }, [filters]);
 
   return (
@@ -81,17 +83,17 @@ const FeedsPaymentsPage: React.FC = () => {
         alignItems={{ xs: "flex-start", sm: "center" }}
         gap={2}
       >
-        <Typography variant="h4">Przelewy</Typography>
+        <Typography variant="h4">Korekty</Typography>
       </Box>
 
       <Box mt={4} sx={{ width: "100%", overflowX: "auto" }}>
         <DataGrid
           loading={loading}
-          rows={feedsPayments}
+          rows={feedsCorrections}
           columns={columns}
           initialState={{
             columns: {
-              columnVisibilityModel: { id: false },
+              columnVisibilityModel: { id: false, dateCreatedUtc: false },
             },
           }}
           localeText={{
@@ -123,7 +125,7 @@ const FeedsPaymentsPage: React.FC = () => {
           onSortModelChange={(model) => {
             if (model.length > 0) {
               const sortField = model[0].field;
-              const foundOrderBy = Object.values(FeedsPaymentsPage).find(
+              const foundOrderBy = Object.values(FeedsCorrectionsPage).find(
                 (orderType) =>
                   mapFeedsPricesOrderTypeToField(orderType) === sortField
               );
@@ -148,4 +150,4 @@ const FeedsPaymentsPage: React.FC = () => {
   );
 };
 
-export default FeedsPaymentsPage;
+export default FeedsCorrectionsPage;

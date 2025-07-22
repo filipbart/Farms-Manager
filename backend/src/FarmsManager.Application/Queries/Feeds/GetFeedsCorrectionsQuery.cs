@@ -23,6 +23,7 @@ public record FeedCorrectionRowDto
     public Guid Id { get; init; }
     public string FarmName { get; init; }
     public string InvoiceNumber { get; init; }
+    public string FilePath { get; init; }
     public DateTime DateCreatedUtc { get; init; }
 }
 
