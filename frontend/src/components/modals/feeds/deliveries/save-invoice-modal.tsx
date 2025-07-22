@@ -98,22 +98,35 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
   useEffect(() => {
     if (draftFeedInvoices.length > 0 && farms.length > 0) {
       const initialData = draftFeedInvoices[0].extractedFields;
+      const henhouseName = initialData.henhouseName?.toLowerCase();
 
-      const matchingFarm = farms.find(
+      const matchedFarms = farms.filter(
         (f) =>
           f.nip === initialData.nip ||
           f.name?.toLowerCase() === initialData.customerName?.toLowerCase()
       );
 
-      if (matchingFarm) {
-        initialData.farmId = matchingFarm.id;
+      let selectedFarm = null;
+
+      if (matchedFarms.length === 1) {
+        selectedFarm = matchedFarms[0];
+      } else if (matchedFarms.length > 1 && henhouseName) {
+        selectedFarm = matchedFarms.find((farm) =>
+          farm.henhouses?.some(
+            (house) => house.name?.toLowerCase() === henhouseName
+          )
+        );
+      }
+
+      if (selectedFarm) {
+        initialData.farmId = selectedFarm.id;
       }
 
       setDraftFeed(draftFeedInvoices[0]);
       reset(initialData);
 
-      if (matchingFarm) {
-        handleFarmChange(matchingFarm.id);
+      if (selectedFarm) {
+        handleFarmChange(selectedFarm.id);
       }
     }
   }, [draftFeedInvoices, feedsNames, farms, reset]);

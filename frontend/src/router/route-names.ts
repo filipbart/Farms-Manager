@@ -12,6 +12,7 @@ export enum RouteName {
   FeedsDeliveries = "feeds/deliveries",
   FeedsPrices = "feeds/prices",
   FeedsNames = "feeds/names",
+  FeedsPayments = "feeds/payments",
   Settings = "settings",
   Users = "users",
   UserProfile = "user-profile",

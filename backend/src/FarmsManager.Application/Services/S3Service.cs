@@ -2,6 +2,7 @@
 using System.Text;
 using Amazon.S3;
 using Amazon.S3.Model;
+using FarmsManager.Application.Common;
 using FarmsManager.Application.FileSystem;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Domain.Exceptions;
@@ -88,6 +89,45 @@ public class S3Service : IS3Service
         }
     }
 
+    public async Task<PaginationModel<FileModel>> GetFilesByType(FileType fileType)
+    {
+        await EnsureBucketExistsAsync();
+
+        var prefix = fileType + "/";
+
+        var request = new ListObjectsRequest
+        {
+            BucketName = _bucketName,
+            Prefix = prefix
+        };
+        var response = await _s3Client.ListObjectsAsync(request);
+
+        if (response.HttpStatusCode != HttpStatusCode.OK)
+        {
+            return new PaginationModel<FileModel>
+            {
+                TotalRows = 0,
+                Items = new List<FileModel>()
+            };
+        }
+
+        var objects = response.S3Objects.Select((t, index) => new FileModel
+        {
+            Id = index,
+            IsFile = true,
+            IsDirectory = false,
+            LastModifyDate = t.LastModified,
+            FileName = t.Key.Replace(prefix, "")
+        }).ToList();
+
+        return new PaginationModel<FileModel>
+        {
+            TotalRows = objects.Count,
+            Items = objects
+        };
+    }
+
+
     public async Task<FileModel> GetFileAsync(FileType fileType, string path)
     {
         await EnsureBucketExistsAsync();
@@ -115,6 +155,7 @@ public class S3Service : IS3Service
             IsDirectory = false,
             LastModifyDate = obj.LastModified,
             ContentType = obj.Headers.ContentType,
+            FileName = Path.GetFileName(path),
             Data = ms.ToArray()
         };
     }

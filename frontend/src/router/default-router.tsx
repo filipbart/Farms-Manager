@@ -16,6 +16,7 @@ import SlaughterhousesPage from "../pages/data/slaughterhouse";
 import SaleFieldsSettingsPage from "../pages/sales/fields-settings";
 import FeedsPricePage from "../pages/feeds/prices";
 import FeedsDeliveriesPage from "../pages/feeds/deliveries";
+import FeedsPaymentsPage from "../pages/feeds/payments";
 
 const DefaultRouter: React.FC = () => {
   const { getRoute } = useRouter();
@@ -62,6 +63,10 @@ const DefaultRouter: React.FC = () => {
         <Route
           path={getRoute(RouteName.FeedsPrices)}
           element={<FeedsPricePage />}
+        />
+        <Route
+          path={getRoute(RouteName.FeedsPayments)}
+          element={<FeedsPaymentsPage />}
         />
       </Route>
     </Routes>

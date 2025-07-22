@@ -9,7 +9,7 @@ import {
 } from "@mui/material";
 import LogoWhite from "../../assets/logo_white.png";
 import SidebarMenuItem from "./sidebar-menu-item";
-import { IoCard, IoHome, IoSettings } from "react-icons/io5";
+import { IoCard, IoDocument, IoHome, IoSettings } from "react-icons/io5";
 import {
   FaClone,
   FaDatabase,
@@ -62,6 +62,11 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             to="/feeds/prices"
             title="Ceny pasz"
             icon={<FaArrowTrendUp />}
+          />
+          <SidebarMenuItem
+            to="/feeds/payments"
+            title="Przelewy"
+            icon={<IoDocument />}
           />
         </SidebarMenuItem>
 

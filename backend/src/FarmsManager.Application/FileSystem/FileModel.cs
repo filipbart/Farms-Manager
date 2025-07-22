@@ -4,6 +4,11 @@ namespace FarmsManager.Application.FileSystem;
 public class FileModel
 {
     /// <summary>
+    /// Dla list po froncie
+    /// </summary>
+    public long? Id { get; set; }
+
+    /// <summary>
     /// Nazwa pliku
     /// </summary>
     public string FileName { get; set; }

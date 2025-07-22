@@ -40,7 +40,8 @@ public class GetFeedDeliveryPaymentFileQueryHandler : IRequestHandler<GetFeedDel
         var invoices =
             await _feedInvoiceRepository.ListAsync(new GetFeedsInvoicesByIdsSpec(request.Ids), cancellationToken);
         var hasDifferentBankAccounts = invoices
-            .Select(i => i.BankAccountNumber)
+            .Select(i => i.BankAccountNumber?.Replace(" ", "").Trim())
+            .Where(x => !string.IsNullOrEmpty(x))
             .Distinct()
             .Count() > 1;
         if (hasDifferentBankAccounts)
@@ -49,7 +50,7 @@ public class GetFeedDeliveryPaymentFileQueryHandler : IRequestHandler<GetFeedDel
         }
 
         var hasDifferentFarms = invoices
-            .Select(i => i.Farm.Name)
+            .Select(i => i.FarmId)
             .Distinct()
             .Count() > 1;
         if (hasDifferentFarms)

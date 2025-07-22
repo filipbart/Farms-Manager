@@ -5,6 +5,7 @@ namespace FarmsManager.Application.Interfaces;
 
 public interface IS3Service : IService
 {
+    Task<PaginationModel<FileModel>> GetFilesByType(FileType fileType);
     Task<FileModel> GetFileAsync(FileType fileType, string path);
     Task<bool> FileExistsAsync(FileType fileType, string path);
     Task MoveFileAsync(FileType fileType, string sourcePath, string destinationPath);
