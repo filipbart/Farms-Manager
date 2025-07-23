@@ -22,4 +22,30 @@ public class AuthController(IMediator mediator) : BaseController
     {
         return Ok(await mediator.Send(command));
     }
+
+    /// <summary>
+    /// Odświeża token JWT użytkownika.
+    /// </summary>
+    /// <returns></returns>
+    [HttpPost("refresh-token")]
+    [ProducesResponseType(typeof(BaseResponse<RefreshTokenCommandResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> RefreshToken()
+    {
+        return Ok(await mediator.Send(new RefreshTokenCommand()));
+    }
+
+    /// <summary>
+    /// Usuwa token JWT z aktywnych sesji użytkownika.
+    /// </summary>
+    /// <param name="command"></param>
+    /// <returns></returns>
+    [HttpPost("logout")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Logout(LogoutCommand command)
+    {
+        await mediator.Send(command);
+        return Ok();
+    }
 }
