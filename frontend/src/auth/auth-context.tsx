@@ -60,14 +60,19 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
     stopSessionChecker();
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    try {
+      await AuthService.logout();
+    } catch {
+      /* empty */
+    }
     setUser(undefined);
     removeAuthToken();
     nav(getRoute(RouteName.Login));
   }, []);
 
   const fetchUserData = useCallback(async () => {
-    const response = await UserService.getUserAsync();
+    const response = await UserService.getUser();
     if (response.success && response.responseData) {
       setUser(response.responseData);
     } else {
@@ -88,7 +93,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
       } else if (remaining < 60) {
         stopSessionChecker();
 
-        const res = await AuthService.refreshTokenAsync();
+        const res = await AuthService.refreshToken();
         if (res.success && res.responseData?.accessToken) {
           setToken(res.responseData.accessToken);
           toast.success("Sesja odświeżona");

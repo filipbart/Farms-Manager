@@ -8,6 +8,7 @@ export default class ApiUrl {
   public static UserDetails = this.User + "/details";
   public static Authenticate = this.BaseUrl + "auth/authenticate";
   public static RefreshToken = this.BaseUrl + "auth/refresh-token";
+  public static Logout = this.BaseUrl + "auth/logout";
 
   public static Farms = this.BaseUrl + "farms";
   public static AddFarm = this.Farms + "/add";

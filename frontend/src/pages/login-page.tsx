@@ -23,7 +23,7 @@ const LoginPage: React.FC = () => {
     if (loading) return;
 
     setLoading(true);
-    const response = await AuthService.loginAsync(val.login, val.password);
+    const response = await AuthService.login(val.login, val.password);
     if (!response.success && response.domainException) {
       toast.error(response.domainException.errorDescription);
       setLoading(false);

@@ -11,7 +11,7 @@ export function useUserDetails() {
     setLoadingUser(true);
     try {
       await handleApiResponse<UserDetails>(
-        () => UserService.getDetailsAsync(),
+        () => UserService.getDetails(),
         (data) => setUserDetails(data.responseData),
         undefined,
         "Nie udało się pobrać szczegółów użytkownika"
