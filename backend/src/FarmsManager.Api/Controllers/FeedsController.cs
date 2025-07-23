@@ -1,4 +1,5 @@
 ﻿using FarmsManager.Api.Controllers.Base;
+using FarmsManager.Application.Commands.Feeds;
 using FarmsManager.Application.Commands.Feeds.Deliveries;
 using FarmsManager.Application.Commands.Feeds.Names;
 using FarmsManager.Application.Commands.Feeds.Prices;
@@ -214,6 +215,19 @@ public class FeedsController(IMediator mediator) : BaseController
     }
 
     /// <summary>
+    /// Usuwa przelew
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    [HttpDelete("delete-payment/{id:guid}")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> DeleteFeedPayment([FromRoute] Guid id)
+    {
+        return Ok(await mediator.Send(new DeleteFeedPaymentCommand(id)));
+    }
+
+    /// <summary>
     /// Zwraca wszystkie przelewy dla dostaw
     /// </summary>
     /// <param name="filters"></param>
@@ -237,18 +251,5 @@ public class FeedsController(IMediator mediator) : BaseController
     public async Task<IActionResult> AddFeedInvoiceCorrection([FromForm] AddFeedInvoiceCorrectionCommandDto dto)
     {
         return Ok(await mediator.Send(new AddFeedInvoiceCorrectionCommand(dto)));
-    }
-
-    /// <summary>
-    /// Zwraca wszystkie korekty faktur dostaw pasz
-    /// </summary>
-    /// <param name="filters"></param>
-    /// <returns></returns>
-    [HttpGet("corrections")]
-    [ProducesResponseType(typeof(BaseResponse<GetFeedsCorrectionsQueryResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetFeedsPrices([FromQuery] GetFeedsCorrectionsQueryFilters filters)
-    {
-        return Ok(await mediator.Send(new GetFeedsCorrectionsQuery(filters)));
     }
 }

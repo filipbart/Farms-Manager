@@ -1,13 +1,15 @@
-import { Box, IconButton } from "@mui/material";
+import { Box, Button, IconButton } from "@mui/material";
 import type { GridColDef } from "@mui/x-data-grid";
 import dayjs from "dayjs";
 import { MdFileDownload } from "react-icons/md";
 import Loading from "../../../components/loading/loading";
 
 export const getFeedsPaymentsColumns = ({
+  deleteFeedPayment,
   downloadPaymentFile,
   downloadFileName,
 }: {
+  deleteFeedPayment: (id: string) => void;
   downloadPaymentFile: (path: string) => void;
   downloadFileName: string | null;
 }): GridColDef[] => {
@@ -25,7 +27,7 @@ export const getFeedsPaymentsColumns = ({
       },
     },
     {
-      field: "actions",
+      field: "fileDownload",
       headerName: "Plik faktury",
       flex: 1,
       renderCell: (params) => (
@@ -49,6 +51,24 @@ export const getFeedsPaymentsColumns = ({
           </IconButton>
         </Box>
       ),
+    },
+    {
+      field: "actions",
+      type: "actions",
+      headerName: "Akcje",
+      flex: 1,
+      getActions: (params) => [
+        <Box key="delete" display="flex" justifyContent="center" width="100%">
+          <Button
+            variant="outlined"
+            size="small"
+            color="error"
+            onClick={() => deleteFeedPayment(params.row.id)}
+          >
+            Usuń
+          </Button>
+        </Box>,
+      ],
     },
   ];
 };

@@ -8,8 +8,12 @@ export const mapFeedsDeliveriesOrderTypeToField = (
       return "cycleText";
     case FeedsDeliveriesOrderType.Farm:
       return "farmName";
-    case FeedsDeliveriesOrderType.PriceDate:
-      return "priceDate";
+    case FeedsDeliveriesOrderType.ItemName:
+      return "itemName";
+    case FeedsDeliveriesOrderType.VendorName:
+      return "vendorName";
+    case FeedsDeliveriesOrderType.UnitPrice:
+      return "unitPrice";
     case FeedsDeliveriesOrderType.DateCreatedUtc:
       return "dateCreatedUtc";
     default:

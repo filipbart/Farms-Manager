@@ -28,13 +28,13 @@ export function filterReducer(
   }
 }
 
-export enum FeedsDeliveriesOrderType {
+export enum FeedsPaymentsOrderType {
   DateCreatedUtc = "DateCreatedUtc",
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export default interface FeedsDeliveriesFilter {}
+export default interface FeedsPaymentsFilter {}
 
 export interface FeedsPaymentsFilterPaginationModel
-  extends FeedsDeliveriesFilter,
-    OrderedPaginationParams<FeedsDeliveriesOrderType> {}
+  extends FeedsPaymentsFilter,
+    OrderedPaginationParams<FeedsPaymentsOrderType> {}

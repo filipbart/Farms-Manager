@@ -5,7 +5,7 @@ namespace FarmsManager.Domain.Aggregates.FeedAggregate.Entites;
 
 public class FeedPaymentEntity : Entity
 {
-    private FeedPaymentEntity()
+    protected FeedPaymentEntity()
     {
     }
 

@@ -10,13 +10,15 @@ export const getFeedsDeliveriesColumns = ({
   setIsEditModalOpen,
   deleteFeedDelivery,
   downloadInvoiceFile,
-  loadingFileId,
+  downloadCorrectionFile,
+  downloadFilePath,
 }: {
   setSelectedFeedDelivery: (s: any) => void;
   setIsEditModalOpen: (v: boolean) => void;
   deleteFeedDelivery: (id: string) => void;
-  downloadInvoiceFile: (id: string) => void;
-  loadingFileId: string | null;
+  downloadInvoiceFile: (path: string) => void;
+  downloadCorrectionFile: (path: string) => void;
+  downloadFilePath: string | null;
 }): GridColDef[] => {
   return [
     { field: "id", headerName: "Id", width: 70 },
@@ -95,11 +97,23 @@ export const getFeedsDeliveriesColumns = ({
           height="100%"
         >
           <IconButton
-            onClick={() => downloadInvoiceFile(params.row.id)}
+            onClick={() =>
+              params.row.isCorrection
+                ? downloadCorrectionFile(params.row.filePath)
+                : downloadInvoiceFile(params.row.id)
+            }
             color="primary"
-            disabled={loadingFileId === params.row.id}
+            disabled={
+              params.row.isCorrection
+                ? downloadFilePath === params.row.filePath
+                : downloadFilePath === params.row.id
+            }
           >
-            {loadingFileId === params.row.id ? (
+            {(
+              params.row.isCorrection
+                ? downloadFilePath === params.row.filePath
+                : downloadFilePath === params.row.id
+            ) ? (
               <Loading size={10} />
             ) : (
               <MdFileDownload />

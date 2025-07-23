@@ -1,6 +1,9 @@
-﻿using FarmsManager.Application.Common.Responses;
+﻿using Ardalis.Specification;
+using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.FileSystem;
 using FarmsManager.Application.Interfaces;
+using FarmsManager.Application.Specifications;
+using FarmsManager.Application.Specifications.Cycle;
 using FarmsManager.Application.Specifications.Farms;
 using FarmsManager.Application.Specifications.Feeds;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
@@ -17,9 +20,11 @@ public record AddFeedInvoiceCorrectionCommandDto
 {
     public string InvoiceNumber { get; init; }
     public Guid FarmId { get; init; }
+    public Guid CycleId { get; init; }
     public decimal SubTotal { get; init; }
     public decimal VatAmount { get; init; }
     public decimal InvoiceTotal { get; init; }
+    public DateOnly InvoiceDate { get; init; }
     public IFormFile File { get; init; }
     public List<Guid> FeedInvoiceIds { get; init; }
 }
@@ -29,24 +34,26 @@ public record AddFeedInvoiceCorrectionCommand(AddFeedInvoiceCorrectionCommandDto
 public class
     AddFeedInvoiceCorrectionCommandHandler : IRequestHandler<AddFeedInvoiceCorrectionCommand, EmptyBaseResponse>
 {
-    private const string Comment = "Korekta została ujęta: {0}";
-
-    private readonly IS3Service _s3Service;
-    private readonly IFarmRepository _farmRepository;
-    private readonly IUserDataResolver _userDataResolver;
-    private readonly IFeedInvoiceRepository _feedInvoiceRepository;
-    private readonly IFeedInvoiceCorrectionRepository _feedInvoiceCorrectionRepository;
-
     public AddFeedInvoiceCorrectionCommandHandler(IS3Service s3Service, IFarmRepository farmRepository,
-        IUserDataResolver userDataResolver, IFeedInvoiceRepository feedInvoiceRepository,
-        IFeedInvoiceCorrectionRepository feedInvoiceCorrectionRepository)
+        ICycleRepository cycleRepository, IUserDataResolver userDataResolver,
+        IFeedInvoiceRepository feedInvoiceRepository, IFeedInvoiceCorrectionRepository feedInvoiceCorrectionRepository)
     {
         _s3Service = s3Service;
         _farmRepository = farmRepository;
+        _cycleRepository = cycleRepository;
         _userDataResolver = userDataResolver;
         _feedInvoiceRepository = feedInvoiceRepository;
         _feedInvoiceCorrectionRepository = feedInvoiceCorrectionRepository;
     }
+
+    private const string Comment = "Korekta została ujęta: {0}";
+
+    private readonly IS3Service _s3Service;
+    private readonly IFarmRepository _farmRepository;
+    private readonly ICycleRepository _cycleRepository;
+    private readonly IUserDataResolver _userDataResolver;
+    private readonly IFeedInvoiceRepository _feedInvoiceRepository;
+    private readonly IFeedInvoiceCorrectionRepository _feedInvoiceCorrectionRepository;
 
 
     public async Task<EmptyBaseResponse> Handle(AddFeedInvoiceCorrectionCommand request, CancellationToken ct)
@@ -55,9 +62,20 @@ public class
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
 
         var farm = await _farmRepository.GetAsync(new FarmByIdSpec(request.Data.FarmId), ct);
+        var cycle = await _cycleRepository.GetAsync(new CycleByIdSpec(request.Data.CycleId), ct);
 
         var feedInvoices =
             await _feedInvoiceRepository.ListAsync(new GetFeedsInvoicesByIdsSpec(request.Data.FeedInvoiceIds), ct);
+
+        var existedCorrections =
+            await _feedInvoiceCorrectionRepository.AnyAsync(
+                new GetFeedsCorrectionsByIdsSpec(request.Data.FeedInvoiceIds), ct);
+
+        if (existedCorrections)
+        {
+            response.AddError("SelectedCorrection", "Zaznaczono korektę podczas dodawania korekty");
+            return response;
+        }
 
         if (feedInvoices.Any(t => t.InvoiceCorrectionId.HasValue))
         {
@@ -85,10 +103,12 @@ public class
 
         var newCorrection = FeedInvoiceCorrectionEntity.CreateNew(
             farm.Id,
+            cycle.Id,
             request.Data.InvoiceNumber,
             request.Data.SubTotal,
             request.Data.VatAmount,
             request.Data.InvoiceTotal,
+            request.Data.InvoiceDate,
             filePath,
             userId
         );
@@ -108,15 +128,24 @@ public class
     }
 }
 
+public sealed class GetFeedsCorrectionsByIdsSpec : BaseSpecification<FeedInvoiceCorrectionEntity>
+{
+    public GetFeedsCorrectionsByIdsSpec(List<Guid> ids)
+    {
+        EnsureExists();
+        Query.Where(t => ids.Contains(t.Id));
+    }
+}
+
 public class AddFeedInvoiceCorrectionCommandValidator : AbstractValidator<AddFeedInvoiceCorrectionCommand>
 {
     public AddFeedInvoiceCorrectionCommandValidator()
     {
         RuleFor(t => t.Data.InvoiceNumber).NotEmpty();
         RuleFor(t => t.Data.FarmId).NotEmpty();
-        RuleFor(t => t.Data.SubTotal).GreaterThanOrEqualTo(0);
-        RuleFor(t => t.Data.VatAmount).GreaterThanOrEqualTo(0);
-        RuleFor(t => t.Data.InvoiceTotal).GreaterThanOrEqualTo(0);
+        RuleFor(t => t.Data.SubTotal);
+        RuleFor(t => t.Data.VatAmount);
+        RuleFor(t => t.Data.InvoiceTotal);
         RuleFor(t => t.Data.FeedInvoiceIds).NotEmpty();
     }
 }

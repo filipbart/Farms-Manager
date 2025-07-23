@@ -13,7 +13,6 @@ import { IoCard, IoHome, IoSettings } from "react-icons/io5";
 import {
   FaClone,
   FaDatabase,
-  FaFileInvoice,
   FaFileInvoiceDollar,
   FaHandshake,
   FaList,
@@ -69,11 +68,6 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             to="/feeds/payments"
             title="Przelewy"
             icon={<FaFileInvoiceDollar />}
-          />
-          <SidebarMenuItem
-            to="/feeds/corrections"
-            title="Korekty"
-            icon={<FaFileInvoice />}
           />
         </SidebarMenuItem>
 

@@ -1,4 +1,5 @@
 ﻿using Ardalis.Specification;
+using FarmsManager.Application.Commands.Feeds.Deliveries;
 using FarmsManager.Application.FileSystem;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications;
@@ -31,14 +32,17 @@ public class GetFeedDeliveryPaymentFileQueryHandler : IRequestHandler<GetFeedDel
     private readonly IUserDataResolver _userDataResolver;
     private readonly IFeedInvoiceRepository _feedInvoiceRepository;
     private readonly IFeedPaymentRepository _feedPaymentRepository;
+    private readonly IFeedInvoiceCorrectionRepository _feedInvoiceCorrectionRepository;
 
     public GetFeedDeliveryPaymentFileQueryHandler(IS3Service s3Service, IUserDataResolver userDataResolver,
-        IFeedInvoiceRepository feedInvoiceRepository, IFeedPaymentRepository feedPaymentRepository)
+        IFeedInvoiceRepository feedInvoiceRepository, IFeedPaymentRepository feedPaymentRepository,
+        IFeedInvoiceCorrectionRepository feedInvoiceCorrectionRepository)
     {
         _s3Service = s3Service;
         _userDataResolver = userDataResolver;
         _feedInvoiceRepository = feedInvoiceRepository;
         _feedPaymentRepository = feedPaymentRepository;
+        _feedInvoiceCorrectionRepository = feedInvoiceCorrectionRepository;
     }
 
     public async Task<FileModel> Handle(GetFeedDeliveryPaymentFileQuery request, CancellationToken cancellationToken)
@@ -46,6 +50,13 @@ public class GetFeedDeliveryPaymentFileQueryHandler : IRequestHandler<GetFeedDel
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var invoices =
             await _feedInvoiceRepository.ListAsync(new GetFeedsInvoicesByIdsSpec(request.Ids), cancellationToken);
+
+        var corrections =
+            await _feedInvoiceCorrectionRepository.ListAsync(new GetFeedsCorrectionsByIdsSpec(request.Ids),
+                cancellationToken);
+
+        corrections = corrections.DistinctBy(t => t.Id).ToList();
+
         var hasDifferentBankAccounts = invoices
             .Select(i => i.BankAccountNumber?.Replace(" ", "").Trim())
             .Where(x => !string.IsNullOrEmpty(x))
@@ -60,7 +71,15 @@ public class GetFeedDeliveryPaymentFileQueryHandler : IRequestHandler<GetFeedDel
             .Select(i => i.FarmId)
             .Distinct()
             .Count() > 1;
+
+
         if (hasDifferentFarms)
+        {
+            throw new Exception("Zaznaczono faktury z różnych farm");
+        }
+
+        var firstInvoice = invoices.First();
+        if (corrections.Any(t => t.FarmId != firstInvoice.FarmId))
         {
             throw new Exception("Zaznaczono faktury z różnych farm");
         }
@@ -70,7 +89,7 @@ public class GetFeedDeliveryPaymentFileQueryHandler : IRequestHandler<GetFeedDel
             throw new Exception("Wybrano fakturę, która jest już opłacona");
         }
 
-        var fileBytes = GeneratePdf(invoices, request.Comment);
+        var fileBytes = GeneratePdf(invoices, corrections, request.Comment);
         var fileName = $"Przelew_{DateTime.Now:yyyyMMdd_HHmmss}{Extension}";
 
         var filePath = await _s3Service.UploadFileAsync(fileBytes, FileType.FeedDeliveryPayment, fileName);
@@ -91,14 +110,26 @@ public class GetFeedDeliveryPaymentFileQueryHandler : IRequestHandler<GetFeedDel
         };
     }
 
-    private static byte[] GeneratePdf(List<FeedInvoiceEntity> invoices, string comment)
+    private static byte[] GeneratePdf(
+        List<FeedInvoiceEntity> invoices,
+        List<FeedInvoiceCorrectionEntity> corrections,
+        string comment)
     {
         var firstInvoice = invoices.First();
-        var totalAmount = invoices.Sum(t => t.InvoiceTotal);
-        var totalSubTotal = invoices.Sum(t => t.SubTotal);
-        var totalVat = invoices.Sum(t => t.VatAmount);
-        var dueDate = invoices.Min(t => t.DueDate);
-        var correction = invoices.FirstOrDefault(t => t.InvoiceCorrection != null)?.InvoiceCorrection;
+
+        var totalAmount = invoices.Sum(i => i.InvoiceTotal);
+        var totalSubTotal = invoices.Sum(i => i.SubTotal);
+        var totalVat = invoices.Sum(i => i.VatAmount);
+
+        var correctionAmount = corrections.Sum(c => c.InvoiceTotal);
+        var correctionSubTotal = corrections.Sum(c => c.SubTotal);
+        var correctionVat = corrections.Sum(c => c.VatAmount);
+
+        var finalAmount = totalAmount - correctionAmount;
+        var finalSubTotal = totalSubTotal - correctionSubTotal;
+        var finalVat = totalVat - correctionVat;
+
+        var dueDate = invoices.Min(i => i.DueDate);
 
         return Document.Create(container =>
         {
@@ -110,71 +141,115 @@ public class GetFeedDeliveryPaymentFileQueryHandler : IRequestHandler<GetFeedDel
 
                 page.Content().Column(col =>
                 {
-                    col.Item().PaddingBottom(20).Text(firstInvoice.Farm.Name).FontSize(16).Bold().AlignCenter();
+                    col.Item().PaddingBottom(20)
+                        .Text(firstInvoice.Farm.Name)
+                        .FontSize(16).Bold().AlignCenter();
 
-                    if (correction != null)
+                    // Sekcja: Faktury
+                    col.Item().PaddingBottom(10).Text("Faktury").Bold();
+                    col.Item().Table(table =>
                     {
-                        col.Item().PaddingBottom(5).Text($"Numer faktury: {firstInvoice.InvoiceNumber}").Bold(); //TODO ogarnąć czy sumować korekty czy ma być pojedyncza
-                        col.Item().Text("Przed korektą").Bold();
-                        AddSummaryTable(col, totalAmount, totalSubTotal, totalVat);
+                        table.ColumnsDefinition(columns =>
+                        {
+                            columns.ConstantColumn(150); // Numer
+                            columns.RelativeColumn(); // Brutto
+                            columns.RelativeColumn(); // Netto
+                            columns.RelativeColumn(); // VAT
+                        });
 
-                        col.Item().PaddingTop(10).PaddingBottom(5)
-                            .Text($"Numer faktury korekty: {correction.InvoiceNumber}").Bold();
-                        col.Item().Text("Korekta").Bold();
-                        AddSummaryTable(col, correction.InvoiceTotal, correction.SubTotal, correction.VatAmount);
+                        table.Header(header =>
+                        {
+                            header.Cell().Text("Numer faktury").Bold();
+                            header.Cell().Text("Kwota brutto").Bold();
+                            header.Cell().Text("Kwota netto").Bold();
+                            header.Cell().Text("Kwota VAT").Bold();
+                        });
 
-                        col.Item().PaddingTop(10).Text("Po korekcie").Bold();
-                        AddSummaryTable(col,
-                            totalAmount - correction.InvoiceTotal,
-                            totalSubTotal - correction.SubTotal,
-                            totalVat - correction.VatAmount
-                        );
-                    }
-                    else
+                        foreach (var invoice in invoices)
+                        {
+                            table.Cell().Text(invoice.InvoiceNumber);
+                            table.Cell().Text(FormatCurrency(invoice.InvoiceTotal));
+                            table.Cell().Text(FormatCurrency(invoice.SubTotal));
+                            table.Cell().Text(FormatCurrency(invoice.VatAmount));
+                        }
+
+                        table.Cell().ColumnSpan(4).PaddingVertical(5).LineHorizontal(1);
+
+                        table.Cell().Text("Suma brutto:").Bold();
+                        table.Cell().Text(FormatCurrency(totalAmount)).Bold();
+                        table.Cell().Text(string.Empty);
+                        table.Cell().Text(string.Empty);
+
+                        table.Cell().Text("Suma netto:").Bold();
+                        table.Cell().Text(FormatCurrency(totalSubTotal)).Bold();
+                        table.Cell().Text(string.Empty);
+                        table.Cell().Text(string.Empty);
+
+                        table.Cell().Text("Suma VAT:").Bold();
+                        table.Cell().Text(FormatCurrency(totalVat)).Bold();
+                        table.Cell().Text(string.Empty);
+                        table.Cell().Text(string.Empty);
+                    });
+
+                    // Sekcja: Korekty (jeśli są)
+                    if (corrections.Count != 0)
                     {
+                        col.Item().PaddingBottom(10).PaddingTop(20).Text("Faktury korygujące").Bold();
                         col.Item().Table(table =>
                         {
                             table.ColumnsDefinition(columns =>
                             {
-                                columns.ConstantColumn(150);
-                                columns.RelativeColumn();
-                                columns.RelativeColumn();
+                                columns.ConstantColumn(150); // Numer
+                                columns.RelativeColumn(); // Brutto
+                                columns.RelativeColumn(); // Netto
+                                columns.RelativeColumn(); // VAT
                             });
 
                             table.Header(header =>
                             {
-                                header.Cell().Text("Numer faktury").Bold();
+                                header.Cell().Text("Numer korekty").Bold();
                                 header.Cell().Text("Kwota brutto").Bold();
+                                header.Cell().Text("Kwota netto").Bold();
                                 header.Cell().Text("Kwota VAT").Bold();
                             });
 
-                            foreach (var invoice in invoices)
+                            foreach (var correction in corrections)
                             {
-                                table.Cell().Text(invoice.InvoiceNumber);
-                                table.Cell().Text(FormatCurrency(invoice.InvoiceTotal));
-                                table.Cell().Text(FormatCurrency(invoice.VatAmount));
+                                table.Cell().Text(correction.InvoiceNumber);
+                                table.Cell().Text(FormatCurrency(correction.InvoiceTotal));
+                                table.Cell().Text(FormatCurrency(correction.SubTotal));
+                                table.Cell().Text(FormatCurrency(correction.VatAmount));
                             }
 
-                            table.Cell().ColumnSpan(3).PaddingVertical(5).LineHorizontal(1);
+                            table.Cell().ColumnSpan(4).PaddingVertical(5).LineHorizontal(1);
 
-                            table.Cell().Text("Suma brutto:").Bold();
-                            table.Cell().Text(FormatCurrency(totalAmount)).Bold();
+                            table.Cell().Text("Suma brutto (korekty):").Bold();
+                            table.Cell().Text(FormatCurrency(correctionAmount)).Bold();
+                            table.Cell().Text(string.Empty);
                             table.Cell().Text(string.Empty);
 
-                            table.Cell().Text("Suma netto:").Bold();
-                            table.Cell().Text(FormatCurrency(totalSubTotal)).Bold();
+                            table.Cell().Text("Suma netto (korekty):").Bold();
+                            table.Cell().Text(FormatCurrency(correctionSubTotal)).Bold();
+                            table.Cell().Text(string.Empty);
                             table.Cell().Text(string.Empty);
 
-                            table.Cell().Text("Suma VAT:").Bold();
-                            table.Cell().Text(FormatCurrency(totalVat)).Bold();
+                            table.Cell().Text("Suma VAT (korekty):").Bold();
+                            table.Cell().Text(FormatCurrency(correctionVat)).Bold();
+                            table.Cell().Text(string.Empty);
                             table.Cell().Text(string.Empty);
                         });
+
+                        // Sekcja: Po korekcie
+                        col.Item().PaddingTop(20).Text("Po korekcie").Bold();
+                        AddSummaryTable(col, finalAmount, finalSubTotal, finalVat);
                     }
 
+                    // Info bankowe
                     col.Item().PaddingVertical(20).LineHorizontal(1);
                     col.Item().Text($"Numer rachunku bankowego: {firstInvoice.BankAccountNumber}");
                     col.Item().Text($"Termin płatności: {dueDate:yyyy-MM-dd}");
 
+                    // Komentarz
                     if (!string.IsNullOrWhiteSpace(comment))
                     {
                         col.Item().PaddingTop(20).LineHorizontal(1);

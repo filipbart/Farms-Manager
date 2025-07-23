@@ -10,7 +10,7 @@ import {
   MenuItem,
 } from "@mui/material";
 import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import LoadingTextField from "../../../common/loading-textfield";
 import LoadingButton from "../../../common/loading-button";
 import { MdSave, MdAttachFile } from "react-icons/md";
@@ -20,6 +20,9 @@ import type { GridRowId } from "@mui/x-data-grid";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import { FeedsService } from "../../../../services/feeds-service";
 import { toast } from "react-toastify";
+import { useLatestCycle } from "../../../../hooks/useLatestCycle";
+import { DatePicker } from "@mui/x-date-pickers";
+import dayjs from "dayjs";
 
 interface AddCorrectionModalProps {
   open: boolean;
@@ -36,6 +39,7 @@ const AddCorrectionModal: React.FC<AddCorrectionModalProps> = ({
 }) => {
   const { farms, loadingFarms, fetchFarms } = useFarms();
   const [selectedFile, setSelectedFile] = useState<File>();
+  const { loadLatestCycle, loadingCycle } = useLatestCycle();
   const [loading, setLoading] = useState(false);
 
   const {
@@ -44,14 +48,20 @@ const AddCorrectionModal: React.FC<AddCorrectionModalProps> = ({
     formState: { errors },
     reset,
     setValue,
+    clearErrors,
+    setError,
+    control,
     watch,
   } = useForm<CorrectionData>({
     defaultValues: {
       invoiceNumber: "",
       farmId: "",
+      cycleId: "",
+      identifierDisplay: "",
       subTotal: 0,
       vatAmount: 0,
       invoiceTotal: 0,
+      invoiceDate: "",
     },
   });
 
@@ -67,16 +77,37 @@ const AddCorrectionModal: React.FC<AddCorrectionModalProps> = ({
     }
   };
 
+  const handleFarmChange = async (farmId: string) => {
+    setValue("cycleId", "");
+    setValue("identifierDisplay", "");
+    clearErrors("cycleId");
+
+    const cycle = await loadLatestCycle(farmId);
+    if (cycle) {
+      setValue("cycleId", cycle.id);
+      clearErrors("cycleId");
+      setValue("identifierDisplay", `${cycle.identifier}/${cycle.year}`);
+    } else {
+      setError("cycleId", {
+        type: "manual",
+        message: "Brak aktywnego cyklu",
+      });
+    }
+  };
+
   const handleSave = async (data: CorrectionData) => {
+    console.log("Data: ", data);
     setLoading(true);
     await handleApiResponse(
       () =>
         FeedsService.addFeedCorrection({
           farmId: data.farmId,
+          cycleId: data.cycleId,
           invoiceNumber: data.invoiceNumber,
           subTotal: data.subTotal,
           vatAmount: data.vatAmount,
           invoiceTotal: data.invoiceTotal,
+          invoiceDate: data.invoiceDate,
           file: data.file,
           feedInvoiceIds: Array.from(selectedDeliveries).map(String),
         }),
@@ -89,7 +120,6 @@ const AddCorrectionModal: React.FC<AddCorrectionModalProps> = ({
       undefined,
       "Wystąpił błąd podczas dodawania faktury korekty"
     );
-
     setLoading(false);
   };
 
@@ -130,7 +160,13 @@ const AddCorrectionModal: React.FC<AddCorrectionModalProps> = ({
                 value={watch("farmId") || ""}
                 error={!!errors.farmId}
                 helperText={errors.farmId?.message}
-                {...register("farmId", { required: "Farma jest wymagana" })}
+                {...register("farmId", {
+                  required: "Farma jest wymagana",
+                  onChange: async (e) => {
+                    const value = e.target.value;
+                    await handleFarmChange(value);
+                  },
+                })}
               >
                 {farms.map((farm) => (
                   <MenuItem key={farm.id} value={farm.id}>
@@ -138,6 +174,45 @@ const AddCorrectionModal: React.FC<AddCorrectionModalProps> = ({
                   </MenuItem>
                 ))}
               </LoadingTextField>
+            </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              <LoadingTextField
+                loading={loadingCycle}
+                label="Cykl"
+                value={watch("identifierDisplay") || ""}
+                slotProps={{ input: { readOnly: true } }}
+                fullWidth
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              <Controller
+                name="invoiceDate"
+                control={control}
+                rules={{
+                  required: "Data korekty jest wymagana",
+                }}
+                render={({ field }) => (
+                  <DatePicker
+                    label="Data korekty"
+                    format="DD.MM.YYYY"
+                    value={field.value ? dayjs(field.value) : null}
+                    onChange={(date) =>
+                      field.onChange(
+                        date ? dayjs(date).format("YYYY-MM-DD") : ""
+                      )
+                    }
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        error: !!errors.invoiceDate,
+                        helperText: errors.invoiceDate?.message,
+                      },
+                    }}
+                  />
+                )}
+              />
             </Grid>
 
             <Grid size={{ xs: 4 }}>
@@ -203,6 +278,7 @@ const AddCorrectionModal: React.FC<AddCorrectionModalProps> = ({
         <DialogActions>
           <Button
             onClick={() => {
+              setSelectedFile(undefined);
               reset();
               onClose();
             }}

@@ -49,4 +49,6 @@ export interface FeedDeliveryListModel {
 
   correctUnitPrice?: number;
   paymentDateUtc?: string;
+  filePath?: string;
+  isCorrection: boolean;
 }

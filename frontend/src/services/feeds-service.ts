@@ -1,7 +1,5 @@
 import ApiUrl from "../common/ApiUrl";
 import type { PaginateModel } from "../common/interfaces/paginate";
-import type { FeedCorrectionListModel } from "../models/feeds/corrections/correction";
-import type { FeedsCorrectionsFilterPaginationModel } from "../models/feeds/corrections/corrections-filters";
 import type { FeedsDeliveriesFilterPaginationModel } from "../models/feeds/deliveries/deliveries-filters";
 import type { DraftFeedInvoice } from "../models/feeds/deliveries/draft-feed-invoice";
 import type {
@@ -33,9 +31,11 @@ export interface SaveFeedInvoiceData {
 export interface AddFeedCorrectionData {
   invoiceNumber: string;
   farmId: string;
+  cycleId: string;
   subTotal: number;
   vatAmount: number;
   invoiceTotal: number;
+  invoiceDate: string;
   file: File | undefined;
   feedInvoiceIds: string[];
 }
@@ -115,6 +115,10 @@ export class FeedsService {
     );
   }
 
+  public static async deleteFeedPayment(id: string) {
+    return await AxiosWrapper.delete(ApiUrl.DeleteFeedPayment + "/" + id);
+  }
+
   public static async getFeedsDeliveries(
     filters: FeedsDeliveriesFilterPaginationModel
   ) {
@@ -141,10 +145,12 @@ export class FeedsService {
     const formData = new FormData();
 
     formData.append("farmId", dto.farmId);
+    formData.append("cycleId", dto.cycleId);
     formData.append("invoiceNumber", dto.invoiceNumber);
     formData.append("subTotal", dto.subTotal.toString());
     formData.append("vatAmount", dto.vatAmount.toString());
     formData.append("invoiceTotal", dto.invoiceTotal.toString());
+    formData.append("invoiceDate", dto.invoiceDate);
 
     if (dto.file) {
       formData.append("file", dto.file);
@@ -156,14 +162,5 @@ export class FeedsService {
     return await AxiosWrapper.post(ApiUrl.AddFeedCorrection, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
-  }
-
-  public static async getFeedsCorrections(
-    filters: FeedsCorrectionsFilterPaginationModel
-  ) {
-    return await AxiosWrapper.get<PaginateModel<FeedCorrectionListModel>>(
-      ApiUrl.FeedsCorrections,
-      { ...filters }
-    );
   }
 }

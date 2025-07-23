@@ -1,12 +1,7 @@
 import { useEffect, useMemo, useReducer, useState } from "react";
-import {
-  filterReducer,
-  initialFilters,
-} from "../../../models/feeds/corrections/corrections-filters";
 import { Box, tablePaginationClasses, Typography } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { toast } from "react-toastify";
-import { mapFeedsPricesOrderTypeToField } from "../../../common/helpers/feeds-price-order-type-helper";
 import type { PaginateModel } from "../../../common/interfaces/paginate";
 import NoRowsOverlay from "../../../components/datagrid/custom-norows";
 import CustomToolbar from "../../../components/datagrid/custom-toolbar";
@@ -17,6 +12,12 @@ import ApiUrl from "../../../common/ApiUrl";
 import { FileType } from "../../../models/files/file-type";
 import type { FeedPaymentListModel } from "../../../models/feeds/payments/payment";
 import { getFeedsPaymentsColumns } from "./payments-columns";
+import {
+  FeedsPaymentsOrderType,
+  filterReducer,
+  initialFilters,
+} from "../../../models/feeds/payments/payments-filters";
+import { mapFeedsPaymentsOrderTypeToField } from "../../../common/helpers/feeds-payment-order-type-helper";
 
 const FeedsPaymentsPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -48,6 +49,25 @@ const FeedsPaymentsPage: React.FC = () => {
     }
   };
 
+  const deleteFeedPayment = async (id: string) => {
+    try {
+      setLoading(true);
+      await handleApiResponse(
+        () => FeedsService.deleteFeedPayment(id),
+        async () => {
+          toast.success("Przelew został poprawnie usunięty");
+          await fetchFeedsPayments();
+        },
+        undefined,
+        "Błąd podczas usuwania przelewu"
+      );
+    } catch {
+      toast.error("Błąd podczas usuwania przelewu");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const downloadPaymentFile = async (fileName: string) => {
     await downloadFile({
       url: ApiUrl.GetFile(fileName),
@@ -61,6 +81,7 @@ const FeedsPaymentsPage: React.FC = () => {
   const columns = useMemo(
     () =>
       getFeedsPaymentsColumns({
+        deleteFeedPayment,
         downloadPaymentFile,
         downloadFileName,
       }),
@@ -123,9 +144,9 @@ const FeedsPaymentsPage: React.FC = () => {
           onSortModelChange={(model) => {
             if (model.length > 0) {
               const sortField = model[0].field;
-              const foundOrderBy = Object.values(FeedsPaymentsPage).find(
+              const foundOrderBy = Object.values(FeedsPaymentsOrderType).find(
                 (orderType) =>
-                  mapFeedsPricesOrderTypeToField(orderType) === sortField
+                  mapFeedsPaymentsOrderTypeToField(orderType) === sortField
               );
               dispatch({
                 type: "setMultiple",

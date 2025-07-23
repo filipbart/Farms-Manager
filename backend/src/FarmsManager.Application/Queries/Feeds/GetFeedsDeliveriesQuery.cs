@@ -53,6 +53,8 @@ public record FeedDeliveryRowDto
     public string BankAccountNumber { get; init; }
     public decimal? CorrectUnitPrice { get; init; }
     public DateTime? PaymentDateUtc { get; init; }
+    public string FilePath { get; init; }
+    public bool IsCorrection { get; init; }
 }
 
 public class
@@ -60,24 +62,63 @@ public class
     BaseResponse<GetFeedsDeliveriesQueryResponse>>
 {
     private readonly IFeedInvoiceRepository _feedInvoiceRepository;
+    private readonly IFeedInvoiceCorrectionRepository _feedInvoiceCorrectionRepository;
 
-    public GetFeedsDeliveriesQueryHandler(IFeedInvoiceRepository feedInvoiceRepository)
+    public GetFeedsDeliveriesQueryHandler(IFeedInvoiceRepository feedInvoiceRepository,
+        IFeedInvoiceCorrectionRepository feedInvoiceCorrectionRepository)
     {
         _feedInvoiceRepository = feedInvoiceRepository;
+        _feedInvoiceCorrectionRepository = feedInvoiceCorrectionRepository;
     }
 
     public async Task<BaseResponse<GetFeedsDeliveriesQueryResponse>> Handle(GetFeedsDeliveriesQuery request,
         CancellationToken ct)
     {
-        var data = await _feedInvoiceRepository.ListAsync<FeedDeliveryRowDto>(
-            new GetAllFeedsDeliveriesSpec(request.Filters, true), ct);
-        var itemRows =
-            await _feedInvoiceRepository.CountAsync(new GetAllFeedsDeliveriesSpec(request.Filters, false), ct);
+        var feedInvoices = await _feedInvoiceRepository.ListAsync<FeedDeliveryRowDto>(
+            new GetAllFeedsDeliveriesSpec(request.Filters, false), ct);
+
+        var feedCorrections = await _feedInvoiceCorrectionRepository.ListAsync<FeedDeliveryRowDto>(
+            new GetAllFeedsCorrectionsSpec(request.Filters, false), ct);
+
+        var combined = feedInvoices.Concat(feedCorrections).ToList();
+
+        combined = request.Filters.OrderBy switch
+        {
+            FeedsDeliveriesOrderBy.DateCreatedUtc => request.Filters.IsDescending
+                ? combined.OrderByDescending(x => x.DateCreatedUtc).ToList()
+                : combined.OrderBy(x => x.DateCreatedUtc).ToList(),
+
+            FeedsDeliveriesOrderBy.Cycle => request.Filters.IsDescending
+                ? combined.OrderByDescending(x => x.CycleText).ToList()
+                : combined.OrderBy(x => x.CycleText).ToList(),
+
+            FeedsDeliveriesOrderBy.Farm => request.Filters.IsDescending
+                ? combined.OrderByDescending(x => x.FarmName).ToList()
+                : combined.OrderBy(x => x.FarmName).ToList(),
+
+            FeedsDeliveriesOrderBy.ItemName => request.Filters.IsDescending
+                ? combined.OrderByDescending(x => x.ItemName).ToList()
+                : combined.OrderBy(x => x.ItemName).ToList(),
+
+            FeedsDeliveriesOrderBy.VendorName => request.Filters.IsDescending
+                ? combined.OrderByDescending(x => x.VendorName).ToList()
+                : combined.OrderBy(x => x.VendorName).ToList(),
+
+            FeedsDeliveriesOrderBy.UnitPrice => request.Filters.IsDescending
+                ? combined.OrderByDescending(x => x.UnitPrice).ToList()
+                : combined.OrderBy(x => x.UnitPrice).ToList(),
+
+            _ => combined
+        };
+
+        var total = combined.Count;
+        var skip = request.Filters.Page * request.Filters.PageSize;
+        var pageItems = combined.Skip(skip).Take(request.Filters.PageSize).ToList();
 
         return BaseResponse.CreateResponse(new GetFeedsDeliveriesQueryResponse
         {
-            TotalRows = itemRows,
-            Items = data
+            TotalRows = total,
+            Items = pageItems
         });
     }
 }
@@ -89,6 +130,12 @@ public class FeedsDeliveriesProfile : Profile
         CreateMap<FeedInvoiceEntity, FeedDeliveryRowDto>()
             .ForMember(t => t.CycleText, opt => opt.MapFrom(t => t.Cycle.Identifier + "/" + t.Cycle.Year))
             .ForMember(t => t.FarmName, opt => opt.MapFrom(t => t.Farm.Name))
-            .ForMember(t => t.HenhouseName, opt => opt.MapFrom(t => t.Henhouse.Name));
+            .ForMember(t => t.HenhouseName, opt => opt.MapFrom(t => t.Henhouse.Name))
+            .ForMember(t => t.IsCorrection, opt => opt.MapFrom(t => false));
+
+        CreateMap<FeedInvoiceCorrectionEntity, FeedDeliveryRowDto>()
+            .ForMember(t => t.CycleText, opt => opt.MapFrom(t => t.Cycle.Identifier + "/" + t.Cycle.Year))
+            .ForMember(t => t.FarmName, opt => opt.MapFrom(t => t.Farm.Name))
+            .ForMember(t => t.IsCorrection, opt => opt.MapFrom(t => true));
     }
 }

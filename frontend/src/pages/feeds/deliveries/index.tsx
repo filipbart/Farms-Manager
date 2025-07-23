@@ -28,6 +28,7 @@ import LoadingButton from "../../../components/common/loading-button";
 import GeneratePaymentModal from "../../../components/modals/feeds/deliveries/generate-paymet-modal";
 import { downloadFile } from "../../../utils/download-file";
 import AddCorrectionModal from "../../../components/modals/feeds/deliveries/add-correction-modal";
+import { FileType } from "../../../models/files/file-type";
 
 const FeedsDeliveriesPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -45,7 +46,7 @@ const FeedsDeliveriesPage: React.FC = () => {
     DraftFeedInvoice[]
   >([]);
 
-  const [loadingFileId, setLoadingFileId] = useState<string | null>(null);
+  const [downloadFilePath, setDownloadFilePath] = useState<string | null>(null);
   const [selectedFeedDelivery, setSelectedFeedDelivery] =
     useState<FeedDeliveryListModel | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -97,8 +98,20 @@ const FeedsDeliveriesPage: React.FC = () => {
     await downloadFile({
       url: `${ApiUrl.DownloadFeedDeliveryFile}/${id}`,
       defaultFilename: "faktura",
-      setLoading: (value) => setLoadingFileId(value ? id : null),
+      setLoading: (value) => setDownloadFilePath(value ? id : null),
       errorMessage: "Błąd podczas pobierania faktury dostawy",
+    });
+  };
+
+  const downloadCorrectionFile = async (filePath: string) => {
+    const cleanedPath = filePath.substring(filePath.indexOf("/") + 1);
+
+    await downloadFile({
+      url: ApiUrl.GetFile(cleanedPath),
+      params: { fileType: FileType.FeedDeliveryCorrection },
+      defaultFilename: "FakturaKorekty",
+      setLoading: (value) => setDownloadFilePath(value ? cleanedPath : null),
+      errorMessage: "Błąd podczas pobierania faktury korekty",
     });
   };
 
@@ -124,9 +137,10 @@ const FeedsDeliveriesPage: React.FC = () => {
         setIsEditModalOpen,
         deleteFeedDelivery,
         downloadInvoiceFile,
-        loadingFileId,
+        downloadCorrectionFile,
+        downloadFilePath,
       }),
-    [loadingFileId]
+    [downloadFilePath]
   );
 
   const fetchDictionaries = async () => {
@@ -278,6 +292,7 @@ const FeedsDeliveriesPage: React.FC = () => {
               `${from} do ${to} z ${count}`,
           }}
           checkboxSelection
+          disableRowSelectionOnClick
           isRowSelectable={(params) => !params.row.paymentDateUtc}
           onRowSelectionModelChange={(newSelection) => {
             setSelectedRows(newSelection);

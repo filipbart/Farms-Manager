@@ -66,7 +66,10 @@ public class
         CancellationToken ct)
     {
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
-        var response = new BaseResponse<AddNewInsertionCommandResponse>();
+        var response = new BaseResponse<AddNewInsertionCommandResponse>
+        {
+            ResponseData = new AddNewInsertionCommandResponse()
+        };
 
         var farm = await _farmRepository.GetAsync(new FarmByIdSpec(request.FarmId), ct);
         var cycle = await _cycleRepository.GetAsync(new CycleByIdSpec(request.CycleId), ct);

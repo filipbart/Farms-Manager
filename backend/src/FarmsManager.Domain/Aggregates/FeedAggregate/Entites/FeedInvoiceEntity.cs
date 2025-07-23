@@ -45,6 +45,12 @@ public class FeedInvoiceEntity : Entity
         PaymentId = paymentId;
         PaymentDateUtc = DateTime.UtcNow;
     }
+    
+    public void MarkAsUnpaid()
+    {
+        PaymentId = null;
+        PaymentDateUtc = null;
+    }
 
     public void SetInvoiceCorrectionId(Guid invoiceCorrectionId) => InvoiceCorrectionId = invoiceCorrectionId;
     public void SetComment(string comment) => Comment = comment;
