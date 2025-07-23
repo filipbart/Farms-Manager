@@ -1,6 +1,7 @@
 ﻿using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications.Feeds;
+using FarmsManager.Domain.Aggregates.FeedAggregate.Entites;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
 using FluentValidation;
@@ -30,13 +31,15 @@ public class UpdateFeedDeliveryCommandHandler : IRequestHandler<UpdateFeedDelive
 {
     private readonly IUserDataResolver _userDataResolver;
     private readonly IFeedNameRepository _feedNameRepository;
+    private readonly IFeedPriceRepository _feedPriceRepository;
     private readonly IFeedInvoiceRepository _feedInvoiceRepository;
 
     public UpdateFeedDeliveryCommandHandler(IUserDataResolver userDataResolver, IFeedNameRepository feedNameRepository,
-        IFeedInvoiceRepository feedInvoiceRepository)
+        IFeedInvoiceRepository feedInvoiceRepository, IFeedPriceRepository feedPriceRepository)
     {
         _userDataResolver = userDataResolver;
         _feedNameRepository = feedNameRepository;
+        _feedPriceRepository = feedPriceRepository;
         _feedInvoiceRepository = feedInvoiceRepository;
     }
 
@@ -64,8 +67,23 @@ public class UpdateFeedDeliveryCommandHandler : IRequestHandler<UpdateFeedDelive
         );
         feedDelivery.SetModified(userId);
 
+        await CheckFeedInvoiceUnitPrice(feedDelivery, cancellationToken);
+
         await _feedInvoiceRepository.UpdateAsync(feedDelivery, cancellationToken);
         return new EmptyBaseResponse();
+    }
+
+    private async Task CheckFeedInvoiceUnitPrice(FeedInvoiceEntity feedInvoice, CancellationToken ct)
+    {
+        var feedPrice =
+            await _feedPriceRepository.FirstOrDefaultAsync(
+                new GetFeedPriceForFeedInvoiceSpec(feedInvoice.FarmId, feedInvoice.ItemName, feedInvoice.InvoiceDate),
+                ct);
+
+        if (feedPrice is not null && feedInvoice.UnitPrice != feedPrice.Price)
+        {
+            feedInvoice.SetCorrectUnitPrice(feedPrice.Price);
+        }
     }
 }
 

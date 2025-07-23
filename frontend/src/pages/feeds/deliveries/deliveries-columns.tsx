@@ -3,11 +3,12 @@ import type { GridColDef } from "@mui/x-data-grid";
 import dayjs from "dayjs";
 import { MdFileDownload, MdWarningAmber } from "react-icons/md";
 import Loading from "../../../components/loading/loading";
-import { red } from "@mui/material/colors";
+import { orange, red } from "@mui/material/colors";
 
 export const getFeedsDeliveriesColumns = ({
   setSelectedFeedDelivery,
   setIsEditModalOpen,
+  setIsEditCorrectionModalOpen,
   deleteFeedDelivery,
   downloadInvoiceFile,
   downloadCorrectionFile,
@@ -15,6 +16,7 @@ export const getFeedsDeliveriesColumns = ({
 }: {
   setSelectedFeedDelivery: (s: any) => void;
   setIsEditModalOpen: (v: boolean) => void;
+  setIsEditCorrectionModalOpen: (v: boolean) => void;
   deleteFeedDelivery: (id: string) => void;
   downloadInvoiceFile: (path: string) => void;
   downloadCorrectionFile: (path: string) => void;
@@ -28,18 +30,27 @@ export const getFeedsDeliveriesColumns = ({
     { field: "vendorName", headerName: "Sprzedawca", flex: 1 },
     { field: "itemName", headerName: "Nazwa paszy", flex: 1 },
     { field: "invoiceNumber", headerName: "Numer faktury", flex: 1 },
-    { field: "quantity", headerName: "Ilość towaru", flex: 1 },
+    {
+      field: "quantity",
+      headerName: "Ilość towaru",
+      flex: 1,
+      renderCell: (params) => {
+        const value = params.value;
+        return <span>{value != null ? value : "—"}</span>;
+      },
+    },
     {
       field: "unitPrice",
       headerName: "Cena jednostkowa netto [zł]",
       flex: 1,
       renderCell: (params) => {
-        const correctUnitPrice = params.row.correctUnitPrice;
+        const unitPrice = params.value;
+        const correctUnitPrice = params.row?.correctUnitPrice;
 
         return (
           <Box display="flex" alignItems="center">
-            <span>{params.value}</span>
-            {correctUnitPrice && (
+            <span>{unitPrice != null ? unitPrice : "—"}</span>
+            {correctUnitPrice != null && (
               <Tooltip title={`Prawidłowa cena: ${correctUnitPrice} zł`}>
                 <MdWarningAmber
                   style={{ marginLeft: 8, fontSize: 20, color: red[900] }}
@@ -64,9 +75,29 @@ export const getFeedsDeliveriesColumns = ({
       field: "dueDate",
       headerName: "Termin płatności",
       flex: 1,
-      type: "string",
-      valueGetter: (date: any) => {
-        return date ? dayjs(date).format("YYYY-MM-DD") : "";
+      renderCell: (params) => {
+        const dueDate = params.row?.dueDate;
+        const paymentDateUtc = params.row?.paymentDateUtc;
+        const isCorrection = params.row?.isCorrection;
+
+        const isOverdue =
+          !isCorrection &&
+          !paymentDateUtc &&
+          dueDate &&
+          dayjs(dueDate).isBefore(dayjs(), "day");
+
+        return (
+          <Box display="flex" alignItems="center">
+            {isOverdue && (
+              <Tooltip title="Termin płatności minął">
+                <MdWarningAmber
+                  style={{ marginRight: 8, fontSize: 20, color: orange[700] }}
+                />
+              </Tooltip>
+            )}
+            <span>{dueDate ? dayjs(dueDate).format("YYYY-MM-DD") : "—"}</span>
+          </Box>
+        );
       },
     },
     { field: "invoiceTotal", headerName: "Wartość brutto [zł]", flex: 1 },
@@ -135,7 +166,11 @@ export const getFeedsDeliveriesColumns = ({
           size="small"
           onClick={() => {
             setSelectedFeedDelivery(params.row);
-            setIsEditModalOpen(true);
+            if (params.row.isCorrection) {
+              setIsEditCorrectionModalOpen(true);
+            } else {
+              setIsEditModalOpen(true);
+            }
           }}
         >
           Edytuj

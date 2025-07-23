@@ -125,9 +125,9 @@ public class GetFeedDeliveryPaymentFileQueryHandler : IRequestHandler<GetFeedDel
         var correctionSubTotal = corrections.Sum(c => c.SubTotal);
         var correctionVat = corrections.Sum(c => c.VatAmount);
 
-        var finalAmount = totalAmount - correctionAmount;
-        var finalSubTotal = totalSubTotal - correctionSubTotal;
-        var finalVat = totalVat - correctionVat;
+        var finalAmount = totalAmount + correctionAmount;
+        var finalSubTotal = totalSubTotal + correctionSubTotal;
+        var finalVat = totalVat + correctionVat;
 
         var dueDate = invoices.Min(i => i.DueDate);
 

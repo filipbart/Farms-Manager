@@ -11,11 +11,11 @@ public class FeedInvoiceCorrectionEntity : Entity
 
     public Guid FarmId { get; init; }
     public Guid CycleId { get; init; }
-    public string InvoiceNumber { get; init; }
-    public decimal SubTotal { get; init; }
-    public decimal VatAmount { get; init; }
-    public decimal InvoiceTotal { get; init; }
-    public DateOnly InvoiceDate { get; init; }
+    public string InvoiceNumber { get; protected internal set; }
+    public decimal SubTotal { get; protected internal set; }
+    public decimal VatAmount { get; protected internal set; }
+    public decimal InvoiceTotal { get; protected internal set; }
+    public DateOnly InvoiceDate { get; protected internal set; }
     public string FilePath { get; init; }
     public virtual FarmEntity Farm { get; init; }
     public virtual CycleEntity Cycle { get; init; }
@@ -43,5 +43,15 @@ public class FeedInvoiceCorrectionEntity : Entity
             FilePath = filePath,
             CreatedBy = userId
         };
+    }
+
+    public void Update(string invoiceNumber, decimal subTotal, decimal vatAmount, decimal invoiceTotal,
+        DateOnly invoiceDate)
+    {
+        InvoiceNumber = invoiceNumber;
+        SubTotal = subTotal;
+        VatAmount = vatAmount;
+        InvoiceTotal = invoiceTotal;
+        InvoiceDate = invoiceDate;
     }
 }

@@ -64,6 +64,8 @@ export default class ApiUrl {
   public static FeedsPayments = this.Feeds + "/payments";
   public static DeleteFeedPayment = this.Feeds + "/delete-payment";
   public static AddFeedCorrection = this.Feeds + "/add-correction";
+  public static DeleteFeedCorrection = this.Feeds + "/delete-correction";
+  public static UpdateFeedCorrection = this.Feeds + "/update-correction";
 
   public static Files = this.BaseUrl + "files";
   public static GetFile = (filePath: string) => `${this.Files}/${filePath}`;

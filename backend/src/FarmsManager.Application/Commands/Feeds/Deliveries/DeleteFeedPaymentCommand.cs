@@ -7,7 +7,7 @@ using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
 using MediatR;
 
-namespace FarmsManager.Application.Commands.Feeds;
+namespace FarmsManager.Application.Commands.Feeds.Deliveries;
 
 public record DeleteFeedPaymentCommand(Guid Id) : IRequest<EmptyBaseResponse>;
 

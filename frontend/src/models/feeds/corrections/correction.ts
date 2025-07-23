@@ -9,3 +9,12 @@ export interface CorrectionData {
   invoiceDate: string;
   file?: File;
 }
+
+export interface UpdateCorrectionData {
+  id: string;
+  invoiceNumber: string;
+  subTotal: number;
+  vatAmount: number;
+  invoiceTotal: number;
+  invoiceDate: string;
+}

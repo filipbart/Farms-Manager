@@ -40,19 +40,20 @@ public class FeedInvoiceEntity : Entity
     public Guid? PaymentId { get; private set; }
 
     public void SetCorrectUnitPrice(decimal? correctUnitPrice) => CorrectUnitPrice = correctUnitPrice;
+
     public void MarkAsPaid(Guid paymentId)
     {
         PaymentId = paymentId;
         PaymentDateUtc = DateTime.UtcNow;
     }
-    
+
     public void MarkAsUnpaid()
     {
         PaymentId = null;
         PaymentDateUtc = null;
     }
 
-    public void SetInvoiceCorrectionId(Guid invoiceCorrectionId) => InvoiceCorrectionId = invoiceCorrectionId;
+    public void SetInvoiceCorrectionId(Guid? invoiceCorrectionId) => InvoiceCorrectionId = invoiceCorrectionId;
     public void SetComment(string comment) => Comment = comment;
 
     public static FeedInvoiceEntity CreateNew(

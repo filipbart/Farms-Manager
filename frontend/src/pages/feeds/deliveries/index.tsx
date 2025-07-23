@@ -29,6 +29,7 @@ import GeneratePaymentModal from "../../../components/modals/feeds/deliveries/ge
 import { downloadFile } from "../../../utils/download-file";
 import AddCorrectionModal from "../../../components/modals/feeds/deliveries/add-correction-modal";
 import { FileType } from "../../../models/files/file-type";
+import EditCorrectionModal from "../../../components/modals/feeds/deliveries/edit-correction-modal";
 
 const FeedsDeliveriesPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -50,6 +51,8 @@ const FeedsDeliveriesPage: React.FC = () => {
   const [selectedFeedDelivery, setSelectedFeedDelivery] =
     useState<FeedDeliveryListModel | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isEditCorrectionModalOpen, setIsEditCorrectionModalOpen] =
+    useState(false);
 
   const [selectedRows, setSelectedRows] = useState<GridRowSelectionModel>({
     type: "include",
@@ -135,6 +138,7 @@ const FeedsDeliveriesPage: React.FC = () => {
       getFeedsDeliveriesColumns({
         setSelectedFeedDelivery,
         setIsEditModalOpen,
+        setIsEditCorrectionModalOpen,
         deleteFeedDelivery,
         downloadInvoiceFile,
         downloadCorrectionFile,
@@ -370,6 +374,20 @@ const FeedsDeliveriesPage: React.FC = () => {
           dispatch({ type: "setMultiple", payload: { page: filters.page } });
         }}
         feedDelivery={selectedFeedDelivery}
+      />
+
+      <EditCorrectionModal
+        open={isEditCorrectionModalOpen}
+        onClose={() => {
+          setIsEditCorrectionModalOpen(false);
+          setSelectedFeedDelivery(null);
+        }}
+        onSave={() => {
+          setIsEditCorrectionModalOpen(false);
+          setSelectedFeedDelivery(null);
+          dispatch({ type: "setMultiple", payload: { page: filters.page } });
+        }}
+        correction={selectedFeedDelivery}
       />
 
       <GeneratePaymentModal

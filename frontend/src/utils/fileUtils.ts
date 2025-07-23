@@ -1,4 +1,5 @@
 export function getFileTypeFromUrl(url: string): "pdf" | "image" | "unknown" {
+  console.log("getType: ", url);
   const urlWithoutQuery = url.split("?")[0].toLowerCase();
 
   if (urlWithoutQuery.endsWith(".pdf")) {

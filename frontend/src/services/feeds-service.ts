@@ -1,5 +1,6 @@
 import ApiUrl from "../common/ApiUrl";
 import type { PaginateModel } from "../common/interfaces/paginate";
+import type { UpdateCorrectionData } from "../models/feeds/corrections/correction";
 import type { FeedsDeliveriesFilterPaginationModel } from "../models/feeds/deliveries/deliveries-filters";
 import type { DraftFeedInvoice } from "../models/feeds/deliveries/draft-feed-invoice";
 import type {
@@ -162,5 +163,13 @@ export class FeedsService {
     return await AxiosWrapper.post(ApiUrl.AddFeedCorrection, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
+  }
+
+  public static async deleteFeedCorrection(id: string) {
+    return await AxiosWrapper.delete(ApiUrl.DeleteFeedCorrection + "/" + id);
+  }
+
+  public static async updateFeedCorrection(dto: UpdateCorrectionData) {
+    return await AxiosWrapper.patch(ApiUrl.UpdateFeedCorrection, dto);
   }
 }

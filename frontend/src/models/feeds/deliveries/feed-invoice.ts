@@ -34,10 +34,10 @@ export interface FeedDeliveryListModel {
   henhouseName: string;
   vendorName: string;
   itemName: string;
-  quantity: number;
-  unitPrice: number;
+  quantity?: number;
+  unitPrice?: number;
   invoiceDate: string;
-  dueDate: string;
+  dueDate?: string;
   invoiceTotal: number;
   subTotal: number;
   vatAmount: number;

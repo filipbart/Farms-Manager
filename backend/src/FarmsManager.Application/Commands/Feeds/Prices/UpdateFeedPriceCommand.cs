@@ -29,11 +29,12 @@ public class UpdateFeedPriceCommandHandler : IRequestHandler<UpdateFeedPriceComm
     private readonly IFeedInvoiceRepository _feedInvoiceRepository;
 
     public UpdateFeedPriceCommandHandler(IUserDataResolver userDataResolver, IFeedNameRepository feedNameRepository,
-        IFeedPriceRepository feedPriceRepository)
+        IFeedPriceRepository feedPriceRepository, IFeedInvoiceRepository feedInvoiceRepository)
     {
         _userDataResolver = userDataResolver;
         _feedNameRepository = feedNameRepository;
         _feedPriceRepository = feedPriceRepository;
+        _feedInvoiceRepository = feedInvoiceRepository;
     }
 
     public async Task<EmptyBaseResponse> Handle(UpdateFeedPriceCommand request, CancellationToken cancellationToken)
