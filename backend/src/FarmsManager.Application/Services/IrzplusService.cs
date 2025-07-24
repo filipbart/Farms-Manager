@@ -4,6 +4,7 @@ using FarmsManager.Application.Extensions;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models.Irzplus;
 using FarmsManager.Application.Models.Irzplus.Common;
+using FarmsManager.Application.Models.Irzplus.Dispositions;
 using FarmsManager.Application.Models.Irzplus.ZZSSD;
 using FarmsManager.Application.Models.Irzplus.ZZSSD.Enums;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
@@ -71,12 +72,13 @@ public class IrzplusService : IIrzplusService
     {
         var authData = await AuthorizeToIrzplusAsync();
 
-        var dispositionZzssd = MapDispositionZzssdForInsertion(insertions);
+        var mappedInsertions = insertions.Select(i => new InsertionIrzPlusDisposition(i)).ToList();
+        var dispositionZzssd = MapDispositionZzssd(mappedInsertions, IrzPlusDispositionType.Insertion);
 
         var dispositionJson = dispositionZzssd.ToJsonStringWithNulls();
 
         using var httpClient = new HttpClient();
-        httpClient.BaseAddress = new Uri(Options.Value.Url); //TODO prawdopodobnie zawsze jeden adres dla Sales również
+        httpClient.BaseAddress = new Uri(Options.Value.Url);
         httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {authData.AccessToken}");
 
         var jsonContent = new StringContent(dispositionJson, Encoding.UTF8, "application/json");
@@ -89,26 +91,26 @@ public class IrzplusService : IIrzplusService
         }
 
         var responseString = await response.Content.ReadAsStringAsync(ct);
-        var responseModel = responseString.ParseJsonString<ZlozenieDyspozycjiResponse>();
-
-        return responseModel;
+        return responseString.ParseJsonString<ZlozenieDyspozycjiResponse>();
     }
 
+
     public async Task<ZlozenieDyspozycjiResponse> SendSalesAsync(IList<SaleEntity> sales,
-        CancellationToken ct = default) //TODO scalić z insertions jakoś
+        CancellationToken ct = default)
     {
         var authData = await AuthorizeToIrzplusAsync();
 
-        var dispositionZzssd = MapDispositionZzssdForSale(sales);
+        var mappedSales = sales.Select(s => new SaleIrzPlusDisposition(s)).ToList();
+        var dispositionZzssd = MapDispositionZzssd(mappedSales, IrzPlusDispositionType.Sale);
 
         var dispositionJson = dispositionZzssd.ToJsonStringWithNulls();
 
         using var httpClient = new HttpClient();
-        httpClient.BaseAddress = new Uri(Options.Value.Url); //TODO prawdopodobnie zawsze jeden adres dla Sales również
+        httpClient.BaseAddress = new Uri(Options.Value.Url);
         httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {authData.AccessToken}");
 
         var jsonContent = new StringContent(dispositionJson, Encoding.UTF8, "application/json");
-        var response = await httpClient.PostAsync("drob/dokument/api/prod/zzssd", jsonContent, ct);
+        var response = await httpClient.PostAsync("drob/dokument/api/test/zzssd", jsonContent, ct);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -117,25 +119,39 @@ public class IrzplusService : IIrzplusService
         }
 
         var responseString = await response.Content.ReadAsStringAsync(ct);
-        var responseModel = responseString.ParseJsonString<ZlozenieDyspozycjiResponse>();
-
-        return responseModel;
+        return responseString.ParseJsonString<ZlozenieDyspozycjiResponse>();
     }
 
-    private static DyspozycjaZZSSD MapDispositionZzssdForSale(IList<SaleEntity> sales)
+
+    private static DyspozycjaZZSSD MapDispositionZzssd<T>(IList<T> items, IrzPlusDispositionType type)
+        where T : IIrzPlusDisposition
     {
-        var firstSale = sales.First();
-        var dispositionZzssd = new DyspozycjaZZSSD
+        if (items == null || items.Count == 0)
+            throw new ArgumentException("Lista nie może być pusta");
+
+        var first = items.First();
+
+        var typZdarzenia = type == IrzPlusDispositionType.Sale
+            ? TypZdarzeniaDrobiu.Wybycie.ToKodOpisDto()
+            : TypZdarzeniaDrobiu.Przybycie.ToKodOpisDto();
+
+        var doDzialalnosci = type == IrzPlusDispositionType.Sale
+            ? (items.First() as SaleIrzPlusDisposition)?.Sale.Slaughterhouse.ProducerNumber ?? first.ProducerNumber
+            : first.ProducerNumber;
+
+        var sumQuantity = items.Sum(i => i.Quantity);
+
+        var disposition = new DyspozycjaZZSSD
         {
-            NumerProducenta = firstSale.Farm.ProducerNumber,
+            NumerProducenta = first.ProducerNumber,
             Zgloszenie = new ZgloszenieZZSSDDTO
             {
                 Pozycje = null,
                 Gatunek = GatunekDrobiu.Kury.ToKodOpisDto(),
-                DoDzialalnosci = firstSale.Slaughterhouse.ProducerNumber,
-                TypZdarzenia = TypZdarzeniaDrobiu.Wybycie.ToKodOpisDto(),
-                DataZdarzenia = firstSale.SaleDate,
-                LiczbaDrobiuPrzybylo = sales.Sum(t => t.Quantity),
+                DoDzialalnosci = doDzialalnosci,
+                TypZdarzenia = typZdarzenia,
+                DataZdarzenia = first.EventDate,
+                LiczbaDrobiuPrzybylo = sumQuantity,
                 LiczbaJajWylegowychPrzybylo = 0,
                 KodKraju = new KodOpisWartosciDto
                 {
@@ -145,80 +161,20 @@ public class IrzplusService : IIrzplusService
             }
         };
 
-        List<PozycjaZZSSDDTO> items = [];
-
-        foreach (var (saleEntity, index) in sales.Select((value, index) => (value, index)))
-        {
-            var item = new PozycjaZZSSDDTO
+        var pozycje = items.Select((item, i) => new PozycjaZZSSDDTO
             {
-                Lp = index + 1,
+                Lp = i + 1,
                 StatusPozycji = StatusPozycjiZZSSD.Zatwierdzona.GetEnumMemberValue(),
-                NumerIdenPartiiDrobiu = saleEntity.Farm.ProducerNumber,
-                LiczbaDrobiuUbylo = saleEntity.Quantity,
+                NumerIdenPartiiDrobiu = item.ProducerNumber,
+                LiczbaDrobiuUbylo = item.Quantity,
                 KategoriaJajWylegowych = null,
-                Budynek = new KodOpisWartosciDto
-                {
-                    Kod = saleEntity.Henhouse.Code,
-                    Opis = saleEntity.Henhouse.Name
-                },
-                ZDzialalnosci = saleEntity.Farm.ProducerNumber
-            };
+                Budynek = new KodOpisWartosciDto { Kod = item.HenhouseCode, Opis = item.HenhouseName },
+                ZDzialalnosci = item.ZdDzialalnosci
+            })
+            .ToList();
 
-            items.Add(item);
-        }
+        disposition.Zgloszenie.Pozycje = pozycje;
 
-        dispositionZzssd.Zgloszenie.Pozycje = items;
-
-        return dispositionZzssd;
-    }
-
-    private static DyspozycjaZZSSD MapDispositionZzssdForInsertion(IList<InsertionEntity> insertions)
-    {
-        var firstInsertion = insertions.First();
-        var dispositionZzssd = new DyspozycjaZZSSD
-        {
-            NumerProducenta = firstInsertion.Farm.ProducerNumber,
-            Zgloszenie = new ZgloszenieZZSSDDTO
-            {
-                Pozycje = null,
-                Gatunek = GatunekDrobiu.Kury.ToKodOpisDto(),
-                DoDzialalnosci = firstInsertion.Farm.ProducerNumber,
-                TypZdarzenia = TypZdarzeniaDrobiu.Przybycie.ToKodOpisDto(),
-                DataZdarzenia = firstInsertion.InsertionDate,
-                LiczbaDrobiuPrzybylo = insertions.Sum(t => t.Quantity),
-                LiczbaJajWylegowychPrzybylo = 0,
-                KodKraju = new KodOpisWartosciDto
-                {
-                    Kod = "PL",
-                    Opis = "POLSKA"
-                }
-            }
-        };
-
-        List<PozycjaZZSSDDTO> items = [];
-
-        foreach (var (insertionEntity, index) in insertions.Select((value, index) => (value, index)))
-        {
-            var item = new PozycjaZZSSDDTO
-            {
-                Lp = index + 1,
-                StatusPozycji = StatusPozycjiZZSSD.Zatwierdzona.GetEnumMemberValue(),
-                NumerIdenPartiiDrobiu = insertionEntity.Farm.ProducerNumber,
-                LiczbaDrobiuUbylo = insertionEntity.Quantity,
-                KategoriaJajWylegowych = null, //KategoriaJajWylegowych.Miesna.ToKodOpisDto(),
-                Budynek = new KodOpisWartosciDto
-                {
-                    Kod = insertionEntity.Henhouse.Code,
-                    Opis = insertionEntity.Henhouse.Name
-                },
-                ZDzialalnosci = insertionEntity.Hatchery.ProducerNumber
-            };
-
-            items.Add(item);
-        }
-
-        dispositionZzssd.Zgloszenie.Pozycje = items;
-
-        return dispositionZzssd;
+        return disposition;
     }
 }

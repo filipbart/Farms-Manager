@@ -11,6 +11,7 @@ export interface AddSaleData {
   cycleId: string;
   saleDate: string;
   slaughterhouseId: string;
+  files: File[];
   entries: {
     henhouseId: string;
     quantity: number;
@@ -46,14 +47,37 @@ export class SalesService {
   }
 
   public static async addNewSale(data: AddSaleData) {
+    const formData = new FormData();
+
+    formData.append("saleType", data.saleType);
+    formData.append("farmId", data.farmId);
+    formData.append("cycleId", data.cycleId);
+    formData.append("saleDate", data.saleDate);
+    formData.append("slaughterhouseId", data.slaughterhouseId);
+
+    formData.append("entries", JSON.stringify(data.entries));
+
+    data.files.forEach((file) => {
+      formData.append("files", file);
+    });
+
     return await AxiosWrapper.post<AddNewSaleResponse>(
       ApiUrl.Sales + "/add",
-      data
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
     );
   }
 
   public static async updateSale(saleId: string, payload: any) {
     return await AxiosWrapper.patch(ApiUrl.UpdateSale + "/" + saleId, payload);
+  }
+
+  public static async deleteSale(saleId: string) {
+    return await AxiosWrapper.delete(ApiUrl.DeleteSale(saleId));
   }
 
   public static async sendToIrzPlus(payload: {

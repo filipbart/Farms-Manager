@@ -9,6 +9,7 @@ interface DownloadFileParams {
   setLoading: (loading: boolean) => void;
   successMessage?: string;
   errorMessage: string;
+  fileExtension?: string;
 }
 
 export const downloadFile = async ({
@@ -18,6 +19,7 @@ export const downloadFile = async ({
   setLoading,
   successMessage,
   errorMessage,
+  fileExtension = "pdf",
 }: DownloadFileParams) => {
   try {
     setLoading(true);
@@ -37,7 +39,7 @@ export const downloadFile = async ({
     }
 
     const disposition = response.headers["content-disposition"];
-    let filename = `${defaultFilename}_${new Date().toISOString()}.pdf`;
+    let filename = `${defaultFilename}_${new Date().toISOString()}.${fileExtension}`;
 
     if (disposition && disposition.includes("filename=")) {
       const fileNameMatch = disposition.match(

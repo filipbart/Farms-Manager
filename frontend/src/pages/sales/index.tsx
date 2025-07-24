@@ -22,9 +22,8 @@ import type { SaleListModel } from "../../models/sales/sales";
 import EditSaleModal from "../../components/modals/sales/edit-sale-modal/edit-sale-modal";
 import { getSalesColumns } from "./sales-columns";
 import { useSales } from "../../hooks/sales/useSales";
-import axios from "axios";
 import ApiUrl from "../../common/ApiUrl";
-import qs from "qs";
+import { downloadFile } from "../../utils/download-file";
 
 const SalesPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -39,16 +38,9 @@ const SalesPage: React.FC = () => {
     return saved ? JSON.parse(saved) : {};
   });
 
-  const columns = useMemo(
-    () =>
-      getSalesColumns({
-        setSelectedSale,
-        setIsEditModalOpen,
-        dispatch,
-        filters,
-      }),
-    [dispatch, filters]
-  );
+  const [downloadDirectoryPath, setDownloadDirectoryPath] = useState<
+    string | null
+  >(null);
 
   const uniqueCycles = useMemo(() => {
     if (!dictionary?.cycles) return [];
@@ -59,6 +51,22 @@ const SalesPage: React.FC = () => {
     }
     return Array.from(map.values());
   }, [dictionary]);
+
+  const deleteSale = async (id: string) => {
+    try {
+      await handleApiResponse(
+        () => SalesService.deleteSale(id),
+        async () => {
+          toast.success("Wstawienie zostało poprawnie usunięte");
+          dispatch({ type: "setMultiple", payload: { page: filters.page } });
+        },
+        undefined,
+        "Błąd podczas usuwania wstawienia"
+      );
+    } catch {
+      toast.error("Błąd podczas usuwania wstawienia");
+    }
+  };
 
   useEffect(() => {
     const fetchDictionaries = async () => {
@@ -81,44 +89,40 @@ const SalesPage: React.FC = () => {
   }, [fetchSales]);
 
   const onClickExport = async () => {
-    setLoadingExport(true);
-
-    await axios({
-      method: "get",
+    await downloadFile({
       url: ApiUrl.SaleExportFile,
-      responseType: "blob",
       params: filters,
-      paramsSerializer: (params: any) => {
-        return qs.stringify(params, { arrayFormat: "repeat" });
-      },
-    })
-      .then((response) => {
-        const blob = new Blob([response.data]);
-
-        if (blob.size === 0) {
-          toast.warning("Brak danych do eksportu");
-          return;
-        }
-
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.setAttribute(
-          "download",
-          `sprzedaze_${new Date().toISOString()}.xlsx`
-        );
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        toast.success("Eksport zakończony sukcesem");
-      })
-      .catch(() => {
-        toast.error("Błąd podczas eksportu sprzedaży");
-      })
-      .finally(() => {
-        setLoadingExport(false);
-      });
+      defaultFilename: "sprzedaze",
+      setLoading: setLoadingExport,
+      successMessage: "Eksport zakończony sukcesem",
+      errorMessage: "Błąd podczas eksportu sprzedaży",
+      fileExtension: "xlsx",
+    });
   };
+
+  const downloadSaleDirectory = async (path: string) => {
+    await downloadFile({
+      url: ApiUrl.SaleDownloadZip,
+      params: { path },
+      defaultFilename: "Przelew",
+      setLoading: (value) => setDownloadDirectoryPath(value ? path : null),
+      errorMessage: "Błąd podczas folderu dokumentów sprzedaży",
+    });
+  };
+
+  const columns = useMemo(
+    () =>
+      getSalesColumns({
+        setSelectedSale,
+        deleteSale,
+        setIsEditModalOpen,
+        downloadSaleDirectory,
+        downloadDirectoryPath,
+        dispatch,
+        filters,
+      }),
+    [dispatch, filters]
+  );
 
   return (
     <Box p={4}>

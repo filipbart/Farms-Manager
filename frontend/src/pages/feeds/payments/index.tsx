@@ -9,7 +9,6 @@ import { FeedsService } from "../../../services/feeds-service";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import { downloadFile } from "../../../utils/download-file";
 import ApiUrl from "../../../common/ApiUrl";
-import { FileType } from "../../../models/files/file-type";
 import type { FeedPaymentListModel } from "../../../models/feeds/payments/payment";
 import { getFeedsPaymentsColumns } from "./payments-columns";
 import {
@@ -28,7 +27,7 @@ const FeedsPaymentsPage: React.FC = () => {
   );
   const [totalRows, setTotalRows] = useState(0);
 
-  const [downloadFileName, setDownloadFileName] = useState<string | null>(null);
+  const [downloadFilePath, setDownloadFilePath] = useState<string | null>(null);
 
   const fetchFeedsPayments = async () => {
     try {
@@ -68,12 +67,12 @@ const FeedsPaymentsPage: React.FC = () => {
     }
   };
 
-  const downloadPaymentFile = async (fileName: string) => {
+  const downloadPaymentFile = async (filePath: string) => {
     await downloadFile({
-      url: ApiUrl.GetFile(fileName),
-      params: { fileType: FileType.FeedDeliveryPayment },
+      url: ApiUrl.GetFile,
+      params: { filePath },
       defaultFilename: "Przelew",
-      setLoading: (value) => setDownloadFileName(value ? fileName : null),
+      setLoading: (value) => setDownloadFilePath(value ? filePath : null),
       errorMessage: "Błąd podczas pobierania przelewu",
     });
   };
@@ -83,9 +82,9 @@ const FeedsPaymentsPage: React.FC = () => {
       getFeedsPaymentsColumns({
         deleteFeedPayment,
         downloadPaymentFile,
-        downloadFileName,
+        downloadFilePath,
       }),
-    [downloadFileName]
+    [downloadFilePath]
   );
 
   useEffect(() => {

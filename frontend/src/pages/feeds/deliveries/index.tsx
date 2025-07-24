@@ -28,7 +28,6 @@ import LoadingButton from "../../../components/common/loading-button";
 import GeneratePaymentModal from "../../../components/modals/feeds/deliveries/generate-paymet-modal";
 import { downloadFile } from "../../../utils/download-file";
 import AddCorrectionModal from "../../../components/modals/feeds/deliveries/add-correction-modal";
-import { FileType } from "../../../models/files/file-type";
 import EditCorrectionModal from "../../../components/modals/feeds/deliveries/edit-correction-modal";
 
 const FeedsDeliveriesPage: React.FC = () => {
@@ -107,13 +106,11 @@ const FeedsDeliveriesPage: React.FC = () => {
   };
 
   const downloadCorrectionFile = async (filePath: string) => {
-    const cleanedPath = filePath.substring(filePath.indexOf("/") + 1);
-
     await downloadFile({
-      url: ApiUrl.GetFile(cleanedPath),
-      params: { fileType: FileType.FeedDeliveryCorrection },
+      url: ApiUrl.GetFile,
+      params: { filePath },
       defaultFilename: "FakturaKorekty",
-      setLoading: (value) => setDownloadFilePath(value ? cleanedPath : null),
+      setLoading: (value) => setDownloadFilePath(value ? filePath : null),
       errorMessage: "Błąd podczas pobierania faktury korekty",
     });
   };

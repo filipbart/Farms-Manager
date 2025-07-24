@@ -40,8 +40,10 @@ export default class ApiUrl {
   public static Sales = this.BaseUrl + "sales";
   public static SalesDict = this.Sales + "/dictionary";
   public static UpdateSale = this.Sales + "/update";
+  public static DeleteSale = (id: string) => this.Sales + "/delete/" + id;
   public static SaleSendToIrz = this.Sales + "/send-to-irz";
   public static SaleExportFile = this.Sales + "/export";
+  public static SaleDownloadZip = this.Sales + "/download";
 
   public static SalesSettings = this.BaseUrl + "sales-settings";
   public static AddSaleFieldExtra = this.SalesSettings + "/add";
@@ -70,5 +72,5 @@ export default class ApiUrl {
   public static UpdateFeedCorrection = this.Feeds + "/update-correction";
 
   public static Files = this.BaseUrl + "files";
-  public static GetFile = (filePath: string) => `${this.Files}/${filePath}`;
+  public static GetFile = `${this.Files}/file`;
 }

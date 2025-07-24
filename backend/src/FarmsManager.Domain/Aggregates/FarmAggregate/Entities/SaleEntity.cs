@@ -96,6 +96,7 @@ public class SaleEntity : Entity
     public bool IsSentToIrz { get; private set; }
     public Guid? SentToIrzBy { get; protected internal set; }
     public string DocumentNumber { get; protected internal set; }
+    public string DirectoryPath { get; protected internal set; }
 
     public void Update(
         DateOnly saleDate,
@@ -145,4 +146,5 @@ public class SaleEntity : Entity
     }
 
     public bool IsAlreadySentToIrz() => DateIrzSentUtc.HasValue || IsSentToIrz;
+    public void SetDirectoryPath(string directoryPath) => DirectoryPath = directoryPath;
 }

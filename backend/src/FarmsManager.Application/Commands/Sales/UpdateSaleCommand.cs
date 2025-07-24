@@ -110,16 +110,4 @@ public class UpdateSaleCommandHandler : IRequestHandler<UpdateSaleCommand, Empty
 
         return new EmptyBaseResponse();
     }
-
-    private static bool AreExtrasEqual(List<SaleOtherExtras> a, List<SaleOtherExtras> b)
-    {
-        if (a == null && b == null) return true;
-        if (a == null || b == null) return false;
-        if (a.Count != b.Count) return false;
-
-        var orderedA = a.OrderBy(x => x.Name).ToList();
-        var orderedB = b.OrderBy(x => x.Name).ToList();
-
-        return !orderedA.Where((t, i) => t.Name != orderedB[i].Name || t.Value != orderedB[i].Value).Any();
-    }
 }

@@ -1,7 +1,9 @@
 using FarmsManager.Application.Commands.Farms;
 using FarmsManager.Application.Commands.Slaughterhouses;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.FileSystem;
 using FarmsManager.Application.Interfaces;
+using FarmsManager.Application.Services;
 using FarmsManager.Application.Specifications.Cycle;
 using FarmsManager.Application.Specifications.Farms;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
@@ -12,8 +14,20 @@ using FarmsManager.Domain.Aggregates.SlaughterhouseAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
 using FluentValidation;
 using MediatR;
+using Microsoft.AspNetCore.Http;
 
 namespace FarmsManager.Application.Commands.Sales;
+
+public record AddNewSaleCommandDto
+{
+    public SaleType SaleType { get; init; }
+    public Guid FarmId { get; init; }
+    public Guid CycleId { get; init; }
+    public DateOnly SaleDate { get; init; }
+    public Guid SlaughterhouseId { get; init; }
+    public string Entries { get; init; }
+    public List<IFormFile> Files { get; init; }
+}
 
 public record AddNewSaleCommand : IRequest<BaseResponse<AddNewSaleCommandResponse>>
 {
@@ -23,6 +37,7 @@ public record AddNewSaleCommand : IRequest<BaseResponse<AddNewSaleCommandRespons
     public DateOnly SaleDate { get; init; }
     public Guid SlaughterhouseId { get; init; }
     public List<Entry> Entries { get; init; }
+    public List<IFormFile> Files { get; init; }
 
     public class Entry
     {
@@ -56,7 +71,7 @@ public class AddNewSaleCommandHandler : IRequestHandler<AddNewSaleCommand, BaseR
 {
     public AddNewSaleCommandHandler(IUserDataResolver userDataResolver, ISaleRepository saleRepository,
         IFarmRepository farmRepository, ICycleRepository cycleRepository, IHenhouseRepository henhouseRepository,
-        ISlaughterhouseRepository slaughterhouseRepository)
+        ISlaughterhouseRepository slaughterhouseRepository, IS3Service s3Service)
     {
         _userDataResolver = userDataResolver;
         _saleRepository = saleRepository;
@@ -64,6 +79,7 @@ public class AddNewSaleCommandHandler : IRequestHandler<AddNewSaleCommand, BaseR
         _cycleRepository = cycleRepository;
         _henhouseRepository = henhouseRepository;
         _slaughterhouseRepository = slaughterhouseRepository;
+        _s3Service = s3Service;
     }
 
     private readonly IUserDataResolver _userDataResolver;
@@ -72,6 +88,7 @@ public class AddNewSaleCommandHandler : IRequestHandler<AddNewSaleCommand, BaseR
     private readonly ICycleRepository _cycleRepository;
     private readonly IHenhouseRepository _henhouseRepository;
     private readonly ISlaughterhouseRepository _slaughterhouseRepository;
+    private readonly IS3Service _s3Service;
 
     public async Task<BaseResponse<AddNewSaleCommandResponse>> Handle(AddNewSaleCommand request,
         CancellationToken ct)
@@ -85,6 +102,23 @@ public class AddNewSaleCommandHandler : IRequestHandler<AddNewSaleCommand, BaseR
 
         var newSales = new List<SaleEntity>();
         var internalGroupId = Guid.NewGuid();
+
+        var directoryGuid = Guid.NewGuid();
+        FileDirectoryModel fileDirectoryModel = null;
+
+        if (request.Files.Count != 0)
+        {
+            foreach (var file in request.Files)
+            {
+                using var memoryStream = new MemoryStream();
+                await file.CopyToAsync(memoryStream, ct);
+                var fileBytes = memoryStream.ToArray();
+
+                fileDirectoryModel = await _s3Service.UploadFileToDirectoryAsync(fileBytes, FileType.Sales,
+                    directoryGuid.ToString(), file.FileName);
+            }
+        }
+
         foreach (var entry in request.Entries)
         {
             var henhouse = await _henhouseRepository.GetAsync(new HenhouseByIdSpec(entry.HenhouseId),
@@ -100,6 +134,9 @@ public class AddNewSaleCommandHandler : IRequestHandler<AddNewSaleCommand, BaseR
                 slaughterhouse.Id, henhouse.Id, entry.Weight, entry.Quantity, entry.ConfiscatedWeight,
                 entry.ConfiscatedCount, entry.DeadWeight, entry.DeadCount, entry.FarmerWeight, entry.BasePrice,
                 entry.PriceWithExtras, entry.Comment, otherExtras, userId);
+
+            newSale.SetDirectoryPath(fileDirectoryModel?.DirectoryPath);
+
             newSales.Add(newSale);
         }
 

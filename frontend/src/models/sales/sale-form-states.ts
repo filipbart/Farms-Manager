@@ -16,6 +16,7 @@ export interface SaleFormState {
   saleDate: Dayjs | null;
   entries: SaleEntry[];
   entriesTableReady: number[];
+  files: File[];
 }
 
 export interface SaleFormErrors {

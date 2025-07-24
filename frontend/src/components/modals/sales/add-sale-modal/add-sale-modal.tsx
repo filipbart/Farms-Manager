@@ -32,6 +32,7 @@ import type { SaleFormErrors } from "../../../../models/sales/sale-form-states";
 import { toast } from "react-toastify";
 import { SalesService } from "../../../../services/sales-service";
 import { useLatestCycle } from "../../../../hooks/useLatestCycle";
+import FilePreview from "../../../common/file-preview";
 
 interface AddSaleModalProps {
   open: boolean;
@@ -56,6 +57,41 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
   const [errors, setErrors] = useState<SaleFormErrors>({});
   const [sendToIrz, setSendToIrz] = useState(false);
   const [entriesTableReady, setEntriesTableReady] = useState<number[]>([]);
+  const [activePreviewFile, setActivePreviewFile] = useState<File | null>(null);
+
+  useEffect(() => {
+    const handlePaste = (event: ClipboardEvent) => {
+      const items = event.clipboardData?.items;
+      if (!items) return;
+
+      const newFiles: File[] = [];
+
+      for (const item of items) {
+        if (item.kind === "file") {
+          const file = item.getAsFile();
+          if (file) {
+            newFiles.push(file);
+          }
+        }
+      }
+
+      if (newFiles.length > 0) {
+        dispatch({
+          type: "SET_FILES",
+          files: [...form.files, ...newFiles],
+        });
+        setActivePreviewFile(newFiles[0]);
+      }
+    };
+
+    if (open) {
+      window.addEventListener("paste", handlePaste);
+    }
+
+    return () => {
+      window.removeEventListener("paste", handlePaste);
+    };
+  }, [open, form.files]);
 
   useEffect(() => {
     fetchFarms();
@@ -134,6 +170,7 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
             deadWeight: Number(entry.deadWeight),
             farmerWeight: Number(entry.farmerWeight),
           })),
+          files: form.files,
         }),
       async (data) => {
         if (!data || !data.responseData || !data.responseData.internalGroupId) {
@@ -170,6 +207,7 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
   };
 
   const handleClose = () => {
+    setActivePreviewFile(null);
     onClose();
     setErrors({});
     setHenhouses([]);
@@ -185,190 +223,284 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
         }
       }}
       fullWidth
-      maxWidth="md"
+      maxWidth="lg"
     >
       <DialogTitle>Nowa sprzedaż</DialogTitle>
       <DialogContent>
         <Grid container spacing={2} mt={1}>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <LoadingTextField
-              loading={loadingFarms}
-              select
-              fullWidth
-              label="Ferma"
-              value={form.farmId}
-              onChange={(e) => handleFarmChange(e.target.value)}
-              error={!!errors.farmId}
-              helperText={errors.farmId}
+          {activePreviewFile && (
+            <Grid
+              size={{ xs: 12, md: 4 }}
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                height: "100%",
+                pr: 2,
+              }}
             >
-              {farms.map((farm) => (
-                <MenuItem key={farm.id} value={farm.id}>
-                  {farm.name}
-                </MenuItem>
-              ))}
-            </LoadingTextField>
-          </Grid>
+              <Typography variant="subtitle2" gutterBottom>
+                Podgląd pliku
+              </Typography>
 
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <LoadingTextField
-              loading={loadingLatestCycle}
-              fullWidth
-              label="Identyfikator"
-              value={form.identifierDisplay}
-              slotProps={{ input: { readOnly: true } }}
-              error={!!errors.identifierId}
-              helperText={errors.identifierId}
-            />
-          </Grid>
+              <FilePreview file={activePreviewFile} maxHeight={500} />
+            </Grid>
+          )}
 
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField
-              select
-              fullWidth
-              label="Typ sprzedaży"
-              value={form.saleType}
-              onChange={(e) => {
-                dispatch({
-                  type: "SET_FIELD",
-                  name: "saleType",
-                  value: e.target.value,
-                });
-                setErrors((prev) => ({ ...prev, saleType: undefined }));
-              }}
-              error={!!errors.saleType}
-              helperText={errors.saleType}
-            >
-              {Object.values(SaleType).map((value) => (
-                <MenuItem key={value} value={value}>
-                  {SaleTypeLabels[value]}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Grid>
+          <Grid size={{ xs: 12, md: activePreviewFile ? 8 : 12 }}>
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <LoadingTextField
+                  loading={loadingFarms}
+                  select
+                  fullWidth
+                  label="Ferma"
+                  value={form.farmId}
+                  onChange={(e) => handleFarmChange(e.target.value)}
+                  error={!!errors.farmId}
+                  helperText={errors.farmId}
+                >
+                  {farms.map((farm) => (
+                    <MenuItem key={farm.id} value={farm.id}>
+                      {farm.name}
+                    </MenuItem>
+                  ))}
+                </LoadingTextField>
+              </Grid>
 
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <LoadingTextField
-              loading={loadingSlaughterhouses}
-              select
-              fullWidth
-              label="Ubojnia"
-              value={form.slaughterhouseId}
-              onChange={(e) => {
-                dispatch({
-                  type: "SET_FIELD",
-                  name: "slaughterhouseId",
-                  value: e.target.value,
-                });
-                setErrors((prev) => ({ ...prev, slaughterhouseId: undefined }));
-              }}
-              error={!!errors.slaughterhouseId}
-              helperText={errors.slaughterhouseId}
-            >
-              {slaughterhouses.map((slaughterhouse) => (
-                <MenuItem key={slaughterhouse.id} value={slaughterhouse.id}>
-                  {slaughterhouse.name}
-                </MenuItem>
-              ))}
-            </LoadingTextField>
-          </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <LoadingTextField
+                  loading={loadingLatestCycle}
+                  fullWidth
+                  label="Identyfikator"
+                  value={form.identifierDisplay}
+                  slotProps={{ input: { readOnly: true } }}
+                  error={!!errors.identifierId}
+                  helperText={errors.identifierId}
+                />
+              </Grid>
 
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <DatePicker
-              label="Data sprzedaży"
-              value={form.saleDate}
-              onChange={(value) => {
-                dispatch({ type: "SET_FIELD", name: "saleDate", value });
-                setErrors((prev) => ({ ...prev, saleDate: undefined }));
-              }}
-              disableFuture
-              format="DD.MM.YYYY"
-              slotProps={{
-                textField: {
-                  error: !!errors.saleDate,
-                  helperText: errors.saleDate,
-                  fullWidth: true,
-                },
-              }}
-            />
-          </Grid>
-          <Grid size={{ xs: 12 }}>
-            {entriesTableReady.length > 0 && (
-              <SaleEntriesTable
-                entries={form.entries}
-                indexes={entriesTableReady}
-                onRemove={(indexToRemove) => {
-                  dispatch({ type: "REMOVE_ENTRY", index: indexToRemove });
-                  setEntriesTableReady((prev) =>
-                    prev.filter((i) => i !== indexToRemove)
-                  );
-                  setErrors((prev) => {
-                    const updated = { ...(prev.entries || {}) };
-                    delete updated[indexToRemove];
-                    return { ...prev, entries: updated };
-                  });
-                }}
-                onEdit={(indexToEdit) => {
-                  setEntriesTableReady((prev) =>
-                    prev.filter((i) => i !== indexToEdit)
-                  );
-                }}
-              />
-            )}
-          </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  select
+                  fullWidth
+                  label="Typ sprzedaży"
+                  value={form.saleType}
+                  onChange={(e) => {
+                    dispatch({
+                      type: "SET_FIELD",
+                      name: "saleType",
+                      value: e.target.value,
+                    });
+                    setErrors((prev) => ({ ...prev, saleType: undefined }));
+                  }}
+                  error={!!errors.saleType}
+                  helperText={errors.saleType}
+                >
+                  {Object.values(SaleType).map((value) => (
+                    <MenuItem key={value} value={value}>
+                      {SaleTypeLabels[value]}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
 
-          <Grid size={12}>
-            <SaleEntriesSection
-              dispatch={dispatch}
-              entries={form.entries}
-              henhouses={henhouses}
-              saleFieldsExtra={saleFieldsExtra}
-              setErrors={setErrors}
-              errors={errors.entries}
-              setEntryErrors={setEntryErrors}
-              farmId={form.farmId}
-              entriesTableReady={entriesTableReady}
-            />
-          </Grid>
-
-          <Grid size={8} />
-          <Grid size={4}>
-            <Button
-              fullWidth
-              variant="outlined"
-              onClick={() => {
-                const lastIndex = form.entries.length - 1;
-                const lastEntry = form.entries[lastIndex];
-                const validation = validateEntry(lastEntry);
-
-                const isValid =
-                  !validation || Object.keys(validation).length === 0;
-
-                if (!entriesTableReady.includes(lastIndex) && isValid) {
-                  setEntriesTableReady((prev) => [...prev, lastIndex]);
-                  setErrors((prev) => {
-                    const newEntriesErrors = { ...(prev.entries || {}) };
-                    delete newEntriesErrors[lastIndex];
-                    return { ...prev, entries: newEntriesErrors };
-                  });
-                } else if (entriesTableReady.includes(lastIndex)) {
-                  dispatch({ type: "ADD_ENTRY" });
-                  setErrors((prev) => {
-                    const newEntriesErrors = { ...(prev.entries || {}) };
-                    const newEntryIndex = form.entries.length;
-                    delete newEntriesErrors[newEntryIndex];
-                    return {
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <LoadingTextField
+                  loading={loadingSlaughterhouses}
+                  select
+                  fullWidth
+                  label="Ubojnia"
+                  value={form.slaughterhouseId}
+                  onChange={(e) => {
+                    dispatch({
+                      type: "SET_FIELD",
+                      name: "slaughterhouseId",
+                      value: e.target.value,
+                    });
+                    setErrors((prev) => ({
                       ...prev,
-                      entries: newEntriesErrors,
-                      entriesGeneral: undefined,
-                    };
-                  });
-                } else {
-                  setEntryErrors(lastIndex, validation);
-                }
-              }}
-            >
-              Dodaj pozycję
-            </Button>
+                      slaughterhouseId: undefined,
+                    }));
+                  }}
+                  error={!!errors.slaughterhouseId}
+                  helperText={errors.slaughterhouseId}
+                >
+                  {slaughterhouses.map((slaughterhouse) => (
+                    <MenuItem key={slaughterhouse.id} value={slaughterhouse.id}>
+                      {slaughterhouse.name}
+                    </MenuItem>
+                  ))}
+                </LoadingTextField>
+              </Grid>
+
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <DatePicker
+                  label="Data sprzedaży"
+                  value={form.saleDate}
+                  onChange={(value) => {
+                    dispatch({ type: "SET_FIELD", name: "saleDate", value });
+                    setErrors((prev) => ({ ...prev, saleDate: undefined }));
+                  }}
+                  disableFuture
+                  format="DD.MM.YYYY"
+                  slotProps={{
+                    textField: {
+                      error: !!errors.saleDate,
+                      helperText: errors.saleDate,
+                      fullWidth: true,
+                    },
+                  }}
+                />
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                {entriesTableReady.length > 0 && (
+                  <SaleEntriesTable
+                    entries={form.entries}
+                    indexes={entriesTableReady}
+                    onRemove={(indexToRemove) => {
+                      dispatch({ type: "REMOVE_ENTRY", index: indexToRemove });
+                      setEntriesTableReady((prev) =>
+                        prev.filter((i) => i !== indexToRemove)
+                      );
+                      setErrors((prev) => {
+                        const updated = { ...(prev.entries || {}) };
+                        delete updated[indexToRemove];
+                        return { ...prev, entries: updated };
+                      });
+                    }}
+                    onEdit={(indexToEdit) => {
+                      setEntriesTableReady((prev) =>
+                        prev.filter((i) => i !== indexToEdit)
+                      );
+                    }}
+                  />
+                )}
+              </Grid>
+
+              <Grid size={12}>
+                <SaleEntriesSection
+                  dispatch={dispatch}
+                  entries={form.entries}
+                  henhouses={henhouses}
+                  saleFieldsExtra={saleFieldsExtra}
+                  setErrors={setErrors}
+                  errors={errors.entries}
+                  setEntryErrors={setEntryErrors}
+                  farmId={form.farmId}
+                  entriesTableReady={entriesTableReady}
+                />
+              </Grid>
+
+              <Grid size={8} />
+              <Grid size={4}>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  onClick={() => {
+                    const lastIndex = form.entries.length - 1;
+                    const lastEntry = form.entries[lastIndex];
+                    const validation = validateEntry(lastEntry);
+
+                    const isValid =
+                      !validation || Object.keys(validation).length === 0;
+
+                    if (!entriesTableReady.includes(lastIndex) && isValid) {
+                      setEntriesTableReady((prev) => [...prev, lastIndex]);
+                      setErrors((prev) => {
+                        const newEntriesErrors = { ...(prev.entries || {}) };
+                        delete newEntriesErrors[lastIndex];
+                        return { ...prev, entries: newEntriesErrors };
+                      });
+                    } else if (entriesTableReady.includes(lastIndex)) {
+                      dispatch({ type: "ADD_ENTRY" });
+                      setErrors((prev) => {
+                        const newEntriesErrors = { ...(prev.entries || {}) };
+                        const newEntryIndex = form.entries.length;
+                        delete newEntriesErrors[newEntryIndex];
+                        return {
+                          ...prev,
+                          entries: newEntriesErrors,
+                          entriesGeneral: undefined,
+                        };
+                      });
+                    } else {
+                      setEntryErrors(lastIndex, validation);
+                    }
+                  }}
+                >
+                  Dodaj pozycję
+                </Button>
+              </Grid>
+
+              <Grid size={{ xs: 12 }}>
+                <Button
+                  variant="outlined"
+                  component="label"
+                  fullWidth
+                  sx={{ mt: 2 }}
+                >
+                  Wybierz pliki lub wklej (Ctrl+V)
+                  <input
+                    type="file"
+                    multiple
+                    hidden
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files || []);
+                      dispatch({ type: "SET_FILES", files });
+                      setActivePreviewFile(files[0] || null);
+                    }}
+                  />
+                </Button>
+
+                {form.files.length > 0 && (
+                  <Grid container spacing={1} mt={1}>
+                    {form.files.map((file, idx) => (
+                      <Grid
+                        container
+                        key={idx}
+                        alignItems="center"
+                        spacing={1}
+                        size={{ xs: 12 }}
+                      >
+                        <Grid size={{ xs: 6 }}>
+                          <Typography variant="body2">{file.name}</Typography>
+                        </Grid>
+
+                        <Grid size={{ xs: 3 }}>
+                          <Button
+                            variant="text"
+                            size="small"
+                            onClick={() => setActivePreviewFile(file)}
+                          >
+                            Podgląd
+                          </Button>
+                        </Grid>
+
+                        <Grid size={{ xs: 3 }}>
+                          <Button
+                            variant="text"
+                            size="small"
+                            color="error"
+                            onClick={() => {
+                              dispatch({
+                                type: "SET_FILES",
+                                files: form.files.filter((_, i) => i !== idx),
+                              });
+
+                              if (activePreviewFile?.name === file.name) {
+                                setActivePreviewFile(null);
+                              }
+                            }}
+                          >
+                            Usuń
+                          </Button>
+                        </Grid>
+                      </Grid>
+                    ))}
+                  </Grid>
+                )}
+              </Grid>
+            </Grid>
           </Grid>
         </Grid>
       </DialogContent>
@@ -403,7 +535,6 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
         <LoadingButton
           startIcon={<MdSave />}
           loading={loading}
-          loadingSize={20}
           onClick={handleSave}
           variant="contained"
           color="primary"

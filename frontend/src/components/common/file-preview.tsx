@@ -48,14 +48,21 @@ const FilePreview: React.FC<FilePreviewProps> = ({
     }
   }, [file, isFileObject]);
 
-  if (!file || (isFileObject && !objectUrl)) return null;
+  if (!file) return null;
+  if (isFileObject && !objectUrl)
+    return <Typography variant="body2">Ładowanie podglądu...</Typography>;
 
   const previewContent = () => {
     if (fileType === "pdf") {
       return (
         <iframe
           src={fileUrl + "#toolbar=0"}
-          style={{ width: "100%", maxHeight, border: "1px solid #ccc" }}
+          style={{
+            width: "100%",
+            border: "1px solid #ccc",
+            maxHeight,
+            height: "100vh",
+          }}
         />
       );
     }

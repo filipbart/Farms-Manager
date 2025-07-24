@@ -5,6 +5,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  IconButton,
   Typography,
 } from "@mui/material";
 import type { GridColDef } from "@mui/x-data-grid";
@@ -15,6 +16,7 @@ import { handleApiResponse } from "../../utils/axios/handle-api-response";
 import Loading from "../../components/loading/loading";
 import { OtherExtrasCell } from "../../models/sales/sale-other-extras-cell";
 import { useState } from "react";
+import { MdFileDownload } from "react-icons/md";
 
 const SaleCommentCell: React.FC<{ value: string }> = ({ value }) => {
   const [open, setOpen] = useState(false);
@@ -43,12 +45,18 @@ const SaleCommentCell: React.FC<{ value: string }> = ({ value }) => {
 
 export const getSalesColumns = ({
   setSelectedSale,
+  deleteSale,
   setIsEditModalOpen,
+  downloadSaleDirectory,
+  downloadDirectoryPath,
   dispatch,
   filters,
 }: {
   setSelectedSale: (s: any) => void;
+  deleteSale: (id: string) => void;
   setIsEditModalOpen: (v: boolean) => void;
+  downloadSaleDirectory: (path: string) => void;
+  downloadDirectoryPath: string | null;
   dispatch: any;
   filters: any;
 }): GridColDef[] => {
@@ -184,6 +192,7 @@ export const getSalesColumns = ({
       field: "actions",
       type: "actions",
       headerName: "Akcje",
+      minWidth: 200,
       flex: 1,
       getActions: (params) => [
         <Button
@@ -197,7 +206,64 @@ export const getSalesColumns = ({
         >
           Edytuj
         </Button>,
+        <Button
+          key="delete"
+          variant="outlined"
+          size="small"
+          color="error"
+          onClick={() => {
+            deleteSale(params.row.id);
+          }}
+        >
+          Usuń
+        </Button>,
       ],
+    },
+    {
+      field: "fileDownload",
+      headerName: "Zawarte dokumenty",
+      flex: 1,
+      renderCell: (params) => {
+        const directoryPath = params.row.directoryPath;
+
+        if (!directoryPath) {
+          return (
+            <Box
+              width="100%"
+              height="100%"
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+            >
+              <Typography variant="body2" color="text.secondary">
+                Brak
+              </Typography>
+            </Box>
+          );
+        }
+
+        return (
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            width="100%"
+            height="100%"
+          >
+            <IconButton
+              onClick={() => downloadSaleDirectory(directoryPath)}
+              color="primary"
+              disabled={downloadDirectoryPath === directoryPath}
+            >
+              {downloadDirectoryPath === directoryPath ? (
+                <Loading size={10} />
+              ) : (
+                <MdFileDownload />
+              )}
+            </IconButton>
+          </Box>
+        );
+      },
     },
     {
       field: "documentNumber",

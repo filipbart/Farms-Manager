@@ -22,7 +22,6 @@ public record FeedPaymentRowDto
 {
     public Guid Id { get; init; }
     public string FarmName { get; init; }
-    public string FileName { get; init; }
     public string FilePath { get; init; }
     public DateTime DateCreatedUtc { get; init; }
 }

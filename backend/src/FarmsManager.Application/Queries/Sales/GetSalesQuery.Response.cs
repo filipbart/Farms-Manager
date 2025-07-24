@@ -31,6 +31,7 @@ public class SaleRowDto
     public DateTime? DateIrzSentUtc { get; init; }
     public bool IsSentToIrz { get; init; }
     public string DocumentNumber { get; init; }
+    public string DirectoryPath { get; init; }
 }
 
 public class GetSalesQueryResponse : PaginationModel<SaleRowDto>;

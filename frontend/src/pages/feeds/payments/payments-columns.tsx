@@ -7,11 +7,11 @@ import Loading from "../../../components/loading/loading";
 export const getFeedsPaymentsColumns = ({
   deleteFeedPayment,
   downloadPaymentFile,
-  downloadFileName,
+  downloadFilePath,
 }: {
   deleteFeedPayment: (id: string) => void;
   downloadPaymentFile: (path: string) => void;
-  downloadFileName: string | null;
+  downloadFilePath: string | null;
 }): GridColDef[] => {
   return [
     { field: "id", headerName: "Id", width: 70 },
@@ -39,11 +39,11 @@ export const getFeedsPaymentsColumns = ({
           height="100%"
         >
           <IconButton
-            onClick={() => downloadPaymentFile(params.row.fileName)}
+            onClick={() => downloadPaymentFile(params.row.filePath)}
             color="primary"
-            disabled={downloadFileName === params.row.fileName}
+            disabled={downloadFilePath === params.row.filePath}
           >
-            {downloadFileName === params.row.fileName ? (
+            {downloadFilePath === params.row.filePath ? (
               <Loading size={10} />
             ) : (
               <MdFileDownload />

@@ -22,6 +22,7 @@ public partial class FmHostBuilder
                 var accessKey = configuration.GetValue<string>("S3:AccessKey");
                 var secretKey = configuration.GetValue<string>("S3:SecretKey");
                 var authRegion = configuration.GetValue<string>("S3:AuthRegion");
+                var region = configuration.GetValue<string>("S3:region");
 
                 var config = new AmazonS3Config
                 {
@@ -29,8 +30,13 @@ public partial class FmHostBuilder
                     UseHttp = true,
                     ForcePathStyle = true,
                     AuthenticationRegion = authRegion,
-                    RegionEndpoint = RegionEndpoint.EUCentral1, //TODO lokalnie komentować
+                    RegionEndpoint = RegionEndpoint.GetBySystemName(region)
                 };
+
+                if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
+                {
+                    config.ServiceURL = url;
+                }
 
                 return new AmazonS3Client(accessKey, secretKey, config);
             }).AsSelf().AsImplementedInterfaces().SingleInstance();

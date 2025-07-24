@@ -28,6 +28,7 @@ export interface SaleListModel {
   dateIrzSentUtc: string | null;
   isSentToIrz: boolean;
   documentNumber: string;
+  directoryPath: string;
 }
 
 export enum SaleType {

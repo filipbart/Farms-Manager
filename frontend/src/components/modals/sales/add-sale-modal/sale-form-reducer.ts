@@ -9,6 +9,7 @@ export const initialState: SaleFormState = {
   saleDate: null,
   entries: [],
   entriesTableReady: [],
+  files: [],
 };
 
 export function formReducer(state: SaleFormState, action: any): SaleFormState {
@@ -38,7 +39,11 @@ export function formReducer(state: SaleFormState, action: any): SaleFormState {
           (i) => i !== action.index
         ),
       };
-
+    case "SET_FILES":
+      return {
+        ...state,
+        files: action.files,
+      };
     case "ADD_ENTRY":
       return {
         ...state,

@@ -27,15 +27,19 @@ public class FilesController(IMediator mediator, IS3Service s3Service) : BaseCon
     /// <summary>
     /// Zwraca plik
     /// </summary>
-    /// <param name="path"></param>
+    /// <param name="filePath"></param>
     /// <param name="fileType"></param>
     /// <returns></returns>
-    [HttpGet("{path}")]
+    [HttpGet("file")]
     [ProducesResponseType(typeof(File), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetFile([FromRoute] string path, [FromQuery] FileType fileType)
+    public async Task<IActionResult> GetFile([FromQuery] string filePath, [FromQuery] FileType? fileType)
     {
-        var file = await s3Service.GetFileAsync(fileType, path);
+        var decodedPath = Uri.UnescapeDataString(filePath);
+        var file = fileType.HasValue == false
+            ? await s3Service.GetFileByKeyAsync(decodedPath)
+            : await s3Service.GetFileAsync(fileType.Value, decodedPath);
+
         return file is null ? NotFound() : File(file.Data, file.ContentType, file.FileName);
     }
 }

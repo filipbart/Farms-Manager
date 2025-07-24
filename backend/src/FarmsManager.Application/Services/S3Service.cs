@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.IO.Compression;
+using System.Net;
 using System.Text;
 using Amazon.S3;
 using Amazon.S3.Model;
@@ -127,6 +128,92 @@ public class S3Service : IS3Service
         };
     }
 
+    public async Task<FileModel> GetFileByKeyAsync(string key)
+    {
+        await EnsureBucketExistsAsync();
+
+        var request = new GetObjectRequest
+        {
+            BucketName = _bucketName,
+            Key = key
+        };
+
+        var obj = await _s3Client.GetObjectAsync(request);
+        if (obj.HttpStatusCode != HttpStatusCode.OK)
+        {
+            throw DomainException.FileNotFound();
+        }
+
+        using var ms = new MemoryStream();
+        await obj.ResponseStream.CopyToAsync(ms);
+
+        return new FileModel
+        {
+            IsFile = true,
+            IsDirectory = false,
+            LastModifyDate = obj.LastModified,
+            ContentType = obj.Headers.ContentType,
+            FileName = Path.GetFileName(key),
+            Data = ms.ToArray()
+        };
+    }
+
+    public async Task<FileModel> GetFolderAsZipAsync(string folderKeyPrefix)
+    {
+        await EnsureBucketExistsAsync();
+
+
+        if (!folderKeyPrefix.EndsWith("/"))
+            folderKeyPrefix += "/";
+
+        var listRequest = new ListObjectsV2Request
+        {
+            BucketName = _bucketName,
+            Prefix = folderKeyPrefix
+        };
+
+        var listResponse = await _s3Client.ListObjectsV2Async(listRequest);
+
+        if (listResponse.KeyCount == 0)
+            throw DomainException.FileNotFound();
+
+        using var zipStream = new MemoryStream();
+        using (var archive = new ZipArchive(zipStream, ZipArchiveMode.Create, leaveOpen: true))
+        {
+            foreach (var s3Object in listResponse.S3Objects)
+            {
+                if (s3Object.Key.EndsWith("/"))
+                    continue;
+
+                var getRequest = new GetObjectRequest
+                {
+                    BucketName = _bucketName,
+                    Key = s3Object.Key
+                };
+
+                using var s3ObjectResponse = await _s3Client.GetObjectAsync(getRequest);
+                await using var entryStream = s3ObjectResponse.ResponseStream;
+
+                var relativePath = s3Object.Key[folderKeyPrefix.Length..];
+                var zipEntry = archive.CreateEntry(relativePath, CompressionLevel.Optimal);
+
+                await using var zipEntryStream = zipEntry.Open();
+                await entryStream.CopyToAsync(zipEntryStream);
+            }
+        }
+
+        zipStream.Position = 0;
+
+        return new FileModel
+        {
+            IsFile = true,
+            IsDirectory = false,
+            LastModifyDate = DateTime.UtcNow,
+            ContentType = "application/zip",
+            FileName = Path.GetFileName(folderKeyPrefix.TrimEnd('/')) + ".zip",
+            Data = zipStream.ToArray()
+        };
+    }
 
     public async Task<FileModel> GetFileAsync(FileType fileType, string path)
     {
@@ -229,6 +316,43 @@ public class S3Service : IS3Service
         return key;
     }
 
+    public async Task<FileDirectoryModel> UploadFileToDirectoryAsync(byte[] fileBytes, FileType fileType,
+        string directory, string fileName, bool publicRead = false)
+    {
+        await EnsureBucketExistsAsync();
+
+        using var ms = new MemoryStream(fileBytes);
+        var directoryPath = GetPath(fileType, directory);
+        var key = $"{directoryPath}/{fileName}";
+
+        var request = new PutObjectRequest
+        {
+            BucketName = _bucketName,
+            Key = key,
+            CannedACL = publicRead ? S3CannedACL.PublicRead : S3CannedACL.Private,
+            InputStream = ms
+        };
+
+        try
+        {
+            var s3Response = await _s3Client.PutObjectAsync(request);
+            if (s3Response.HttpStatusCode != HttpStatusCode.OK)
+            {
+                throw new Exception("Błąd podczas zapisywania pliku do S3");
+            }
+        }
+        catch (AmazonS3Exception e)
+        {
+            throw new Exception($"Błąd podczas próby zapisania pliku do S3: {e.Message}");
+        }
+
+        return new FileDirectoryModel
+        {
+            DirectoryPath = directoryPath,
+            FilePath = key
+        };
+    }
+
     public async Task DeleteFileAsync(FileType fileType, string path)
     {
         await EnsureBucketExistsAsync();
@@ -241,6 +365,42 @@ public class S3Service : IS3Service
         };
 
         await _s3Client.DeleteObjectAsync(request);
+    }
+    
+    public async Task DeleteFolderAsync(FileType fileType, string folderPath)
+    {
+        await EnsureBucketExistsAsync();
+        
+        var prefix = GetPath(fileType, folderPath).TrimEnd('/') + "/";
+
+        var listRequest = new ListObjectsV2Request
+        {
+            BucketName = _bucketName,
+            Prefix = prefix
+        };
+
+        ListObjectsV2Response listResponse;
+        do
+        {
+            listResponse = await _s3Client.ListObjectsV2Async(listRequest);
+
+            if (listResponse.S3Objects.Count == 0)
+                return;
+
+            var deleteObjectsRequest = new DeleteObjectsRequest
+            {
+                BucketName = _bucketName,
+                Objects = listResponse.S3Objects
+                    .Select(obj => new KeyVersion { Key = obj.Key })
+                    .ToList()
+            };
+
+            await _s3Client.DeleteObjectsAsync(deleteObjectsRequest);
+
+            listRequest.ContinuationToken = listResponse.NextContinuationToken;
+
+        } while (listResponse.IsTruncated == true);
+
     }
 
     public string GeneratePreSignedUrl(FileType fileType, string path, string fileName = null)
@@ -283,4 +443,10 @@ public class S3Service : IS3Service
         pathBuilder.Append(path);
         return pathBuilder.ToString();
     }
+}
+
+public class FileDirectoryModel
+{
+    public string DirectoryPath { get; init; }
+    public string FilePath { get; init; }
 }

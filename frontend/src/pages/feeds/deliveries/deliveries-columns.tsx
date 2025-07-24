@@ -116,7 +116,8 @@ export const getFeedsDeliveriesColumns = ({
     },
 
     {
-      field: "invoiceFile",
+      field: "download",
+      type: "actions",
       headerName: "Plik faktury",
       flex: 1,
       renderCell: (params) => (
