@@ -10,6 +10,7 @@ export const getFeedsDeliveriesColumns = ({
   setIsEditModalOpen,
   setIsEditCorrectionModalOpen,
   deleteFeedDelivery,
+  deleteFeedCorrection,
   downloadInvoiceFile,
   downloadCorrectionFile,
   downloadFilePath,
@@ -18,6 +19,7 @@ export const getFeedsDeliveriesColumns = ({
   setIsEditModalOpen: (v: boolean) => void;
   setIsEditCorrectionModalOpen: (v: boolean) => void;
   deleteFeedDelivery: (id: string) => void;
+  deleteFeedCorrection: (id: string) => void;
   downloadInvoiceFile: (path: string) => void;
   downloadCorrectionFile: (path: string) => void;
   downloadFilePath: string | null;
@@ -183,7 +185,11 @@ export const getFeedsDeliveriesColumns = ({
           size="small"
           color="error"
           onClick={() => {
-            deleteFeedDelivery(params.row.id);
+            if (params.row.isCorrection) {
+              deleteFeedCorrection(params.row.id);
+            } else {
+              deleteFeedDelivery(params.row.id);
+            }
           }}
         >
           Usuń

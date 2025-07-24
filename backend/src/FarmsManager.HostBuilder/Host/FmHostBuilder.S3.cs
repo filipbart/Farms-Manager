@@ -33,7 +33,7 @@ public partial class FmHostBuilder
                     RegionEndpoint = RegionEndpoint.GetBySystemName(region)
                 };
 
-                if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
+                if (configuration.GetValue<bool>("TestMode"))
                 {
                     config.ServiceURL = url;
                 }

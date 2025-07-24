@@ -96,6 +96,25 @@ const FeedsDeliveriesPage: React.FC = () => {
     }
   };
 
+  const deleteFeedCorrection = async (id: string) => {
+    try {
+      setLoading(true);
+      await handleApiResponse(
+        () => FeedsService.deleteFeedCorrection(id),
+        () => {
+          toast.success("Korekta została poprawnie usunięta");
+          dispatch({ type: "setMultiple", payload: { page: 0 } });
+        },
+        undefined,
+        "Błąd podczas usuwania korekty"
+      );
+    } catch {
+      toast.error("Błąd podczas usuwania korekty");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const downloadInvoiceFile = async (id: string) => {
     await downloadFile({
       url: `${ApiUrl.DownloadFeedDeliveryFile}/${id}`,
@@ -137,6 +156,7 @@ const FeedsDeliveriesPage: React.FC = () => {
         setIsEditModalOpen,
         setIsEditCorrectionModalOpen,
         deleteFeedDelivery,
+        deleteFeedCorrection,
         downloadInvoiceFile,
         downloadCorrectionFile,
         downloadFilePath,
@@ -160,6 +180,7 @@ const FeedsDeliveriesPage: React.FC = () => {
   const handleCloseSaveDataModal = () => {
     setDraftFeedInvoices([]);
     setOpenSaveDataModal(false);
+    dispatch({ type: "setMultiple", payload: { page: 0 } });
   };
 
   const handleSaveInvoiceData = (feedInvoiceData: DraftFeedInvoice) => {

@@ -49,13 +49,14 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
 
   const [loading, setLoading] = useState(false);
   const { farms, loadingFarms, fetchFarms } = useFarms();
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   const [henhouses, setHenhouses] = useState<HouseRowModel[]>([]);
   const { loadLatestCycle, loadingCycle } = useLatestCycle();
   const { feedsNames, loadingFeedsNames, fetchFeedsNames } = useFeedsNames();
 
   const [draftFeed, setDraftFeed] = useState<DraftFeedInvoice>(
-    draftFeedInvoices[0]
+    draftFeedInvoices[currentIndex]
   );
 
   const {
@@ -94,42 +95,6 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
       });
     }
   };
-
-  useEffect(() => {
-    if (draftFeedInvoices.length > 0 && farms.length > 0) {
-      const initialData = draftFeedInvoices[0].extractedFields;
-      const henhouseName = initialData.henhouseName?.toLowerCase();
-
-      const matchedFarms = farms.filter(
-        (f) =>
-          f.nip === initialData.nip ||
-          f.name?.toLowerCase() === initialData.customerName?.toLowerCase()
-      );
-
-      let selectedFarm = null;
-
-      if (matchedFarms.length === 1) {
-        selectedFarm = matchedFarms[0];
-      } else if (matchedFarms.length > 1 && henhouseName) {
-        selectedFarm = matchedFarms.find((farm) =>
-          farm.henhouses?.some(
-            (house) => house.name?.toLowerCase() === henhouseName
-          )
-        );
-      }
-
-      if (selectedFarm) {
-        initialData.farmId = selectedFarm.id;
-      }
-
-      setDraftFeed(draftFeedInvoices[0]);
-      reset(initialData);
-
-      if (selectedFarm) {
-        handleFarmChange(selectedFarm.id);
-      }
-    }
-  }, [draftFeedInvoices, feedsNames, farms, reset]);
 
   useEffect(() => {
     const henhouseName = draftFeed?.extractedFields.henhouseName;
@@ -172,13 +137,59 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
   }, []);
 
   useEffect(() => {
-    if (draftFeedInvoices.length > 0) {
-      const initialData = draftFeedInvoices[0].extractedFields;
-
-      setDraftFeed(draftFeedInvoices[0]);
-      reset(initialData);
+    if (draftFeedInvoices.length === 0) {
+      if (open) {
+        handleClose();
+      }
+      return;
     }
-  }, [draftFeedInvoices, feedsNames, reset]);
+
+    const newIndex = Math.min(currentIndex, draftFeedInvoices.length - 1);
+
+    if (newIndex !== currentIndex) {
+      setCurrentIndex(newIndex);
+      return;
+    }
+
+    if (farms.length === 0) {
+      return;
+    }
+
+    const currentDraft = draftFeedInvoices[newIndex];
+    const data = { ...currentDraft.extractedFields };
+
+    setDraftFeed(currentDraft);
+
+    const henhouseName = data.henhouseName?.toLowerCase();
+    const matchedFarms = farms.filter(
+      (f) =>
+        f.nip === data.nip ||
+        f.name?.toLowerCase() === data.customerName?.toLowerCase()
+    );
+
+    let selectedFarm = null;
+    if (matchedFarms.length === 1) {
+      selectedFarm = matchedFarms[0];
+    } else if (matchedFarms.length > 1 && henhouseName) {
+      selectedFarm = matchedFarms.find((farm) =>
+        farm.henhouses?.some(
+          (house) => house.name?.toLowerCase() === henhouseName
+        )
+      );
+    }
+
+    if (selectedFarm) {
+      data.farmId = selectedFarm.id;
+    }
+
+    reset(data);
+
+    if (selectedFarm) {
+      handleFarmChange(selectedFarm.id);
+    } else {
+      setHenhouses([]);
+    }
+  }, [currentIndex, draftFeedInvoices, farms, reset, open, handleClose]);
 
   const fileType = getFileTypeFromUrl(draftFeed.fileUrl ?? "");
 
@@ -524,6 +535,23 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
           </DialogContent>
 
           <DialogActions>
+            <Button
+              onClick={() => setCurrentIndex((prev) => Math.max(0, prev - 1))}
+              disabled={currentIndex === 0}
+            >
+              Poprzedni
+            </Button>
+            <Button
+              onClick={() =>
+                setCurrentIndex((prev) =>
+                  Math.min(draftFeedInvoices.length - 1, prev + 1)
+                )
+              }
+              disabled={currentIndex === draftFeedInvoices.length - 1}
+            >
+              Następny
+            </Button>
+
             <Button onClick={handleClose} color="secondary" variant="outlined">
               Anuluj
             </Button>

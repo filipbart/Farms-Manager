@@ -70,7 +70,16 @@ const UploadInvoicesModal: React.FC<UploadInvoicesModalProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+    <Dialog
+      open={open}
+      onClose={(_event, reason) => {
+        if (reason !== "backdropClick") {
+          handleClose();
+        }
+      }}
+      maxWidth="xs"
+      fullWidth
+    >
       <DialogTitle>Wgraj faktury</DialogTitle>
       <DialogContent>
         <Box my={2}>
