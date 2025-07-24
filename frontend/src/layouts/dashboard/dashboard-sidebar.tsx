@@ -21,7 +21,7 @@ import {
   FaWarehouse,
 } from "react-icons/fa";
 import { FaArrowTrendUp, FaGear, FaHouse, FaJarWheat } from "react-icons/fa6";
-import { MdFactory, MdPeopleAlt } from "react-icons/md";
+import { MdFactory, MdPayments, MdPeopleAlt } from "react-icons/md";
 import { PiFarmFill } from "react-icons/pi";
 import { useAuth } from "../../auth/useAuth";
 
@@ -71,16 +71,21 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           />
         </SidebarMenuItem>
 
-        <SidebarMenuItem to="/costs" title="Koszty" icon={<FaMoneyBill />}>
+        <SidebarMenuItem to="/expenses" title="Koszty" icon={<FaMoneyBill />}>
           <SidebarMenuItem
-            to="/costs/productions"
+            to="/expenses/production"
             title="Koszty produkcyjne"
             icon={<MdFactory />}
           />
           <SidebarMenuItem
-            to="/costs/contractors"
+            to="/expenses/contractors"
             title="Kontrahenci"
             icon={<FaHandshake />}
+          />
+          <SidebarMenuItem
+            to="/expenses/types"
+            title="Typy wydatków"
+            icon={<MdPayments />}
           />
         </SidebarMenuItem>
         <SidebarMenuItem to="/data" title="Dane" icon={<FaDatabase />}>
