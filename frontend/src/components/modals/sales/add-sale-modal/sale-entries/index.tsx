@@ -173,21 +173,6 @@ const SaleEntriesSection: React.FC<SaleEntriesSectionProps> = ({
               </Grid>
               <Grid size={{ xs: 12, sm: 3 }}>
                 <TextField
-                  label="Sztuki"
-                  type="number"
-                  value={entry.confiscatedCount}
-                  onChange={(e) =>
-                    handleFieldChange(index, "confiscatedCount", e.target.value)
-                  }
-                  slotProps={{ htmlInput: { min: 0, step: 1 } }}
-                  error={!!errors?.[index]?.confiscatedCount}
-                  helperText={errors?.[index]?.confiscatedCount}
-                  fullWidth
-                />
-              </Grid>
-
-              <Grid size={{ xs: 12, sm: 3 }}>
-                <TextField
                   label="Waga (kg)"
                   type="number"
                   value={entry.confiscatedWeight}
@@ -204,26 +189,25 @@ const SaleEntriesSection: React.FC<SaleEntriesSectionProps> = ({
                   fullWidth
                 />
               </Grid>
+              <Grid size={{ xs: 12, sm: 3 }}>
+                <TextField
+                  label="Sztuki"
+                  type="number"
+                  value={entry.confiscatedCount}
+                  onChange={(e) =>
+                    handleFieldChange(index, "confiscatedCount", e.target.value)
+                  }
+                  slotProps={{ htmlInput: { min: 0, step: 1 } }}
+                  error={!!errors?.[index]?.confiscatedCount}
+                  helperText={errors?.[index]?.confiscatedCount}
+                  fullWidth
+                />
+              </Grid>
 
               <Grid size={12}>
                 <Typography variant="h6" mt={2} mb={1}>
                   Martwe
                 </Typography>
-              </Grid>
-
-              <Grid size={{ xs: 12, sm: 3 }}>
-                <TextField
-                  label="Sztuki"
-                  type="number"
-                  value={entry.deadCount}
-                  onChange={(e) =>
-                    handleFieldChange(index, "deadCount", e.target.value)
-                  }
-                  slotProps={{ htmlInput: { min: 0, step: 1 } }}
-                  error={!!errors?.[index]?.deadCount}
-                  helperText={errors?.[index]?.deadCount}
-                  fullWidth
-                />
               </Grid>
 
               <Grid size={{ xs: 12, sm: 3 }}>
@@ -237,6 +221,21 @@ const SaleEntriesSection: React.FC<SaleEntriesSectionProps> = ({
                   slotProps={{ htmlInput: { min: 0, step: 0.01 } }}
                   error={!!errors?.[index]?.deadWeight}
                   helperText={errors?.[index]?.deadWeight}
+                  fullWidth
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12, sm: 3 }}>
+                <TextField
+                  label="Sztuki"
+                  type="number"
+                  value={entry.deadCount}
+                  onChange={(e) =>
+                    handleFieldChange(index, "deadCount", e.target.value)
+                  }
+                  slotProps={{ htmlInput: { min: 0, step: 1 } }}
+                  error={!!errors?.[index]?.deadCount}
+                  helperText={errors?.[index]?.deadCount}
                   fullWidth
                 />
               </Grid>

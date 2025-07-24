@@ -71,7 +71,7 @@ public class IrzplusService : IIrzplusService
     {
         var authData = await AuthorizeToIrzplusAsync();
 
-        var dispositionZzssd = MapDispositionZzssd(insertions);
+        var dispositionZzssd = MapDispositionZzssdForInsertion(insertions);
 
         var dispositionJson = dispositionZzssd.ToJsonStringWithNulls();
 
@@ -94,12 +94,85 @@ public class IrzplusService : IIrzplusService
         return responseModel;
     }
 
-    public Task<ZlozenieDyspozycjiResponse> SendSalesAsync(IList<SaleEntity> insertions, CancellationToken ct = default)
+    public async Task<ZlozenieDyspozycjiResponse> SendSalesAsync(IList<SaleEntity> sales,
+        CancellationToken ct = default) //TODO scalić z insertions jakoś
     {
-        throw new NotImplementedException();
+        var authData = await AuthorizeToIrzplusAsync();
+
+        var dispositionZzssd = MapDispositionZzssdForSale(sales);
+
+        var dispositionJson = dispositionZzssd.ToJsonStringWithNulls();
+
+        using var httpClient = new HttpClient();
+        httpClient.BaseAddress = new Uri(Options.Value.Url); //TODO prawdopodobnie zawsze jeden adres dla Sales również
+        httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {authData.AccessToken}");
+
+        var jsonContent = new StringContent(dispositionJson, Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync("drob/dokument/api/prod/zzssd", jsonContent, ct);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync(ct);
+            throw new Exception($"Błąd podczas wysyłania dyspozycji do IRZplus: {response.StatusCode}\n{errorContent}");
+        }
+
+        var responseString = await response.Content.ReadAsStringAsync(ct);
+        var responseModel = responseString.ParseJsonString<ZlozenieDyspozycjiResponse>();
+
+        return responseModel;
     }
 
-    private static DyspozycjaZZSSD MapDispositionZzssd(IList<InsertionEntity> insertions)
+    private static DyspozycjaZZSSD MapDispositionZzssdForSale(IList<SaleEntity> sales)
+    {
+        var firstSale = sales.First();
+        var dispositionZzssd = new DyspozycjaZZSSD
+        {
+            NumerProducenta = firstSale.Farm.ProducerNumber,
+            Zgloszenie = new ZgloszenieZZSSDDTO
+            {
+                Pozycje = null,
+                Gatunek = GatunekDrobiu.Kury.ToKodOpisDto(),
+                DoDzialalnosci = firstSale.Slaughterhouse.ProducerNumber,
+                TypZdarzenia = TypZdarzeniaDrobiu.Wybycie.ToKodOpisDto(),
+                DataZdarzenia = firstSale.SaleDate,
+                LiczbaDrobiuPrzybylo = sales.Sum(t => t.Quantity),
+                LiczbaJajWylegowychPrzybylo = 0,
+                KodKraju = new KodOpisWartosciDto
+                {
+                    Kod = "PL",
+                    Opis = "POLSKA"
+                }
+            }
+        };
+
+        List<PozycjaZZSSDDTO> items = [];
+
+        foreach (var (saleEntity, index) in sales.Select((value, index) => (value, index)))
+        {
+            var item = new PozycjaZZSSDDTO
+            {
+                Lp = index + 1,
+                StatusPozycji = StatusPozycjiZZSSD.Zatwierdzona.GetEnumMemberValue(),
+                NumerIdenPartiiDrobiu = saleEntity.Farm.ProducerNumber,
+                LiczbaDrobiuUbylo = saleEntity.Quantity,
+                KategoriaJajWylegowych = null,
+                Budynek = new KodOpisWartosciDto
+                {
+                    Kod = saleEntity.Henhouse.Code,
+                    Opis = saleEntity.Henhouse.Name
+                },
+                ZDzialalnosci = saleEntity.Farm.ProducerNumber
+            };
+
+            items.Add(item);
+        }
+
+        dispositionZzssd.Zgloszenie.Pozycje = items;
+
+        return dispositionZzssd;
+    }
+
+    private static DyspozycjaZZSSD MapDispositionZzssdForInsertion(IList<InsertionEntity> insertions)
     {
         var firstInsertion = insertions.First();
         var dispositionZzssd = new DyspozycjaZZSSD

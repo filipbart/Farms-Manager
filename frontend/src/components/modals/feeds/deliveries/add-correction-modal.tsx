@@ -151,146 +151,163 @@ const AddCorrectionModal: React.FC<AddCorrectionModalProps> = ({
         <form onSubmit={handleSubmit(handleSave)}>
           <DialogContent>
             <Grid container spacing={2}>
-              <Grid size={{ xs: 12 }}>
-                <TextField
-                  label="Numer faktury"
-                  {...register("invoiceNumber", {
-                    required: "Numer faktury jest wymagany",
-                  })}
-                  error={!!errors.invoiceNumber}
-                  helperText={errors.invoiceNumber?.message}
-                  fullWidth
-                />
-              </Grid>
+              {/* Lewa kolumna: podgląd pliku */}
+              <Grid
+                container
+                direction="column"
+                spacing={2}
+                size={{ xs: 12, md: 4 }}
+              >
+                <Grid size={{ xs: 12 }}>
+                  <Button
+                    variant="outlined"
+                    component="label"
+                    startIcon={<MdAttachFile />}
+                    fullWidth
+                  >
+                    Wybierz plik
+                    <input type="file" hidden onChange={handleFileChange} />
+                  </Button>
+                </Grid>
 
-              <Grid size={{ xs: 12 }}>
-                <LoadingTextField
-                  label="Ferma"
-                  select
-                  fullWidth
-                  loading={loadingFarms}
-                  value={watch("farmId") || ""}
-                  error={!!errors.farmId}
-                  helperText={errors.farmId?.message}
-                  {...register("farmId", {
-                    required: "Farma jest wymagana",
-                    onChange: async (e) => {
-                      const value = e.target.value;
-                      await handleFarmChange(value);
-                    },
-                  })}
-                >
-                  {farms.map((farm) => (
-                    <MenuItem key={farm.id} value={farm.id}>
-                      {farm.name}
-                    </MenuItem>
-                  ))}
-                </LoadingTextField>
-              </Grid>
-
-              <Grid size={{ xs: 12 }}>
-                <LoadingTextField
-                  loading={loadingCycle}
-                  label="Cykl"
-                  value={watch("identifierDisplay") || ""}
-                  slotProps={{ input: { readOnly: true } }}
-                  fullWidth
-                />
-              </Grid>
-
-              <Grid size={{ xs: 12 }}>
-                <Controller
-                  name="invoiceDate"
-                  control={control}
-                  rules={{
-                    required: "Data korekty jest wymagana",
-                  }}
-                  render={({ field }) => (
-                    <DatePicker
-                      label="Data korekty"
-                      format="DD.MM.YYYY"
-                      value={field.value ? dayjs(field.value) : null}
-                      onChange={(date) =>
-                        field.onChange(
-                          date ? dayjs(date).format("YYYY-MM-DD") : ""
-                        )
-                      }
-                      slotProps={{
-                        textField: {
-                          fullWidth: true,
-                          error: !!errors.invoiceDate,
-                          helperText: errors.invoiceDate?.message,
-                        },
-                      }}
-                    />
-                  )}
-                />
-              </Grid>
-
-              <Grid size={{ xs: 4 }}>
-                <TextField
-                  label="Netto [zł]"
-                  type="number"
-                  slotProps={{ htmlInput: { step: "any" } }}
-                  {...register("subTotal", {
-                    required: "Wartość netto jest wymagana",
-                    valueAsNumber: true,
-                  })}
-                  error={!!errors.subTotal}
-                  helperText={errors.subTotal?.message}
-                  fullWidth
-                />
-              </Grid>
-
-              <Grid size={{ xs: 4 }}>
-                <TextField
-                  label="VAT [zł]"
-                  type="number"
-                  slotProps={{ htmlInput: { step: "any" } }}
-                  {...register("vatAmount", {
-                    required: "VAT jest wymagany",
-                    valueAsNumber: true,
-                  })}
-                  error={!!errors.vatAmount}
-                  helperText={errors.vatAmount?.message}
-                  fullWidth
-                />
-              </Grid>
-
-              <Grid size={{ xs: 4 }}>
-                <TextField
-                  label="Brutto [zł]"
-                  type="number"
-                  slotProps={{ htmlInput: { step: "any" } }}
-                  {...register("invoiceTotal", {
-                    required: "Wartość brutto jest wymagana",
-                    valueAsNumber: true,
-                  })}
-                  error={!!errors.invoiceTotal}
-                  helperText={errors.invoiceTotal?.message}
-                  fullWidth
-                />
-              </Grid>
-
-              <Grid size={{ xs: 12 }}>
-                <Button
-                  variant="outlined"
-                  component="label"
-                  startIcon={<MdAttachFile />}
-                >
-                  Wybierz plik
-                  <input type="file" hidden onChange={handleFileChange} />
-                </Button>
                 {selectedFile && (
                   <>
-                    <Typography variant="body2" sx={{ mt: 1 }}>
-                      Wybrano plik: {selectedFile.name}
-                    </Typography>
-                    <Box mt={1}>
-                      <FilePreview file={selectedFile} />
-                    </Box>
+                    <Grid size={{ xs: 12 }}>
+                      <Typography variant="body2">
+                        Wybrano plik: {selectedFile.name}
+                      </Typography>
+                    </Grid>
+                    <Grid size={{ xs: 12 }}>
+                      <Box mt={1}>
+                        <FilePreview file={selectedFile} />
+                      </Box>
+                    </Grid>
                   </>
                 )}
+              </Grid>
+
+              {/* Prawa kolumna: reszta formularza */}
+              <Grid container spacing={2} size={{ xs: 12, md: 8 }}>
+                <Grid size={{ xs: 12 }}>
+                  <TextField
+                    label="Numer faktury"
+                    {...register("invoiceNumber", {
+                      required: "Numer faktury jest wymagany",
+                    })}
+                    error={!!errors.invoiceNumber}
+                    helperText={errors.invoiceNumber?.message}
+                    fullWidth
+                  />
+                </Grid>
+
+                <Grid size={{ xs: 12 }}>
+                  <LoadingTextField
+                    label="Ferma"
+                    select
+                    fullWidth
+                    loading={loadingFarms}
+                    value={watch("farmId") || ""}
+                    error={!!errors.farmId}
+                    helperText={errors.farmId?.message}
+                    {...register("farmId", {
+                      required: "Farma jest wymagana",
+                      onChange: async (e) => {
+                        const value = e.target.value;
+                        await handleFarmChange(value);
+                      },
+                    })}
+                  >
+                    {farms.map((farm) => (
+                      <MenuItem key={farm.id} value={farm.id}>
+                        {farm.name}
+                      </MenuItem>
+                    ))}
+                  </LoadingTextField>
+                </Grid>
+
+                <Grid size={{ xs: 12 }}>
+                  <LoadingTextField
+                    loading={loadingCycle}
+                    label="Cykl"
+                    value={watch("identifierDisplay") || ""}
+                    slotProps={{ input: { readOnly: true } }}
+                    fullWidth
+                  />
+                </Grid>
+
+                <Grid size={{ xs: 12 }}>
+                  <Controller
+                    name="invoiceDate"
+                    control={control}
+                    rules={{
+                      required: "Data korekty jest wymagana",
+                    }}
+                    render={({ field }) => (
+                      <DatePicker
+                        label="Data korekty"
+                        format="DD.MM.YYYY"
+                        value={field.value ? dayjs(field.value) : null}
+                        onChange={(date) =>
+                          field.onChange(
+                            date ? dayjs(date).format("YYYY-MM-DD") : ""
+                          )
+                        }
+                        slotProps={{
+                          textField: {
+                            fullWidth: true,
+                            error: !!errors.invoiceDate,
+                            helperText: errors.invoiceDate?.message,
+                          },
+                        }}
+                      />
+                    )}
+                  />
+                </Grid>
+
+                <Grid size={{ xs: 4 }}>
+                  <TextField
+                    label="Netto [zł]"
+                    type="number"
+                    slotProps={{ htmlInput: { step: "any" } }}
+                    {...register("subTotal", {
+                      required: "Wartość netto jest wymagana",
+                      valueAsNumber: true,
+                    })}
+                    error={!!errors.subTotal}
+                    helperText={errors.subTotal?.message}
+                    fullWidth
+                  />
+                </Grid>
+
+                <Grid size={{ xs: 4 }}>
+                  <TextField
+                    label="VAT [zł]"
+                    type="number"
+                    slotProps={{ htmlInput: { step: "any" } }}
+                    {...register("vatAmount", {
+                      required: "VAT jest wymagany",
+                      valueAsNumber: true,
+                    })}
+                    error={!!errors.vatAmount}
+                    helperText={errors.vatAmount?.message}
+                    fullWidth
+                  />
+                </Grid>
+
+                <Grid size={{ xs: 4 }}>
+                  <TextField
+                    label="Brutto [zł]"
+                    type="number"
+                    slotProps={{ htmlInput: { step: "any" } }}
+                    {...register("invoiceTotal", {
+                      required: "Wartość brutto jest wymagana",
+                      valueAsNumber: true,
+                    })}
+                    error={!!errors.invoiceTotal}
+                    helperText={errors.invoiceTotal?.message}
+                    fullWidth
+                  />
+                </Grid>
               </Grid>
             </Grid>
           </DialogContent>

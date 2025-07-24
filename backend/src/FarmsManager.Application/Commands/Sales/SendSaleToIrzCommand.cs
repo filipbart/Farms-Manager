@@ -104,6 +104,11 @@ public class SendSaleToIrzCommandHandler : IRequestHandler<SendSaleToIrzCommand,
             return response;
         }
 
+        if (dispositionResponse.NumerDokumentu.IsEmpty())
+        {
+            throw new Exception("Numer dokumentu z systemu IRZplus jest pusty");
+        }
+
         salesToSend.ForEach(t => t.MarkAsSentToIrz(dispositionResponse.NumerDokumentu, userId));
         await _saleRepository.UpdateRangeAsync(salesToSend, ct);
 

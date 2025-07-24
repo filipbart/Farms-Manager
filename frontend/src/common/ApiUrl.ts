@@ -25,6 +25,8 @@ export default class ApiUrl {
 
   public static Insertions = this.BaseUrl + "insertions";
   public static UpdateInsertion = this.Insertions + "/update";
+  public static DeleteInsertion = (id: string) =>
+    this.Insertions + "/delete/" + id;
   public static InsertionsDict = this.Insertions + "/dictionary";
   public static LatestCycle = "/latest-cycle";
   public static InsertionAvailableHenhouses =

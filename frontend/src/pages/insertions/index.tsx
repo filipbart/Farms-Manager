@@ -39,16 +39,6 @@ const InsertionsPage: React.FC = () => {
     return saved ? JSON.parse(saved) : {};
   });
 
-  const columns = useMemo(
-    () =>
-      getInsertionsColumns({
-        setSelectedInsertion,
-        setIsEditModalOpen,
-        dispatch,
-        filters,
-      }),
-    [dispatch, filters]
-  );
   const uniqueCycles = useMemo(() => {
     if (!dictionary) return [];
     const map = new Map<string, CycleDictModel>();
@@ -77,6 +67,25 @@ const InsertionsPage: React.FC = () => {
     fetchDictionaries();
   }, []);
 
+  const deleteInsertion = async (id: string) => {
+    try {
+      setLoading(true);
+      await handleApiResponse(
+        () => InsertionsService.deleteInsertion(id),
+        async () => {
+          toast.success("Wstawienie zostało poprawnie usunięte");
+          dispatch({ type: "setMultiple", payload: { page: filters.page } });
+        },
+        undefined,
+        "Błąd podczas usuwania wstawienia"
+      );
+    } catch {
+      toast.error("Błąd podczas usuwania wstawienia");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     const fetchInsertions = async () => {
       setLoading(true);
@@ -98,6 +107,18 @@ const InsertionsPage: React.FC = () => {
     };
     fetchInsertions();
   }, [filters]);
+
+  const columns = useMemo(
+    () =>
+      getInsertionsColumns({
+        setSelectedInsertion,
+        deleteInsertion,
+        setIsEditModalOpen,
+        dispatch,
+        filters,
+      }),
+    [dispatch, filters]
+  );
 
   return (
     <Box p={4}>

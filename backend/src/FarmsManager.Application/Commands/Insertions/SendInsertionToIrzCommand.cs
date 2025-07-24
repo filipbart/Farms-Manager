@@ -23,7 +23,8 @@ public class SendInsertionToIrzCommandHandler : IRequestHandler<SendInsertionToI
     private readonly IInsertionRepository _insertionRepository;
     private readonly IIrzplusService _irzplusService;
 
-    public SendInsertionToIrzCommandHandler(IUserDataResolver userDataResolver, IInsertionRepository insertionRepository,
+    public SendInsertionToIrzCommandHandler(IUserDataResolver userDataResolver,
+        IInsertionRepository insertionRepository,
         IUserRepository userRepository, IIrzplusService irzplusService)
     {
         _userDataResolver = userDataResolver;
@@ -102,6 +103,11 @@ public class SendInsertionToIrzCommandHandler : IRequestHandler<SendInsertionToI
             }
 
             return response;
+        }
+
+        if (dispositionResponse.NumerDokumentu.IsEmpty())
+        {
+            throw new Exception("Numer dokumentu z systemu IRZplus jest pusty");
         }
 
         insertionsToSend.ForEach(t => t.MarkAsSentToIrz(dispositionResponse.NumerDokumentu, userId));

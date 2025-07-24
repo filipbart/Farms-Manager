@@ -9,11 +9,13 @@ import { InsertionsService } from "../../services/insertions-service";
 
 export const getInsertionsColumns = ({
   setSelectedInsertion,
+  deleteInsertion,
   setIsEditModalOpen,
   dispatch,
   filters,
 }: {
   setSelectedInsertion: (s: any) => void;
+  deleteInsertion: (id: string) => void;
   setIsEditModalOpen: (v: boolean) => void;
   dispatch: any;
   filters: any;
@@ -144,6 +146,17 @@ export const getInsertionsColumns = ({
           }}
         >
           Edytuj
+        </Button>,
+        <Button
+          key="delete"
+          variant="outlined"
+          size="small"
+          color="error"
+          onClick={() => {
+            deleteInsertion(params.row.id);
+          }}
+        >
+          Usuń
         </Button>,
       ],
     },

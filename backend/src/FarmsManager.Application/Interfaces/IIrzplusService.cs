@@ -9,5 +9,5 @@ public interface IIrzplusService : IService
 {
     public void PrepareOptions(IrzplusCredentials credentials);
     public Task<ZlozenieDyspozycjiResponse> SendInsertionsAsync(IList<InsertionEntity> insertions, CancellationToken ct = default);
-    public Task<ZlozenieDyspozycjiResponse> SendSalesAsync(IList<SaleEntity> insertions, CancellationToken ct = default);
+    public Task<ZlozenieDyspozycjiResponse> SendSalesAsync(IList<SaleEntity> sales, CancellationToken ct = default);
 }

@@ -48,6 +48,10 @@ export class InsertionsService {
     );
   }
 
+  public static async deleteInsertion(insertionId: string) {
+    return await AxiosWrapper.delete(ApiUrl.DeleteInsertion(insertionId));
+  }
+
   public static async addNewCycle(data: AddCycleData) {
     return await AxiosWrapper.post<LatestCycle>(
       ApiUrl.Insertions + "/add-cycle",
