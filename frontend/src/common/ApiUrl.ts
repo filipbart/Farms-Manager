@@ -76,6 +76,13 @@ export default class ApiUrl {
   public static AddExpensesType = this.Expenses + "/add-type";
   public static DeleteExpensesType = (id: string) =>
     this.Expenses + "/delete-type/" + id;
+  public static ExpensesContractors = this.Expenses + "/contractors";
+  public static AddExpensesContractor = this.Expenses + "/add-contractor";
+  public static DeleteExpenseContractor = (id: string) =>
+    this.Expenses + "/delete-contractor/" + id;
+  public static UpdateExpenseContractor = (id: string) =>
+    this.Expenses + "/update-contractor/" + id;
+
   public static Files = this.BaseUrl + "files";
   public static GetFile = `${this.Files}/file`;
 }

@@ -122,7 +122,7 @@ const AddInsertionModal: React.FC<AddInsertionModalProps> = ({
   useEffect(() => {
     fetchFarms();
     fetchHatcheries();
-  }, []);
+  }, [fetchFarms, fetchHatcheries]);
 
   useEffect(() => {
     if (open) {

@@ -62,7 +62,7 @@ const EditCorrectionModal: React.FC<EditCorrectionModalProps> = ({
         invoiceDate: correction.invoiceDate,
       });
     }
-  }, [correction]);
+  }, [correction, reset]);
 
   const handleUpdate = async (data: UpdateCorrectionData) => {
     if (!correction) return;

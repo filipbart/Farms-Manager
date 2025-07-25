@@ -134,7 +134,7 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
   useEffect(() => {
     fetchFarms();
     fetchFeedsNames();
-  }, []);
+  }, [fetchFarms, fetchFeedsNames]);
 
   useEffect(() => {
     if (draftFeedInvoices.length === 0) {

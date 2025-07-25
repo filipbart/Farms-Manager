@@ -106,7 +106,7 @@ public class AddNewSaleCommandHandler : IRequestHandler<AddNewSaleCommand, BaseR
         var directoryGuid = Guid.NewGuid();
         FileDirectoryModel fileDirectoryModel = null;
 
-        if (request.Files.Count != 0)
+        if (request.Files != null && request.Files.Count != 0)
         {
             foreach (var file in request.Files)
             {

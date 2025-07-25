@@ -71,7 +71,7 @@ const AddCorrectionModal: React.FC<AddCorrectionModalProps> = ({
 
   useEffect(() => {
     fetchFarms();
-  }, []);
+  }, [fetchFarms]);
 
   useEffect(() => {
     return () => {

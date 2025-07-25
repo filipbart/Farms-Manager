@@ -63,8 +63,8 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
   const logout = useCallback(async () => {
     try {
       await AuthService.logout();
-    } catch {
-      /* empty */
+    } catch (error) {
+      console.error("Błąd podczas wylogowywania:", error);
     }
     setUser(undefined);
     removeAuthToken();
@@ -132,7 +132,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
 
   useEffect(() => {
     initialLoad();
-  }, []);
+  }, [initialLoad]);
 
   useEffect(() => {
     if (!authToken && location.pathname !== "/login") {

@@ -51,7 +51,7 @@ const EditFeedPriceModal: React.FC<EditFeedPriceModalProps> = ({
     if (open && feedPrice) {
       fetchFeedsNames();
     }
-  }, [open, feedPrice]);
+  }, [open, feedPrice, fetchFeedsNames]);
 
   useEffect(() => {
     if (feedPrice && feedsNames.length > 0) {

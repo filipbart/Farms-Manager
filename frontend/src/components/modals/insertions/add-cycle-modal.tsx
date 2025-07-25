@@ -83,7 +83,7 @@ const SetCycleModal: React.FC<SetCycleModalProps> = ({ open, onClose }) => {
 
   useEffect(() => {
     fetchFarms();
-  }, []);
+  }, [fetchFarms]);
 
   return (
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
