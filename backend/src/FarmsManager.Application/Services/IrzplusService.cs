@@ -153,12 +153,7 @@ public class IrzplusService : IIrzplusService
                 TypZdarzenia = typZdarzenia,
                 DataZdarzenia = first.EventDate,
                 LiczbaDrobiuPrzybylo = sumQuantity,
-                LiczbaJajWylegowychPrzybylo = 0,
-                KodKraju = new KodOpisWartosciDto
-                {
-                    Kod = "PL",
-                    Opis = "POLSKA"
-                }
+                LiczbaJajWylegowychPrzybylo = 0
             }
         };
 
