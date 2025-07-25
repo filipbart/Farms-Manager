@@ -3,7 +3,7 @@ using FarmsManager.Application.Common;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Models;
 using FarmsManager.Application.Specifications.Feeds;
-using FarmsManager.Domain.Aggregates.FeedAggregate.Entites;
+using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
 using MediatR;
 

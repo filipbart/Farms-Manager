@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Specifications;
-using FarmsManager.Domain.Aggregates.FeedAggregate.Entites;
+using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
 using MediatR;
 

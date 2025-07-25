@@ -54,5 +54,9 @@ public class AddSaleFieldExtraCommandValidator : AbstractValidator<AddSaleFieldE
             .WithMessage("Lista pól nie może byc pusta")
             .Must(x => x.Length <= 20)
             .WithMessage("Liczba pól nie może być większa niż 20");
+
+        RuleForEach(x => x.Fields)
+            .NotEmpty()
+            .WithMessage("Pole nie może być puste");
     }
 }

@@ -140,10 +140,11 @@ public class IrzplusService : IIrzplusService
             : first.ProducerNumber;
 
         var sumQuantity = items.Sum(i => i.Quantity);
+        var realproducerNumber = first.ProducerNumber.Split("-")[0];
 
         var disposition = new DyspozycjaZZSSD
         {
-            NumerProducenta = first.ProducerNumber,
+            NumerProducenta = realproducerNumber,
             Zgloszenie = new ZgloszenieZZSSDDTO
             {
                 Pozycje = null,

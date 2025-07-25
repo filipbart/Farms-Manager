@@ -17,6 +17,7 @@ import SaleFieldsSettingsPage from "../pages/sales/fields-settings";
 import FeedsPricePage from "../pages/feeds/prices";
 import FeedsDeliveriesPage from "../pages/feeds/deliveries";
 import FeedsPaymentsPage from "../pages/feeds/payments";
+import ExpensesTypesPage from "../pages/expenses/types";
 
 const DefaultRouter: React.FC = () => {
   const { getRoute } = useRouter();
@@ -67,6 +68,10 @@ const DefaultRouter: React.FC = () => {
         <Route
           path={getRoute(RouteName.FeedsPayments)}
           element={<FeedsPaymentsPage />}
+        />
+        <Route
+          path={getRoute(RouteName.ExpensesTypes)}
+          element={<ExpensesTypesPage />}
         />
       </Route>
     </Routes>

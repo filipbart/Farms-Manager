@@ -3,7 +3,7 @@ using FarmsManager.Application.Commands.Feeds.Deliveries;
 using FarmsManager.Application.FileSystem;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications;
-using FarmsManager.Domain.Aggregates.FeedAggregate.Entites;
+using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
 using FluentValidation;

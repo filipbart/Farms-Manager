@@ -6,7 +6,7 @@ using FarmsManager.Application.Specifications;
 using FarmsManager.Application.Specifications.Cycle;
 using FarmsManager.Application.Specifications.Farms;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
-using FarmsManager.Domain.Aggregates.FeedAggregate.Entites;
+using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
 using FluentValidation;

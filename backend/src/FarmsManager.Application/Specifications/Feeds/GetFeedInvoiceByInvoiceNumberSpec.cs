@@ -1,5 +1,5 @@
 ﻿using Ardalis.Specification;
-using FarmsManager.Domain.Aggregates.FeedAggregate.Entites;
+using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
 
 namespace FarmsManager.Application.Specifications.Feeds;
 

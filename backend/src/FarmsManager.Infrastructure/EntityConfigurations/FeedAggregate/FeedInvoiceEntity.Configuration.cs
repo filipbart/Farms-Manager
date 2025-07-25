@@ -1,4 +1,4 @@
-﻿using FarmsManager.Domain.Aggregates.FeedAggregate.Entites;
+﻿using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace FarmsManager.Infrastructure.EntityConfigurations.FeedAggregate;

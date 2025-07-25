@@ -1,6 +1,6 @@
 ﻿using Ardalis.Specification;
 using FarmsManager.Application.Queries.Feeds;
-using FarmsManager.Domain.Aggregates.FeedAggregate.Entites;
+using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
 
 namespace FarmsManager.Application.Specifications.Feeds;
 

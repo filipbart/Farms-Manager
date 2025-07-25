@@ -1,6 +1,6 @@
 ﻿using FarmsManager.Domain.SeedWork;
 
-namespace FarmsManager.Domain.Aggregates.FeedAggregate.Entites;
+namespace FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
 
 public class FeedNameEntity : Entity
 {

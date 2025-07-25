@@ -27,6 +27,48 @@ namespace FarmsManager.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities.ExpenseTypeEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("DateCreatedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_created_utc");
+
+                    b.Property<DateTime?>("DateDeletedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_deleted_utc");
+
+                    b.Property<DateTime?>("DateModifiedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_modified_utc");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_by");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.HasKey("Id")
+                        .HasName("pk_expense_type");
+
+                    b.ToTable("expense_type", "farms_manager");
+                });
+
             modelBuilder.Entity("FarmsManager.Domain.Aggregates.FarmAggregate.Entities.CycleEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -481,7 +523,7 @@ namespace FarmsManager.Infrastructure.Migrations
                     b.ToTable("sale_field_extra", "farms_manager");
                 });
 
-            modelBuilder.Entity("FarmsManager.Domain.Aggregates.FeedAggregate.Entites.FeedInvoiceCorrectionEntity", b =>
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.FeedAggregate.Entities.FeedInvoiceCorrectionEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid")
@@ -555,7 +597,7 @@ namespace FarmsManager.Infrastructure.Migrations
                     b.ToTable("feed_invoice_correction", "farms_manager");
                 });
 
-            modelBuilder.Entity("FarmsManager.Domain.Aggregates.FeedAggregate.Entites.FeedInvoiceEntity", b =>
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.FeedAggregate.Entities.FeedInvoiceEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid")
@@ -686,7 +728,7 @@ namespace FarmsManager.Infrastructure.Migrations
                     b.ToTable("feed_invoice", "farms_manager");
                 });
 
-            modelBuilder.Entity("FarmsManager.Domain.Aggregates.FeedAggregate.Entites.FeedNameEntity", b =>
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.FeedAggregate.Entities.FeedNameEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid")
@@ -727,7 +769,7 @@ namespace FarmsManager.Infrastructure.Migrations
                     b.ToTable("feed_name", "farms_manager");
                 });
 
-            modelBuilder.Entity("FarmsManager.Domain.Aggregates.FeedAggregate.Entites.FeedPaymentEntity", b =>
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.FeedAggregate.Entities.FeedPaymentEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid")
@@ -778,7 +820,7 @@ namespace FarmsManager.Infrastructure.Migrations
                     b.ToTable("feed_payment", "farms_manager");
                 });
 
-            modelBuilder.Entity("FarmsManager.Domain.Aggregates.FeedAggregate.Entites.FeedPriceEntity", b =>
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.FeedAggregate.Entities.FeedPriceEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid")
@@ -1172,7 +1214,7 @@ namespace FarmsManager.Infrastructure.Migrations
                     b.Navigation("Slaughterhouse");
                 });
 
-            modelBuilder.Entity("FarmsManager.Domain.Aggregates.FeedAggregate.Entites.FeedInvoiceCorrectionEntity", b =>
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.FeedAggregate.Entities.FeedInvoiceCorrectionEntity", b =>
                 {
                     b.HasOne("FarmsManager.Domain.Aggregates.FarmAggregate.Entities.CycleEntity", "Cycle")
                         .WithMany()
@@ -1193,7 +1235,7 @@ namespace FarmsManager.Infrastructure.Migrations
                     b.Navigation("Farm");
                 });
 
-            modelBuilder.Entity("FarmsManager.Domain.Aggregates.FeedAggregate.Entites.FeedInvoiceEntity", b =>
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.FeedAggregate.Entities.FeedInvoiceEntity", b =>
                 {
                     b.HasOne("FarmsManager.Domain.Aggregates.FarmAggregate.Entities.CycleEntity", "Cycle")
                         .WithMany()
@@ -1216,12 +1258,12 @@ namespace FarmsManager.Infrastructure.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_feed_invoice_henhouse_henhouse_id");
 
-                    b.HasOne("FarmsManager.Domain.Aggregates.FeedAggregate.Entites.FeedInvoiceCorrectionEntity", "InvoiceCorrection")
+                    b.HasOne("FarmsManager.Domain.Aggregates.FeedAggregate.Entities.FeedInvoiceCorrectionEntity", "InvoiceCorrection")
                         .WithMany()
                         .HasForeignKey("InvoiceCorrectionId")
                         .HasConstraintName("fk_feed_invoice_feed_invoice_correction_invoice_correction_id");
 
-                    b.HasOne("FarmsManager.Domain.Aggregates.FeedAggregate.Entites.FeedPaymentEntity", "Payment")
+                    b.HasOne("FarmsManager.Domain.Aggregates.FeedAggregate.Entities.FeedPaymentEntity", "Payment")
                         .WithMany()
                         .HasForeignKey("PaymentId")
                         .HasConstraintName("fk_feed_invoice_feed_payment_entity_payment_id");
@@ -1237,7 +1279,7 @@ namespace FarmsManager.Infrastructure.Migrations
                     b.Navigation("Payment");
                 });
 
-            modelBuilder.Entity("FarmsManager.Domain.Aggregates.FeedAggregate.Entites.FeedPaymentEntity", b =>
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.FeedAggregate.Entities.FeedPaymentEntity", b =>
                 {
                     b.HasOne("FarmsManager.Domain.Aggregates.FarmAggregate.Entities.FarmEntity", "Farm")
                         .WithMany()
@@ -1249,7 +1291,7 @@ namespace FarmsManager.Infrastructure.Migrations
                     b.Navigation("Farm");
                 });
 
-            modelBuilder.Entity("FarmsManager.Domain.Aggregates.FeedAggregate.Entites.FeedPriceEntity", b =>
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.FeedAggregate.Entities.FeedPriceEntity", b =>
                 {
                     b.HasOne("FarmsManager.Domain.Aggregates.FarmAggregate.Entities.CycleEntity", "Cycle")
                         .WithMany()
