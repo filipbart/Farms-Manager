@@ -100,10 +100,9 @@ const ExpensesContractorsPage: React.FC = () => {
             paginationDisplayedRows: ({ from, to, count }) =>
               `${from} do ${to} z ${count}`,
           }}
-          rowCount={expensesContractors.length}
           rowSelection={false}
           showToolbar={false}
-          pageSizeOptions={[5, 10, 25, { value: -1, label: "Wszystkie" }]}
+          pageSizeOptions={[5, 10, 25, 100, { value: -1, label: "Wszystkie" }]}
           sx={{
             [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },
             [`& .${tablePaginationClasses.input}`]: { display: "inline-flex" },

@@ -1,4 +1,5 @@
 ﻿using FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace FarmsManager.Infrastructure.EntityConfigurations.ExpenseAggregate;
@@ -11,6 +12,7 @@ public class ExpenseContractorEntityConfiguration : BaseConfiguration<ExpenseCon
 
         builder.HasKey(t => t.Id);
 
-        builder.HasOne(t => t.ExpenseType).WithMany().HasForeignKey(t => t.ExpenseTypeId);
+        builder.HasOne(t => t.ExpenseType).WithMany().HasForeignKey(t => t.ExpenseTypeId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

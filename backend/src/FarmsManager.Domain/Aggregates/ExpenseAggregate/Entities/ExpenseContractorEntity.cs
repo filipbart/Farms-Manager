@@ -4,11 +4,16 @@ namespace FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities;
 
 public class ExpenseContractorEntity : Entity
 {
-    public Guid ExpenseTypeId { get; protected internal set; }
+    public Guid? ExpenseTypeId { get; protected internal set; }
     public string Name { get; protected internal set; }
     public string Nip { get; protected internal set; }
     public string Address { get; protected internal set; }
     public virtual ExpenseTypeEntity ExpenseType { get; protected internal set; }
+
+    public void SetExpenseType(Guid? expenseTypeId)
+    {
+        ExpenseTypeId = expenseTypeId;
+    }
 
     public static ExpenseContractorEntity CreateNew(Guid expenseTypeId, string name, string nip, string address,
         Guid? userId = null)

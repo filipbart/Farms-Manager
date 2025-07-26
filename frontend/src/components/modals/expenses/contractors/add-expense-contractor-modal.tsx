@@ -49,6 +49,7 @@ const AddExpenseContractorModal: React.FC<AddExpenseContractorModalProps> = ({
       () => ExpensesService.addExpenseContractor(data),
       () => {
         toast.success("Kontrahent został dodany");
+        reset();
         onSave();
       },
       undefined,
@@ -65,7 +66,7 @@ const AddExpenseContractorModal: React.FC<AddExpenseContractorModalProps> = ({
 
   useEffect(() => {
     fetchExpensesTypes();
-  }, []);
+  }, [fetchExpensesTypes]);
 
   return (
     <Dialog open={open} onClose={close} fullWidth maxWidth="sm">

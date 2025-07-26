@@ -3,8 +3,6 @@ using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
-using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
-using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
 using MediatR;
 
 namespace FarmsManager.Application.Queries.Expenses.Types;

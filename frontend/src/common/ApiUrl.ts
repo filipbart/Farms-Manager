@@ -10,6 +10,9 @@ export default class ApiUrl {
   public static RefreshToken = this.BaseUrl + "auth/refresh-token";
   public static Logout = this.BaseUrl + "auth/logout";
 
+  public static Files = this.BaseUrl + "files";
+  public static GetFile = `${this.Files}/file`;
+
   public static Farms = this.BaseUrl + "farms";
   public static AddFarm = this.Farms + "/add";
   public static DeleteFarm = this.Farms + "/delete";
@@ -82,7 +85,4 @@ export default class ApiUrl {
     this.Expenses + "/delete-contractor/" + id;
   public static UpdateExpenseContractor = (id: string) =>
     this.Expenses + "/update-contractor/" + id;
-
-  public static Files = this.BaseUrl + "files";
-  public static GetFile = `${this.Files}/file`;
 }

@@ -15,12 +15,14 @@ public class DeleteExpenseTypeCommandHandler : IRequestHandler<DeleteExpenseType
 {
     private readonly IUserDataResolver _userDataResolver;
     private readonly IExpenseTypeRepository _expenseTypeRepository;
+    private readonly IExpenseContractorRepository _expenseContractorRepository;
 
     public DeleteExpenseTypeCommandHandler(IUserDataResolver userDataResolver,
-        IExpenseTypeRepository expenseTypeRepository)
+        IExpenseTypeRepository expenseTypeRepository, IExpenseContractorRepository expenseContractorRepository)
     {
         _userDataResolver = userDataResolver;
         _expenseTypeRepository = expenseTypeRepository;
+        _expenseContractorRepository = expenseContractorRepository;
     }
 
     public async Task<EmptyBaseResponse> Handle(DeleteExpenseTypeCommand request, CancellationToken cancellationToken)
@@ -29,6 +31,21 @@ public class DeleteExpenseTypeCommandHandler : IRequestHandler<DeleteExpenseType
         var entity =
             await _expenseTypeRepository.GetAsync(new GetExpenseTypeByIdSpec(request.ExpenseTypeId),
                 cancellationToken);
+
+        var contractors =
+            await _expenseContractorRepository.ListAsync(new GetContractorsByExpenseTypeSpec(request.ExpenseTypeId),
+                cancellationToken);
+        if (contractors.Count != 0)
+        {
+            foreach (var expenseContractorEntity in contractors)
+            {
+                expenseContractorEntity.SetExpenseType(null);
+                expenseContractorEntity.SetModified(userId);
+            }
+
+            await _expenseContractorRepository.UpdateRangeAsync(contractors, cancellationToken);
+        }
+
 
         entity.Delete(userId);
         await _expenseTypeRepository.UpdateAsync(entity, cancellationToken);
@@ -43,5 +60,15 @@ public sealed class GetExpenseTypeByIdSpec : BaseSpecification<ExpenseTypeEntity
     {
         EnsureExists();
         Query.Where(e => e.Id == id);
+    }
+}
+
+public sealed class GetContractorsByExpenseTypeSpec : BaseSpecification<ExpenseContractorEntity>
+{
+    public GetContractorsByExpenseTypeSpec(Guid expenseTypeId)
+    {
+        EnsureExists();
+
+        Query.Where(t => t.ExpenseTypeId == expenseTypeId);
     }
 }
