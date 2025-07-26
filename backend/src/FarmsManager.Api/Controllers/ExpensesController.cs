@@ -3,6 +3,7 @@ using FarmsManager.Application.Commands.Expenses.Contractors;
 using FarmsManager.Application.Commands.Expenses.Types;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Queries.Expenses.Contractors;
+using FarmsManager.Application.Queries.Expenses.Productions;
 using FarmsManager.Application.Queries.Expenses.Types;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -100,5 +101,30 @@ public class ExpensesController(IMediator mediator) : BaseController
         AddExpenseContractorDto data)
     {
         return Ok(await mediator.Send(new UpdateExpenseContractorCommand(expenseContractorId, data)));
+    }
+
+    /// <summary>
+    /// Zwraca słownik filtrów dla kosztów produkcyjnych
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet("productions/dictionary")]
+    [ProducesResponseType(typeof(BaseResponse<GetExpenseProductionDictionaryQueryResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetExpenseProductionDictionary()
+    {
+        return Ok(await mediator.Send(new GetExpenseProductionDictionaryQuery()));
+    }
+
+    /// <summary>
+    /// Zwraca koszty produkcyjne
+    /// </summary>
+    /// <param name="filters"></param>
+    /// <returns></returns>
+    [HttpGet("productions")]
+    [ProducesResponseType(typeof(BaseResponse<GetExpensesProductionQueryResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetExpensesProduction([FromQuery] GetExpensesProductionsFilters filters)
+    {
+        return Ok(await mediator.Send(new GetExpensesProductionQuery(filters)));
     }
 }

@@ -85,4 +85,9 @@ export default class ApiUrl {
     this.Expenses + "/delete-contractor/" + id;
   public static UpdateExpenseContractor = (id: string) =>
     this.Expenses + "/update-contractor/" + id;
+  public static ExpensesProductionsDictionary =
+    this.Expenses + "/productions/dictionary";
+  public static ExpensesProductions = this.Expenses + "/productions";
+  public static DeleteExpenseProduction = (id: string) =>
+    this.Expenses + "/productions/delete/" + id;
 }

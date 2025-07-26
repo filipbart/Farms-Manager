@@ -3,6 +3,7 @@ using FarmsManager.Application.Models;
 using FarmsManager.Application.Queries.Farms;
 using FarmsManager.Application.Queries.Hatcheries;
 using FarmsManager.Application.Specifications;
+using FarmsManager.Application.Specifications.Cycle;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.HatcheryAggregate.Interfaces;
@@ -41,13 +42,5 @@ public class GetInsertionDictionaryQueryHandler : IRequestHandler<GetInsertionDi
             Hatcheries = hatcheries,
             Cycles = cycles
         });
-    }
-}
-
-public sealed class GetAllCyclesSpec : BaseSpecification<CycleEntity>
-{
-    public GetAllCyclesSpec()
-    {
-        EnsureExists();
     }
 }
