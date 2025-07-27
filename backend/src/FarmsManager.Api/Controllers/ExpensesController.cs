@@ -1,5 +1,6 @@
 using FarmsManager.Api.Controllers.Base;
 using FarmsManager.Application.Commands.Expenses.Contractors;
+using FarmsManager.Application.Commands.Expenses.Production;
 using FarmsManager.Application.Commands.Expenses.Types;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Queries.Expenses.Contractors;
@@ -126,5 +127,55 @@ public class ExpensesController(IMediator mediator) : BaseController
     public async Task<IActionResult> GetExpensesProduction([FromQuery] GetExpensesProductionsFilters filters)
     {
         return Ok(await mediator.Send(new GetExpensesProductionQuery(filters)));
+    }
+
+    /// <summary>
+    /// Dodaje nową fakturę kosztów ręcznie
+    /// </summary>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    [HttpPost("productions/add")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> AddExpenseProduction([FromForm] AddExpenseProductionData data)
+    {
+        return Ok(await mediator.Send(new AddExpenseProductionCommand(data)));
+    }
+
+    /// <summary>
+    /// Aktualizuje dane kosztów produkcyjnych
+    /// </summary>
+    /// <param name="expenseProductionId"></param>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    [HttpPatch("productions/update/{expenseProductionId:guid}")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> UpdateExpenseProduction([FromRoute] Guid expenseProductionId, UpdateExpenseProductionData data)
+    {
+        return Ok(await mediator.Send(new UpdateExpenseProductionCommand(expenseProductionId, data)));
+    }
+
+    /// <summary>
+    /// Usuwa dane kosztów produkcyjnych
+    /// </summary>
+    /// <param name="expenseProductionId"></param>
+    /// <returns></returns>
+    [HttpDelete("productions/delete/{expenseProductionId:guid}")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> DeleteExpenseProduction([FromRoute] Guid expenseProductionId)
+    {
+        return Ok(await mediator.Send(new DeleteExpenseProductionCommand(expenseProductionId)));
+    }
+    
+    
+    [HttpPost("productions/upload")]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType(typeof(BaseResponse<UploadExpensesInvoicesCommandResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> UploadExpenseInvoices([FromForm] UploadExpensesInvoicesDto dto)
+    {
+        return Ok(await mediator.Send(new UploadExpensesInvoicesCommand(dto)));
     }
 }

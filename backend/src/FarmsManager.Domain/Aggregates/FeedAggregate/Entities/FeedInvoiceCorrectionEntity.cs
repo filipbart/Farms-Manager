@@ -16,9 +16,11 @@ public class FeedInvoiceCorrectionEntity : Entity
     public decimal VatAmount { get; protected internal set; }
     public decimal InvoiceTotal { get; protected internal set; }
     public DateOnly InvoiceDate { get; protected internal set; }
-    public string FilePath { get; init; }
+    public string FilePath { get; protected internal set; }
     public virtual FarmEntity Farm { get; init; }
     public virtual CycleEntity Cycle { get; init; }
+    
+    public void SetFilePath(string filePath) => FilePath = filePath;
 
     public static FeedInvoiceCorrectionEntity CreateNew(
         Guid farmId,
@@ -28,7 +30,6 @@ public class FeedInvoiceCorrectionEntity : Entity
         decimal vatAmount,
         decimal invoiceTotal,
         DateOnly invoiceDate,
-        string filePath,
         Guid? userId = null)
     {
         return new FeedInvoiceCorrectionEntity
@@ -40,7 +41,6 @@ public class FeedInvoiceCorrectionEntity : Entity
             VatAmount = vatAmount,
             InvoiceTotal = invoiceTotal,
             InvoiceDate = invoiceDate,
-            FilePath = filePath,
             CreatedBy = userId
         };
     }

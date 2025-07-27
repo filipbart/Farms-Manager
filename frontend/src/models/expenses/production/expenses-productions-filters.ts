@@ -5,7 +5,7 @@ export const initialFilters: ExpensesProductionsFilterPaginationModel = {
   farmIds: [],
   cycles: [],
   contractorIds: [],
-  expensesTypeNames: [],
+  expensesTypesIds: [],
   dateSince: "",
   dateTo: "",
   page: 0,
@@ -51,7 +51,7 @@ export default interface ExpensesProductionsFilter {
   farmIds: string[];
   cycles: CycleDictModel[];
   contractorIds: string[];
-  expensesTypeNames: string[];
+  expensesTypesIds: string[];
   dateSince: string;
   dateTo: string;
 }

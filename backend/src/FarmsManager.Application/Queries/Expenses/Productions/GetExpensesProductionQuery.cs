@@ -23,7 +23,7 @@ public record GetExpensesProductionsFilters : OrderedPaginationParams<ExpensesPr
     public List<Guid> FarmIds { get; init; }
     public List<CycleDictModel> Cycles { get; init; }
     public List<Guid> ContractorIds { get; init; }
-    public List<string> ExpensesTypeNames { get; init; }
+    public List<Guid> ExpensesTypesIds { get; init; }
     public DateOnly? DateSince { get; init; }
     public DateOnly? DateTo { get; init; }
 }

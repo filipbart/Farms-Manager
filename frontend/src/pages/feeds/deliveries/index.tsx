@@ -17,7 +17,7 @@ import {
   initialFilters,
 } from "../../../models/feeds/deliveries/deliveries-filters";
 import { getFeedsDeliveriesColumns } from "./deliveries-columns";
-import UploadInvoicesModal from "../../../components/modals/feeds/deliveries/upload-invoices-modal";
+import UploadFeedInvoicesModal from "../../../components/modals/feeds/deliveries/upload-feed-invoices-modal";
 import SaveInvoiceModal from "../../../components/modals/feeds/deliveries/save-invoice-modal";
 import type { DraftFeedInvoice } from "../../../models/feeds/deliveries/draft-feed-invoice";
 import type { FeedDeliveryListModel } from "../../../models/feeds/deliveries/feed-invoice";
@@ -374,7 +374,7 @@ const FeedsDeliveriesPage: React.FC = () => {
         />
       )}
 
-      <UploadInvoicesModal
+      <UploadFeedInvoicesModal
         open={openUploadModal}
         onClose={() => setOpenUploadModal(false)}
         onUpload={uploadFiles}

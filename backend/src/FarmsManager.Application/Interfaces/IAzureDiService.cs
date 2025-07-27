@@ -6,4 +6,5 @@ namespace FarmsManager.Application.Interfaces;
 public interface IAzureDiService : IService
 {
     Task<FeedDeliveryInvoiceModel> AnalyzeFeedDeliveryInvoiceAsync(string preSignedUrl);
+    Task<ExpenseProductionInvoiceModel> AnalyzeExpenseProductionInvoiceAsync(string preSignedUrl);
 }

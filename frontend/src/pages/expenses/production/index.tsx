@@ -9,7 +9,10 @@ import {
   initialFilters,
 } from "../../../models/expenses/production/expenses-productions-filters";
 import type { ExpensesProductionsDictionary } from "../../../models/expenses/production/expenses-productions-dictionary";
-import type { ExpenseProductionListModel } from "../../../models/expenses/production/expenses-productions";
+import type {
+  DraftExpenseInvoice,
+  ExpenseProductionListModel,
+} from "../../../models/expenses/production/expenses-productions";
 import type { CycleDictModel } from "../../../models/common/dictionaries";
 import { useExpenseProductions } from "../../../hooks/expenses/useExpensesProducations";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
@@ -21,16 +24,23 @@ import CustomToolbar from "../../../components/datagrid/custom-toolbar";
 import NoRowsOverlay from "../../../components/datagrid/custom-norows";
 import { mapExpenseProductionOrderTypeToField } from "../../../common/helpers/expenses-productions-order-type-helper";
 import { getExpensesProductionsFiltersConfig } from "./filter-config.expenses-production";
+import AddExpenseProductionModal from "../../../components/modals/expenses/production/add-expense-production-modal";
+import EditExpenseProductionModal from "../../../components/modals/expenses/production/edit-expense-production-modal";
+import UploadExpenseInvoicesModal from "../../../components/modals/expenses/production/upload-expense-invoices-modal";
 
 const ExpenseProductionPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
   const [dictionary, setDictionary] = useState<ExpensesProductionsDictionary>();
-  const [openAddInvoicesModal, setOpenAddInvoicesModal] = useState(false);
-  const [openAddExpenseProductionModal, setOpenAddExpenseProductionModel] =
+  const [openAddExpenseProductionModal, setOpenAddExpenseProductionModal] =
     useState(false);
   const [selectedExpenseProduction, setSelectedExpenseProduction] =
     useState<ExpenseProductionListModel | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const [openAddInvoicesModal, setOpenAddInvoicesModal] = useState(false);
+  const [draftExpenseInvoices, setDraftExpenseInvoices] = useState<
+    DraftExpenseInvoice[]
+  >([]);
 
   const {
     expenseProductions,
@@ -48,6 +58,15 @@ const ExpenseProductionPage: React.FC = () => {
   const [downloadingFilePath, setDownloadFilePath] = useState<string | null>(
     null
   );
+
+  const uploadFiles = async (draftFiles: DraftExpenseInvoice[]) => {
+    if (draftFiles.length === 0) {
+      toast.error("Brak plików do przetworzenia");
+      return;
+    }
+    setDraftExpenseInvoices(draftFiles);
+    setOpenAddInvoicesModal(true);
+  };
 
   const uniqueCycles = useMemo(() => {
     if (!dictionary?.cycles) return [];
@@ -98,7 +117,7 @@ const ExpenseProductionPage: React.FC = () => {
   const downloadExpenseProductionFile = async (path: string) => {
     await downloadFile({
       url: ApiUrl.GetFile,
-      params: { path },
+      params: { filePath: path },
       defaultFilename: "FakturaKosztu",
       setLoading: (value) => setDownloadFilePath(value ? path : null),
       errorMessage: "Błąd podczas pobierania faktury kosztu",
@@ -132,16 +151,16 @@ const ExpenseProductionPage: React.FC = () => {
           <Button
             variant="contained"
             color="primary"
-            onClick={() => setOpenAddExpenseProductionModel(true)}
+            onClick={() => setOpenAddExpenseProductionModal(true)}
           >
-            Dodaj ręcznie
+            Dodaj fakturę ręcznie
           </Button>
           <Button
             variant="contained"
             color="primary"
             onClick={() => setOpenAddInvoicesModal(true)}
           >
-            Dodaj faktury (automatycznie)
+            Dodaj faktury automatycznie
           </Button>
         </Box>
       </Box>
@@ -223,7 +242,13 @@ const ExpenseProductionPage: React.FC = () => {
         />
       </Box>
 
-      {/* <EditExpenseProductionModal
+      <UploadExpenseInvoicesModal
+        open={openAddInvoicesModal}
+        onClose={() => setOpenAddInvoicesModal(false)}
+        onUpload={uploadFiles}
+      />
+
+      <EditExpenseProductionModal
         open={isEditModalOpen}
         onClose={() => {
           setIsEditModalOpen(false);
@@ -234,17 +259,17 @@ const ExpenseProductionPage: React.FC = () => {
           setSelectedExpenseProduction(null);
           dispatch({ type: "setMultiple", payload: { page: filters.page } });
         }}
-        expenseProduction={selectedExpenseProduction}
+        expenseProductionToEdit={selectedExpenseProduction}
       />
 
       <AddExpenseProductionModal
-        open={openModal}
-        onClose={() => setOpenModal(false)}
+        open={openAddExpenseProductionModal}
+        onClose={() => setOpenAddExpenseProductionModal(false)}
         onSave={() => {
-          setOpenModal(false);
+          setOpenAddExpenseProductionModal(false);
           dispatch({ type: "setMultiple", payload: { page: 0 } });
         }}
-      /> */}
+      />
     </Box>
   );
 };

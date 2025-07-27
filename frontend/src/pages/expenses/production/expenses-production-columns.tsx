@@ -1,4 +1,4 @@
-import { Button, Typography, IconButton } from "@mui/material";
+import { Button, Typography, IconButton, Box } from "@mui/material";
 import type { GridColDef } from "@mui/x-data-grid";
 import dayjs from "dayjs";
 import { MdFileDownload } from "react-icons/md";
@@ -97,9 +97,19 @@ export const getExpenseProductionColumns = ({
 
         if (!filePath) {
           return (
-            <Typography variant="body2" color="text.secondary">
-              Brak
-            </Typography>
+            <Box
+              sx={{
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Typography variant="body2" color="text.secondary">
+                Brak
+              </Typography>
+            </Box>
           );
         }
 

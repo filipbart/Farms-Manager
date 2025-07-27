@@ -13,7 +13,7 @@ public class ExpenseProductionRow
     public decimal InvoiceTotal { get; init; }
     public decimal SubTotal { get; init; }
     public decimal VatAmount { get; init; }
-    public DateTime InvoiceDate { get; init; }
+    public DateOnly InvoiceDate { get; init; }
     public DateTime DateCreatedUtc { get; init; }
     public string FilePath { get; init; }
 }

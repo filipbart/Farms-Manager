@@ -48,6 +48,32 @@ public class AzureDiService : IAzureDiService
         return invoiceData;
     }
 
+    public async Task<ExpenseProductionInvoiceModel> AnalyzeExpenseProductionInvoiceAsync(string preSignedUrl)
+    {
+        var options = new AnalyzeDocumentOptions(ModelId, new Uri(preSignedUrl));
+
+        options.Features.Add("queryFields");
+        var customQueryFields = GetCustomQueryFields<ExpenseProductionInvoiceModel>();
+        foreach (var field in customQueryFields)
+        {
+            options.QueryFields.Add(field);
+        }
+
+        var operation = await _client.AnalyzeDocumentAsync(WaitUntil.Completed, options);
+
+        var result = operation.Value;
+        if (result.Documents.Any() == false)
+            throw new Exception("No documents detected in analysis.");
+
+        var documentFields = result.Documents[0].Fields;
+
+        if (documentFields == null)
+            throw new Exception("No documents detected in analysis.");
+
+        var invoiceData = documentFields.MapFromAzureDiFields<ExpenseProductionInvoiceModel>();
+        return invoiceData;
+    }
+
 
     private static List<string> GetCustomQueryFields<T>()
     {

@@ -40,7 +40,7 @@ export const getExpensesProductionsFiltersConfig = (
     disabled: !dictionary,
   },
   {
-    key: "expensesTypeNames",
+    key: "expensesTypesIds",
     label: "Typ wydatku",
     type: "multiSelect",
     options:

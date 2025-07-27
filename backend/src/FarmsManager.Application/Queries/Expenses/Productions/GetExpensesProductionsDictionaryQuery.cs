@@ -1,8 +1,10 @@
+using AutoMapper;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Models;
 using FarmsManager.Application.Queries.Farms;
 using FarmsManager.Application.Specifications.Cycle;
 using FarmsManager.Application.Specifications.Expenses;
+using FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
 using MediatR;
@@ -55,5 +57,14 @@ public class GetExpenseProductionDictionaryQueryHandler : IRequestHandler<GetExp
             ExpenseTypes = expenseTypes,
             Cycles = cycles
         });
+    }
+}
+
+public class ExpensesProductionDictionaryProfile : Profile
+{
+    public ExpensesProductionDictionaryProfile()
+    {
+        CreateMap<ExpenseContractorEntity, DictModel>();
+        CreateMap<ExpenseTypeEntity, DictModel>();
     }
 }

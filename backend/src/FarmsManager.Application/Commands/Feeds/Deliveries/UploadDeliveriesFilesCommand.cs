@@ -68,23 +68,10 @@ public class UploadDeliveriesFilesCommandHandler : IRequestHandler<UploadDeliver
 
             var preSignedUrl = _s3Service.GeneratePreSignedUrl(FileType.FeedDeliveryInvoice, filePath, file.FileName);
 
-            var feedDeliveryInvoiceModels = await _azureDiService.AnalyzeFeedDeliveryInvoiceAsync(preSignedUrl);
-            var extractedFields = _mapper.Map<AddFeedDeliveryInvoiceDto>(feedDeliveryInvoiceModels);
+            var feedDeliveryInvoiceModel = await _azureDiService.AnalyzeFeedDeliveryInvoiceAsync(preSignedUrl);
+            var extractedFields = _mapper.Map<AddFeedDeliveryInvoiceDto>(feedDeliveryInvoiceModel);
 
-            // var extractedFields = new AddFeedDeliveryInvoiceDto
-            // {
-            //     InvoiceNumber = "370/01/25/FV/K",
-            //     BankAccountNumber = "11002233445566778899001122",
-            //     VendorName = "WIPASZ SPÓŁKA AKCYJNA",
-            //     ItemName = "WIK K4",
-            //     Quantity = (decimal?)21.37,
-            //     UnitPrice = (decimal?)1.34,
-            //     InvoiceDate = DateOnly.FromDateTime(DateTime.Now),
-            //     DueDate = DateOnly.FromDateTime(DateTime.Now.AddDays(10)),
-            //     InvoiceTotal = (decimal?)21334.12,
-            //     SubTotal = (decimal?)20112.23,
-            //     VatAmount = 1222
-            // }; //TODO dane do testow
+            //todo wyciągnąć dane z invoiceModel i szukać Id fermy itd. - dostosować front również
 
             var existedInvoice = await _feedInvoiceRepository.SingleOrDefaultAsync(
                 new GetFeedInvoiceByInvoiceNumberSpec(extractedFields.InvoiceNumber), cancellationToken);

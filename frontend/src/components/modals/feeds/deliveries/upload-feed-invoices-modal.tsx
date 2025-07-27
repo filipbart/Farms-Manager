@@ -17,13 +17,13 @@ import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import { MdFileUpload } from "react-icons/md";
 import type { DraftFeedInvoice } from "../../../../models/feeds/deliveries/draft-feed-invoice";
 
-interface UploadInvoicesModalProps {
+interface UploadFeedInvoicesModalProps {
   open: boolean;
   onClose: () => void;
   onUpload: (files: DraftFeedInvoice[]) => void;
 }
 
-const UploadInvoicesModal: React.FC<UploadInvoicesModalProps> = ({
+const UploadFeedInvoicesModal: React.FC<UploadFeedInvoicesModalProps> = ({
   open,
   onClose,
   onUpload,
@@ -130,4 +130,4 @@ const UploadInvoicesModal: React.FC<UploadInvoicesModalProps> = ({
   );
 };
 
-export default UploadInvoicesModal;
+export default UploadFeedInvoicesModal;

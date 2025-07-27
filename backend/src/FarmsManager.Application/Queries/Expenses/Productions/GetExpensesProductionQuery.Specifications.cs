@@ -14,6 +14,8 @@ public sealed class GetAllExpenseProductionsSpec : BaseSpecification<ExpenseProd
         PopulateFilters(filters);
         ApplyOrdering(filters);
 
+        Query.Include(t => t.ExpenseContractor).ThenInclude(t => t.ExpenseType);
+
         if (withPagination)
         {
             Paginate(filters);
@@ -22,33 +24,35 @@ public sealed class GetAllExpenseProductionsSpec : BaseSpecification<ExpenseProd
 
     private void PopulateFilters(GetExpensesProductionsFilters filters)
     {
-        if (filters.FarmIds is not null && filters.FarmIds.Any())
+        if (filters.FarmIds is not null && filters.FarmIds.Count != 0)
         {
             Query.Where(ep => filters.FarmIds.Contains(ep.FarmId));
         }
 
-        if (filters.ContractorIds is not null && filters.ContractorIds.Any())
+        if (filters.ContractorIds is not null && filters.ContractorIds.Count != 0)
         {
-            Query.Where(ep => filters.ContractorIds.Contains(ep.ContractorId));
+            Query.Where(ep => filters.ContractorIds.Contains(ep.ExpenseContractorId));
         }
 
-        if (filters.ExpensesTypeNames is not null && filters.ExpensesTypeNames.Any())
+        if (filters.ExpensesTypesIds is not null && filters.ExpensesTypesIds.Count != 0)
         {
-            Query.Where(ep => filters.ExpensesTypeNames.Contains(ep.ExpenseType.Name));
+            Query.Where(ep =>
+                ep.ExpenseContractor.ExpenseTypeId.HasValue &&
+                filters.ExpensesTypesIds.Contains(ep.ExpenseContractor.ExpenseTypeId.Value));
         }
 
-        if (filters.Cycles is not null && filters.Cycles.Any())
+        if (filters.Cycles is not null && filters.Cycles.Count != 0)
         {
         }
 
         if (filters.DateSince is not null)
         {
-            Query.Where(ep => ep.InvoiceDate.Date >= filters.DateSince.Value);
+            Query.Where(ep => ep.InvoiceDate >= filters.DateSince.Value);
         }
 
         if (filters.DateTo is not null)
         {
-            Query.Where(ep => ep.InvoiceDate.Date <= filters.DateTo.Value);
+            Query.Where(ep => ep.InvoiceDate <= filters.DateTo.Value);
         }
     }
 
@@ -87,11 +91,11 @@ public sealed class GetAllExpenseProductionsSpec : BaseSpecification<ExpenseProd
             case ExpensesProductionsOrderBy.Contractor:
                 if (isDescending)
                 {
-                    Query.OrderByDescending(ep => ep.Contractor.Name);
+                    Query.OrderByDescending(ep => ep.ExpenseContractor.Name);
                 }
                 else
                 {
-                    Query.OrderBy(ep => ep.Contractor.Name);
+                    Query.OrderBy(ep => ep.ExpenseContractor.Name);
                 }
 
                 break;
@@ -99,11 +103,11 @@ public sealed class GetAllExpenseProductionsSpec : BaseSpecification<ExpenseProd
             case ExpensesProductionsOrderBy.ExpenseType:
                 if (isDescending)
                 {
-                    Query.OrderByDescending(ep => ep.ExpenseType.Name);
+                    Query.OrderByDescending(ep => ep.ExpenseContractor.ExpenseType.Name);
                 }
                 else
                 {
-                    Query.OrderBy(ep => ep.ExpenseType.Name);
+                    Query.OrderBy(ep => ep.ExpenseContractor.ExpenseType.Name);
                 }
 
                 break;

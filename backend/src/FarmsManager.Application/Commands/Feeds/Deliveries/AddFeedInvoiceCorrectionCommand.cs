@@ -89,16 +89,6 @@ public class
             return response;
         }
 
-        string filePath = null;
-        if (request.Data.File != null)
-        {
-            using var memoryStream = new MemoryStream();
-            await request.Data.File.CopyToAsync(memoryStream, ct);
-            var fileBytes = memoryStream.ToArray();
-            filePath = await _s3Service.UploadFileAsync(fileBytes, FileType.FeedDeliveryCorrection,
-                request.Data.File.FileName);
-        }
-
         var comment = string.Format(Comment, request.Data.InvoiceNumber);
 
         var newCorrection = FeedInvoiceCorrectionEntity.CreateNew(
@@ -109,9 +99,24 @@ public class
             request.Data.VatAmount,
             request.Data.InvoiceTotal,
             request.Data.InvoiceDate,
-            filePath,
             userId
         );
+
+        if (request.Data.File != null)
+        {
+            var fileId = Guid.NewGuid();
+            var extension = Path.GetExtension(request.Data.File.FileName);
+            var fileName = $"{fileId}{extension}";
+
+            using var memoryStream = new MemoryStream();
+            await request.Data.File.CopyToAsync(memoryStream, ct);
+            var fileBytes = memoryStream.ToArray();
+
+            var filePath = await _s3Service.UploadFileAsync(fileBytes, FileType.FeedDeliveryCorrection,
+                fileName);
+
+            newCorrection.SetFilePath(filePath);
+        }
 
         await _feedInvoiceCorrectionRepository.AddAsync(newCorrection, ct);
 
