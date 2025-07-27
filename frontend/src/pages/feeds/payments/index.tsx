@@ -114,6 +114,7 @@ const FeedsPaymentsPage: React.FC = () => {
               columnVisibilityModel: { id: false },
             },
           }}
+          scrollbarSize={17}
           localeText={{
             paginationRowsPerPage: "Wierszy na stronę:",
             paginationDisplayedRows: ({ from, to, count }) =>

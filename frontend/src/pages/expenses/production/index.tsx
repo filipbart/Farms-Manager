@@ -216,6 +216,7 @@ const ExpenseProductionPage: React.FC = () => {
             paginationDisplayedRows: ({ from, to, count }) =>
               `${from} do ${to} z ${count}`,
           }}
+          scrollbarSize={17}
           paginationMode="server"
           paginationModel={{
             pageSize: filters.pageSize ?? 10,

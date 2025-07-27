@@ -205,6 +205,7 @@ const SalesPage: React.FC = () => {
             [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },
             [`& .${tablePaginationClasses.input}`]: { display: "inline-flex" },
           }}
+          scrollbarSize={17}
           sortingMode="server"
           onSortModelChange={(model) => {
             if (model.length > 0) {

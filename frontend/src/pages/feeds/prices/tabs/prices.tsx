@@ -153,6 +153,7 @@ const FeedsPricesTab: React.FC = () => {
               columnVisibilityModel: { id: false, dateCreatedUtc: false },
             },
           }}
+          scrollbarSize={17}
           localeText={{
             paginationRowsPerPage: "Wierszy na stronę:",
             paginationDisplayedRows: ({ from, to, count }) =>

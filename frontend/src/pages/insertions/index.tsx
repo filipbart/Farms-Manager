@@ -168,6 +168,7 @@ const InsertionsPage: React.FC = () => {
               JSON.stringify(model)
             );
           }}
+          scrollbarSize={17}
           initialState={{
             columns: {
               columnVisibilityModel: { id: false, dateCreatedUtc: false },
