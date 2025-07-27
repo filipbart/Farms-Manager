@@ -69,9 +69,7 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
     setError,
     clearErrors,
     watch,
-  } = useForm<FeedInvoiceData>({
-    defaultValues: draftFeedInvoices[0].extractedFields,
-  });
+  } = useForm<FeedInvoiceData>();
 
   const [previewOpen, setPreviewOpen] = useState(false);
 
@@ -98,6 +96,13 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
 
   useEffect(() => {
     const henhouseName = draftFeed?.extractedFields.henhouseName;
+    const henhouseIdFromBackend = draftFeed?.extractedFields.henhouseId;
+
+    if (henhouseIdFromBackend) {
+      setValue("henhouseId", henhouseIdFromBackend);
+      clearErrors("henhouseId");
+      return;
+    }
 
     if (henhouseName && henhouses.length > 0) {
       const matchedHenhouse = henhouses.find(
@@ -127,7 +132,6 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
       undefined,
       "Wystąpił błąd podczas zapisywania danych faktury"
     );
-
     setLoading(false);
   };
 
@@ -145,7 +149,6 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
     }
 
     const newIndex = Math.min(currentIndex, draftFeedInvoices.length - 1);
-
     if (newIndex !== currentIndex) {
       setCurrentIndex(newIndex);
       return;
@@ -156,45 +159,51 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
     }
 
     const currentDraft = draftFeedInvoices[newIndex];
-    const data = { ...currentDraft.extractedFields };
-
     setDraftFeed(currentDraft);
 
-    const henhouseName = data.henhouseName?.toLowerCase();
-    const matchedFarms = farms.filter(
-      (f) =>
-        f.nip === data.nip ||
-        f.name?.toLowerCase() === data.customerName?.toLowerCase()
-    );
+    const data = { ...currentDraft.extractedFields };
+    let farmToProcess: { id: string } | null = null;
 
-    let selectedFarm = null;
-    if (matchedFarms.length === 1) {
-      selectedFarm = matchedFarms[0];
-    } else if (matchedFarms.length > 1 && henhouseName) {
-      selectedFarm = matchedFarms.find((farm) =>
-        farm.henhouses?.some(
-          (house) => house.name?.toLowerCase() === henhouseName
-        )
+    if (data.farmId) {
+      farmToProcess = { id: data.farmId };
+    } else {
+      const henhouseName = data.henhouseName?.toLowerCase();
+      const matchedFarms = farms.filter(
+        (f) =>
+          f.nip === data.nip ||
+          f.name?.toLowerCase() === data.customerName?.toLowerCase()
       );
-    }
 
-    if (selectedFarm) {
-      data.farmId = selectedFarm.id;
+      let selectedFarm = null;
+      if (matchedFarms.length === 1) {
+        selectedFarm = matchedFarms[0];
+      } else if (matchedFarms.length > 1 && henhouseName) {
+        selectedFarm = matchedFarms.find((farm) =>
+          farm.henhouses?.some(
+            (house) => house.name?.toLowerCase() === henhouseName
+          )
+        );
+      }
+
+      if (selectedFarm) {
+        data.farmId = selectedFarm.id;
+        farmToProcess = selectedFarm;
+      }
     }
 
     reset(data);
 
-    if (selectedFarm) {
-      handleFarmChange(selectedFarm.id);
+    if (farmToProcess) {
+      handleFarmChange(farmToProcess.id);
     } else {
       setHenhouses([]);
     }
   }, [currentIndex, draftFeedInvoices, farms, reset, open, handleClose]);
 
-  const fileType = getFileTypeFromUrl(draftFeed.fileUrl ?? "");
+  const fileType = getFileTypeFromUrl(draftFeed?.fileUrl ?? "");
 
   const renderPreview = () => {
-    if (!draftFeed.fileUrl) return <Typography>Brak podglądu</Typography>;
+    if (!draftFeed?.fileUrl) return <Typography>Brak podglądu</Typography>;
 
     if (fileType === "pdf") {
       return (
@@ -241,6 +250,10 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
     }
   };
 
+  if (!draftFeed) {
+    return null;
+  }
+
   return (
     <>
       <Dialog
@@ -256,6 +269,7 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
         <DialogTitle>Podgląd faktury i dane</DialogTitle>
 
         <form onSubmit={handleSubmit(handleSave)}>
+          <input type="hidden" {...register("cycleId")} />
           <DialogContent dividers>
             <Grid container spacing={2}>
               <Grid size={{ md: 12, lg: 5, xl: 6 }}>
@@ -279,9 +293,10 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
                       helperText={errors.farmId?.message}
                       {...register("farmId", {
                         required: "Farma jest wymagana",
-                        onChange: async (e: any) => {
-                          const value = e.target.value;
-                          await handleFarmChange(value);
+                        onChange: async (
+                          e: React.ChangeEvent<HTMLInputElement>
+                        ) => {
+                          await handleFarmChange(e.target.value);
                         },
                       })}
                     >
@@ -298,7 +313,9 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
                       loading={loadingCycle}
                       label="Cykl"
                       value={watch("identifierDisplay") || ""}
-                      slotProps={{ input: { readOnly: true } }}
+                      error={!!errors.cycleId}
+                      helperText={errors.cycleId?.message}
+                      InputProps={{ readOnly: true }}
                       fullWidth
                     />
                   </Grid>
@@ -310,9 +327,11 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
                       error={!!errors.henhouseId}
                       helperText={errors.henhouseId?.message}
                       value={watch("henhouseId") || ""}
-                      onChange={(e) => setValue("henhouseId", e.target.value)}
+                      {...register("henhouseId", {
+                        required: "Kurnik jest wymagany",
+                      })}
                       fullWidth
-                      disabled={!watch("farmId") || watch("farmId") === ""}
+                      disabled={!watch("farmId")}
                     >
                       {henhouses.map((house) => (
                         <MenuItem key={house.id} value={house.id}>
@@ -322,7 +341,7 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
                     </TextField>
                   </Grid>
 
-                  <Grid size={{ xs: 12 }}>
+                  <Grid size={12}>
                     <Divider />
                   </Grid>
 
@@ -343,23 +362,23 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
                       label="Numer konta bankowego"
                       error={!!errors.bankAccountNumber}
                       helperText={errors.bankAccountNumber?.message}
-                      {...register("bankAccountNumber", {
-                        required: "Numer konta bankowego jest wymagany",
-                      })}
+                      {...register("bankAccountNumber")}
                       fullWidth
                     />
                   </Grid>
 
                   <Grid size={{ xs: 12, sm: 12, md: 6 }}>
                     <LoadingTextField
-                      value={watch("itemName")}
-                      onChange={(e) => setValue("itemName", e.target.value)}
-                      loading={loadingFeedsNames}
+                      value={watch("itemName") || ""}
                       select
                       label="Typ (nazwa) paszy"
                       fullWidth
                       error={!!errors.itemName}
                       helperText={errors.itemName?.message}
+                      {...register("itemName", {
+                        required: "Nazwa paszy jest wymagana",
+                      })}
+                      loading={loadingFeedsNames}
                     >
                       {feedsNames.map((feedName) => (
                         <MenuItem key={feedName.id} value={feedName.name}>
@@ -385,8 +404,7 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
                     <TextField
                       label="Ilość"
                       type="number"
-                      inputMode="decimal"
-                      slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
+                      InputProps={{ inputProps: { min: 0, step: "0.01" } }}
                       error={!!errors.quantity}
                       helperText={errors.quantity?.message}
                       {...register("quantity", {
@@ -401,8 +419,7 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
                     <TextField
                       label="Cena jednostkowa [zł]"
                       type="number"
-                      inputMode="decimal"
-                      slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
+                      InputProps={{ inputProps: { min: 0, step: "0.01" } }}
                       error={!!errors.unitPrice}
                       helperText={errors.unitPrice?.message}
                       {...register("unitPrice", {
@@ -475,8 +492,7 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
                     <TextField
                       label="Wartość brutto [zł]"
                       type="number"
-                      inputMode="decimal"
-                      slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
+                      InputProps={{ inputProps: { min: 0, step: "0.01" } }}
                       error={!!errors.invoiceTotal}
                       helperText={errors.invoiceTotal?.message}
                       {...register("invoiceTotal", {
@@ -491,8 +507,7 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
                     <TextField
                       label="Wartość netto [zł]"
                       type="number"
-                      inputMode="decimal"
-                      slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
+                      InputProps={{ inputProps: { min: 0, step: "0.01" } }}
                       error={!!errors.subTotal}
                       helperText={errors.subTotal?.message}
                       {...register("subTotal", {
@@ -507,8 +522,7 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
                     <TextField
                       label="VAT [zł]"
                       type="number"
-                      inputMode="decimal"
-                      slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
+                      InputProps={{ inputProps: { min: 0, step: "0.01" } }}
                       error={!!errors.vatAmount}
                       helperText={errors.vatAmount?.message}
                       {...register("vatAmount", {
@@ -569,7 +583,6 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
         </form>
       </Dialog>
 
-      {/* DIALOG PODGLĄDU */}
       <Dialog
         open={previewOpen}
         onClose={() => setPreviewOpen(false)}

@@ -151,7 +151,8 @@ public class ExpensesController(IMediator mediator) : BaseController
     [HttpPatch("productions/update/{expenseProductionId:guid}")]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> UpdateExpenseProduction([FromRoute] Guid expenseProductionId, UpdateExpenseProductionData data)
+    public async Task<IActionResult> UpdateExpenseProduction([FromRoute] Guid expenseProductionId,
+        UpdateExpenseProductionData data)
     {
         return Ok(await mediator.Send(new UpdateExpenseProductionCommand(expenseProductionId, data)));
     }
@@ -168,8 +169,12 @@ public class ExpensesController(IMediator mediator) : BaseController
     {
         return Ok(await mediator.Send(new DeleteExpenseProductionCommand(expenseProductionId)));
     }
-    
-    
+
+    /// <summary>
+    /// Wrzuca tymczasowo pliki faktur i je odczytuje
+    /// </summary>
+    /// <param name="dto"></param>
+    /// <returns></returns>
     [HttpPost("productions/upload")]
     [Consumes("multipart/form-data")]
     [ProducesResponseType(typeof(BaseResponse<UploadExpensesInvoicesCommandResponse>), StatusCodes.Status200OK)]
@@ -177,5 +182,18 @@ public class ExpensesController(IMediator mediator) : BaseController
     public async Task<IActionResult> UploadExpenseInvoices([FromForm] UploadExpensesInvoicesDto dto)
     {
         return Ok(await mediator.Send(new UploadExpensesInvoicesCommand(dto)));
+    }
+
+    /// <summary>
+    /// Zapisuje dane faktury kosztów produkcyjnych
+    /// </summary>
+    /// <param name="command"></param>
+    /// <returns></returns>
+    [HttpPost("productions/save-invoice")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> SaveExpenseInvoice(SaveExpenseProductionInvoiceCommand command)
+    {
+        return Ok(await mediator.Send(command));
     }
 }

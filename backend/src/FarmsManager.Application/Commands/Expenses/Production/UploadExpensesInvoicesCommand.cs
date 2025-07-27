@@ -5,7 +5,9 @@ using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models;
 using FarmsManager.Application.Models.AzureDi;
 using FarmsManager.Application.Specifications.Expenses;
+using FarmsManager.Application.Specifications.Farms;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Http;
@@ -39,14 +41,19 @@ public class UploadExpensesInvoicesCommandHandler : IRequestHandler<UploadExpens
     private readonly IMapper _mapper;
     private readonly IS3Service _s3Service;
     private readonly IAzureDiService _azureDiService;
+    private readonly IFarmRepository _farmRepository;
+    private readonly IExpenseContractorRepository _expenseContractorRepository;
     private readonly IExpenseProductionRepository _expenseProductionRepository;
 
     public UploadExpensesInvoicesCommandHandler(IMapper mapper, IS3Service s3Service, IAzureDiService azureDiService,
+        IFarmRepository farmRepository, IExpenseContractorRepository expenseContractorRepository,
         IExpenseProductionRepository expenseProductionRepository)
     {
         _mapper = mapper;
         _s3Service = s3Service;
         _azureDiService = azureDiService;
+        _farmRepository = farmRepository;
+        _expenseContractorRepository = expenseContractorRepository;
         _expenseProductionRepository = expenseProductionRepository;
     }
 
@@ -68,7 +75,8 @@ public class UploadExpensesInvoicesCommandHandler : IRequestHandler<UploadExpens
 
             var preSignedUrl = _s3Service.GeneratePreSignedUrl(FileType.ExpenseProduction, filePath, file.FileName);
 
-            var expenseProductionInvoiceModel = await _azureDiService.AnalyzeFeedDeliveryInvoiceAsync(preSignedUrl);
+            var expenseProductionInvoiceModel =
+                await _azureDiService.AnalyzeExpenseProductionInvoiceAsync(preSignedUrl);
             var extractedFields = _mapper.Map<AddExpenseProductionInvoiceDto>(expenseProductionInvoiceModel);
 
             var existedInvoice = await _expenseProductionRepository.FirstOrDefaultAsync(
@@ -79,7 +87,19 @@ public class UploadExpensesInvoicesCommandHandler : IRequestHandler<UploadExpens
                 throw new Exception($"Istnieje już dostawa z tym numerem faktury: {existedInvoice.InvoiceNumber}");
             }
 
-            //todo wyciągnąć dane z invoiceModel i szukać Id fermy itd.
+            var farm = await _farmRepository.FirstOrDefaultAsync(new FarmByNipOrNameSpec(
+                    expenseProductionInvoiceModel.CustomerNip.Replace("-", ""),
+                    expenseProductionInvoiceModel.CustomerName),
+                cancellationToken);
+            var expenseContractor = await _expenseContractorRepository.FirstOrDefaultAsync(
+                new ExpenseContractorByNipSpec(expenseProductionInvoiceModel.VendorNip.Replace("-", "")),
+                cancellationToken);
+
+            extractedFields.FarmId = farm?.Id;
+            extractedFields.CycleId = farm?.ActiveCycleId;
+            extractedFields.ContractorId = expenseContractor?.Id;
+            extractedFields.ExpenseTypeId = expenseContractor?.ExpenseTypeId;
+            extractedFields.ExpenseTypeName = expenseContractor?.ExpenseType?.Name;
 
             response.ResponseData.Files.Add(new UploadExpensesInvoicesData
             {
@@ -109,7 +129,7 @@ public class UploadExpensesInvoicesCommandProfile : Profile
         CreateMap<ExpenseProductionInvoiceModel, AddExpenseProductionInvoiceDto>()
             .ForMember(m => m.FarmId, opt => opt.Ignore())
             .ForMember(m => m.CycleId, opt => opt.Ignore())
-            .ForMember(m => m.ContractorName, opt => opt.Ignore())
+            .ForMember(m => m.ContractorId, opt => opt.Ignore())
             .ForMember(m => m.ExpenseTypeName, opt => opt.Ignore())
             .ForMember(m => m.ExpenseTypeId, opt => opt.Ignore());
     }

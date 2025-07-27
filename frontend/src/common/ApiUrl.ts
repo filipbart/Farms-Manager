@@ -95,4 +95,6 @@ export default class ApiUrl {
     this.ExpensesProductions + "/delete/" + id;
   public static UploadExpensesProductions =
     this.ExpensesProductions + "/upload";
+  public static SaveExpenseInvoiceData =
+    this.ExpensesProductions + "/save-invoice";
 }

@@ -22,7 +22,7 @@ public class HatcheryEntity : Entity
             Name = name,
             ProducerNumber = producerNumber,
             FullName = fullName,
-            Nip = nip,
+            Nip = nip.Replace("-", ""),
             Address = address,
             CreatedBy = userId
         };

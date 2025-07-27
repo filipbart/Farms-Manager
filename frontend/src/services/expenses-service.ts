@@ -9,6 +9,7 @@ import type {
   AddExpenseProductionData,
   DraftExpenseInvoice,
   ExpenseProductionListModel,
+  SaveExpenseInvoiceData,
   UpdateExpenseProductionData,
 } from "../models/expenses/production/expenses-productions";
 import type { ExpensesProductionsDictionary } from "../models/expenses/production/expenses-productions-dictionary";
@@ -117,5 +118,9 @@ export class ExpensesService {
         },
       }
     );
+  }
+
+  public static async saveExpenseInvoice(invoiceData: SaveExpenseInvoiceData) {
+    return await AxiosWrapper.post(ApiUrl.SaveExpenseInvoiceData, invoiceData);
   }
 }

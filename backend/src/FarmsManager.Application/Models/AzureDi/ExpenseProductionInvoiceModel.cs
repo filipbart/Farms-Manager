@@ -11,7 +11,7 @@ public class ExpenseProductionInvoiceModel
     public string VendorName { get; init; }
     
     [AzureDiField("VendorTaxId")]
-    public string ContractorNip { get; init; }
+    public string VendorNip { get; init; }
 
     [AzureDiField("InvoiceDate")]
     public DateOnly? InvoiceDate { get; init; }
@@ -26,7 +26,7 @@ public class ExpenseProductionInvoiceModel
     public decimal? VatAmount { get; init; }
     
     [AzureDiField("CustomerTaxId")]
-    public string FarmNip { get; init; }
+    public string CustomerNip { get; init; }
     
     [AzureDiField("CustomerName")]
     public string CustomerName { get; init; }

@@ -40,6 +40,7 @@ export interface ExpenseInvoiceData {
   cycleId?: string;
   cycleDisplay?: string;
   invoiceNumber?: string;
+  contractorId?: string;
   contractorName?: string;
   expenseTypeName?: string;
   expenseTypeId?: number;
@@ -47,6 +48,12 @@ export interface ExpenseInvoiceData {
   subTotal?: number;
   vatAmount?: number;
   invoiceDate?: string;
+}
+
+export interface SaveExpenseInvoiceData {
+  filePath: string;
+  draftId: string;
+  data: ExpenseInvoiceData;
 }
 
 export interface DraftExpenseInvoice {

@@ -4,7 +4,10 @@ using FarmsManager.Application.FileSystem;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models;
 using FarmsManager.Application.Models.AzureDi;
+using FarmsManager.Application.Specifications.Farms;
 using FarmsManager.Application.Specifications.Feeds;
+using FarmsManager.Application.Specifications.Henhouses;
+using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
 using FluentValidation;
 using MediatR;
@@ -36,17 +39,22 @@ public record UploadDeliveriesFilesCommand(UploadDeliveriesFilesCommandDto Data)
 public class UploadDeliveriesFilesCommandHandler : IRequestHandler<UploadDeliveriesFilesCommand,
     BaseResponse<UploadDeliveriesFilesCommandResponse>>
 {
+    private readonly IMapper _mapper;
     private readonly IS3Service _s3Service;
     private readonly IAzureDiService _azureDiService;
-    private readonly IMapper _mapper;
+    private readonly IFarmRepository _farmRepository;
+    private readonly IHenhouseRepository _henhouseRepository;
     private readonly IFeedInvoiceRepository _feedInvoiceRepository;
 
-    public UploadDeliveriesFilesCommandHandler(IS3Service s3Service, IAzureDiService azureDiService, IMapper mapper,
+    public UploadDeliveriesFilesCommandHandler(IMapper mapper, IS3Service s3Service, IAzureDiService azureDiService,
+        IFarmRepository farmRepository, IHenhouseRepository henhouseRepository,
         IFeedInvoiceRepository feedInvoiceRepository)
     {
+        _mapper = mapper;
         _s3Service = s3Service;
         _azureDiService = azureDiService;
-        _mapper = mapper;
+        _farmRepository = farmRepository;
+        _henhouseRepository = henhouseRepository;
         _feedInvoiceRepository = feedInvoiceRepository;
     }
 
@@ -71,8 +79,6 @@ public class UploadDeliveriesFilesCommandHandler : IRequestHandler<UploadDeliver
             var feedDeliveryInvoiceModel = await _azureDiService.AnalyzeFeedDeliveryInvoiceAsync(preSignedUrl);
             var extractedFields = _mapper.Map<AddFeedDeliveryInvoiceDto>(feedDeliveryInvoiceModel);
 
-            //todo wyciągnąć dane z invoiceModel i szukać Id fermy itd. - dostosować front również
-
             var existedInvoice = await _feedInvoiceRepository.SingleOrDefaultAsync(
                 new GetFeedInvoiceByInvoiceNumberSpec(extractedFields.InvoiceNumber), cancellationToken);
 
@@ -80,6 +86,19 @@ public class UploadDeliveriesFilesCommandHandler : IRequestHandler<UploadDeliver
             {
                 throw new Exception($"Istnieje już dostawa z tym numerem faktury: {existedInvoice.InvoiceNumber}");
             }
+
+
+            var farm = await _farmRepository.FirstOrDefaultAsync(new FarmByNipOrNameSpec(
+                    feedDeliveryInvoiceModel.CustomerNip.Replace("-", ""),
+                    feedDeliveryInvoiceModel.CustomerName),
+                cancellationToken);
+            var henhouse =
+                await _henhouseRepository.FirstOrDefaultAsync(
+                    new HenhouseByNameSpec(feedDeliveryInvoiceModel.HenhouseName), cancellationToken);
+
+            extractedFields.FarmId = farm?.Id;
+            extractedFields.CycleId = farm?.ActiveCycleId;
+            extractedFields.HenhouseId = henhouse?.Id;
 
             response.Files.Add(new UploadDeliveryFileData
             {

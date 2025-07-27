@@ -36,7 +36,7 @@ public class FarmEntity : Entity
         {
             Name = name,
             ProducerNumber = producerNumber,
-            Nip = nip,
+            Nip = nip.Replace("-", ""),
             Address = address,
             CreatedBy = createdBy
         };

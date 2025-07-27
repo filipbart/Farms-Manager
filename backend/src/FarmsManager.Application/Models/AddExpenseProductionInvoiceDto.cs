@@ -2,14 +2,14 @@
 
 public class AddExpenseProductionInvoiceDto
 {
-    public Guid? FarmId { get; init; }
-    public Guid? CycleId { get; init; }
-    public string InvoiceNumber { get; init; }
-    public string ContractorName { get; init; }
-    public string ExpenseTypeName { get; init; }
-    public Guid? ExpenseTypeId { get; init; }
-    public decimal? InvoiceTotal { get; init; }
-    public decimal? SubTotal { get; init; }
-    public decimal? VatAmount { get; init; }
-    public DateOnly? InvoiceDate { get; init; }
+    public Guid? FarmId { get; set; }
+    public Guid? CycleId { get; set; }
+    public Guid? ContractorId { get; set; }
+    public Guid? ExpenseTypeId { get; set; }
+    public string InvoiceNumber { get; set; }
+    public string ExpenseTypeName { get; set; }
+    public decimal? InvoiceTotal { get; set; }
+    public decimal? SubTotal { get; set; }
+    public decimal? VatAmount { get; set; }
+    public DateOnly? InvoiceDate { get; set; }
 }

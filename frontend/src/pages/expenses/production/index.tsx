@@ -27,6 +27,7 @@ import { getExpensesProductionsFiltersConfig } from "./filter-config.expenses-pr
 import AddExpenseProductionModal from "../../../components/modals/expenses/production/add-expense-production-modal";
 import EditExpenseProductionModal from "../../../components/modals/expenses/production/edit-expense-production-modal";
 import UploadExpenseInvoicesModal from "../../../components/modals/expenses/production/upload-expense-invoices-modal";
+import SaveExpensesInvoicesModal from "../../../components/modals/expenses/production/save-expenses-invoices-modal";
 
 const ExpenseProductionPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -37,6 +38,7 @@ const ExpenseProductionPage: React.FC = () => {
     useState<ExpenseProductionListModel | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
+  const [openSaveInvoicesModal, setOpenSaveInvoicesModal] = useState(false);
   const [openAddInvoicesModal, setOpenAddInvoicesModal] = useState(false);
   const [draftExpenseInvoices, setDraftExpenseInvoices] = useState<
     DraftExpenseInvoice[]
@@ -65,7 +67,7 @@ const ExpenseProductionPage: React.FC = () => {
       return;
     }
     setDraftExpenseInvoices(draftFiles);
-    setOpenAddInvoicesModal(true);
+    setOpenSaveInvoicesModal(true);
   };
 
   const uniqueCycles = useMemo(() => {
@@ -135,6 +137,26 @@ const ExpenseProductionPage: React.FC = () => {
       }),
     []
   );
+
+  const handleCloseSaveInvoicesModal = () => {
+    setDraftExpenseInvoices([]);
+    setOpenSaveInvoicesModal(false);
+    dispatch({ type: "setMultiple", payload: { page: 0 } });
+  };
+
+  const handleSaveInvoicesModal = (expenseInvoiceData: DraftExpenseInvoice) => {
+    const filteredInvoices = draftExpenseInvoices.filter(
+      (t) => t.draftId !== expenseInvoiceData.draftId
+    );
+
+    if (filteredInvoices.length === 0) {
+      setDraftExpenseInvoices([]);
+      setOpenSaveInvoicesModal(false);
+      dispatch({ type: "setMultiple", payload: { page: 0 } });
+    }
+
+    setDraftExpenseInvoices(filteredInvoices);
+  };
 
   return (
     <Box p={4}>
@@ -241,6 +263,15 @@ const ExpenseProductionPage: React.FC = () => {
           }}
         />
       </Box>
+
+      {draftExpenseInvoices.length > 0 && (
+        <SaveExpensesInvoicesModal
+          open={openSaveInvoicesModal}
+          onClose={handleCloseSaveInvoicesModal}
+          onSave={handleSaveInvoicesModal}
+          draftExpenseInvoices={draftExpenseInvoices}
+        />
+      )}
 
       <UploadExpenseInvoicesModal
         open={openAddInvoicesModal}

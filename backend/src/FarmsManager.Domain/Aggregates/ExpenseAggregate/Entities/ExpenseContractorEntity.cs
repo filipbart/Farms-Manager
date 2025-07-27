@@ -22,7 +22,7 @@ public class ExpenseContractorEntity : Entity
         {
             ExpenseTypeId = expenseTypeId,
             Name = name,
-            Nip = nip,
+            Nip = nip.Replace("-", ""),
             Address = address,
             CreatedBy = userId
         };
@@ -32,7 +32,7 @@ public class ExpenseContractorEntity : Entity
     {
         ExpenseTypeId = expenseTypeId;
         Name = name;
-        Nip = nip;
+        Nip = nip.Replace("-", "");
         Address = address;
     }
 }
