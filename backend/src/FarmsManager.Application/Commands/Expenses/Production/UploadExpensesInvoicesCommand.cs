@@ -107,7 +107,7 @@ public class UploadExpensesInvoicesCommandHandler : IRequestHandler<UploadExpens
             {
                 expenseContractor = ExpenseContractorEntity.CreateNewFromInvoice(
                     expenseProductionInvoiceModel.VendorName, expenseProductionInvoiceModel.VendorNip,
-                    expenseProductionInvoiceModel.VendorAddress, userId);
+                    expenseProductionInvoiceModel.VendorAddress.Replace("\n", ""), userId);
                 await _expenseContractorRepository.AddAsync(expenseContractor, cancellationToken);
             }
 
