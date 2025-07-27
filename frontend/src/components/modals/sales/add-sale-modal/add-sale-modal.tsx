@@ -230,7 +230,7 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
         <Grid container spacing={2} mt={1}>
           {activePreviewFile && (
             <Grid
-              size={{ xs: 12, md: 4 }}
+              size={{ xs: 12, md: 5 }}
               sx={{
                 display: "flex",
                 flexDirection: "column",
@@ -242,11 +242,11 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
                 Podgląd pliku
               </Typography>
 
-              <FilePreview file={activePreviewFile} maxHeight={500} />
+              <FilePreview file={activePreviewFile} maxHeight={700} />
             </Grid>
           )}
 
-          <Grid size={{ xs: 12, md: activePreviewFile ? 8 : 12 }}>
+          <Grid size={{ xs: 12, md: activePreviewFile ? 7 : 12 }}>
             <Grid container spacing={2}>
               <Grid size={{ xs: 12, sm: 6 }}>
                 <LoadingTextField

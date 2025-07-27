@@ -19,6 +19,7 @@ public record ExpenseContractorRow
     public Guid Id { get; init; }
     public string Name { get; init; }
     public string ExpenseType { get; init; }
+    public Guid? ExpenseTypeId { get; init; }
     public string Nip { get; init; }
     public string Address { get; init; }
     public DateTime DateCreatedUtc { get; init; }

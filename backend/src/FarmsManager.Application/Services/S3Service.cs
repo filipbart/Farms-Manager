@@ -17,6 +17,7 @@ public class S3Service : IS3Service
     private const double ExpiresInMinutes = 20;
     private readonly string _bucketName;
     private readonly IAmazonS3 _s3Client;
+    private readonly Protocol _protocol;
 
     private readonly bool _isDevelopment =
         Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
@@ -27,6 +28,9 @@ public class S3Service : IS3Service
     {
         _s3Client = s3Client;
         _bucketName = configuration.GetValue<string>("S3:BucketName");
+        _protocol = Enum.TryParse<Protocol>(configuration.GetValue<string>("S3:Protocol"), out var protocol)
+            ? protocol
+            : Protocol.HTTP;
     }
 
     private async Task EnsureBucketExistsAsync()
@@ -366,11 +370,11 @@ public class S3Service : IS3Service
 
         await _s3Client.DeleteObjectAsync(request);
     }
-    
+
     public async Task DeleteFolderAsync(FileType fileType, string folderPath)
     {
         await EnsureBucketExistsAsync();
-        
+
         var prefix = GetPath(fileType, folderPath).TrimEnd('/') + "/";
 
         var listRequest = new ListObjectsV2Request
@@ -398,9 +402,7 @@ public class S3Service : IS3Service
             await _s3Client.DeleteObjectsAsync(deleteObjectsRequest);
 
             listRequest.ContinuationToken = listResponse.NextContinuationToken;
-
         } while (listResponse.IsTruncated == true);
-
     }
 
     public string GeneratePreSignedUrl(FileType fileType, string path, string fileName = null)
@@ -412,7 +414,7 @@ public class S3Service : IS3Service
             BucketName = _bucketName,
             Key = key,
             Expires = DateTime.Now.AddMinutes(ExpiresInMinutes),
-            Protocol = Protocol.HTTP,
+            Protocol = _protocol,
         };
 
         if (fileName.IsNotEmpty())

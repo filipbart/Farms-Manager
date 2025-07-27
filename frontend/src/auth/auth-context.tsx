@@ -61,15 +61,19 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   const logout = useCallback(async () => {
-    try {
-      await AuthService.logout();
-    } catch (error) {
-      console.error("Błąd podczas wylogowywania:", error);
-    }
     setUser(undefined);
     removeAuthToken();
     nav(getRoute(RouteName.Login));
-  }, []);
+
+    try {
+      await AuthService.logout();
+    } catch (error) {
+      console.error(
+        "Nie udało się wylogować na serwerze (token mógł wygasnąć):",
+        error
+      );
+    }
+  }, [removeAuthToken, nav, getRoute]);
 
   const fetchUserData = useCallback(async () => {
     const response = await UserService.getUser();

@@ -12,6 +12,9 @@ public class ExpenseProductionInvoiceModel
     
     [AzureDiField("VendorTaxId")]
     public string VendorNip { get; init; }
+    
+    [AzureDiField("VendorAddress")]
+    public string VendorAddress { get; init; }
 
     [AzureDiField("InvoiceDate")]
     public DateOnly? InvoiceDate { get; init; }

@@ -6,8 +6,10 @@ using FarmsManager.Application.Models;
 using FarmsManager.Application.Models.AzureDi;
 using FarmsManager.Application.Specifications.Expenses;
 using FarmsManager.Application.Specifications.Farms;
+using FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
+using FarmsManager.Domain.Exceptions;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Http;
@@ -42,17 +44,21 @@ public class UploadExpensesInvoicesCommandHandler : IRequestHandler<UploadExpens
     private readonly IS3Service _s3Service;
     private readonly IAzureDiService _azureDiService;
     private readonly IFarmRepository _farmRepository;
+    private readonly IUserDataResolver _userDataResolver;
     private readonly IExpenseContractorRepository _expenseContractorRepository;
     private readonly IExpenseProductionRepository _expenseProductionRepository;
 
+
     public UploadExpensesInvoicesCommandHandler(IMapper mapper, IS3Service s3Service, IAzureDiService azureDiService,
-        IFarmRepository farmRepository, IExpenseContractorRepository expenseContractorRepository,
+        IFarmRepository farmRepository, IUserDataResolver userDataResolver,
+        IExpenseContractorRepository expenseContractorRepository,
         IExpenseProductionRepository expenseProductionRepository)
     {
         _mapper = mapper;
         _s3Service = s3Service;
         _azureDiService = azureDiService;
         _farmRepository = farmRepository;
+        _userDataResolver = userDataResolver;
         _expenseContractorRepository = expenseContractorRepository;
         _expenseProductionRepository = expenseProductionRepository;
     }
@@ -60,6 +66,7 @@ public class UploadExpensesInvoicesCommandHandler : IRequestHandler<UploadExpens
     public async Task<BaseResponse<UploadExpensesInvoicesCommandResponse>> Handle(UploadExpensesInvoicesCommand request,
         CancellationToken cancellationToken)
     {
+        var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var response = BaseResponse.CreateResponse(new UploadExpensesInvoicesCommandResponse());
 
         foreach (var file in request.Dto.Files)
@@ -91,15 +98,24 @@ public class UploadExpensesInvoicesCommandHandler : IRequestHandler<UploadExpens
                     expenseProductionInvoiceModel.CustomerNip.Replace("-", ""),
                     expenseProductionInvoiceModel.CustomerName),
                 cancellationToken);
+
             var expenseContractor = await _expenseContractorRepository.FirstOrDefaultAsync(
                 new ExpenseContractorByNipSpec(expenseProductionInvoiceModel.VendorNip.Replace("-", "")),
                 cancellationToken);
 
+            if (expenseContractor is null)
+            {
+                expenseContractor = ExpenseContractorEntity.CreateNewFromInvoice(
+                    expenseProductionInvoiceModel.VendorName, expenseProductionInvoiceModel.VendorNip,
+                    expenseProductionInvoiceModel.VendorAddress, userId);
+                await _expenseContractorRepository.AddAsync(expenseContractor, cancellationToken);
+            }
+
             extractedFields.FarmId = farm?.Id;
             extractedFields.CycleId = farm?.ActiveCycleId;
-            extractedFields.ContractorId = expenseContractor?.Id;
-            extractedFields.ExpenseTypeId = expenseContractor?.ExpenseTypeId;
-            extractedFields.ExpenseTypeName = expenseContractor?.ExpenseType?.Name;
+            extractedFields.ContractorId = expenseContractor.Id;
+            extractedFields.ExpenseTypeId = expenseContractor.ExpenseTypeId;
+            extractedFields.ExpenseTypeName = expenseContractor.ExpenseType?.Name;
 
             response.ResponseData.Files.Add(new UploadExpensesInvoicesData
             {

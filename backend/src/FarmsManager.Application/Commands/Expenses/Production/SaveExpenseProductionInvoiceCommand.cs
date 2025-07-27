@@ -89,6 +89,12 @@ public class
 
         await _s3Service.MoveFileAsync(FileType.ExpenseProduction, request.FilePath, newPath);
 
+        if (contractor.ExpenseTypeId is null)
+        {
+            contractor.SetExpenseType(request.Data.ExpenseTypeId!.Value);
+            await _expenseContractorRepository.UpdateAsync(contractor, ct);
+        }
+
         return response;
     }
 }

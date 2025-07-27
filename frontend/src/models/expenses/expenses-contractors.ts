@@ -2,6 +2,7 @@ export interface ExpenseContractorRow {
   id: string;
   name: string;
   expenseType: string;
+  expenseTypeId: string;
   nip: string;
   address: string;
   dateCreatedUtc: string;

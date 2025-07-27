@@ -9,6 +9,7 @@ import {
   TextField,
   MenuItem,
   Box,
+  Autocomplete,
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -163,7 +164,7 @@ const AddExpenseProductionModal: React.FC<AddExpenseProductionModalProps> = ({
       <form onSubmit={handleSubmit(handleSave)}>
         <DialogContent>
           <Grid container spacing={3}>
-            <Grid size={{ xs: 12, md: 4 }}>
+            <Grid size={{ xs: 12, md: 5 }}>
               <Box display="flex" flexDirection="column" gap={2}>
                 <Button
                   variant="outlined"
@@ -180,14 +181,14 @@ const AddExpenseProductionModal: React.FC<AddExpenseProductionModalProps> = ({
                       Wybrano plik: {selectedFile.name}
                     </Typography>
                     <Box mt={1}>
-                      <FilePreview file={selectedFile} maxHeight={500} />
+                      <FilePreview file={selectedFile} maxHeight={700} />
                     </Box>
                   </>
                 )}
               </Box>
             </Grid>
 
-            <Grid size={{ xs: 12, md: 8 }}>
+            <Grid size={{ xs: 12, md: 7 }}>
               <Grid container spacing={2}>
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <LoadingTextField
@@ -261,25 +262,39 @@ const AddExpenseProductionModal: React.FC<AddExpenseProductionModalProps> = ({
                 </Grid>
 
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <LoadingTextField
-                    label="Kontrahent"
-                    select
-                    fullWidth
-                    loading={loadingExpensesContractors}
-                    value={watch("expenseContractorId") || ""}
-                    error={!!errors.expenseContractorId}
-                    helperText={errors.expenseContractorId?.message}
-                    {...register("expenseContractorId", {
-                      required: "Kontrahent jest wymagany",
-                      onChange: (e) => handleContractorChange(e.target.value),
-                    })}
-                  >
-                    {expensesContractors.map((contractor) => (
-                      <MenuItem key={contractor.id} value={contractor.id}>
-                        {contractor.name}
-                      </MenuItem>
-                    ))}
-                  </LoadingTextField>
+                  <Controller
+                    name="expenseContractorId"
+                    control={control}
+                    rules={{ required: "Kontrahent jest wymagany" }}
+                    render={({ field, fieldState: { error } }) => (
+                      <Autocomplete
+                        options={expensesContractors}
+                        getOptionLabel={(option) => option.name || ""}
+                        isOptionEqualToValue={(option, value) =>
+                          option.id === value.id
+                        }
+                        loading={loadingExpensesContractors}
+                        value={
+                          expensesContractors.find(
+                            (contractor) => contractor.id === field.value
+                          ) || null
+                        }
+                        onChange={(_, newValue) => {
+                          const newId = newValue ? newValue.id : "";
+                          field.onChange(newId);
+                          handleContractorChange(newId);
+                        }}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Kontrahent"
+                            error={!!error}
+                            helperText={error?.message}
+                          />
+                        )}
+                      />
+                    )}
+                  />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField

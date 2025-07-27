@@ -22,7 +22,19 @@ public class ExpenseContractorEntity : Entity
         {
             ExpenseTypeId = expenseTypeId,
             Name = name,
-            Nip = nip.Replace("-", ""),
+            Nip = nip.Replace("-", "").Trim(),
+            Address = address,
+            CreatedBy = userId
+        };
+    }
+
+    public static ExpenseContractorEntity CreateNewFromInvoice(string name, string nip, string address,
+        Guid? userId = null)
+    {
+        return new ExpenseContractorEntity
+        {
+            Name = name,
+            Nip = nip.Replace("-", "").Trim(),
             Address = address,
             CreatedBy = userId
         };

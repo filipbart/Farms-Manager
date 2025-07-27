@@ -27,7 +27,6 @@ public partial class FmHostBuilder
                 var config = new AmazonS3Config
                 {
                     ServiceURL = url,
-                    UseHttp = true,
                     ForcePathStyle = true,
                     AuthenticationRegion = authRegion,
                     RegionEndpoint = RegionEndpoint.GetBySystemName(region)
@@ -35,6 +34,7 @@ public partial class FmHostBuilder
 
                 if (configuration.GetValue<bool>("TestMode"))
                 {
+                    config.UseHttp = true;
                     config.ServiceURL = url;
                 }
 

@@ -43,7 +43,7 @@ export interface ExpenseInvoiceData {
   contractorId?: string;
   contractorName?: string;
   expenseTypeName?: string;
-  expenseTypeId?: number;
+  expenseTypeId?: string;
   invoiceTotal?: number;
   subTotal?: number;
   vatAmount?: number;

@@ -67,6 +67,11 @@ public static class AzureDiMappingExtensions
             return fieldValue.ValueString;
         }
 
+        if (fieldValue.FieldType == DocumentFieldType.Address)
+        {
+            return fieldValue.Content;
+        }
+
         if (fieldValue.FieldType == DocumentFieldType.Date)
         {
             if (fieldValue.ValueDate.HasValue)

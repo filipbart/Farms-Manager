@@ -11,21 +11,24 @@ import {
   useTheme,
   useMediaQuery,
   TextField,
+  Autocomplete,
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import { MdSave, MdZoomIn } from "react-icons/md";
-import { useFarms } from "../../../../hooks/useFarms";
-import { useLatestCycle } from "../../../../hooks/useLatestCycle";
-import { getFileTypeFromUrl } from "../../../../utils/fileUtils";
-import LoadingTextField from "../../../common/loading-textfield";
 import { Controller, useForm } from "react-hook-form";
-import LoadingButton from "../../../common/loading-button";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
+import { toast } from "react-toastify";
+
+import { useFarms } from "../../../../hooks/useFarms";
+import { useLatestCycle } from "../../../../hooks/useLatestCycle";
+import { useExpensesContractor } from "../../../../hooks/expenses/useExpensesContractors";
+import { useExpensesTypes } from "../../../../hooks/expenses/useExpensesTypes";
+import { getFileTypeFromUrl } from "../../../../utils/fileUtils";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import { ExpensesService } from "../../../../services/expenses-service";
-import { toast } from "react-toastify";
-import { useExpensesContractor } from "../../../../hooks/expenses/useExpensesContractors";
+import LoadingTextField from "../../../common/loading-textfield";
+import LoadingButton from "../../../common/loading-button";
 import type {
   DraftExpenseInvoice,
   ExpenseInvoiceData,
@@ -59,10 +62,14 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
     loadingExpensesContractors,
     fetchExpensesContractors,
   } = useExpensesContractor();
+  const { expensesTypes, loadingExpensesTypes, fetchExpensesTypes } =
+    useExpensesTypes();
 
   const [draftExpense, setDraftExpense] = useState<DraftExpenseInvoice>(
     draftExpenseInvoices[currentIndex]
   );
+
+  const showExpenseTypeSelect = !draftExpense?.extractedFields?.expenseTypeName;
 
   const {
     register,
@@ -96,15 +103,28 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
   const handleContractorChange = (contractorId: string) => {
     const selected = expensesContractors.find((c) => c.id === contractorId);
     setValue("expenseTypeName", selected?.expenseType || "");
-    setValue("contractorId", selected?.id || "");
+    if (selected?.expenseType) {
+      setValue("expenseTypeId", selected.expenseTypeId || "");
+    }
   };
 
   useEffect(() => {
     if (open) {
       fetchFarms();
       fetchExpensesContractors();
+      if (
+        draftExpenseInvoices.some((d) => !d.extractedFields.expenseTypeName)
+      ) {
+        fetchExpensesTypes();
+      }
     }
-  }, [open, fetchFarms, fetchExpensesContractors]);
+  }, [
+    open,
+    fetchFarms,
+    fetchExpensesContractors,
+    fetchExpensesTypes,
+    draftExpenseInvoices,
+  ]);
 
   useEffect(() => {
     const contractorName = draftExpense?.extractedFields.contractorName;
@@ -119,7 +139,6 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
       const matchedContractor = expensesContractors.find(
         (c) => c.name.toLowerCase() === contractorName.toLowerCase()
       );
-
       if (matchedContractor) {
         handleContractorChange(matchedContractor.id);
       }
@@ -131,22 +150,16 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
       handleClose();
       return;
     }
-
     const newIndex = Math.min(currentIndex, draftExpenseInvoices.length - 1);
     if (newIndex !== currentIndex) {
       setCurrentIndex(newIndex);
       return;
     }
-
-    if (!farms.length) {
-      return;
-    }
+    if (!farms.length) return;
 
     const currentDraft = draftExpenseInvoices[newIndex];
     setDraftExpense(currentDraft);
-
     const data = { ...currentDraft.extractedFields };
-
     reset(data);
 
     if (data.farmId) {
@@ -283,33 +296,72 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
                   </Grid>
 
                   <Grid size={{ xs: 12, sm: 6 }}>
-                    <LoadingTextField
-                      label="Kontrahent"
-                      select
-                      fullWidth
-                      loading={loadingExpensesContractors}
-                      value={watch("contractorId") || ""}
-                      error={!!errors.contractorId}
-                      helperText={errors.contractorId?.message}
-                      {...register("contractorId", {
-                        required: "Kontrahent jest wymagany",
-                        onChange: (e) => handleContractorChange(e.target.value),
-                      })}
-                    >
-                      {expensesContractors.map((contractor) => (
-                        <MenuItem key={contractor.id} value={contractor.id}>
-                          {contractor.name}
-                        </MenuItem>
-                      ))}
-                    </LoadingTextField>
+                    <Controller
+                      name="contractorId"
+                      control={control}
+                      rules={{ required: "Kontrahent jest wymagany" }}
+                      render={({ field, fieldState: { error } }) => (
+                        <Autocomplete
+                          options={expensesContractors}
+                          getOptionLabel={(option) => option.name || ""}
+                          isOptionEqualToValue={(option, value) =>
+                            option.id === value.id
+                          }
+                          loading={loadingExpensesContractors}
+                          value={
+                            expensesContractors.find(
+                              (contractor) => contractor.id === field.value
+                            ) || null
+                          }
+                          onChange={(_, newValue) => {
+                            const newId = newValue ? newValue.id : "";
+                            field.onChange(newId);
+                            handleContractorChange(newId);
+                          }}
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              label="Kontrahent"
+                              error={!!error}
+                              helperText={error?.message}
+                            />
+                          )}
+                        />
+                      )}
+                    />
                   </Grid>
                   <Grid size={{ xs: 12, sm: 6 }}>
-                    <TextField
-                      label="Typ wydatku"
-                      value={watch("expenseTypeName") || ""}
-                      InputProps={{ readOnly: true }}
-                      fullWidth
-                    />
+                    {showExpenseTypeSelect ? (
+                      <Controller
+                        name="expenseTypeId"
+                        control={control}
+                        rules={{ required: "Typ wydatku jest wymagany" }}
+                        render={({ field }) => (
+                          <LoadingTextField
+                            {...field}
+                            select
+                            label="Typ wydatku"
+                            fullWidth
+                            loading={loadingExpensesTypes}
+                            error={!!errors.expenseTypeId}
+                            helperText={errors.expenseTypeId?.message}
+                          >
+                            {expensesTypes.map((type) => (
+                              <MenuItem key={type.id} value={type.id}>
+                                {type.name}
+                              </MenuItem>
+                            ))}
+                          </LoadingTextField>
+                        )}
+                      />
+                    ) : (
+                      <TextField
+                        label="Typ wydatku"
+                        value={watch("expenseTypeName") || ""}
+                        InputProps={{ readOnly: true }}
+                        fullWidth
+                      />
+                    )}
                   </Grid>
 
                   <Grid size={12}>
@@ -360,7 +412,7 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
                       label="Netto [zł]"
                       type="number"
                       value={watch("subTotal") || ""}
-                      InputProps={{ inputProps: { step: "0.01" } }}
+                      slotProps={{ htmlInput: { step: "0.01" } }}
                       {...register("subTotal", {
                         required: "Wartość netto jest wymagana",
                         valueAsNumber: true,
@@ -375,7 +427,7 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
                       label="VAT [zł]"
                       type="number"
                       value={watch("vatAmount") || ""}
-                      InputProps={{ inputProps: { step: "0.01" } }}
+                      slotProps={{ htmlInput: { step: "0.01" } }}
                       {...register("vatAmount", {
                         required: "VAT jest wymagany",
                         valueAsNumber: true,
@@ -390,7 +442,7 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
                       label="Brutto [zł]"
                       type="number"
                       value={watch("invoiceTotal") || ""}
-                      InputProps={{ inputProps: { step: "0.01" } }}
+                      slotProps={{ htmlInput: { step: "0.01" } }}
                       {...register("invoiceTotal", {
                         required: "Wartość brutto jest wymagana",
                         valueAsNumber: true,
