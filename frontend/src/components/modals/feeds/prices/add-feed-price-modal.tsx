@@ -1,5 +1,4 @@
 import {
-  Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
@@ -21,6 +20,7 @@ import { useLatestCycle } from "../../../../hooks/useLatestCycle";
 import { useFeedsNames } from "../../../../hooks/feeds/useFeedsNames";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import type { AddFeedPriceFormData } from "../../../../models/feeds/prices/feed-price";
+import AppDialog from "../../../common/app-dialog";
 
 interface AddHatcheryModalProps {
   open: boolean;
@@ -103,7 +103,7 @@ const AddFeedPriceModal: React.FC<AddHatcheryModalProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={close} fullWidth maxWidth="sm">
+    <AppDialog open={open} onClose={close} fullWidth maxWidth="sm">
       <DialogTitle>Wprowadź nową cenę</DialogTitle>
       <form onSubmit={handleSubmit(handleSave)}>
         <DialogContent>
@@ -220,7 +220,7 @@ const AddFeedPriceModal: React.FC<AddHatcheryModalProps> = ({
           </LoadingButton>
         </DialogActions>
       </form>
-    </Dialog>
+    </AppDialog>
   );
 };
 

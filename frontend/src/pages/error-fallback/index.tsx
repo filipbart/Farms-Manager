@@ -4,10 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Button from "@mui/material/Button"; // Importuj przycisk z MUI
 import { Typography } from "@mui/material";
 
-const ErrorFallback: React.FC<FallbackProps> = ({
-  error,
-  resetErrorBoundary,
-}) => {
+const ErrorFallback: React.FC<FallbackProps> = ({ resetErrorBoundary }) => {
   const nav = useNavigate();
   const location = useLocation();
   const originalLocation = useRef(location.pathname);

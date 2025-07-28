@@ -1,5 +1,4 @@
 import {
-  Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
@@ -19,6 +18,7 @@ import LoadingTextField from "../../../common/loading-textfield";
 import type { AddProductionDataFailureData } from "../../../../models/production-data/failures/failures";
 import { ProductionDataFailuresService } from "../../../../services/production-data/production-data-failures-service";
 import type { HouseRowModel } from "../../../../models/farms/house-row-model";
+import AppDialog from "../../../common/app-dialog";
 
 interface AddProductionDataFailureModalProps {
   open: boolean;
@@ -101,16 +101,7 @@ const AddProductionDataFailureModal: React.FC<
   };
 
   return (
-    <AppDialog
-      open={open}
-      onClose={(_event, reason) => {
-        if (reason !== "backdropClick") {
-          close();
-        }
-      }}
-      fullWidth
-      maxWidth="sm"
-    >
+    <AppDialog open={open} onClose={close} fullWidth maxWidth="sm">
       <DialogTitle>Dodaj wpis o upadkach i wybrakowaniach</DialogTitle>
       <form onSubmit={handleSubmit(handleSave)}>
         <DialogContent>

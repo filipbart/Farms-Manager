@@ -1,5 +1,4 @@
 import {
-  Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
@@ -17,6 +16,7 @@ import { toast } from "react-toastify";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import LoadingButton from "../../common/loading-button";
 import { MdSave } from "react-icons/md";
+import AppDialog from "../../common/app-dialog";
 
 interface AddFarmModalProps {
   open: boolean;
@@ -60,7 +60,7 @@ const AddFarmModal: React.FC<AddFarmModalProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={close} fullWidth maxWidth="sm">
+    <AppDialog open={open} onClose={close} fullWidth maxWidth="sm">
       <DialogTitle>Wprowadź dane nowej fermy</DialogTitle>
       <form onSubmit={handleSubmit(handleSave)}>
         <DialogContent>
@@ -131,7 +131,7 @@ const AddFarmModal: React.FC<AddFarmModalProps> = ({
           </LoadingButton>
         </DialogActions>
       </form>
-    </Dialog>
+    </AppDialog>
   );
 };
 

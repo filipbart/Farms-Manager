@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import {
-  Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
@@ -17,6 +16,7 @@ import type { Dayjs } from "dayjs";
 import type InsertionListModel from "../../../models/insertions/insertions";
 import dayjs from "dayjs";
 import { MdSave } from "react-icons/md";
+import AppDialog from "../../common/app-dialog";
 
 interface EditInsertionModalProps {
   open: boolean;
@@ -92,7 +92,7 @@ const EditInsertionModal: React.FC<EditInsertionModalProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+    <AppDialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>Edycja wstawienia</DialogTitle>
       <DialogContent>
         <Box display="flex" flexDirection="column" gap={2} mt={1}>
@@ -147,7 +147,7 @@ const EditInsertionModal: React.FC<EditInsertionModalProps> = ({
           Zapisz
         </LoadingButton>
       </DialogActions>
-    </Dialog>
+    </AppDialog>
   );
 };
 

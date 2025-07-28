@@ -1,5 +1,4 @@
 import {
-  Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
@@ -17,6 +16,7 @@ import {
   type AddHatcheryFormData,
 } from "../../../services/hatcheries-service";
 import { MdSave } from "react-icons/md";
+import AppDialog from "../../common/app-dialog";
 
 interface AddHatcheryModalProps {
   open: boolean;
@@ -60,7 +60,7 @@ const AddHatcheryModal: React.FC<AddHatcheryModalProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={close} fullWidth maxWidth="sm">
+    <AppDialog open={open} onClose={close} fullWidth maxWidth="sm">
       <DialogTitle>Wprowadź dane nowej wylęgarni</DialogTitle>
       <form onSubmit={handleSubmit(handleSave)}>
         <DialogContent>
@@ -140,7 +140,7 @@ const AddHatcheryModal: React.FC<AddHatcheryModalProps> = ({
           </LoadingButton>
         </DialogActions>
       </form>
-    </Dialog>
+    </AppDialog>
   );
 };
 

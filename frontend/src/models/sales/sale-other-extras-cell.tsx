@@ -1,7 +1,6 @@
 import { useState } from "react";
 import {
   Button,
-  Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
@@ -13,6 +12,7 @@ import {
   TableCell,
 } from "@mui/material";
 import type { SaleOtherExtras } from "../../models/sales/sales";
+import AppDialog from "../../components/common/app-dialog";
 
 export const OtherExtrasCell = ({ value }: { value: SaleOtherExtras }) => {
   const [open, setOpen] = useState(false);
@@ -30,7 +30,7 @@ export const OtherExtrasCell = ({ value }: { value: SaleOtherExtras }) => {
       <Button variant="text" onClick={() => setOpen(true)}>
         Pokaż dodatki
       </Button>
-      <Dialog
+      <AppDialog
         open={open}
         onClose={() => setOpen(false)}
         maxWidth="sm"
@@ -62,7 +62,7 @@ export const OtherExtrasCell = ({ value }: { value: SaleOtherExtras }) => {
         <DialogActions>
           <Button onClick={() => setOpen(false)}>Zamknij</Button>
         </DialogActions>
-      </Dialog>
+      </AppDialog>
     </>
   );
 };

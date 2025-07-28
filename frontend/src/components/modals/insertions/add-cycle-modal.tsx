@@ -1,7 +1,6 @@
 import {
   Box,
   Button,
-  Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
@@ -20,6 +19,7 @@ import LoadingButton from "../../common/loading-button";
 import LoadingTextField from "../../common/loading-textfield";
 import { MdSave } from "react-icons/md";
 import { useLatestCycle } from "../../../hooks/useLatestCycle";
+import AppDialog from "../../common/app-dialog";
 
 interface SetCycleModalProps {
   open: boolean;
@@ -86,7 +86,7 @@ const SetCycleModal: React.FC<SetCycleModalProps> = ({ open, onClose }) => {
   }, [fetchFarms]);
 
   return (
-    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
+    <AppDialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
       <DialogTitle>Ustaw nowy cykl</DialogTitle>
       <DialogContent sx={{ mt: 1 }}>
         <Box display="flex" flexDirection="column" gap={3}>
@@ -150,7 +150,7 @@ const SetCycleModal: React.FC<SetCycleModalProps> = ({ open, onClose }) => {
           Zapisz
         </LoadingButton>
       </DialogActions>
-    </Dialog>
+    </AppDialog>
   );
 };
 

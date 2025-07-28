@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import {
-  Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
@@ -23,6 +22,7 @@ import LoadingButton from "../../../common/loading-button";
 import { MdSave } from "react-icons/md";
 import { toast } from "react-toastify";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
+import AppDialog from "../../../common/app-dialog";
 
 interface EditSaleModalProps {
   open: boolean;
@@ -163,7 +163,7 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({
   if (!form) return null;
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <AppDialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>Edycja pozycji sprzedaży</DialogTitle>
       <DialogContent dividers>
         <Grid container spacing={2}>
@@ -399,7 +399,7 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({
           Zapisz
         </LoadingButton>
       </DialogActions>
-    </Dialog>
+    </AppDialog>
   );
 };
 

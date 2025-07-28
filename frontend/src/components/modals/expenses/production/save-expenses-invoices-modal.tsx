@@ -1,7 +1,6 @@
 import {
   Typography,
   Button,
-  Dialog,
   DialogTitle,
   DialogContent,
   Grid,
@@ -33,6 +32,7 @@ import type {
   DraftExpenseInvoice,
   ExpenseInvoiceData,
 } from "../../../../models/expenses/production/expenses-productions";
+import AppDialog from "../../../common/app-dialog";
 
 interface SaveExpensesInvoicesModalProps {
   open: boolean;
@@ -244,7 +244,7 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
 
   return (
     <>
-      <Dialog open={open} onClose={handleClose} fullWidth maxWidth="xl">
+      <AppDialog open={open} onClose={handleClose} fullWidth maxWidth="xl">
         <DialogTitle>Podgląd i weryfikacja faktury kosztowej</DialogTitle>
         <form onSubmit={handleSubmit(handleSave)}>
           <input type="hidden" {...register("cycleId")} />
@@ -288,7 +288,7 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
                       loading={loadingCycle}
                       label="Cykl"
                       value={watch("cycleDisplay") || ""}
-                      InputProps={{ readOnly: true }}
+                      slotProps={{ input: { readOnly: true } }}
                       error={!!errors.cycleId}
                       helperText={errors.cycleId?.message}
                       fullWidth
@@ -487,9 +487,9 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
             </LoadingButton>
           </DialogActions>
         </form>
-      </Dialog>
+      </AppDialog>
 
-      <Dialog
+      <AppDialog
         open={previewOpen}
         onClose={() => setPreviewOpen(false)}
         maxWidth="xl"
@@ -519,7 +519,7 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
             <Typography sx={{ p: 2 }}>Nieobsługiwany format pliku</Typography>
           )}
         </DialogContent>
-      </Dialog>
+      </AppDialog>
     </>
   );
 };

@@ -1,6 +1,5 @@
 import {
   Button,
-  Dialog,
   DialogTitle,
   DialogContent,
   Grid,
@@ -21,6 +20,7 @@ import type {
   ExpenseProductionListModel,
   UpdateExpenseProductionData,
 } from "../../../../models/expenses/production/expenses-productions";
+import AppDialog from "../../../common/app-dialog";
 
 interface EditExpenseProductionModalProps {
   open: boolean;
@@ -84,16 +84,7 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
   };
 
   return (
-    <Dialog
-      open={open}
-      onClose={(_event, reason) => {
-        if (reason !== "backdropClick") {
-          handleClose();
-        }
-      }}
-      maxWidth="md"
-      fullWidth
-    >
+    <AppDialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
       <DialogTitle>Edytuj koszt produkcji</DialogTitle>
 
       <form onSubmit={handleSubmit(handleSave)}>
@@ -201,7 +192,7 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
           </LoadingButton>
         </DialogActions>
       </form>
-    </Dialog>
+    </AppDialog>
   );
 };
 

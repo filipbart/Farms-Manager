@@ -1,12 +1,12 @@
 import { useState } from "react";
 import {
-  Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   Button,
   TextField,
 } from "@mui/material";
+import AppDialog from "../../../common/app-dialog";
 
 interface GeneratePaymentModalProps {
   open: boolean;
@@ -32,16 +32,7 @@ const GeneratePaymentModal: React.FC<GeneratePaymentModalProps> = ({
   };
 
   return (
-    <Dialog
-      open={open}
-      onClose={(_event, reason) => {
-        if (reason !== "backdropClick") {
-          handleClose();
-        }
-      }}
-      maxWidth="sm"
-      fullWidth
-    >
+    <AppDialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle>Komentarz do przelewu (opcjonalny)</DialogTitle>
       <DialogContent>
         <TextField
@@ -60,7 +51,7 @@ const GeneratePaymentModal: React.FC<GeneratePaymentModalProps> = ({
           Generuj przelew
         </Button>
       </DialogActions>
-    </Dialog>
+    </AppDialog>
   );
 };
 

@@ -1,6 +1,5 @@
 import React, { useEffect, useReducer, useState } from "react";
 import {
-  Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
@@ -33,6 +32,7 @@ import { toast } from "react-toastify";
 import { SalesService } from "../../../../services/sales-service";
 import { useLatestCycle } from "../../../../hooks/useLatestCycle";
 import FilePreview from "../../../common/file-preview";
+import AppDialog from "../../../common/app-dialog";
 
 interface AddSaleModalProps {
   open: boolean;
@@ -215,16 +215,7 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
   };
 
   return (
-    <Dialog
-      open={open}
-      onClose={(_event, reason) => {
-        if (reason !== "backdropClick") {
-          handleClose();
-        }
-      }}
-      fullWidth
-      maxWidth="lg"
-    >
+    <AppDialog open={open} onClose={handleClose} fullWidth maxWidth="lg">
       <DialogTitle>Nowa sprzedaż</DialogTitle>
       <DialogContent>
         <Grid container spacing={2} mt={1}>
@@ -542,7 +533,7 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
           Zapisz
         </LoadingButton>
       </DialogActions>
-    </Dialog>
+    </AppDialog>
   );
 };
 

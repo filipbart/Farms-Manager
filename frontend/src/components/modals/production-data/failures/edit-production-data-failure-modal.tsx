@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import {
-  Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
@@ -14,6 +13,7 @@ import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import LoadingButton from "../../../common/loading-button";
 import type { ProductionDataFailureListModel } from "../../../../models/production-data/failures/failures";
 import { ProductionDataFailuresService } from "../../../../services/production-data/production-data-failures-service";
+import AppDialog from "../../../common/app-dialog";
 
 interface EditProductionDataFailureModalProps {
   open: boolean;
@@ -81,16 +81,7 @@ const EditProductionDataFailureModal: React.FC<
   };
 
   return (
-    <AppDialog
-      open={open}
-      onClose={(_event, reason) => {
-        if (reason !== "backdropClick") {
-          onClose();
-        }
-      }}
-      fullWidth
-      maxWidth="sm"
-    >
+    <AppDialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>Edytuj wpis o upadkach i wybrakowaniach</DialogTitle>
       <DialogContent>
         <Box display="flex" flexDirection="column" gap={2.5} mt={1}>

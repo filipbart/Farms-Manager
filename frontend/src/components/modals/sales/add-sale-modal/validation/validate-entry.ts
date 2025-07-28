@@ -1,8 +1,8 @@
+import type { OtherExtraErrors } from "../../../../../models/sales/sale-form-states";
 import type {
   SaleEntry,
   SaleEntryErrors,
 } from "../../../../../models/sales/sales-entry";
-import type { OtherExtraErrors } from "../sale-form-types";
 
 export const validateEntry = (entry: SaleEntry): SaleEntryErrors => {
   const e: SaleEntryErrors = {};
@@ -70,7 +70,6 @@ export const validateEntry = (entry: SaleEntry): SaleEntryErrors => {
     e.priceWithExtras = "Cena z dodatkami musi być większa niż 0";
   }
 
-  // Walidacja otherExtras w ramach entry
   if (entry.otherExtras?.length > 0) {
     const otherExtrasErrors: OtherExtraErrors[] = [];
 

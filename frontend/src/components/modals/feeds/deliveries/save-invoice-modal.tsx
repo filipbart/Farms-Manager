@@ -1,7 +1,6 @@
 import {
   Typography,
   Button,
-  Dialog,
   DialogTitle,
   DialogContent,
   Grid,
@@ -29,6 +28,7 @@ import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import { FeedsService } from "../../../../services/feeds-service";
 import { toast } from "react-toastify";
 import { useFeedsNames } from "../../../../hooks/feeds/useFeedsNames";
+import AppDialog from "../../../common/app-dialog";
 
 interface SaveInvoiceModalProps {
   open: boolean;
@@ -256,16 +256,7 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
 
   return (
     <>
-      <Dialog
-        open={open}
-        onClose={(_event, reason) => {
-          if (reason !== "backdropClick") {
-            handleClose();
-          }
-        }}
-        fullWidth
-        maxWidth="xl"
-      >
+      <AppDialog open={open} onClose={handleClose} fullWidth maxWidth="xl">
         <DialogTitle>Podgląd faktury i dane</DialogTitle>
 
         <form onSubmit={handleSubmit(handleSave)}>
@@ -581,9 +572,9 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
             </LoadingButton>
           </DialogActions>
         </form>
-      </Dialog>
+      </AppDialog>
 
-      <Dialog
+      <AppDialog
         open={previewOpen}
         onClose={() => setPreviewOpen(false)}
         maxWidth="xl"
@@ -613,7 +604,7 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
             <Typography sx={{ p: 2 }}>Nieobsługiwany format pliku</Typography>
           )}
         </DialogContent>
-      </Dialog>
+      </AppDialog>
     </>
   );
 };

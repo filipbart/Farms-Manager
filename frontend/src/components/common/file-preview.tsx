@@ -1,11 +1,6 @@
 import { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  Button,
-  Typography,
-} from "@mui/material";
+import { DialogTitle, DialogContent, Button, Typography } from "@mui/material";
+import AppDialog from "./app-dialog";
 
 interface FilePreviewProps {
   file: File | string | undefined;
@@ -93,7 +88,7 @@ const FilePreview: React.FC<FilePreviewProps> = ({
         </Button>
       )}
 
-      <Dialog
+      <AppDialog
         open={previewOpen}
         onClose={() => setPreviewOpen(false)}
         maxWidth="lg"
@@ -118,7 +113,7 @@ const FilePreview: React.FC<FilePreviewProps> = ({
             <Typography>Nieobsługiwany typ pliku</Typography>
           )}
         </DialogContent>
-      </Dialog>
+      </AppDialog>
     </>
   );
 };

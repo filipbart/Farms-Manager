@@ -1,7 +1,6 @@
 import {
   Box,
   Button,
-  Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
@@ -17,6 +16,7 @@ import Loading from "../../components/loading/loading";
 import { OtherExtrasCell } from "../../models/sales/sale-other-extras-cell";
 import { useState } from "react";
 import { MdFileDownload } from "react-icons/md";
+import AppDialog from "../../components/common/app-dialog";
 
 const SaleCommentCell: React.FC<{ value: string }> = ({ value }) => {
   const [open, setOpen] = useState(false);
@@ -30,7 +30,7 @@ const SaleCommentCell: React.FC<{ value: string }> = ({ value }) => {
       <Button variant="text" onClick={() => setOpen(true)}>
         {preview}
       </Button>
-      <Dialog open={open} onClose={() => setOpen(false)}>
+      <AppDialog open={open} onClose={() => setOpen(false)}>
         <DialogTitle>Zawartość komentarza</DialogTitle>
         <DialogContent>
           <Typography>{value}</Typography>
@@ -38,7 +38,7 @@ const SaleCommentCell: React.FC<{ value: string }> = ({ value }) => {
         <DialogActions>
           <Button onClick={() => setOpen(false)}>Zamknij</Button>
         </DialogActions>
-      </Dialog>
+      </AppDialog>
     </>
   );
 };

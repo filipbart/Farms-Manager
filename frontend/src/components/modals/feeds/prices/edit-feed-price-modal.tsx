@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import {
-  Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
@@ -19,6 +18,7 @@ import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import { useFeedsNames } from "../../../../hooks/feeds/useFeedsNames";
 import LoadingTextField from "../../../common/loading-textfield";
 import LoadingButton from "../../../common/loading-button";
+import AppDialog from "../../../common/app-dialog";
 
 interface EditFeedPriceModalProps {
   open: boolean;
@@ -100,7 +100,7 @@ const EditFeedPriceModal: React.FC<EditFeedPriceModalProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+    <AppDialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>Edytcja ceny paszy</DialogTitle>
       <DialogContent>
         <Box display="flex" flexDirection="column" gap={2} mt={1}>
@@ -160,7 +160,7 @@ const EditFeedPriceModal: React.FC<EditFeedPriceModalProps> = ({
           Zapisz
         </LoadingButton>
       </DialogActions>
-    </Dialog>
+    </AppDialog>
   );
 };
 

@@ -1,5 +1,8 @@
+import type {
+  SaleFormState,
+  SaleFormErrors,
+} from "../../../../../models/sales/sale-form-states";
 import type { SaleEntryErrors } from "../../../../../models/sales/sales-entry";
-import type { SaleFormErrors, SaleFormState } from "../sale-form-types";
 import { validateEntry } from "./validate-entry";
 
 export const validateForm = (form: SaleFormState): SaleFormErrors => {

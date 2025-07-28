@@ -1,7 +1,6 @@
 import {
   Typography,
   Button,
-  Dialog,
   DialogTitle,
   DialogContent,
   Grid,
@@ -27,6 +26,7 @@ import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import type { AddExpenseProductionData } from "../../../../models/expenses/production/expenses-productions";
 import { useExpensesContractor } from "../../../../hooks/expenses/useExpensesContractors";
 import { ExpensesService } from "../../../../services/expenses-service";
+import AppDialog from "../../../common/app-dialog";
 
 interface AddExpenseProductionModalProps {
   open: boolean;
@@ -149,16 +149,7 @@ const AddExpenseProductionModal: React.FC<AddExpenseProductionModalProps> = ({
   };
 
   return (
-    <Dialog
-      open={open}
-      onClose={(_event, reason) => {
-        if (reason !== "backdropClick") {
-          handleClose();
-        }
-      }}
-      maxWidth="lg"
-      fullWidth
-    >
+    <AppDialog open={open} onClose={handleClose} maxWidth="lg" fullWidth>
       <DialogTitle>Dodaj koszt produkcji</DialogTitle>
 
       <form onSubmit={handleSubmit(handleSave)}>
@@ -373,7 +364,7 @@ const AddExpenseProductionModal: React.FC<AddExpenseProductionModalProps> = ({
           </LoadingButton>
         </DialogActions>
       </form>
-    </Dialog>
+    </AppDialog>
   );
 };
 

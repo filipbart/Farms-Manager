@@ -1,6 +1,5 @@
 import React, { useRef, useState } from "react";
 import {
-  Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
@@ -16,6 +15,7 @@ import LoadingButton from "../../../common/loading-button";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import type { DraftExpenseInvoice } from "../../../../models/expenses/production/expenses-productions";
 import { ExpensesService } from "../../../../services/expenses-service";
+import AppDialog from "../../../common/app-dialog";
 interface UploadExpenseInvoicesModalProps {
   open: boolean;
   onClose: () => void;
@@ -72,16 +72,7 @@ const UploadExpenseInvoicesModal: React.FC<UploadExpenseInvoicesModalProps> = ({
   };
 
   return (
-    <Dialog
-      open={open}
-      onClose={(_event, reason) => {
-        if (reason !== "backdropClick") {
-          handleClose();
-        }
-      }}
-      maxWidth="xs"
-      fullWidth
-    >
+    <AppDialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
       <DialogTitle>Wgraj faktury kosztów produkcyjnych</DialogTitle>
       <DialogContent>
         <Box my={2}>
@@ -128,7 +119,7 @@ const UploadExpenseInvoicesModal: React.FC<UploadExpenseInvoicesModalProps> = ({
           Prześlij
         </LoadingButton>
       </DialogActions>
-    </Dialog>
+    </AppDialog>
   );
 };
 

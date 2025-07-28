@@ -1,6 +1,5 @@
 import React, { useRef, useState } from "react";
 import {
-  Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
@@ -16,6 +15,7 @@ import { FeedsService } from "../../../../services/feeds-service";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import { MdFileUpload } from "react-icons/md";
 import type { DraftFeedInvoice } from "../../../../models/feeds/deliveries/draft-feed-invoice";
+import AppDialog from "../../../common/app-dialog";
 
 interface UploadFeedInvoicesModalProps {
   open: boolean;
@@ -70,16 +70,7 @@ const UploadFeedInvoicesModal: React.FC<UploadFeedInvoicesModalProps> = ({
   };
 
   return (
-    <Dialog
-      open={open}
-      onClose={(_event, reason) => {
-        if (reason !== "backdropClick") {
-          handleClose();
-        }
-      }}
-      maxWidth="xs"
-      fullWidth
-    >
+    <AppDialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
       <DialogTitle>Wgraj faktury</DialogTitle>
       <DialogContent>
         <Box my={2}>
@@ -126,7 +117,7 @@ const UploadFeedInvoicesModal: React.FC<UploadFeedInvoicesModalProps> = ({
           Prześlij
         </LoadingButton>
       </DialogActions>
-    </Dialog>
+    </AppDialog>
   );
 };
 

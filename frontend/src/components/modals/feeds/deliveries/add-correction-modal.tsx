@@ -1,7 +1,6 @@
 import {
   Typography,
   Button,
-  Dialog,
   DialogTitle,
   DialogContent,
   Grid,
@@ -25,6 +24,7 @@ import { useLatestCycle } from "../../../../hooks/useLatestCycle";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import FilePreview from "../../../common/file-preview";
+import AppDialog from "../../../common/app-dialog";
 
 interface AddCorrectionModalProps {
   open: boolean;
@@ -136,16 +136,7 @@ const AddCorrectionModal: React.FC<AddCorrectionModalProps> = ({
 
   return (
     <>
-      <Dialog
-        open={open}
-        onClose={(_event, reason) => {
-          if (reason !== "backdropClick") {
-            onClose();
-          }
-        }}
-        maxWidth="lg"
-        fullWidth
-      >
+      <AppDialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
         <DialogTitle>Dodaj fakturę kosztową</DialogTitle>
 
         <form onSubmit={handleSubmit(handleSave)}>
@@ -333,7 +324,7 @@ const AddCorrectionModal: React.FC<AddCorrectionModalProps> = ({
             </LoadingButton>
           </DialogActions>
         </form>
-      </Dialog>
+      </AppDialog>
     </>
   );
 };

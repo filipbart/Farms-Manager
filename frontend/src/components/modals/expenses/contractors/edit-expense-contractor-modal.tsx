@@ -1,5 +1,4 @@
 import {
-  Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
@@ -17,6 +16,7 @@ import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import LoadingButton from "../../../common/loading-button";
 import { useExpensesTypes } from "../../../../hooks/expenses/useExpensesTypes";
 import LoadingTextField from "../../../common/loading-textfield";
+import AppDialog from "../../../common/app-dialog";
 
 const INITIAL_FORM_STATE = {
   name: "",
@@ -140,7 +140,7 @@ const EditExpenseContractorModal: React.FC<EditExpenseContractorModalProps> = ({
   }, [onClose]);
 
   return (
-    <Dialog open={open} onClose={close} fullWidth maxWidth="sm">
+    <AppDialog open={open} onClose={close} fullWidth maxWidth="sm">
       <DialogTitle>Edytuj dane kontrahenta</DialogTitle>
       <DialogContent>
         <Box display="flex" flexDirection="column" gap={2} mt={1}>
@@ -204,7 +204,7 @@ const EditExpenseContractorModal: React.FC<EditExpenseContractorModalProps> = ({
           Zapisz zmiany
         </LoadingButton>
       </DialogActions>
-    </Dialog>
+    </AppDialog>
   );
 };
 

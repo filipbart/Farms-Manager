@@ -1,6 +1,5 @@
 import React, { useEffect, useReducer, useState } from "react";
 import {
-  Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
@@ -28,6 +27,7 @@ import type {
 } from "../../../models/insertions/insertion-entry";
 import { MdSave } from "react-icons/md";
 import { useLatestCycle } from "../../../hooks/useLatestCycle";
+import AppDialog from "../../common/app-dialog";
 
 interface AddInsertionModalProps {
   open: boolean;
@@ -275,16 +275,7 @@ const AddInsertionModal: React.FC<AddInsertionModalProps> = ({
   };
 
   return (
-    <Dialog
-      open={open}
-      onClose={(_event, reason) => {
-        if (reason !== "backdropClick") {
-          handleClose();
-        }
-      }}
-      fullWidth
-      maxWidth="lg"
-    >
+    <AppDialog open={open} onClose={handleClose} fullWidth maxWidth="lg">
       <DialogTitle>Nowe wstawienie</DialogTitle>
       <DialogContent>
         <Box display="flex" flexDirection="column" gap={2} mt={1}>
@@ -401,7 +392,7 @@ const AddInsertionModal: React.FC<AddInsertionModalProps> = ({
           Zapisz
         </LoadingButton>
       </DialogActions>
-    </Dialog>
+    </AppDialog>
   );
 };
 

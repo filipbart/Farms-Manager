@@ -1,6 +1,5 @@
 import {
   Button,
-  Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
@@ -18,6 +17,7 @@ import { FeedsService } from "../../../../services/feeds-service";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import LoadingButton from "../../../common/loading-button";
 import type { FeedDeliveryListModel } from "../../../../models/feeds/deliveries/feed-invoice";
+import AppDialog from "../../../common/app-dialog";
 
 interface EditCorrectionModalProps {
   open: boolean;
@@ -89,14 +89,7 @@ const EditCorrectionModal: React.FC<EditCorrectionModalProps> = ({
   };
 
   return (
-    <Dialog
-      open={open}
-      onClose={(_event, reason) => {
-        if (reason !== "backdropClick") onClose();
-      }}
-      maxWidth="sm"
-      fullWidth
-    >
+    <AppDialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>Edytuj fakturę korekty</DialogTitle>
 
       <form onSubmit={handleSubmit(handleUpdate)}>
@@ -208,7 +201,7 @@ const EditCorrectionModal: React.FC<EditCorrectionModalProps> = ({
           </LoadingButton>
         </DialogActions>
       </form>
-    </Dialog>
+    </AppDialog>
   );
 };
 

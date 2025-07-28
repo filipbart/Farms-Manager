@@ -1,5 +1,4 @@
 import {
-  Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
@@ -17,6 +16,7 @@ import {
   type AddSlaughterhouseFormData,
 } from "../../../services/slaughterhouses-service";
 import { MdSave } from "react-icons/md";
+import AppDialog from "../../common/app-dialog";
 
 interface AddSlaughterhouseModalProps {
   open: boolean;
@@ -60,7 +60,7 @@ const AddSlaughterhouseModal: React.FC<AddSlaughterhouseModalProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={close} fullWidth maxWidth="sm">
+    <AppDialog open={open} onClose={close} fullWidth maxWidth="sm">
       <DialogTitle>Wprowadź dane nowej ubojni</DialogTitle>
       <form onSubmit={handleSubmit(handleSave)}>
         <DialogContent>
@@ -128,7 +128,7 @@ const AddSlaughterhouseModal: React.FC<AddSlaughterhouseModalProps> = ({
           </LoadingButton>
         </DialogActions>
       </form>
-    </Dialog>
+    </AppDialog>
   );
 };
 

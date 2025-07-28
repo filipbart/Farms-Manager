@@ -1,5 +1,4 @@
 import {
-  Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
@@ -18,6 +17,7 @@ import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import LoadingButton from "../../../common/loading-button";
 import { useExpensesTypes } from "../../../../hooks/expenses/useExpensesTypes";
 import LoadingTextField from "../../../common/loading-textfield";
+import AppDialog from "../../../common/app-dialog";
 
 interface AddExpenseContractorModalProps {
   open: boolean;
@@ -69,7 +69,7 @@ const AddExpenseContractorModal: React.FC<AddExpenseContractorModalProps> = ({
   }, [fetchExpensesTypes]);
 
   return (
-    <Dialog open={open} onClose={close} fullWidth maxWidth="sm">
+    <AppDialog open={open} onClose={close} fullWidth maxWidth="sm">
       <DialogTitle>Wprowadź dane nowego kontrahenta</DialogTitle>
       <form onSubmit={handleSubmit(handleSave)}>
         <DialogContent>
@@ -147,7 +147,7 @@ const AddExpenseContractorModal: React.FC<AddExpenseContractorModalProps> = ({
           </LoadingButton>
         </DialogActions>
       </form>
-    </Dialog>
+    </AppDialog>
   );
 };
 

@@ -1,6 +1,5 @@
 import {
   Button,
-  Dialog,
   DialogTitle,
   DialogContent,
   Grid,
@@ -17,6 +16,7 @@ import type { FeedDeliveryListModel } from "../../../../models/feeds/deliveries/
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import { FeedsService } from "../../../../services/feeds-service";
 import { MdSave } from "react-icons/md";
+import AppDialog from "../../../common/app-dialog";
 
 interface EditInvoiceModalProps {
   open: boolean;
@@ -68,16 +68,7 @@ const EditFeedDeliveryModal: React.FC<EditInvoiceModalProps> = ({
   };
 
   return (
-    <Dialog
-      open={open}
-      onClose={(_event, reason) => {
-        if (reason !== "backdropClick") {
-          onClose();
-        }
-      }}
-      fullWidth
-      maxWidth="md"
-    >
+    <AppDialog open={open} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle>Edycja faktury</DialogTitle>
 
       <form onSubmit={handleSubmit(handleSave)}>
@@ -298,7 +289,7 @@ const EditFeedDeliveryModal: React.FC<EditInvoiceModalProps> = ({
           </LoadingButton>
         </DialogActions>
       </form>
-    </Dialog>
+    </AppDialog>
   );
 };
 
