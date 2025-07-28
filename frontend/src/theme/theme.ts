@@ -48,11 +48,23 @@ const theme = createTheme(
         },
       },
       MuiDataGrid: {
+        defaultProps: {
+          columnHeaderHeight: 64,
+        },
         styleOverrides: {
           root: {
             borderColor: "#374151",
             ".MuiDataGrid-filler": {
               border: "none !important",
+            },
+            ".MuiDataGrid-columnHeaderTitle": {
+              whiteSpace: "normal",
+              lineHeight: "normal",
+              textOverflow: "initial",
+              overflow: "hidden",
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
             },
           },
           toolbar: {

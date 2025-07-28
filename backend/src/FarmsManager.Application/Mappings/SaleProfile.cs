@@ -2,7 +2,7 @@
 using FarmsManager.Application.Models;
 using FarmsManager.Domain.Aggregates.SlaughterhouseAggregate.Entities;
 
-namespace FarmsManager.Application.Mappings.Sales;
+namespace FarmsManager.Application.Mappings;
 
 public class SaleProfile : Profile
 {

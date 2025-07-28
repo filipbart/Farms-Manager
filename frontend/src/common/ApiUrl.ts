@@ -97,4 +97,15 @@ export default class ApiUrl {
     this.ExpensesProductions + "/upload";
   public static SaveExpenseInvoiceData =
     this.ExpensesProductions + "/save-invoice";
+
+  public static ProductionData = this.BaseUrl + "production-data";
+
+  public static ProductionDataFailures = this.ProductionData + "/failures";
+  public static ProductionDataFailuresDictionary =
+    this.ProductionDataFailures + "/dictionary";
+  public static AddProductionDataFailure = this.ProductionDataFailures + "/add";
+  public static UpdateProductionDataFailure = (id: string) =>
+    this.ProductionDataFailures + "/update/" + id;
+  public static DeleteProductionDataFailure = (id: string) =>
+    this.ProductionDataFailures + "/delete/" + id;
 }

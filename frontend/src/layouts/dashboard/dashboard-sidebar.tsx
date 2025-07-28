@@ -15,13 +15,26 @@ import {
   FaDatabase,
   FaFileInvoiceDollar,
   FaHandshake,
+  FaIndustry,
   FaList,
   FaMoneyBill,
   FaTruck,
   FaWarehouse,
+  FaWeight,
 } from "react-icons/fa";
-import { FaArrowTrendUp, FaGear, FaHouse, FaJarWheat } from "react-icons/fa6";
-import { MdFactory, MdPayments, MdPeopleAlt } from "react-icons/md";
+import {
+  FaArrowTrendUp,
+  FaBuildingWheat,
+  FaGear,
+  FaHouse,
+  FaJarWheat,
+} from "react-icons/fa6";
+import {
+  MdFactory,
+  MdPayments,
+  MdPeopleAlt,
+  MdTrendingDown,
+} from "react-icons/md";
 import { PiFarmFill } from "react-icons/pi";
 import { useAuth } from "../../auth/useAuth";
 
@@ -86,6 +99,32 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             to="/expenses/types"
             title="Typy wydatków"
             icon={<MdPayments />}
+          />
+        </SidebarMenuItem>
+        <SidebarMenuItem
+          to="/production-data"
+          title="Dane produkcyjne"
+          icon={<FaIndustry />}
+        >
+          <SidebarMenuItem
+            to="/production-data/failures"
+            title="Upadki i wybrakowania"
+            icon={<MdTrendingDown />}
+          />
+          <SidebarMenuItem
+            to="/production-data/rest-feeds"
+            title="Pozostała pasza"
+            icon={<FaJarWheat />}
+          />
+          <SidebarMenuItem
+            to="/production-data/moved-feeds"
+            title="Pasza przeniesiona"
+            icon={<FaBuildingWheat />}
+          />
+          <SidebarMenuItem
+            to="/production-data/body-weights"
+            title="Masy ciała"
+            icon={<FaWeight />}
           />
         </SidebarMenuItem>
         <SidebarMenuItem to="/data" title="Dane" icon={<FaDatabase />}>

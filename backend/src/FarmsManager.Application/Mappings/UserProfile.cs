@@ -2,7 +2,7 @@
 using FarmsManager.Application.Queries.User;
 using FarmsManager.Domain.Aggregates.UserAggregate.Entities;
 
-namespace FarmsManager.Application.Mappings.User;
+namespace FarmsManager.Application.Mappings;
 
 public class UserProfile : Profile
 {

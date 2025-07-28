@@ -1,8 +1,9 @@
 ﻿using AutoMapper;
+using FarmsManager.Application.Models;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
 using FarmsManager.Domain.Models.FarmAggregate;
 
-namespace FarmsManager.Application.Mappings.Farm;
+namespace FarmsManager.Application.Mappings;
 
 public class FarmProfile : Profile
 {
@@ -14,13 +15,9 @@ public class FarmProfile : Profile
             .ForMember(m => m.Henhouses,
                 opt => opt.MapFrom(t =>
                     t.Henhouses.Where(h => h.DateDeletedUtc.HasValue == false).OrderByDescending(h => h.Name)));
-    }
-}
-
-public class CycleProfile : Profile
-{
-    public CycleProfile()
-    {
-        CreateMap<CycleEntity, FarmLatestCycleDto>();
+        
+        CreateMap<FarmEntity, FarmDictModel>()
+            .ForMember(t => t.Henhouses,
+                opt => opt.MapFrom(t => t.Henhouses.Where(h => h.DateDeletedUtc.HasValue == false)));
     }
 }
