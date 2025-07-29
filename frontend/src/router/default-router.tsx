@@ -22,6 +22,7 @@ import ExpensesContractorsPage from "../pages/expenses/contractors";
 import ExpenseProductionPage from "../pages/expenses/production";
 import ProductionDataFailuresPage from "../pages/production-data/failures";
 import ProductionDataRemainingFeedPage from "../pages/production-data/remaining-feed";
+import ProductionDataTransferFeedPage from "../pages/production-data/transfer-feed";
 
 const DefaultRouter: React.FC = () => {
   const { getRoute } = useRouter();
@@ -92,6 +93,10 @@ const DefaultRouter: React.FC = () => {
         <Route
           path={getRoute(RouteName.ProductionDataRemainingFeed)}
           element={<ProductionDataRemainingFeedPage />}
+        />
+        <Route
+          path={getRoute(RouteName.ProductionDataTransferFeed)}
+          element={<ProductionDataTransferFeedPage />}
         />
       </Route>
     </Routes>

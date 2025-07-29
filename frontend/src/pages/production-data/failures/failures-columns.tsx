@@ -1,7 +1,7 @@
 import { Button } from "@mui/material";
 import type { GridColDef } from "@mui/x-data-grid";
 import dayjs from "dayjs";
-import type { ProductionDataFailureListModel } from "../../../models/production-data/failures/failures";
+import type { ProductionDataFailureListModel } from "../../../models/production-data/failures";
 
 interface GetProductionDataFailuresColumnsProps {
   setSelectedFailure: (row: ProductionDataFailureListModel) => void;

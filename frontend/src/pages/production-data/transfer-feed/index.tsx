@@ -1,16 +1,11 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
-import { DataGrid } from "@mui/x-data-grid";
 import { useEffect, useMemo, useReducer, useState } from "react";
 import { toast } from "react-toastify";
-import type { ProductionDataFailureListModel } from "../../../models/production-data/failures";
 import type { CycleDictModel } from "../../../models/common/dictionaries";
-import { getProductionDataFailuresColumns } from "./failures-columns";
+import { handleApiResponse } from "../../../utils/axios/handle-api-response";
+import FiltersForm from "../../../components/filters/filters-form";
 import CustomToolbar from "../../../components/datagrid/custom-toolbar";
 import NoRowsOverlay from "../../../components/datagrid/custom-norows";
-import { handleApiResponse } from "../../../utils/axios/handle-api-response";
-import { ProductionDataFailuresService } from "../../../services/production-data/production-data-failures-service";
-import AddProductionDataFailureModal from "../../../components/modals/production-data/failures/add-production-data-failure-modal";
-import EditProductionDataFailureModal from "../../../components/modals/production-data/failures/edit-production-data-failure-modal";
 import {
   filterReducer,
   initialFilters,
@@ -18,24 +13,26 @@ import {
   ProductionDataOrderType,
   type ProductionDataDictionary,
 } from "../../../models/production-data/production-data-filters";
-import { getProductionDataFiltersConfig } from "../filter-config.production-data";
-import FiltersForm from "../../../components/filters/filters-form";
+import type { ProductionDataTransferFeedListModel } from "../../../models/production-data/transfer-feed";
 import { ProductionDataService } from "../../../services/production-data/production-data-service";
+import { getFeedTransfersColumns } from "./transfer-feed-columns";
+import { getProductionDataFiltersConfig } from "../filter-config.production-data";
+import { DataGrid } from "@mui/x-data-grid";
 
-const ProductionDataFailuresPage: React.FC = () => {
+const ProductionDataTransferFeedPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
   const [dictionary, setDictionary] = useState<ProductionDataDictionary>();
   const [openModal, setOpenModal] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [failures, setFailures] = useState<ProductionDataFailureListModel[]>(
-    []
-  );
+  const [feedTransfers, setFeedTransfers] = useState<
+    ProductionDataTransferFeedListModel[]
+  >([]);
   const [totalRows, setTotalRows] = useState(0);
-  const [selectedFailure, setSelectedFailure] =
-    useState<ProductionDataFailureListModel | null>(null);
+  const [selectedFeedTransfer, setSelectedFeedTransfer] =
+    useState<ProductionDataTransferFeedListModel | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [visibilityModel, setVisibilityModel] = useState(() => {
-    const saved = localStorage.getItem("columnVisibilityModelFailures");
+    const saved = localStorage.getItem("columnVisibilityModelFeedTransfers");
     return saved ? JSON.parse(saved) : {};
   });
 
@@ -57,7 +54,6 @@ const ProductionDataFailuresPage: React.FC = () => {
         await handleApiResponse(
           () => ProductionDataService.getDictionaries(),
           (data) => {
-            console.log(data);
             setDictionary(data.responseData);
           },
           undefined,
@@ -70,52 +66,52 @@ const ProductionDataFailuresPage: React.FC = () => {
     fetchDictionaries();
   }, []);
 
-  const deleteFailure = async (id: string) => {
-    try {
-      setLoading(true);
-      await handleApiResponse(
-        () => ProductionDataFailuresService.deleteFailure(id),
-        async () => {
-          toast.success("Wpis został poprawnie usunięty");
-          dispatch({ type: "setMultiple", payload: { page: filters.page } });
-        },
-        undefined,
-        "Błąd podczas usuwania wpisu"
-      );
-    } catch {
-      toast.error("Błąd podczas usuwania wpisu");
-    } finally {
-      setLoading(false);
-    }
+  const deleteFeedTransfer = async (id: string) => {
+    // try {
+    //   setLoading(true);
+    //   await handleApiResponse(
+    //     () => ProductionDataTransferFeedService.deleteFeedTransfer(id),
+    //     async () => {
+    //       toast.success("Przeniesienie zostało poprawnie usunięte");
+    //       dispatch({ type: "setMultiple", payload: { page: filters.page } });
+    //     },
+    //     undefined,
+    //     "Błąd podczas usuwania przeniesienia"
+    //   );
+    // } catch {
+    //   toast.error("Błąd podczas usuwania przeniesienia");
+    // } finally {
+    //   setLoading(false);
+    // }
   };
 
   useEffect(() => {
-    const fetchFailures = async () => {
+    const fetchFeedTransfers = async () => {
       setLoading(true);
-      try {
-        await handleApiResponse(
-          () => ProductionDataFailuresService.getFailures(filters),
-          (data) => {
-            setFailures(data.responseData?.items ?? []);
-            setTotalRows(data.responseData?.totalRows ?? 0);
-          },
-          undefined,
-          "Błąd podczas pobierania danych"
-        );
-      } catch {
-        toast.error("Błąd podczas pobierania danych");
-      } finally {
-        setLoading(false);
-      }
+      //   try {
+      //     await handleApiResponse(
+      //       () => ProductionDataTransferFeedService.getFeedTransfers(filters),
+      //       (data) => {
+      //         setFeedTransfers(data.responseData?.items ?? []);
+      //         setTotalRows(data.responseData?.totalRows ?? 0);
+      //       },
+      //       undefined,
+      //       "Błąd podczas pobierania danych"
+      //     );
+      //   } catch {
+      //     toast.error("Błąd podczas pobierania danych");
+      //   } finally {
+      //     setLoading(false);
+      //   }
     };
-    fetchFailures();
+    fetchFeedTransfers();
   }, [filters]);
 
-  const columns = useMemo(
+  const { columns, columnGroupingModel } = useMemo(
     () =>
-      getProductionDataFailuresColumns({
-        setSelectedFailure,
-        deleteFailure,
+      getFeedTransfersColumns({
+        setSelectedTransfer: setSelectedFeedTransfer,
+        deleteTransfer: deleteFeedTransfer,
         setIsEditModalOpen,
       }),
     []
@@ -131,7 +127,7 @@ const ProductionDataFailuresPage: React.FC = () => {
         alignItems={{ xs: "flex-start", sm: "center" }}
         gap={2}
       >
-        <Typography variant="h4">Upadki i Wybrakowania</Typography>
+        <Typography variant="h4">Przeniesienia Paszy</Typography>
         <Box display="flex" gap={2}>
           <Button
             variant="contained"
@@ -156,13 +152,14 @@ const ProductionDataFailuresPage: React.FC = () => {
       <Box mt={4} sx={{ width: "100%", overflowX: "auto" }}>
         <DataGrid
           loading={loading}
-          rows={failures}
+          rows={feedTransfers}
           columns={columns}
+          columnGroupingModel={columnGroupingModel}
           columnVisibilityModel={visibilityModel}
           onColumnVisibilityModelChange={(model) => {
             setVisibilityModel(model);
             localStorage.setItem(
-              "columnVisibilityModelFailures",
+              "columnVisibilityModelFeedTransfers",
               JSON.stringify(model)
             );
           }}
@@ -222,30 +219,30 @@ const ProductionDataFailuresPage: React.FC = () => {
         />
       </Box>
 
-      <EditProductionDataFailureModal
+      {/* <EditFeedTransferModal
         open={isEditModalOpen}
         onClose={() => {
           setIsEditModalOpen(false);
-          setSelectedFailure(null);
+          setSelectedFeedTransfer(null);
         }}
         onSave={() => {
           setIsEditModalOpen(false);
-          setSelectedFailure(null);
+          setSelectedFeedTransfer(null);
           dispatch({ type: "setMultiple", payload: { page: filters.page } });
         }}
-        failure={selectedFailure}
+        feedTransfer={selectedFeedTransfer}
       />
 
-      <AddProductionDataFailureModal
+      <AddFeedTransferModal
         open={openModal}
         onClose={() => setOpenModal(false)}
         onSave={() => {
           setOpenModal(false);
           dispatch({ type: "setMultiple", payload: { page: 0 } });
         }}
-      />
+      /> */}
     </Box>
   );
 };
 
-export default ProductionDataFailuresPage;
+export default ProductionDataTransferFeedPage;

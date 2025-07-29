@@ -4,7 +4,7 @@ import type {
   AddProductionDataFailureData,
   ProductionDataFailureListModel,
   UpdateProductionDataFailureData,
-} from "../../models/production-data/failures/failures";
+} from "../../models/production-data/failures";
 import type { ProductionDataFilterPaginationModel } from "../../models/production-data/production-data-filters";
 import AxiosWrapper from "../../utils/axios/wrapper";
 

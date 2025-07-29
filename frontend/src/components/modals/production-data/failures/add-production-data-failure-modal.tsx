@@ -15,7 +15,7 @@ import { useLatestCycle } from "../../../../hooks/useLatestCycle";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import LoadingButton from "../../../common/loading-button";
 import LoadingTextField from "../../../common/loading-textfield";
-import type { AddProductionDataFailureData } from "../../../../models/production-data/failures/failures";
+import type { AddProductionDataFailureData } from "../../../../models/production-data/failures";
 import { ProductionDataFailuresService } from "../../../../services/production-data/production-data-failures-service";
 import type { HouseRowModel } from "../../../../models/farms/house-row-model";
 import AppDialog from "../../../common/app-dialog";

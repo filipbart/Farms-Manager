@@ -12,7 +12,7 @@ import { MdSave } from "react-icons/md";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import LoadingButton from "../../../common/loading-button";
 import AppDialog from "../../../common/app-dialog";
-import type { ProductionDataRemainingFeedListModel } from "../../../../models/production-data/remaining-feed/remaining-feed";
+import type { ProductionDataRemainingFeedListModel } from "../../../../models/production-data/remaining-feed";
 import { ProductionDataRemainingFeedService } from "../../../../services/production-data/production-data-remaining-feed-service";
 
 interface EditProductionDataRemainingFeedModalProps {

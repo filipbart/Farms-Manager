@@ -36,7 +36,7 @@ public class RemainingFeedController(IMediator mediator) : BaseController
     }
 
     /// <summary>
-    /// Dodaje nowy wpis o upadkach/wybrakowaniach
+    /// Dodaje nowy wpis o pozostałej paszy
     /// </summary>
     [HttpPost("add")]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]

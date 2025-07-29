@@ -21,7 +21,7 @@ import LoadingTextField from "../../../common/loading-textfield";
 import AppDialog from "../../../common/app-dialog";
 import type { HouseRowModel } from "../../../../models/farms/house-row-model";
 import { ProductionDataRemainingFeedService } from "../../../../services/production-data/production-data-remaining-feed-service";
-import type { AddRemainingFeedData } from "../../../../models/production-data/remaining-feed/remaining-feed";
+import type { AddRemainingFeedData } from "../../../../models/production-data/remaining-feed";
 
 interface AddProductionDataRemainingFeedModalProps {
   open: boolean;

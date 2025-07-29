@@ -11,7 +11,7 @@ import { toast } from "react-toastify";
 import { MdSave } from "react-icons/md";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import LoadingButton from "../../../common/loading-button";
-import type { ProductionDataFailureListModel } from "../../../../models/production-data/failures/failures";
+import type { ProductionDataFailureListModel } from "../../../../models/production-data/failures";
 import { ProductionDataFailuresService } from "../../../../services/production-data/production-data-failures-service";
 import AppDialog from "../../../common/app-dialog";
 

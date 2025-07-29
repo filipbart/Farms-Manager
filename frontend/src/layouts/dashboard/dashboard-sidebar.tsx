@@ -117,7 +117,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             icon={<FaJarWheat />}
           />
           <SidebarMenuItem
-            to="/production-data/moved-feeds"
+            to="/production-data/transfer-feed"
             title="Pasza przeniesiona"
             icon={<FaBuildingWheat />}
           />

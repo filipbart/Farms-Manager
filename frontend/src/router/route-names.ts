@@ -18,6 +18,7 @@ export enum RouteName {
   ExpensesTypes = "expenses/types",
   ProductionDataFailures = "production-data/failures",
   ProductionDataRemainingFeed = "production-data/remaining-feed",
+  ProductionDataTransferFeed = "production-data/transfer-feed",
   Settings = "settings",
   Users = "users",
   UserProfile = "user-profile",

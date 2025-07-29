@@ -3,6 +3,7 @@ using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications.ProductionData;
 using FarmsManager.Domain.Aggregates.ProductionDataAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
+using FluentValidation;
 using MediatR;
 
 
@@ -43,5 +44,15 @@ public class
         await _repository.UpdateAsync(remainingFeed, cancellationToken);
 
         return new EmptyBaseResponse();
+    }
+}
+
+public class
+    UpdateProductionDataRemainingFeedCommandValidator : AbstractValidator<UpdateProductionDataRemainingFeedCommand>
+{
+    public UpdateProductionDataRemainingFeedCommandValidator()
+    {
+        RuleFor(t => t.Data.RemainingTonnage).GreaterThanOrEqualTo(0);
+        RuleFor(t => t.Data.RemainingValue).GreaterThanOrEqualTo(0);
     }
 }

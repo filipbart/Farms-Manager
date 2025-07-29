@@ -7,7 +7,7 @@ import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import FiltersForm from "../../../components/filters/filters-form";
 import CustomToolbar from "../../../components/datagrid/custom-toolbar";
 import NoRowsOverlay from "../../../components/datagrid/custom-norows";
-import type { ProductionDataRemainingFeedListModel } from "../../../models/production-data/remaining-feed/remaining-feed";
+import type { ProductionDataRemainingFeedListModel } from "../../../models/production-data/remaining-feed";
 import {
   filterReducer,
   initialFilters,

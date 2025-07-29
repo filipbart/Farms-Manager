@@ -5,7 +5,7 @@ import type {
   AddRemainingFeedData,
   ProductionDataRemainingFeedListModel,
   UpdateRemainingFeedData,
-} from "../../models/production-data/remaining-feed/remaining-feed";
+} from "../../models/production-data/remaining-feed";
 import AxiosWrapper from "../../utils/axios/wrapper";
 
 interface CalculateValueParams {

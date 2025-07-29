@@ -1,6 +1,6 @@
 import { Button } from "@mui/material";
 import dayjs from "dayjs";
-import type { ProductionDataRemainingFeedListModel } from "../../../models/production-data/remaining-feed/remaining-feed";
+import type { ProductionDataRemainingFeedListModel } from "../../../models/production-data/remaining-feed";
 import type { GridColDef } from "@mui/x-data-grid";
 
 interface GetRemainingFeedColumnsProps {
@@ -47,7 +47,7 @@ export const getRemainingFeedColumns = ({
     },
     {
       field: "remainingValue",
-      headerName: "Wartość pozostała [zł]",
+      headerName: "Wartość [zł]",
       flex: 1,
     },
     {
