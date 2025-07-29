@@ -99,13 +99,23 @@ export default class ApiUrl {
     this.ExpensesProductions + "/save-invoice";
 
   public static ProductionData = this.BaseUrl + "production-data";
+  public static ProductionDataDictionary = this.ProductionData + "/dictionary";
 
   public static ProductionDataFailures = this.ProductionData + "/failures";
-  public static ProductionDataFailuresDictionary =
-    this.ProductionDataFailures + "/dictionary";
   public static AddProductionDataFailure = this.ProductionDataFailures + "/add";
   public static UpdateProductionDataFailure = (id: string) =>
     this.ProductionDataFailures + "/update/" + id;
   public static DeleteProductionDataFailure = (id: string) =>
     this.ProductionDataFailures + "/delete/" + id;
+
+  public static ProductionDataRemainingFeed =
+    this.ProductionData + "/remaining-feed";
+  public static CalculateRemainingFeedValue =
+    this.ProductionDataRemainingFeed + "/calculate-value";
+  public static AddProductionDataRemainingFeed =
+    this.ProductionDataRemainingFeed + "/add";
+  public static UpdateProductionDataRemainingFeed = (id: string) =>
+    this.ProductionDataRemainingFeed + "/update/" + id;
+  public static DeleteProductionDataRemainingFeed = (id: string) =>
+    this.ProductionDataRemainingFeed + "/delete/" + id;
 }

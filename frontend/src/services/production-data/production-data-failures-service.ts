@@ -5,26 +5,15 @@ import type {
   ProductionDataFailureListModel,
   UpdateProductionDataFailureData,
 } from "../../models/production-data/failures/failures";
-import type {
-  ProductionDataFailureDictionary,
-  ProductionDataFailureFilterPaginationModel,
-} from "../../models/production-data/failures/failures-filters";
+import type { ProductionDataFilterPaginationModel } from "../../models/production-data/production-data-filters";
 import AxiosWrapper from "../../utils/axios/wrapper";
 
 export class ProductionDataFailuresService {
   /**
-   * Pobiera słowniki potrzebne do filtrów
-   */
-  public static async getFailuresDictionaries() {
-    return await AxiosWrapper.get<ProductionDataFailureDictionary>(
-      ApiUrl.ProductionDataFailuresDictionary
-    );
-  }
-  /**
    * Pobiera listę wpisów o upadkach i wybrakowaniach
    */
   public static async getFailures(
-    filters: ProductionDataFailureFilterPaginationModel
+    filters: ProductionDataFilterPaginationModel
   ) {
     return await AxiosWrapper.get<
       PaginateModel<ProductionDataFailureListModel>

@@ -8,12 +8,12 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 
 import "dayjs/locale/pl";
 import { RouterProvider } from "./router/use-router";
-import { AuthContextProvider } from "./auth/auth-context";
 import {
   GlobalContext,
   GlobalContextProvider,
 } from "./context/global/global-context";
 import Loading from "./components/loading/loading";
+import { AuthContextProvider } from "./auth/auth-context-provider";
 
 function App() {
   return (

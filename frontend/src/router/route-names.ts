@@ -17,6 +17,7 @@ export enum RouteName {
   ExpensesContractors = "expenses/contractors",
   ExpensesTypes = "expenses/types",
   ProductionDataFailures = "production-data/failures",
+  ProductionDataRemainingFeed = "production-data/remaining-feed",
   Settings = "settings",
   Users = "users",
   UserProfile = "user-profile",

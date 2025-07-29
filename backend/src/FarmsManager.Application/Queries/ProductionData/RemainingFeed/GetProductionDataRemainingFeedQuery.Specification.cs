@@ -3,11 +3,11 @@ using FarmsManager.Application.Models.ProductionData;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.ProductionDataAggregate.Entities;
 
-namespace FarmsManager.Application.Queries.ProductionData.Failures;
+namespace FarmsManager.Application.Queries.ProductionData.RemainingFeed;
 
-public sealed class GetAllProductionDataFailuresSpec : BaseSpecification<ProductionDataFailureEntity>
+public sealed class GetAllProductionDataRemainingFeedSpec : BaseSpecification<ProductionDataRemainingFeedEntity>
 {
-    public GetAllProductionDataFailuresSpec(ProductionDataQueryFilters filters, bool withPagination)
+    public GetAllProductionDataRemainingFeedSpec(ProductionDataQueryFilters filters, bool withPagination)
     {
         EnsureExists();
         DisableTracking();
@@ -73,7 +73,6 @@ public sealed class GetAllProductionDataFailuresSpec : BaseSpecification<Product
                     Query.OrderBy(t => t.Cycle.Year)
                         .ThenBy(t => t.Cycle.Identifier);
                 }
-
                 break;
 
             case ProductionDataOrderBy.Farm:
@@ -85,7 +84,6 @@ public sealed class GetAllProductionDataFailuresSpec : BaseSpecification<Product
                 {
                     Query.OrderBy(t => t.Farm.Name);
                 }
-
                 break;
 
             case ProductionDataOrderBy.Henhouse:
@@ -97,31 +95,6 @@ public sealed class GetAllProductionDataFailuresSpec : BaseSpecification<Product
                 {
                     Query.OrderBy(t => t.Henhouse.Name);
                 }
-
-                break;
-
-            case ProductionDataOrderBy.DeadCount:
-                if (isDescending)
-                {
-                    Query.OrderByDescending(t => t.DeadCount);
-                }
-                else
-                {
-                    Query.OrderBy(t => t.DeadCount);
-                }
-
-                break;
-
-            case ProductionDataOrderBy.DefectiveCount:
-                if (isDescending)
-                {
-                    Query.OrderByDescending(t => t.DefectiveCount);
-                }
-                else
-                {
-                    Query.OrderBy(t => t.DefectiveCount);
-                }
-
                 break;
 
             case ProductionDataOrderBy.DateCreatedUtc:
@@ -134,7 +107,6 @@ public sealed class GetAllProductionDataFailuresSpec : BaseSpecification<Product
                 {
                     Query.OrderBy(t => t.DateCreatedUtc);
                 }
-
                 break;
         }
     }

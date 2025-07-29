@@ -112,7 +112,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             icon={<MdTrendingDown />}
           />
           <SidebarMenuItem
-            to="/production-data/rest-feeds"
+            to="/production-data/remaining-feed"
             title="Pozostała pasza"
             icon={<FaJarWheat />}
           />

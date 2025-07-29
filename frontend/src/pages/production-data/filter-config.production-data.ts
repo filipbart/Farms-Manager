@@ -1,15 +1,15 @@
-import type { FilterConfig } from "../../../components/filters/filter-types";
-import type { CycleDictModel } from "../../../models/common/dictionaries";
+import type { FilterConfig } from "../../components/filters/filter-types";
+import type { CycleDictModel } from "../../models/common/dictionaries";
 import type {
-  ProductionDataFailureDictionary,
-  ProductionDataFailureFilterPaginationModel,
-} from "../../../models/production-data/failures/failures-filters";
+  ProductionDataDictionary,
+  ProductionDataFilterPaginationModel,
+} from "../../models/production-data/production-data-filters";
 
-export const getProductionDataFailuresFiltersConfig = (
-  dictionary: ProductionDataFailureDictionary | undefined,
+export const getProductionDataFiltersConfig = (
+  dictionary: ProductionDataDictionary | undefined,
   uniqueCycles: CycleDictModel[],
-  filters: ProductionDataFailureFilterPaginationModel
-): FilterConfig<keyof ProductionDataFailureFilterPaginationModel>[] => [
+  filters: ProductionDataFilterPaginationModel
+): FilterConfig<keyof ProductionDataFilterPaginationModel>[] => [
   {
     key: "farmIds",
     label: "Ferma",

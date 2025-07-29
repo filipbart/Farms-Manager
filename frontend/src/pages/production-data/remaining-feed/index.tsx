@@ -2,15 +2,12 @@ import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { useEffect, useMemo, useReducer, useState } from "react";
 import { toast } from "react-toastify";
-import type { ProductionDataFailureListModel } from "../../../models/production-data/failures/failures";
 import type { CycleDictModel } from "../../../models/common/dictionaries";
-import { getProductionDataFailuresColumns } from "./failures-columns";
+import { handleApiResponse } from "../../../utils/axios/handle-api-response";
+import FiltersForm from "../../../components/filters/filters-form";
 import CustomToolbar from "../../../components/datagrid/custom-toolbar";
 import NoRowsOverlay from "../../../components/datagrid/custom-norows";
-import { handleApiResponse } from "../../../utils/axios/handle-api-response";
-import { ProductionDataFailuresService } from "../../../services/production-data/production-data-failures-service";
-import AddProductionDataFailureModal from "../../../components/modals/production-data/failures/add-production-data-failure-modal";
-import EditProductionDataFailureModal from "../../../components/modals/production-data/failures/edit-production-data-failure-modal";
+import type { ProductionDataRemainingFeedListModel } from "../../../models/production-data/remaining-feed/remaining-feed";
 import {
   filterReducer,
   initialFilters,
@@ -18,24 +15,27 @@ import {
   ProductionDataOrderType,
   type ProductionDataDictionary,
 } from "../../../models/production-data/production-data-filters";
+import { ProductionDataRemainingFeedService } from "../../../services/production-data/production-data-remaining-feed-service";
+import { getRemainingFeedColumns } from "./remaining-feed-columns";
 import { getProductionDataFiltersConfig } from "../filter-config.production-data";
-import FiltersForm from "../../../components/filters/filters-form";
+import AddProductionDataRemainingFeedModal from "../../../components/modals/production-data/remaining-feed/add-production-data-remaining-feed-modal";
+import EditProductionDataRemainingFeedModal from "../../../components/modals/production-data/remaining-feed/edit-production-data-failure-modal";
 import { ProductionDataService } from "../../../services/production-data/production-data-service";
 
-const ProductionDataFailuresPage: React.FC = () => {
+const ProductionDataRemainingFeedPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
   const [dictionary, setDictionary] = useState<ProductionDataDictionary>();
   const [openModal, setOpenModal] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [failures, setFailures] = useState<ProductionDataFailureListModel[]>(
-    []
-  );
+  const [remainingFeeds, setRemainingFeeds] = useState<
+    ProductionDataRemainingFeedListModel[]
+  >([]);
   const [totalRows, setTotalRows] = useState(0);
-  const [selectedFailure, setSelectedFailure] =
-    useState<ProductionDataFailureListModel | null>(null);
+  const [selectedRemainingFeed, setSelectedRemainingFeed] =
+    useState<ProductionDataRemainingFeedListModel | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [visibilityModel, setVisibilityModel] = useState(() => {
-    const saved = localStorage.getItem("columnVisibilityModelFailures");
+    const saved = localStorage.getItem("columnVisibilityModelRemainingFeeds");
     return saved ? JSON.parse(saved) : {};
   });
 
@@ -57,7 +57,6 @@ const ProductionDataFailuresPage: React.FC = () => {
         await handleApiResponse(
           () => ProductionDataService.getDictionaries(),
           (data) => {
-            console.log(data);
             setDictionary(data.responseData);
           },
           undefined,
@@ -70,11 +69,11 @@ const ProductionDataFailuresPage: React.FC = () => {
     fetchDictionaries();
   }, []);
 
-  const deleteFailure = async (id: string) => {
+  const deleteRemainingFeed = async (id: string) => {
     try {
       setLoading(true);
       await handleApiResponse(
-        () => ProductionDataFailuresService.deleteFailure(id),
+        () => ProductionDataRemainingFeedService.deleteRemainingFeed(id),
         async () => {
           toast.success("Wpis został poprawnie usunięty");
           dispatch({ type: "setMultiple", payload: { page: filters.page } });
@@ -90,13 +89,13 @@ const ProductionDataFailuresPage: React.FC = () => {
   };
 
   useEffect(() => {
-    const fetchFailures = async () => {
+    const fetchRemainingFeeds = async () => {
       setLoading(true);
       try {
         await handleApiResponse(
-          () => ProductionDataFailuresService.getFailures(filters),
+          () => ProductionDataRemainingFeedService.getRemainingFeeds(filters),
           (data) => {
-            setFailures(data.responseData?.items ?? []);
+            setRemainingFeeds(data.responseData?.items ?? []);
             setTotalRows(data.responseData?.totalRows ?? 0);
           },
           undefined,
@@ -108,14 +107,14 @@ const ProductionDataFailuresPage: React.FC = () => {
         setLoading(false);
       }
     };
-    fetchFailures();
+    fetchRemainingFeeds();
   }, [filters]);
 
   const columns = useMemo(
     () =>
-      getProductionDataFailuresColumns({
-        setSelectedFailure,
-        deleteFailure,
+      getRemainingFeedColumns({
+        setSelectedRemainingFeed,
+        deleteRemainingFeed,
         setIsEditModalOpen,
       }),
     []
@@ -131,7 +130,7 @@ const ProductionDataFailuresPage: React.FC = () => {
         alignItems={{ xs: "flex-start", sm: "center" }}
         gap={2}
       >
-        <Typography variant="h4">Upadki i Wybrakowania</Typography>
+        <Typography variant="h4">Pozostała Pasza</Typography>
         <Box display="flex" gap={2}>
           <Button
             variant="contained"
@@ -156,13 +155,13 @@ const ProductionDataFailuresPage: React.FC = () => {
       <Box mt={4} sx={{ width: "100%", overflowX: "auto" }}>
         <DataGrid
           loading={loading}
-          rows={failures}
+          rows={remainingFeeds}
           columns={columns}
           columnVisibilityModel={visibilityModel}
           onColumnVisibilityModelChange={(model) => {
             setVisibilityModel(model);
             localStorage.setItem(
-              "columnVisibilityModelFailures",
+              "columnVisibilityModelRemainingFeeds",
               JSON.stringify(model)
             );
           }}
@@ -222,21 +221,21 @@ const ProductionDataFailuresPage: React.FC = () => {
         />
       </Box>
 
-      <EditProductionDataFailureModal
+      <EditProductionDataRemainingFeedModal
         open={isEditModalOpen}
         onClose={() => {
           setIsEditModalOpen(false);
-          setSelectedFailure(null);
+          setSelectedRemainingFeed(null);
         }}
         onSave={() => {
           setIsEditModalOpen(false);
-          setSelectedFailure(null);
+          setSelectedRemainingFeed(null);
           dispatch({ type: "setMultiple", payload: { page: filters.page } });
         }}
-        failure={selectedFailure}
+        remainingFeed={selectedRemainingFeed}
       />
 
-      <AddProductionDataFailureModal
+      <AddProductionDataRemainingFeedModal
         open={openModal}
         onClose={() => setOpenModal(false)}
         onSave={() => {
@@ -248,4 +247,4 @@ const ProductionDataFailuresPage: React.FC = () => {
   );
 };
 
-export default ProductionDataFailuresPage;
+export default ProductionDataRemainingFeedPage;

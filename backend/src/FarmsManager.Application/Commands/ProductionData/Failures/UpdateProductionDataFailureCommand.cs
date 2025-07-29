@@ -1,6 +1,6 @@
 ﻿using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
-using FarmsManager.Application.Specifications.ProductionData.Failures;
+using FarmsManager.Application.Specifications.ProductionData;
 using FarmsManager.Domain.Aggregates.ProductionDataAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
 using MediatR;

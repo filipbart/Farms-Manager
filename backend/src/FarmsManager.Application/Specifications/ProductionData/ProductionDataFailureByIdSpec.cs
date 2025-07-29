@@ -1,7 +1,7 @@
 ﻿using Ardalis.Specification;
 using FarmsManager.Domain.Aggregates.ProductionDataAggregate.Entities;
 
-namespace FarmsManager.Application.Specifications.ProductionData.Failures;
+namespace FarmsManager.Application.Specifications.ProductionData;
 
 public sealed class ProductionDataFailureByIdSpec : BaseSpecification<ProductionDataFailureEntity>,
     ISingleResultSpecification<ProductionDataFailureEntity>
