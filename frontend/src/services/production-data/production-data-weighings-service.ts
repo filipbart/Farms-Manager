@@ -5,9 +5,9 @@ import type {
   AddWeighingData,
   GetHatcheryParams,
   GetHatcheryResponse,
+  GetWeightStandardsQueryResponse,
   ProductionDataWeighingListModel,
   UpdateWeighingData,
-  WeightStandardRowModel,
 } from "../../models/production-data/weighings";
 import AxiosWrapper from "../../utils/axios/wrapper";
 
@@ -61,7 +61,7 @@ export class ProductionDataWeighingsService {
    * Pobiera listę norm wagowych
    */
   public static async getStandards() {
-    return await AxiosWrapper.get<WeightStandardRowModel[]>(
+    return await AxiosWrapper.get<GetWeightStandardsQueryResponse>(
       ApiUrl.WeightStandards
     );
   }
@@ -78,7 +78,10 @@ export class ProductionDataWeighingsService {
    * Dodaje nowe normy wagowe
    * @param data - Tablica obiektów z nowymi normami
    */
+  // PO
   public static async addStandards(data: { day: number; weight: number }[]) {
-    return await AxiosWrapper.post(ApiUrl.AddWeightStandards, data);
+    return await AxiosWrapper.post(ApiUrl.AddWeightStandards, {
+      standards: data,
+    });
   }
 }

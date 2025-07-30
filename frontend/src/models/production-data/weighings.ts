@@ -38,6 +38,10 @@ export interface UpdateWeighingData {
   weight: number;
 }
 
+export interface GetWeightStandardsQueryResponse {
+  items: WeightStandardRowModel[];
+}
+
 export interface WeightStandardRowModel {
   id: string;
   day: number;

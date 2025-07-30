@@ -1,4 +1,4 @@
-import { Button, Typography } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 import type { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import type { ProductionDataWeighingListModel } from "../../../../models/production-data/weighings";
 
@@ -22,10 +22,18 @@ const renderWeightCell = (
     deviation != null ? ` (${deviation > 0 ? "+" : ""}${deviation})` : "";
 
   return (
-    <Typography variant="body2" sx={{ whiteSpace: "nowrap" }}>
-      {weight}
-      {deviationText}
-    </Typography>
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center", // Wyśrodkowanie w pionie
+        height: "100%",
+      }}
+    >
+      <Typography variant="body2" sx={{ whiteSpace: "nowrap" }}>
+        {weight}
+        {deviationText}
+      </Typography>
+    </Box>
   );
 };
 
@@ -42,13 +50,13 @@ export const getWeighingsColumns = ({
     {
       field: "weighing1Day",
       headerName: "Ważenie I (doba)",
-      type: "number",
+
       width: 140,
     },
     {
       field: "weighing1Weight",
       headerName: "Masa ciała",
-      type: "number",
+
       width: 120,
       renderCell: (params) =>
         renderWeightCell(params, "weighing1Weight", "weighing1Deviation"),
@@ -56,13 +64,13 @@ export const getWeighingsColumns = ({
     {
       field: "weighing2Day",
       headerName: "Ważenie II (doba)",
-      type: "number",
+
       width: 140,
     },
     {
       field: "weighing2Weight",
       headerName: "Masa ciała",
-      type: "number",
+
       width: 120,
       renderCell: (params) =>
         renderWeightCell(params, "weighing2Weight", "weighing2Deviation"),
@@ -70,13 +78,13 @@ export const getWeighingsColumns = ({
     {
       field: "weighing3Day",
       headerName: "Ważenie III (doba)",
-      type: "number",
+
       width: 140,
     },
     {
       field: "weighing3Weight",
       headerName: "Masa ciała",
-      type: "number",
+
       width: 120,
       renderCell: (params) =>
         renderWeightCell(params, "weighing3Weight", "weighing3Deviation"),
@@ -84,13 +92,13 @@ export const getWeighingsColumns = ({
     {
       field: "weighing4Day",
       headerName: "Ważenie IV (doba)",
-      type: "number",
+
       width: 140,
     },
     {
       field: "weighing4Weight",
       headerName: "Masa ciała",
-      type: "number",
+
       width: 120,
       renderCell: (params) =>
         renderWeightCell(params, "weighing4Weight", "weighing4Deviation"),
@@ -98,13 +106,13 @@ export const getWeighingsColumns = ({
     {
       field: "weighing5Day",
       headerName: "Ważenie V (doba)",
-      type: "number",
+
       width: 140,
     },
     {
       field: "weighing5Weight",
       headerName: "Masa ciała",
-      type: "number",
+
       width: 120,
       renderCell: (params) =>
         renderWeightCell(params, "weighing5Weight", "weighing5Deviation"),

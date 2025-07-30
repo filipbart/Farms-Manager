@@ -10,9 +10,9 @@ export function useWeightStandards() {
   const fetchStandards = useCallback(async () => {
     setLoadingStandards(true);
     try {
-      await handleApiResponse<WeightStandardRowModel[]>(
+      await handleApiResponse(
         () => ProductionDataWeighingsService.getStandards(),
-        (data) => setStandards(data.responseData ?? []),
+        (data) => setStandards(data.responseData?.items ?? []),
         undefined,
         "Nie udało się pobrać listy norm wagowych"
       );
