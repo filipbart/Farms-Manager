@@ -11,7 +11,7 @@ namespace FarmsManager.Api.Controllers.ProductionData;
 public class WeighingsController(IMediator mediator) : BaseController
 {
     /// <summary>
-    /// Zwraca listę wpisów o upadkach i wybrakowaniach według podanych filtrów
+    /// Zwraca listę ważeń według podanych filtrów
     /// </summary>
     [HttpGet]
     [ProducesResponseType(typeof(BaseResponse<GetProductionDataWeighingsQueryResponse>), StatusCodes.Status200OK)]
@@ -19,6 +19,19 @@ public class WeighingsController(IMediator mediator) : BaseController
     public async Task<IActionResult> GetWeighings([FromQuery] ProductionDataQueryFilters filters)
     {
         return Ok(await mediator.Send(new GetProductionDataWeighingsQuery(filters)));
+    }
+
+    /// <summary>
+    /// Zwraca wylęgarnie przy dodawaniu ważenia
+    /// </summary>
+    /// <param name="query"></param>
+    /// <returns></returns>
+    [HttpGet("get-hatchery")]
+    [ProducesResponseType(typeof(BaseResponse<GetHatcheryForWeighingQueryResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetHatcheryForWeighing([FromQuery] GetHatcheryForWeighingQuery query)
+    {
+        return Ok(await mediator.Send(query));
     }
 
     // /// <summary>

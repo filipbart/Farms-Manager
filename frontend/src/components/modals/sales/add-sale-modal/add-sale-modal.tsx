@@ -453,10 +453,6 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
                         spacing={1}
                         size={{ xs: 12 }}
                       >
-                        <Grid size={{ xs: 6 }}>
-                          <Typography variant="body2">{file.name}</Typography>
-                        </Grid>
-
                         <Grid size={{ xs: 3 }}>
                           <Button
                             variant="text"
@@ -485,6 +481,10 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
                           >
                             Usuń
                           </Button>
+                        </Grid>
+
+                        <Grid size={{ xs: 6 }}>
+                          <Typography variant="body2">{file.name}</Typography>
                         </Grid>
                       </Grid>
                     ))}
