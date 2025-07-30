@@ -43,12 +43,17 @@ const AddProductionDataWeighingModal: React.FC<
   } = useForm<AddWeighingData & { cycleDisplay: string }>();
 
   const [loading, setLoading] = useState(false);
+  const [isFetchingHatchery, setIsFetchingHatchery] = useState(false);
   const { farms, loadingFarms, fetchFarms } = useFarms();
   const { hatcheries, loadingHatcheries, fetchHatcheries } = useHatcheries();
   const { loadLatestCycle, loadingCycle } = useLatestCycle();
   const [availableHenhouses, setAvailableHenhouses] = useState<HouseRowModel[]>(
     []
   );
+
+  const farmId = watch("farmId");
+  const cycleId = watch("cycleId");
+  const henhouseId = watch("henhouseId");
 
   useEffect(() => {
     if (open) {
@@ -57,10 +62,39 @@ const AddProductionDataWeighingModal: React.FC<
     }
   }, [open, fetchFarms, fetchHatcheries]);
 
+  useEffect(() => {
+    const fetchHatcheryForContext = async () => {
+      setValue("hatcheryId", "");
+
+      if (farmId && cycleId && henhouseId) {
+        setIsFetchingHatchery(true);
+        try {
+          const response =
+            await ProductionDataWeighingsService.getHatcheryForWeighing({
+              farmId,
+              cycleId,
+              henhouseId,
+            });
+
+          if (response.success && response.responseData?.hatcheryId) {
+            setValue("hatcheryId", response.responseData.hatcheryId);
+          }
+        } catch (error) {
+          console.error("Błąd podczas pobierania wylęgarni", error);
+        } finally {
+          setIsFetchingHatchery(false);
+        }
+      }
+    };
+
+    fetchHatcheryForContext();
+  }, [farmId, cycleId, henhouseId, setValue]);
+
   const handleFarmChange = async (farmId: string) => {
     setValue("cycleId", "");
     setValue("cycleDisplay", "");
     setValue("henhouseId", "");
+    setValue("hatcheryId", "");
     clearErrors("cycleId");
     setAvailableHenhouses([]);
 
@@ -158,7 +192,7 @@ const AddProductionDataWeighingModal: React.FC<
             </TextField>
 
             <LoadingTextField
-              loading={loadingHatcheries}
+              loading={loadingHatcheries || isFetchingHatchery}
               select
               label="Wylęgarnia"
               fullWidth

@@ -43,3 +43,13 @@ export interface WeightStandardRowModel {
   day: number;
   weight: number;
 }
+
+export interface GetHatcheryParams {
+  farmId: string;
+  cycleId: string;
+  henhouseId: string;
+}
+
+export interface GetHatcheryResponse {
+  hatcheryId?: string;
+}

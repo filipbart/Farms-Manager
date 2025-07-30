@@ -3,6 +3,8 @@ import type { PaginateModel } from "../../common/interfaces/paginate";
 import type { ProductionDataFilterPaginationModel } from "../../models/production-data/production-data-filters";
 import type {
   AddWeighingData,
+  GetHatcheryParams,
+  GetHatcheryResponse,
   ProductionDataWeighingListModel,
   UpdateWeighingData,
   WeightStandardRowModel,
@@ -19,6 +21,16 @@ export class ProductionDataWeighingsService {
     return await AxiosWrapper.get<
       PaginateModel<ProductionDataWeighingListModel>
     >(ApiUrl.ProductionDataWeighings, { ...filters });
+  }
+
+  /**
+   * Pobiera domyślną wylęgarnię na podstawie wstawienia
+   */
+  public static async getHatcheryForWeighing(params: GetHatcheryParams) {
+    return await AxiosWrapper.get<GetHatcheryResponse>(
+      ApiUrl.GetHatcheryForWeighing,
+      params
+    );
   }
 
   /**

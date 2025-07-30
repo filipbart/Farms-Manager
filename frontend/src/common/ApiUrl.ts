@@ -140,4 +140,6 @@ export default class ApiUrl {
   public static AddWeightStandards = this.WeightStandards + "/add";
   public static DeleteWeightStandard = (id: string) =>
     this.WeightStandards + "/delete/" + id;
+  public static GetHatcheryForWeighing =
+    this.ProductionDataWeighings + "/get-hatchery";
 }
