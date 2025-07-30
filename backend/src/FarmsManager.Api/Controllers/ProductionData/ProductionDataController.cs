@@ -1,7 +1,6 @@
 ﻿using FarmsManager.Api.Controllers.Base;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Queries.ProductionData;
-using FarmsManager.Application.Queries.ProductionData.RemainingFeed;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
