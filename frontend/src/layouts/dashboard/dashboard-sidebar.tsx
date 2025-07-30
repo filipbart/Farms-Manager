@@ -122,7 +122,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             icon={<FaBuildingWheat />}
           />
           <SidebarMenuItem
-            to="/production-data/body-weights"
+            to="/production-data/weighings"
             title="Masy ciała"
             icon={<FaWeight />}
           />

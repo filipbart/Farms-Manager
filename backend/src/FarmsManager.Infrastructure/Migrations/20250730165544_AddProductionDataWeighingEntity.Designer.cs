@@ -4,6 +4,7 @@ using FarmsManager.Domain.Aggregates.UserAggregate.Models;
 using FarmsManager.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FarmsManager.Infrastructure.Migrations
 {
     [DbContext(typeof(FarmsManagerContext))]
-    partial class FarmsManagerContextModelSnapshot : ModelSnapshot
+    [Migration("20250730165544_AddProductionDataWeighingEntity")]
+    partial class AddProductionDataWeighingEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1404,50 +1407,6 @@ namespace FarmsManager.Infrastructure.Migrations
                         .HasDatabaseName("ix_production_data_weighing_cycle_id_farm_id_henhouse_id_hatch");
 
                     b.ToTable("production_data_weighing", "farms_manager");
-                });
-
-            modelBuilder.Entity("FarmsManager.Domain.Aggregates.ProductionDataAggregate.Entities.ProductionDataWeightStandardEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTime>("DateCreatedUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("date_created_utc");
-
-                    b.Property<DateTime?>("DateDeletedUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("date_deleted_utc");
-
-                    b.Property<DateTime?>("DateModifiedUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("date_modified_utc");
-
-                    b.Property<int>("Day")
-                        .HasColumnType("integer")
-                        .HasColumnName("day");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("deleted_by");
-
-                    b.Property<Guid?>("ModifiedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("modified_by");
-
-                    b.Property<decimal>("Weight")
-                        .HasColumnType("numeric")
-                        .HasColumnName("weight");
-
-                    b.HasKey("Id")
-                        .HasName("pk_production_data_weight_standard");
-
-                    b.ToTable("production_data_weight_standard", "farms_manager");
                 });
 
             modelBuilder.Entity("FarmsManager.Domain.Aggregates.SlaughterhouseAggregate.Entities.SlaughterhouseEntity", b =>

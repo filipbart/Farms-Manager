@@ -127,4 +127,17 @@ export default class ApiUrl {
     this.ProductionDataTransferFeed + "/update/" + id;
   public static DeleteProductionDataTransferFeed = (id: string) =>
     this.ProductionDataTransferFeed + "/delete/" + id;
+
+  public static ProductionDataWeighings = this.ProductionData + "/weighings";
+  public static AddProductionDataWeighing =
+    this.ProductionDataWeighings + "/add";
+  public static UpdateProductionDataWeighing = (id: string) =>
+    this.ProductionDataWeighings + "/update/" + id;
+  public static DeleteProductionDataWeighing = (id: string) =>
+    this.ProductionDataWeighings + "/delete/" + id;
+
+  public static WeightStandards = this.ProductionDataWeighings + "/standards";
+  public static AddWeightStandards = this.WeightStandards + "/add";
+  public static DeleteWeightStandard = (id: string) =>
+    this.WeightStandards + "/delete/" + id;
 }
