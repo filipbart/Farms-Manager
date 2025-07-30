@@ -18,6 +18,9 @@ import { ProductionDataService } from "../../../services/production-data/product
 import { getFeedTransfersColumns } from "./transfer-feed-columns";
 import { getProductionDataFiltersConfig } from "../filter-config.production-data";
 import { DataGrid } from "@mui/x-data-grid";
+import { ProductionDataTransferFeedService } from "../../../services/production-data/production-data-transfer-feed-service";
+import AddProductionDataTransferFeedModal from "../../../components/modals/production-data/transfer-feed/add-production-data-transfer-feed-modal";
+import EditProductionDataTransferFeedModal from "../../../components/modals/production-data/transfer-feed/edit-production-data-transfer-feed-modal";
 
 const ProductionDataTransferFeedPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -67,42 +70,42 @@ const ProductionDataTransferFeedPage: React.FC = () => {
   }, []);
 
   const deleteFeedTransfer = async (id: string) => {
-    // try {
-    //   setLoading(true);
-    //   await handleApiResponse(
-    //     () => ProductionDataTransferFeedService.deleteFeedTransfer(id),
-    //     async () => {
-    //       toast.success("Przeniesienie zostało poprawnie usunięte");
-    //       dispatch({ type: "setMultiple", payload: { page: filters.page } });
-    //     },
-    //     undefined,
-    //     "Błąd podczas usuwania przeniesienia"
-    //   );
-    // } catch {
-    //   toast.error("Błąd podczas usuwania przeniesienia");
-    // } finally {
-    //   setLoading(false);
-    // }
+    try {
+      setLoading(true);
+      await handleApiResponse(
+        () => ProductionDataTransferFeedService.deleteFeedTransfer(id),
+        async () => {
+          toast.success("Przeniesienie zostało poprawnie usunięte");
+          dispatch({ type: "setMultiple", payload: { page: filters.page } });
+        },
+        undefined,
+        "Błąd podczas usuwania przeniesienia"
+      );
+    } catch {
+      toast.error("Błąd podczas usuwania przeniesienia");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     const fetchFeedTransfers = async () => {
       setLoading(true);
-      //   try {
-      //     await handleApiResponse(
-      //       () => ProductionDataTransferFeedService.getFeedTransfers(filters),
-      //       (data) => {
-      //         setFeedTransfers(data.responseData?.items ?? []);
-      //         setTotalRows(data.responseData?.totalRows ?? 0);
-      //       },
-      //       undefined,
-      //       "Błąd podczas pobierania danych"
-      //     );
-      //   } catch {
-      //     toast.error("Błąd podczas pobierania danych");
-      //   } finally {
-      //     setLoading(false);
-      //   }
+      try {
+        await handleApiResponse(
+          () => ProductionDataTransferFeedService.getFeedTransfers(filters),
+          (data) => {
+            setFeedTransfers(data.responseData?.items ?? []);
+            setTotalRows(data.responseData?.totalRows ?? 0);
+          },
+          undefined,
+          "Błąd podczas pobierania danych"
+        );
+      } catch {
+        toast.error("Błąd podczas pobierania danych");
+      } finally {
+        setLoading(false);
+      }
     };
     fetchFeedTransfers();
   }, [filters]);
@@ -219,7 +222,7 @@ const ProductionDataTransferFeedPage: React.FC = () => {
         />
       </Box>
 
-      {/* <EditFeedTransferModal
+      <EditProductionDataTransferFeedModal
         open={isEditModalOpen}
         onClose={() => {
           setIsEditModalOpen(false);
@@ -233,14 +236,14 @@ const ProductionDataTransferFeedPage: React.FC = () => {
         feedTransfer={selectedFeedTransfer}
       />
 
-      <AddFeedTransferModal
+      <AddProductionDataTransferFeedModal
         open={openModal}
         onClose={() => setOpenModal(false)}
         onSave={() => {
           setOpenModal(false);
           dispatch({ type: "setMultiple", payload: { page: 0 } });
         }}
-      /> */}
+      />
     </Box>
   );
 };

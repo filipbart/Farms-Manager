@@ -18,8 +18,8 @@ public class ProductionDataTransferFeedEntity : Entity
     public Guid ToHenhouseId { get; init; }
 
     public string FeedName { get; init; }
-    public int RemainingTonnage { get; protected internal set; }
-    public decimal RemainingValue { get; protected internal set; }
+    public decimal Tonnage { get; protected internal set; }
+    public decimal Value { get; protected internal set; }
 
     public virtual CycleEntity FromCycle { get; init; }
     public virtual HenhouseEntity FromHenhouse { get; init; }
@@ -37,8 +37,8 @@ public class ProductionDataTransferFeedEntity : Entity
         Guid toCycleId,
         Guid toHenhouseId,
         string feedName,
-        int remainingTonnage,
-        decimal remainingValue,
+        decimal tonnage,
+        decimal value,
         Guid? userId = null)
     {
         return new ProductionDataTransferFeedEntity
@@ -50,15 +50,15 @@ public class ProductionDataTransferFeedEntity : Entity
             ToCycleId = toCycleId,
             ToHenhouseId = toHenhouseId,
             FeedName = feedName,
-            RemainingTonnage = remainingTonnage,
-            RemainingValue = remainingValue,
+            Tonnage = tonnage,
+            Value = value,
             CreatedBy = userId
         };
     }
 
-    public void UpdateData(int remainingTonnage, decimal remainingValue)
+    public void UpdateData(decimal tonnage, decimal value)
     {
-        RemainingTonnage = remainingTonnage;
-        RemainingValue = remainingValue;
+        Tonnage = tonnage;
+        Value = value;
     }
 }

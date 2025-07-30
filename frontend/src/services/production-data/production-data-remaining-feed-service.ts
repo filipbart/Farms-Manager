@@ -8,17 +8,6 @@ import type {
 } from "../../models/production-data/remaining-feed";
 import AxiosWrapper from "../../utils/axios/wrapper";
 
-interface CalculateValueParams {
-  cycleId: string;
-  henhouseId: string;
-  feedName: string;
-  tonnage: number;
-}
-
-interface CalculatedValueResponse {
-  value: number;
-}
-
 export class ProductionDataRemainingFeedService {
   /**
    * Pobiera listę wpisów o pozostałej paszy
@@ -29,16 +18,6 @@ export class ProductionDataRemainingFeedService {
     return await AxiosWrapper.get<
       PaginateModel<ProductionDataRemainingFeedListModel>
     >(ApiUrl.ProductionDataRemainingFeed, { ...filters });
-  }
-
-  /**
-   * Oblicza wartość pozostałej paszy
-   */
-  public static async calculateValue(params: CalculateValueParams) {
-    return await AxiosWrapper.get<CalculatedValueResponse>(
-      ApiUrl.CalculateRemainingFeedValue,
-      params
-    );
   }
 
   /**

@@ -12,8 +12,8 @@ public class ProductionDataTransferFeedRowDto
     public string ToFarmName { get; init; }
     public string ToHenhouseName { get; init; }
     public string FeedName { get; init; }
-    public int RemainingTonnage { get; init; }
-    public decimal RemainingValue { get; init; }
+    public decimal Tonnage { get; init; }
+    public decimal Value { get; init; }
     public DateTime DateCreatedUtc { get; init; }
 }
 

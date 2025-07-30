@@ -20,7 +20,7 @@ public record AddProductionDataRemainingFeedCommand : IRequest<EmptyBaseResponse
     public Guid HenhouseId { get; init; }
     public Guid CycleId { get; init; }
     public string FeedName { get; init; }
-    public int RemainingTonnage { get; init; }
+    public decimal RemainingTonnage { get; init; }
     public decimal RemainingValue { get; init; }
 }
 

@@ -34,12 +34,12 @@ export const getFeedTransfersColumns = ({
     // Pozostałe kolumny
     { field: "feedName", headerName: "Typ (nazwa) paszy", flex: 1 },
     {
-      field: "remainingTonnage",
+      field: "tonnage",
       headerName: "Tonaż pozostały [t]",
       flex: 1,
     },
     {
-      field: "remainingValue",
+      field: "value",
       headerName: "Wartość [zł]",
       flex: 1,
     },

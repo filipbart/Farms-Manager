@@ -1,6 +1,7 @@
 ﻿using FarmsManager.Api.Controllers.Base;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Queries.ProductionData;
+using FarmsManager.Application.Queries.ProductionData.RemainingFeed;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -20,5 +21,18 @@ public class ProductionDataController(IMediator mediator) : BaseController
     public async Task<IActionResult> GetProductionDataDictionary()
     {
         return Ok(await mediator.Send(new GetProductionDataDictionaryQuery()));
+    }
+
+    /// <summary>
+    /// Zwraca wartość pozostałej paszy na podstawie podanych parametrów
+    /// </summary>
+    /// <param name="query"></param>
+    /// <returns></returns>
+    [HttpGet("calculate-value")]
+    [ProducesResponseType(typeof(BaseResponse<GetRemainingFeedValueQueryResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetRemainingFeedValue([FromQuery] GetRemainingFeedValueQuery query)
+    {
+        return Ok(await mediator.Send(query));
     }
 }

@@ -13,7 +13,7 @@ public class ProductionDataRemainingFeedEntity : Entity
     public Guid CycleId { get; init; }
     public Guid HenhouseId { get; init; }
     public string FeedName { get; init; }
-    public int RemainingTonnage { get; protected internal set; }
+    public decimal RemainingTonnage { get; protected internal set; }
     public decimal RemainingValue { get; protected internal set; }
 
     public virtual CycleEntity Cycle { get; init; }
@@ -25,7 +25,7 @@ public class ProductionDataRemainingFeedEntity : Entity
         Guid cycleId,
         Guid henhouseId,
         string feedName,
-        int remainingTonnage,
+        decimal remainingTonnage,
         decimal remainingValue,
         Guid? userId = null)
     {
@@ -41,7 +41,7 @@ public class ProductionDataRemainingFeedEntity : Entity
         };
     }
 
-    public void UpdateData(int remainingTonnage, decimal remainingValue)
+    public void UpdateData(decimal remainingTonnage, decimal remainingValue)
     {
         RemainingTonnage = remainingTonnage;
         RemainingValue = remainingValue;

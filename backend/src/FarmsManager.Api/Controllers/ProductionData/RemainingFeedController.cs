@@ -23,19 +23,6 @@ public class RemainingFeedController(IMediator mediator) : BaseController
     }
 
     /// <summary>
-    /// Zwraca wartość pozostałej paszy na podstawie podanych parametrów
-    /// </summary>
-    /// <param name="query"></param>
-    /// <returns></returns>
-    [HttpGet("calculate-value")]
-    [ProducesResponseType(typeof(BaseResponse<GetRemainingFeedValueQueryResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetRemainingFeedValue([FromQuery] GetRemainingFeedValueQuery query)
-    {
-        return Ok(await mediator.Send(query));
-    }
-
-    /// <summary>
     /// Dodaje nowy wpis o pozostałej paszy
     /// </summary>
     [HttpPost("add")]

@@ -11,8 +11,8 @@ namespace FarmsManager.Application.Commands.ProductionData.TransferFeed;
 
 public record UpdateProductionDataTransferFeedCommandDto
 {
-    public int RemainingTonnage { get; init; }
-    public decimal RemainingValue { get; init; }
+    public decimal Tonnage { get; init; }
+    public decimal Value { get; init; }
 }
 
 public record UpdateProductionDataTransferFeedCommand(Guid Id, UpdateProductionDataTransferFeedCommandDto Data)
@@ -39,7 +39,7 @@ public class
         var transferFeed =
             await _repository.GetAsync(new ProductionDataTransferFeedByIdSpec(request.Id), cancellationToken); 
 
-        transferFeed.UpdateData(request.Data.RemainingTonnage, request.Data.RemainingValue); 
+        transferFeed.UpdateData(request.Data.Tonnage, request.Data.Value); 
         transferFeed.SetModified(userId);
         await _repository.UpdateAsync(transferFeed, cancellationToken);
 
@@ -52,7 +52,7 @@ public class
 {
     public UpdateProductionDataTransferFeedCommandValidator()
     {
-        RuleFor(t => t.Data.RemainingTonnage).GreaterThanOrEqualTo(0);
-        RuleFor(t => t.Data.RemainingValue).GreaterThanOrEqualTo(0);
+        RuleFor(t => t.Data.Tonnage).GreaterThanOrEqualTo(0);
+        RuleFor(t => t.Data.Value).GreaterThanOrEqualTo(0);
     }
 }

@@ -4,6 +4,7 @@ using FarmsManager.Domain.Aggregates.UserAggregate.Models;
 using FarmsManager.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FarmsManager.Infrastructure.Migrations
 {
     [DbContext(typeof(FarmsManagerContext))]
-    partial class FarmsManagerContextModelSnapshot : ModelSnapshot
+    [Migration("20250730084319_AdjustProductionDataTransferFeedEntity")]
+    partial class AdjustProductionDataTransferFeedEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1188,8 +1191,8 @@ namespace FarmsManager.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("modified_by");
 
-                    b.Property<decimal>("RemainingTonnage")
-                        .HasColumnType("numeric")
+                    b.Property<int>("RemainingTonnage")
+                        .HasColumnType("integer")
                         .HasColumnName("remaining_tonnage");
 
                     b.Property<decimal>("RemainingValue")
@@ -1269,8 +1272,8 @@ namespace FarmsManager.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("to_henhouse_id");
 
-                    b.Property<decimal>("Tonnage")
-                        .HasColumnType("numeric")
+                    b.Property<int>("Tonnage")
+                        .HasColumnType("integer")
                         .HasColumnName("tonnage");
 
                     b.Property<decimal>("Value")

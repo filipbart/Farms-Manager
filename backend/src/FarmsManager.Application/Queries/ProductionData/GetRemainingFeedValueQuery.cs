@@ -10,7 +10,7 @@ using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
 using FluentValidation;
 using MediatR;
 
-namespace FarmsManager.Application.Queries.ProductionData.RemainingFeed;
+namespace FarmsManager.Application.Queries.ProductionData;
 
 public record GetRemainingFeedValueQueryResponse
 {
@@ -22,7 +22,7 @@ public class GetRemainingFeedValueQuery : IRequest<BaseResponse<GetRemainingFeed
     public Guid CycleId { get; init; }
     public Guid HenhouseId { get; init; }
     public string FeedName { get; init; }
-    public int Tonnage { get; init; }
+    public decimal Tonnage { get; init; }
 }
 
 public class

@@ -23,8 +23,8 @@ public record AddProductionDataTransferFeedCommand : IRequest<EmptyBaseResponse>
     public Guid ToHenhouseId { get; init; }
     public Guid ToCycleId { get; init; }
     public string FeedName { get; init; }
-    public int RemainingTonnage { get; init; }
-    public decimal RemainingValue { get; init; }
+    public decimal Tonnage { get; init; }
+    public decimal Value { get; init; }
 }
 
 public class
@@ -57,15 +57,15 @@ public class
     public async Task<EmptyBaseResponse> Handle(AddProductionDataTransferFeedCommand request, CancellationToken ct)
     {
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
-        
+
         var fromFarm = await _farmRepository.GetAsync(new FarmByIdSpec(request.FromFarmId), ct);
         var fromCycle = await _cycleRepository.GetAsync(new CycleByIdSpec(request.FromCycleId), ct);
         var fromHenhouse = await _henhouseRepository.GetAsync(new HenhouseByIdSpec(request.FromHenhouseId), ct);
-        
+
         var toFarm = await _farmRepository.GetAsync(new FarmByIdSpec(request.ToFarmId), ct);
         var toCycle = await _cycleRepository.GetAsync(new CycleByIdSpec(request.ToCycleId), ct);
         var toHenhouse = await _henhouseRepository.GetAsync(new HenhouseByIdSpec(request.ToHenhouseId), ct);
-        
+
         var feedName = await _feedNameRepository.GetAsync(new GetFeedNameByNameSpec(request.FeedName), ct);
 
         var newTransfer = ProductionDataTransferFeedEntity.CreateNew(
@@ -76,8 +76,8 @@ public class
             toCycle.Id,
             toHenhouse.Id,
             feedName.Name,
-            request.RemainingTonnage,
-            request.RemainingValue,
+            request.Tonnage,
+            request.Value,
             userId
         );
 
@@ -98,7 +98,8 @@ public class AddProductionDataTransferFeedValidator : AbstractValidator<AddProdu
         RuleFor(t => t.ToHenhouseId).NotEmpty();
         RuleFor(t => t.ToCycleId).NotEmpty();
         RuleFor(t => t.FeedName).NotEmpty();
-        RuleFor(t => t.RemainingTonnage).GreaterThan(0);
-        RuleFor(t => t.RemainingValue).GreaterThan(0);
+        RuleFor(t => t.Tonnage).GreaterThan(0);
+        RuleFor(t => t.Value).GreaterThanOrEqualTo(0);
+        RuleFor(t => t.FromHenhouseId).NotEqual(t => t.ToHenhouseId);
     }
 }

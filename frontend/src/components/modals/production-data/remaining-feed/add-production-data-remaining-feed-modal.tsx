@@ -22,6 +22,7 @@ import AppDialog from "../../../common/app-dialog";
 import type { HouseRowModel } from "../../../../models/farms/house-row-model";
 import { ProductionDataRemainingFeedService } from "../../../../services/production-data/production-data-remaining-feed-service";
 import type { AddRemainingFeedData } from "../../../../models/production-data/remaining-feed";
+import { ProductionDataService } from "../../../../services/production-data/production-data-service";
 
 interface AddProductionDataRemainingFeedModalProps {
   open: boolean;
@@ -69,13 +70,12 @@ const AddProductionDataRemainingFeedModal: React.FC<
       if (cycleId && henhouseId && feedName && remainingTonnage > 0) {
         setIsCalculatingValue(true);
         try {
-          const response =
-            await ProductionDataRemainingFeedService.calculateValue({
-              cycleId,
-              henhouseId,
-              feedName,
-              tonnage: remainingTonnage,
-            });
+          const response = await ProductionDataService.calculateValue({
+            cycleId,
+            henhouseId,
+            feedName,
+            tonnage: remainingTonnage,
+          });
           if (response.success && response.responseData) {
             setValue("remainingValue", response.responseData.value);
           }
@@ -216,7 +216,7 @@ const AddProductionDataRemainingFeedModal: React.FC<
             <TextField
               label="Tonaż pozostały [t]"
               type="number"
-              slotProps={{ htmlInput: { min: 0, step: "0.001" } }}
+              slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
               error={!!errors.remainingTonnage}
               helperText={errors.remainingTonnage?.message}
               {...register("remainingTonnage", {

@@ -11,7 +11,7 @@ namespace FarmsManager.Application.Commands.ProductionData.RemainingFeed;
 
 public record UpdateProductionDataRemainingFeedCommandDto
 {
-    public int RemainingTonnage { get; init; }
+    public decimal RemainingTonnage { get; init; }
     public decimal RemainingValue { get; init; }
 }
 

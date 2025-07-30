@@ -100,6 +100,8 @@ export default class ApiUrl {
 
   public static ProductionData = this.BaseUrl + "production-data";
   public static ProductionDataDictionary = this.ProductionData + "/dictionary";
+  public static CalculateRemainingFeedValue =
+    this.ProductionData + "/calculate-value";
 
   public static ProductionDataFailures = this.ProductionData + "/failures";
   public static AddProductionDataFailure = this.ProductionDataFailures + "/add";
@@ -110,12 +112,19 @@ export default class ApiUrl {
 
   public static ProductionDataRemainingFeed =
     this.ProductionData + "/remaining-feed";
-  public static CalculateRemainingFeedValue =
-    this.ProductionDataRemainingFeed + "/calculate-value";
   public static AddProductionDataRemainingFeed =
     this.ProductionDataRemainingFeed + "/add";
   public static UpdateProductionDataRemainingFeed = (id: string) =>
     this.ProductionDataRemainingFeed + "/update/" + id;
   public static DeleteProductionDataRemainingFeed = (id: string) =>
     this.ProductionDataRemainingFeed + "/delete/" + id;
+
+  public static ProductionDataTransferFeed =
+    this.ProductionData + "/transfer-feed";
+  public static AddProductionDataTransferFeed =
+    this.ProductionDataTransferFeed + "/add";
+  public static UpdateProductionDataTransferFeed = (id: string) =>
+    this.ProductionDataTransferFeed + "/update/" + id;
+  public static DeleteProductionDataTransferFeed = (id: string) =>
+    this.ProductionDataTransferFeed + "/delete/" + id;
 }

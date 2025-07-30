@@ -127,7 +127,7 @@ const EditProductionDataRemainingFeedModal: React.FC<
             helperText={errors.remainingTonnage}
             fullWidth
             type="number"
-            InputProps={{ inputProps: { min: 0, step: "0.001" } }}
+            InputProps={{ inputProps: { min: 0, step: "0.01" } }}
           />
 
           <TextField

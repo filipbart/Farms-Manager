@@ -9,7 +9,7 @@ public class ProductionDataRemainingFeedRowDto
     public string FarmName { get; init; }
     public string HenhouseName { get; init; }
     public string FeedName { get; init; }
-    public int RemainingTonnage { get; init; }
+    public decimal RemainingTonnage { get; init; }
     public decimal RemainingValue { get; init; }
     public DateTime DateCreatedUtc { get; init; }
 }

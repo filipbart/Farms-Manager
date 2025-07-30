@@ -7,7 +7,24 @@ export interface ProductionDataTransferFeedListModel {
   toFarmName: string;
   toHenhouseName: string;
   feedName: string;
-  remainingTonnage: number;
-  remainingValue: number;
+  tonnage: number;
+  value: number;
   dateCreatedUtc: Date;
+}
+
+export interface AddTransferFeedData {
+  fromFarmId: string;
+  fromHenhouseId: string;
+  fromCycleId: string;
+  toFarmId: string;
+  toHenhouseId: string;
+  toCycleId: string;
+  feedName: string;
+  tonnage: number;
+  value: number;
+}
+
+export interface UpdateTransferFeedData {
+  tonnage: number;
+  value: number;
 }
