@@ -11,6 +11,7 @@ import LogoWhite from "../../assets/logo_white.png";
 import SidebarMenuItem from "./sidebar-menu-item";
 import { IoCard, IoHome, IoSettings } from "react-icons/io5";
 import {
+  FaBurn,
   FaClone,
   FaDatabase,
   FaFileInvoiceDollar,
@@ -33,6 +34,7 @@ import {
   MdFactory,
   MdPayments,
   MdPeopleAlt,
+  MdPropane,
   MdTrendingDown,
 } from "react-icons/md";
 import { PiFarmFill } from "react-icons/pi";
@@ -125,6 +127,18 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             to="/production-data/weighings"
             title="Masy ciała"
             icon={<FaWeight />}
+          />
+        </SidebarMenuItem>
+        <SidebarMenuItem to="/gas" title="Gaz" icon={<MdPropane />}>
+          <SidebarMenuItem
+            to="/gas/deliveries"
+            title="Dostawy gazu"
+            icon={<FaTruck />}
+          />
+          <SidebarMenuItem
+            to="/gas/consumptions"
+            title="Zużycie gazu"
+            icon={<FaBurn />}
           />
         </SidebarMenuItem>
         <SidebarMenuItem to="/data" title="Dane" icon={<FaDatabase />}>

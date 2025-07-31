@@ -142,4 +142,16 @@ export default class ApiUrl {
     this.WeightStandards + "/delete/" + id;
   public static GetHatcheryForWeighing =
     this.ProductionDataWeighings + "/get-hatchery";
+
+  public static Gas = this.BaseUrl + "gas";
+  public static GasDeliveriesDictionary = this.Gas + "/dictionary";
+  public static GasContractors = this.Gas + "/contractors";
+  public static GasDeliveries = this.Gas + "/deliveries";
+  public static AddGasDelivery = this.GasDeliveries + "/add";
+  public static UpdateGasDelivery = (id: string) =>
+    this.GasDeliveries + "/update/" + id;
+  public static DeleteGasDelivery = (id: string) =>
+    this.GasDeliveries + "/delete/" + id;
+  public static UploadGasInvoices = this.GasDeliveries + "/upload";
+  public static SaveGasInvoiceData = this.GasDeliveries + "/save-invoice";
 }

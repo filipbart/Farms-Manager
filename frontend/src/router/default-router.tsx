@@ -24,6 +24,7 @@ import ProductionDataFailuresPage from "../pages/production-data/failures";
 import ProductionDataRemainingFeedPage from "../pages/production-data/remaining-feed";
 import ProductionDataTransferFeedPage from "../pages/production-data/transfer-feed";
 import ProductionDataWeighingsPage from "../pages/production-data/weighings";
+import GasDeliveriesPage from "../pages/gas/deliveries";
 
 const DefaultRouter: React.FC = () => {
   const { getRoute } = useRouter();
@@ -102,6 +103,10 @@ const DefaultRouter: React.FC = () => {
         <Route
           path={getRoute(RouteName.ProductionDataWeighings)}
           element={<ProductionDataWeighingsPage />}
+        />
+        <Route
+          path={getRoute(RouteName.GasDeliveries)}
+          element={<GasDeliveriesPage />}
         />
       </Route>
     </Routes>

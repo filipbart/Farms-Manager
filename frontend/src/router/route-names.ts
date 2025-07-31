@@ -20,6 +20,8 @@ export enum RouteName {
   ProductionDataRemainingFeed = "production-data/remaining-feed",
   ProductionDataTransferFeed = "production-data/transfer-feed",
   ProductionDataWeighings = "production-data/weighings",
+  GasDeliveries = "gas/deliveries",
+  GasConsumptions = "gas/consumptions",
   Settings = "settings",
   Users = "users",
   UserProfile = "user-profile",
