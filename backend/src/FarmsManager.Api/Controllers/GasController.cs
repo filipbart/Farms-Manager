@@ -62,6 +62,19 @@ public class GasController(IMediator mediator) : BaseController
     }
 
     /// <summary>
+    /// Zapisuje dane faktury dostawy gazu
+    /// </summary>
+    /// <param name="command"></param>
+    /// <returns></returns>
+    [HttpPost("deliveries/save-invoice")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> SaveGasDeliveryInvoice(SaveGasDeliveryInvoiceCommand command)
+    {
+        return Ok(await mediator.Send(command));
+    }
+
+    /// <summary>
     /// Dodaje nową dostawę gazu
     /// </summary>
     /// <param name="data"></param>
@@ -72,5 +85,32 @@ public class GasController(IMediator mediator) : BaseController
     public async Task<IActionResult> AddGasDelivery([FromForm] AddGasDeliveryData data)
     {
         return Ok(await mediator.Send(new AddGasDeliveryCommand(data)));
+    }
+
+    /// <summary>
+    /// Aktualizuje wpis dostawy gazu
+    /// </summary>
+    /// <param name="gasDeliveryId"></param>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    [HttpPatch("deliveries/update/{gasDeliveryId:guid}")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> UpdateGasDelivery([FromRoute] Guid gasDeliveryId, UpdateGasDeliveryData data)
+    {
+        return Ok(await mediator.Send(new UpdateGasDeliveryCommand(gasDeliveryId, data)));
+    }
+
+    /// <summary>
+    /// Usuwa wpis dostawy gazu
+    /// </summary>
+    /// <param name="gasDeliveryId"></param>
+    /// <returns></returns>
+    [HttpDelete("deliveries/delete/{gasDeliveryId:guid}")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> DeleteGasDelivery([FromRoute] Guid gasDeliveryId)
+    {
+        return Ok(await mediator.Send(new DeleteGasDeliveryCommand(gasDeliveryId)));
     }
 }
