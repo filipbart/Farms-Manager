@@ -1,6 +1,7 @@
 ﻿using Ardalis.Specification;
 using FarmsManager.Application.Commands.Expenses.Types;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Common.Validators;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities;
@@ -66,7 +67,8 @@ public class AddExpenseContractorCommandValidator : AbstractValidator<AddExpense
     public AddExpenseContractorCommandValidator()
     {
         RuleFor(t => t.Data.Name).NotEmpty();
-        RuleFor(t => t.Data.Nip).NotEmpty();
+        RuleFor(t => t.Data.Nip).NotEmpty().Must(ValidationHelpers.IsValidNip)
+            .WithMessage("Podany numer NIP jest nieprawidłowy.");
         RuleFor(t => t.Data.Address).NotEmpty();
         RuleFor(t => t.Data.ExpenseTypeId).NotEmpty();
     }

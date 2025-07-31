@@ -1,5 +1,6 @@
 ﻿using FarmsManager.Application.Commands.Expenses.Types;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Common.Validators;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
@@ -50,7 +51,8 @@ public class UpdateExpenseContractorCommandValidator : AbstractValidator<UpdateE
     public UpdateExpenseContractorCommandValidator()
     {
         RuleFor(t => t.Data.Name).NotEmpty();
-        RuleFor(t => t.Data.Nip).NotEmpty();
+        RuleFor(t => t.Data.Nip).NotEmpty().Must(ValidationHelpers.IsValidNip)
+            .WithMessage("Podany numer NIP jest nieprawidłowy.");
         RuleFor(t => t.Data.Address).NotEmpty();
         RuleFor(t => t.Data.ExpenseTypeId).NotEmpty();
     }

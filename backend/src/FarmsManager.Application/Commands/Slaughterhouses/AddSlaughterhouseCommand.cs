@@ -1,4 +1,5 @@
 ﻿using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Common.Validators;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Domain.Aggregates.SlaughterhouseAggregate.Entities;
 using FarmsManager.Domain.Aggregates.SlaughterhouseAggregate.Interfaces;
@@ -22,7 +23,9 @@ public class AddSlaughterhouseCommandValidator : AbstractValidator<AddSlaughterh
     public AddSlaughterhouseCommandValidator()
     {
         RuleFor(t => t.Name).NotEmpty();
-        RuleFor(t => t.Nip).NotEmpty();
+        RuleFor(t => t.Nip).NotEmpty()
+            .Must(ValidationHelpers.IsValidNip)
+            .WithMessage("Podany numer NIP jest nieprawidłowy.");
     }
 }
 

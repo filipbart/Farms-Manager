@@ -17,6 +17,7 @@ import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import LoadingButton from "../../common/loading-button";
 import { MdSave } from "react-icons/md";
 import AppDialog from "../../common/app-dialog";
+import { isValidNip } from "../../../utils/validation";
 
 interface AddFarmModalProps {
   open: boolean;
@@ -92,6 +93,8 @@ const AddFarmModal: React.FC<AddFarmModalProps> = ({
               error={!!errors?.nip}
               helperText={errors.nip ? (errors.nip.message as string) : ""}
               {...register("nip", {
+                validate: (value) =>
+                  isValidNip(value) || "NIP jest nieprawidłowy",
                 required: "NIP jest wymagany",
               })}
               fullWidth

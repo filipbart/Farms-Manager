@@ -18,6 +18,7 @@ import LoadingButton from "../../../common/loading-button";
 import { useExpensesTypes } from "../../../../hooks/expenses/useExpensesTypes";
 import LoadingTextField from "../../../common/loading-textfield";
 import AppDialog from "../../../common/app-dialog";
+import { isValidNip } from "../../../../utils/validation";
 
 interface AddExpenseContractorModalProps {
   open: boolean;
@@ -108,6 +109,8 @@ const AddExpenseContractorModal: React.FC<AddExpenseContractorModalProps> = ({
               error={!!errors?.nip}
               helperText={errors.nip ? (errors.nip.message as string) : ""}
               {...register("nip", {
+                validate: (value) =>
+                  isValidNip(value) || "NIP jest nieprawidłowy",
                 required: "NIP jest wymagany",
               })}
               fullWidth

@@ -17,6 +17,7 @@ import LoadingButton from "../../../common/loading-button";
 import { useExpensesTypes } from "../../../../hooks/expenses/useExpensesTypes";
 import LoadingTextField from "../../../common/loading-textfield";
 import AppDialog from "../../../common/app-dialog";
+import { isValidNip } from "../../../../utils/validation";
 
 const INITIAL_FORM_STATE = {
   name: "",
@@ -94,7 +95,11 @@ const EditExpenseContractorModal: React.FC<EditExpenseContractorModalProps> = ({
     const newErrors = {
       name: !form.name.trim() ? "Nazwa jest wymagana" : "",
       expenseTypeId: !form.expenseTypeId ? "Typ jest wymagany" : "",
-      nip: !form.nip.trim() ? "NIP jest wymagany" : "",
+      nip: !form.nip.trim()
+        ? "NIP jest wymagany"
+        : isValidNip(form.nip)
+        ? ""
+        : "NIP jest nieprawidłowy",
       address: !form.address.trim() ? "Adres jest wymagany" : "",
     };
 

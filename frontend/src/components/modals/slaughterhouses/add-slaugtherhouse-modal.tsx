@@ -17,6 +17,7 @@ import {
 } from "../../../services/slaughterhouses-service";
 import { MdSave } from "react-icons/md";
 import AppDialog from "../../common/app-dialog";
+import { isValidNip } from "../../../utils/validation";
 
 interface AddSlaughterhouseModalProps {
   open: boolean;
@@ -92,6 +93,8 @@ const AddSlaughterhouseModal: React.FC<AddSlaughterhouseModalProps> = ({
               error={!!errors?.nip}
               helperText={errors.nip ? (errors.nip.message as string) : ""}
               {...register("nip", {
+                validate: (value) =>
+                  isValidNip(value) || "NIP jest nieprawidłowy",
                 required: "NIP jest wymagany",
               })}
               fullWidth

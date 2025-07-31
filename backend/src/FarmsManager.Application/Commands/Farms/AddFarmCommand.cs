@@ -1,4 +1,5 @@
 ﻿using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Common.Validators;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
@@ -21,7 +22,8 @@ public class AddFarmCommandValidator : AbstractValidator<AddFarmCommand>
     public AddFarmCommandValidator()
     {
         RuleFor(t => t.Name).NotEmpty();
-        RuleFor(t => t.Nip).NotEmpty();
+        RuleFor(t => t.Nip).NotEmpty().Must(ValidationHelpers.IsValidNip)
+            .WithMessage("Podany numer NIP jest nieprawidłowy.");
         RuleFor(t => t.Address).NotEmpty();
     }
 }

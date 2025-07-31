@@ -1,4 +1,5 @@
 ﻿using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Common.Validators;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Domain.Aggregates.HatcheryAggregate.Entities;
 using FarmsManager.Domain.Aggregates.HatcheryAggregate.Interfaces;
@@ -42,7 +43,8 @@ public class AddHatcheryCommandValidator : AbstractValidator<AddHatcheryCommand>
     {
         RuleFor(t => t.Name).NotEmpty();
         RuleFor(t => t.FullName).NotEmpty();
-        RuleFor(t => t.Nip).NotEmpty();
+        RuleFor(t => t.Nip).NotEmpty().Must(ValidationHelpers.IsValidNip)
+            .WithMessage("Podany numer NIP jest nieprawidłowy.");
     }
 }
 
