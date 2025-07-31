@@ -1,10 +1,8 @@
 ﻿using FarmsManager.Application.Common;
-using FarmsManager.Application.Models.AzureDi;
 
 namespace FarmsManager.Application.Interfaces;
 
 public interface IAzureDiService : IService
 {
-    Task<FeedDeliveryInvoiceModel> AnalyzeFeedDeliveryInvoiceAsync(string preSignedUrl);
-    Task<ExpenseProductionInvoiceModel> AnalyzeExpenseProductionInvoiceAsync(string preSignedUrl);
+    Task<T> AnalyzeInvoiceAsync<T>(string preSignedUrl) where T : class, new();
 }

@@ -1,12 +1,4 @@
-import {
-  Box,
-  Button,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  Typography,
-} from "@mui/material";
+import { Box, Button, IconButton, Typography } from "@mui/material";
 import type { GridColDef } from "@mui/x-data-grid";
 import dayjs from "dayjs";
 import { toast } from "react-toastify";
@@ -16,32 +8,7 @@ import Loading from "../../components/loading/loading";
 import { OtherExtrasCell } from "../../models/sales/sale-other-extras-cell";
 import { useState } from "react";
 import { MdFileDownload } from "react-icons/md";
-import AppDialog from "../../components/common/app-dialog";
-
-const SaleCommentCell: React.FC<{ value: string }> = ({ value }) => {
-  const [open, setOpen] = useState(false);
-
-  if (!value) return null;
-
-  const preview = value.length > 20 ? `${value.slice(0, 20)}...` : value;
-
-  return (
-    <>
-      <Button variant="text" onClick={() => setOpen(true)}>
-        {preview}
-      </Button>
-      <AppDialog open={open} onClose={() => setOpen(false)}>
-        <DialogTitle>Zawartość komentarza</DialogTitle>
-        <DialogContent>
-          <Typography>{value}</Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpen(false)}>Zamknij</Button>
-        </DialogActions>
-      </AppDialog>
-    </>
-  );
-};
+import { CommentCell } from "../../components/datagrid/comment-cell";
 
 export const getSalesColumns = ({
   setSelectedSale,
@@ -95,7 +62,7 @@ export const getSalesColumns = ({
       field: "comment",
       headerName: "Komentarz",
       flex: 1,
-      renderCell: (params) => <SaleCommentCell value={params.value} />,
+      renderCell: (params) => <CommentCell value={params.value} />,
     },
     {
       field: "sendToIrz",

@@ -101,6 +101,14 @@ public static class AzureDiMappingExtensions
         }
         else if (fieldValue.FieldType == DocumentFieldType.Double)
         {
+            var content = fieldValue.Content;
+
+            if (content.Contains('\n'))
+            {
+                var value = content.Split('\n')[0];
+                return decimal.Parse(value);
+            }
+
             var doubleValue = fieldValue.ValueDouble;
 
             if (propType == typeof(decimal) || propType == typeof(decimal?))

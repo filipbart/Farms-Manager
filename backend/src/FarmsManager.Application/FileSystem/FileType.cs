@@ -7,4 +7,5 @@ public enum FileType
     FeedDeliveryCorrection,
     Sales,
     ExpenseProduction,
+    GasDelivery,
 }

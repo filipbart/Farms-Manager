@@ -22,56 +22,28 @@ public class AzureDiService : IAzureDiService
         _client = new DocumentIntelligenceClient(new Uri(endpoint), credential);
     }
 
-    public async Task<FeedDeliveryInvoiceModel> AnalyzeFeedDeliveryInvoiceAsync(string preSignedUrl)
+    public async Task<T> AnalyzeInvoiceAsync<T>(string preSignedUrl) where T : class, new()
     {
         var options = new AnalyzeDocumentOptions(ModelId, new Uri(preSignedUrl));
-
         options.Features.Add("queryFields");
-        var customQueryFields = GetCustomQueryFields<FeedDeliveryInvoiceModel>();
+
+        var customQueryFields = GetCustomQueryFields<T>();
         foreach (var field in customQueryFields)
         {
             options.QueryFields.Add(field);
         }
 
         var operation = await _client.AnalyzeDocumentAsync(WaitUntil.Completed, options);
-
         var result = operation.Value;
-        if (result.Documents.Any() == false)
+
+        if (!result.Documents.Any())
             throw new Exception("No documents detected in analysis.");
 
         var documentFields = result.Documents[0].Fields;
-
         if (documentFields == null)
             throw new Exception("No documents detected in analysis.");
 
-        var invoiceData = documentFields.MapFromAzureDiFields<FeedDeliveryInvoiceModel>();
-        return invoiceData;
-    }
-
-    public async Task<ExpenseProductionInvoiceModel> AnalyzeExpenseProductionInvoiceAsync(string preSignedUrl)
-    {
-        var options = new AnalyzeDocumentOptions(ModelId, new Uri(preSignedUrl));
-
-        options.Features.Add("queryFields");
-        var customQueryFields = GetCustomQueryFields<ExpenseProductionInvoiceModel>();
-        foreach (var field in customQueryFields)
-        {
-            options.QueryFields.Add(field);
-        }
-
-        var operation = await _client.AnalyzeDocumentAsync(WaitUntil.Completed, options);
-
-        var result = operation.Value;
-        if (result.Documents.Any() == false)
-            throw new Exception("No documents detected in analysis.");
-
-        var documentFields = result.Documents[0].Fields;
-
-        if (documentFields == null)
-            throw new Exception("No documents detected in analysis.");
-
-        var invoiceData = documentFields.MapFromAzureDiFields<ExpenseProductionInvoiceModel>();
-        return invoiceData;
+        return documentFields.MapFromAzureDiFields<T>();
     }
 
 

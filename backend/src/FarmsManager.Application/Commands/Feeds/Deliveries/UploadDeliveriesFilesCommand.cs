@@ -4,6 +4,7 @@ using FarmsManager.Application.FileSystem;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models;
 using FarmsManager.Application.Models.AzureDi;
+using FarmsManager.Application.Models.Invoices;
 using FarmsManager.Application.Specifications.Farms;
 using FarmsManager.Application.Specifications.Feeds;
 using FarmsManager.Application.Specifications.Henhouses;
@@ -76,7 +77,7 @@ public class UploadDeliveriesFilesCommandHandler : IRequestHandler<UploadDeliver
 
             var preSignedUrl = _s3Service.GeneratePreSignedUrl(FileType.FeedDeliveryInvoice, filePath, file.FileName);
 
-            var feedDeliveryInvoiceModel = await _azureDiService.AnalyzeFeedDeliveryInvoiceAsync(preSignedUrl);
+            var feedDeliveryInvoiceModel = await _azureDiService.AnalyzeInvoiceAsync<FeedDeliveryInvoiceModel>(preSignedUrl);
             var extractedFields = _mapper.Map<AddFeedDeliveryInvoiceDto>(feedDeliveryInvoiceModel);
 
             var existedInvoice = await _feedInvoiceRepository.SingleOrDefaultAsync(

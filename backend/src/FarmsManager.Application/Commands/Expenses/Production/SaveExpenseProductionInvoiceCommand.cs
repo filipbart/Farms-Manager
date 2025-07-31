@@ -3,6 +3,7 @@ using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.FileSystem;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models;
+using FarmsManager.Application.Models.Invoices;
 using FarmsManager.Application.Specifications.Cycle;
 using FarmsManager.Application.Specifications.Expenses;
 using FarmsManager.Application.Specifications.Farms;

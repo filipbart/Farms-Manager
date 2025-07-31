@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import { MdFileDownload } from "react-icons/md";
 import Loading from "../../../components/loading/loading";
 import type { GasDeliveryListModel } from "../../../models/gas/gas-deliveries";
+import { CommentCell } from "../../../components/datagrid/comment-cell";
 
 interface GetGasDeliveriesColumnsProps {
   setSelectedGasDelivery: (row: GasDeliveryListModel) => void;
@@ -57,7 +58,9 @@ export const getGasDeliveriesColumns = ({
     {
       field: "comment",
       headerName: "Komentarz",
+      flex: 1,
       sortable: false,
+      renderCell: (params) => <CommentCell value={params.value} />,
     },
     {
       field: "filePath",

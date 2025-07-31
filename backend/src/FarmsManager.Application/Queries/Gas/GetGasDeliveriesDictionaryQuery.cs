@@ -38,7 +38,7 @@ public class GetGasDeliveriesDictionaryQueryHandler : IRequestHandler<GetGasDeli
         var contractors =
             await _gasContractorRepository.ListAsync<DictModel>(new GetAllGasContractorsSpec(), cancellationToken);
 
-        return BaseResponse.CreateResponse(new GetGasDeliveriesDictionaryQueryResponse()
+        return BaseResponse.CreateResponse(new GetGasDeliveriesDictionaryQueryResponse
         {
             Farms = farms,
             Contractors = contractors,

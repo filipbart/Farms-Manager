@@ -4,6 +4,7 @@ using FarmsManager.Application.FileSystem;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models;
 using FarmsManager.Application.Models.AzureDi;
+using FarmsManager.Application.Models.Invoices;
 using FarmsManager.Application.Specifications.Expenses;
 using FarmsManager.Application.Specifications.Farms;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities;
@@ -83,7 +84,7 @@ public class UploadExpensesInvoicesCommandHandler : IRequestHandler<UploadExpens
             var preSignedUrl = _s3Service.GeneratePreSignedUrl(FileType.ExpenseProduction, filePath, file.FileName);
 
             var expenseProductionInvoiceModel =
-                await _azureDiService.AnalyzeExpenseProductionInvoiceAsync(preSignedUrl);
+                await _azureDiService.AnalyzeInvoiceAsync<ExpenseProductionInvoiceModel>(preSignedUrl);
             var extractedFields = _mapper.Map<AddExpenseProductionInvoiceDto>(expenseProductionInvoiceModel);
 
             var existedInvoice = await _expenseProductionRepository.FirstOrDefaultAsync(

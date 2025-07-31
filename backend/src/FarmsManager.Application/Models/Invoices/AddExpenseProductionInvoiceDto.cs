@@ -1,4 +1,4 @@
-﻿namespace FarmsManager.Application.Models;
+﻿namespace FarmsManager.Application.Models.Invoices;
 
 public class AddExpenseProductionInvoiceDto
 {

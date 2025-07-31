@@ -171,7 +171,7 @@ public class ExpensesController(IMediator mediator) : BaseController
     }
 
     /// <summary>
-    /// Wrzuca tymczasowo pliki faktur i je odczytuje
+    /// Wrzuca tymczasowo pliki faktur i je odczytuje dla kosztów produkcji
     /// </summary>
     /// <param name="dto"></param>
     /// <returns></returns>
