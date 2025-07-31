@@ -306,7 +306,7 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
                       value={watch("identifierDisplay") || ""}
                       error={!!errors.cycleId}
                       helperText={errors.cycleId?.message}
-                      InputProps={{ readOnly: true }}
+                      slotProps={{ input: { readOnly: true } }}
                       fullWidth
                     />
                   </Grid>

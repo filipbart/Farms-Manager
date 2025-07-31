@@ -92,25 +92,25 @@ const EditProductionDataRemainingFeedModal: React.FC<
           <TextField
             label="Ferma"
             value={remainingFeed?.farmName || ""}
-            InputProps={{ readOnly: true }}
+            slotProps={{ input: { readOnly: true } }}
             fullWidth
           />
           <TextField
             label="Kurnik"
             value={remainingFeed?.henhouseName || ""}
-            InputProps={{ readOnly: true }}
+            slotProps={{ input: { readOnly: true } }}
             fullWidth
           />
           <TextField
             label="Cykl"
             value={remainingFeed?.cycleText || ""}
-            InputProps={{ readOnly: true }}
+            slotProps={{ input: { readOnly: true } }}
             fullWidth
           />
           <TextField
             label="Typ (nazwa) paszy"
             value={remainingFeed?.feedName || ""}
-            InputProps={{ readOnly: true }}
+            slotProps={{ input: { readOnly: true } }}
             fullWidth
           />
 

@@ -358,7 +358,7 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
                       <TextField
                         label="Typ wydatku"
                         value={watch("expenseTypeName") || ""}
-                        InputProps={{ readOnly: true }}
+                        slotProps={{ input: { readOnly: true } }}
                         fullWidth
                       />
                     )}

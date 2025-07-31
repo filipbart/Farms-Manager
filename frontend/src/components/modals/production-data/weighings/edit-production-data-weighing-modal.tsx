@@ -81,25 +81,25 @@ const EditProductionDataWeighingModal: React.FC<
             <TextField
               label="Ferma"
               value={weighing?.farmName || ""}
-              InputProps={{ readOnly: true }}
+              slotProps={{ input: { readOnly: true } }}
               fullWidth
             />
             <TextField
               label="Kurnik"
               value={weighing?.henhouseName || ""}
-              InputProps={{ readOnly: true }}
+              slotProps={{ input: { readOnly: true } }}
               fullWidth
             />
             <TextField
               label="Cykl"
               value={weighing?.cycleText || ""}
-              InputProps={{ readOnly: true }}
+              slotProps={{ input: { readOnly: true } }}
               fullWidth
             />
             <TextField
               label="Wylęgarnia"
               value={weighing?.hatcheryName || ""}
-              InputProps={{ readOnly: true }}
+              slotProps={{ input: { readOnly: true } }}
               fullWidth
             />
 

@@ -90,7 +90,7 @@ const EditGasDeliveryModal: React.FC<EditGasDeliveryModalProps> = ({
               <TextField
                 label="Ferma"
                 value={gasDelivery?.farmName || ""}
-                InputProps={{ readOnly: true }}
+                slotProps={{ input: { readOnly: true } }}
                 fullWidth
               />
             </Grid>
@@ -98,7 +98,7 @@ const EditGasDeliveryModal: React.FC<EditGasDeliveryModalProps> = ({
               <TextField
                 label="Kontrahent"
                 value={gasDelivery?.contractorName || ""}
-                InputProps={{ readOnly: true }}
+                slotProps={{ input: { readOnly: true } }}
                 fullWidth
               />
             </Grid>

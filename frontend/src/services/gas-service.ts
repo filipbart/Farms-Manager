@@ -8,7 +8,7 @@ import type {
   SaveGasInvoiceData,
   UpdateGasDeliveryData,
 } from "../models/gas/gas-deliveries";
-import type { GasDeliveriesDictionary } from "../models/gas/gas-deliveries-dictionary";
+import type { GasDeliveriesDictionary } from "../models/gas/gas-dictionaries";
 import type { GasDeliveriesFilterPaginationModel } from "../models/gas/gas-deliveries-filters";
 import AxiosWrapper from "../utils/axios/wrapper";
 

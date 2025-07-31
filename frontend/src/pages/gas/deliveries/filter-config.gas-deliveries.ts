@@ -1,5 +1,5 @@
 import type { FilterConfig } from "../../../components/filters/filter-types";
-import type { GasDeliveriesDictionary } from "../../../models/gas/gas-deliveries-dictionary";
+import type { GasDeliveriesDictionary } from "../../../models/gas/gas-dictionaries";
 import type { GasDeliveriesFilterPaginationModel } from "../../../models/gas/gas-deliveries-filters";
 
 export const getGasDeliveriesFiltersConfig = (

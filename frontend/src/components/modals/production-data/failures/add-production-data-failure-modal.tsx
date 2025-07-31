@@ -129,7 +129,7 @@ const AddProductionDataFailureModal: React.FC<
               loading={loadingCycle}
               label="Cykl"
               value={watch("cycleDisplay") || ""}
-              InputProps={{ readOnly: true }}
+              slotProps={{ input: { readOnly: true } }}
               error={!!errors.cycleId}
               helperText={errors.cycleId?.message}
               fullWidth
