@@ -1,4 +1,5 @@
 ﻿using FarmsManager.Api.Controllers.Base;
+using FarmsManager.Application.Commands.Gas.Consumptions;
 using FarmsManager.Application.Commands.Gas.Deliveries;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Queries.Gas;
@@ -153,11 +154,16 @@ public class GasController(IMediator mediator) : BaseController
         return Ok(await mediator.Send(query));
     }
 
-    // [HttpPost("consumptions/add")]
-    // [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
-    // [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    // public async Task<IActionResult> AddGasConsumption()
-    // {
-    //     
-    // }
+    /// <summary>
+    /// Dodaje nowe zużycie gazu
+    /// </summary>
+    /// <param name="command"></param>
+    /// <returns></returns>
+    [HttpPost("consumptions/add")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> AddGasConsumption(AddGasConsumptionCommand command)
+    {
+        return Ok(await mediator.Send(command));
+    }
 }

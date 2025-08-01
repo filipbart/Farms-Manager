@@ -39,6 +39,11 @@ public class UpdateGasDeliveryCommandHandler : IRequestHandler<UpdateGasDelivery
             await _gasDeliveryRepository.GetAsync(new GetGasDeliveryByIdSpec(request.Id),
                 cancellationToken);
 
+        if (entity.UsedQuantity > 0)
+        {
+            throw new Exception("Nie można edytować dostawy, która została już częściowo lub w całości zużyta.");
+        }
+
         entity.Update(
             request.Data.InvoiceNumber,
             request.Data.InvoiceDate,

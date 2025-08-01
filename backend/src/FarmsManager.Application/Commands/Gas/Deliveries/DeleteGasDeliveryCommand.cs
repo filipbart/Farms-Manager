@@ -33,6 +33,12 @@ public class DeleteGasDeliveryCommandHandler : IRequestHandler<DeleteGasDelivery
             await _gasDeliveryRepository.GetAsync(new GetGasDeliveryByIdSpec(request.Id),
                 cancellationToken);
 
+        if (entity.UsedQuantity > 0)
+        {
+            throw new Exception(
+                "Nie można usunąć dostawy, która została już częściowo lub w całości zużyta. Należy najpierw anulować powiązane z nią zużycia.");
+        }
+
         if (entity.FilePath.IsNotEmpty())
         {
             await _s3Service.DeleteFileAsync(FileType.GasDelivery, entity.FilePath);

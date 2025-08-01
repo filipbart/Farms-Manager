@@ -1,5 +1,6 @@
 ﻿using Ardalis.Specification;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.GasAggregate.Entities;
 using FarmsManager.Domain.Aggregates.GasAggregate.Interfaces;
 using MediatR;
@@ -59,10 +60,11 @@ public class CalculateCostForConsumptionQueryHandler : IRequestHandler<Calculate
     }
 }
 
-public sealed class GetAvailableGasDeliveriesForFarmSpec : Specification<GasDeliveryEntity>
+public sealed class GetAvailableGasDeliveriesForFarmSpec : BaseSpecification<GasDeliveryEntity>
 {
     public GetAvailableGasDeliveriesForFarmSpec(Guid farmId)
     {
+        EnsureExists();
         Query
             .Where(d => d.FarmId == farmId && d.UsedQuantity < d.Quantity)
             .OrderBy(d => d.InvoiceDate);

@@ -1,6 +1,7 @@
 ﻿using Ardalis.Specification;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.GasAggregate.Entities;
+using FarmsManager.Domain.Aggregates.GasAggregate.Enum;
 
 namespace FarmsManager.Application.Queries.Gas.Consumptions;
 
@@ -25,6 +26,8 @@ public sealed class GetAllGasConsumptionsSpec : BaseSpecification<GasConsumption
 
     private void PopulateFilters(GetGasConsumptionsQueryFilters filters)
     {
+        Query.Where(gc => gc.Status == GasConsumptionStatus.Active && gc.CorrectionForId == null);
+
         if (filters.FarmIds is not null && filters.FarmIds.Any())
         {
             Query.Where(gc => filters.FarmIds.Contains(gc.FarmId));

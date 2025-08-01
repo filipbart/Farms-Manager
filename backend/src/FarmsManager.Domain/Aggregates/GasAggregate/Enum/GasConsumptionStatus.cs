@@ -1,7 +1,9 @@
-﻿namespace FarmsManager.Domain.Aggregates.GasAggregate.Enum;
+﻿using System.ComponentModel;
+
+namespace FarmsManager.Domain.Aggregates.GasAggregate.Enum;
 
 public enum GasConsumptionStatus
 {
-    Active,
-    Cancelled
+    [Description("Aktywny")] Active,
+    [Description("Anulowany")] Cancelled
 }

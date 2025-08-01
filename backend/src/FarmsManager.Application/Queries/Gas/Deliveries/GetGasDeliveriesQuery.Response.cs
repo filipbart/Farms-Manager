@@ -10,6 +10,7 @@ public class GasDeliveryRowDto
     public string FarmName { get; init; }
     public string ContractorName { get; init; }
     public string InvoiceNumber { get; init; }
+    public decimal UsedQuantity { get; init; }
     public DateOnly InvoiceDate { get; init; }
     public decimal UnitPrice { get; init; }
     public decimal Quantity { get; init; }

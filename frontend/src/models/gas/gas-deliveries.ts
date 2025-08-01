@@ -7,6 +7,7 @@ export interface GasDeliveryListModel {
   invoiceTotal: number;
   unitPrice: number;
   quantity: number;
+  usedQuantity: number;
   comment: string;
   filePath?: string;
   dateCreatedUtc: string;

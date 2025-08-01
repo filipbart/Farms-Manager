@@ -1,4 +1,4 @@
-import { Button, Typography, IconButton, Box } from "@mui/material";
+import { Button, Typography, IconButton, Box, Tooltip } from "@mui/material";
 import type { GridColDef } from "@mui/x-data-grid";
 import dayjs from "dayjs";
 import { MdFileDownload } from "react-icons/md";
@@ -56,6 +56,12 @@ export const getGasDeliveriesColumns = ({
       flex: 1,
     },
     {
+      field: "usedQuantity",
+      headerName: "Ilość zużyta [l]",
+      flex: 1,
+      sortable: false,
+    },
+    {
       field: "comment",
       headerName: "Komentarz",
       flex: 1,
@@ -68,10 +74,8 @@ export const getGasDeliveriesColumns = ({
       align: "center",
       headerAlign: "center",
       sortable: false,
-      flex: 0.5,
       renderCell: (params) => {
         const filePath = params.row.filePath;
-
         if (!filePath) {
           return (
             <Box
@@ -89,9 +93,7 @@ export const getGasDeliveriesColumns = ({
             </Box>
           );
         }
-
         const isDownloading = downloadingFilePath === filePath;
-
         return (
           <IconButton
             onClick={() => downloadGasDeliveryFile(filePath)}
@@ -108,30 +110,58 @@ export const getGasDeliveriesColumns = ({
       type: "actions",
       headerName: "Akcje",
       width: 200,
-      getActions: (params) => [
-        <Button
-          key="edit"
-          variant="outlined"
-          size="small"
-          onClick={() => {
-            setSelectedGasDelivery(params.row);
-            setIsEditModalOpen(true);
-          }}
-        >
-          Edytuj
-        </Button>,
-        <Button
-          key="delete"
-          variant="outlined"
-          size="small"
-          color="error"
-          onClick={() => {
-            deleteGasDelivery(params.row.id);
-          }}
-        >
-          Usuń
-        </Button>,
-      ],
+      getActions: (params) => {
+        const isUsed = params.row.usedQuantity > 0;
+
+        const editButton = (
+          <Button
+            key="edit"
+            variant="outlined"
+            size="small"
+            disabled={isUsed}
+            onClick={() => {
+              setSelectedGasDelivery(params.row);
+              setIsEditModalOpen(true);
+            }}
+          >
+            Edytuj
+          </Button>
+        );
+
+        const deleteButton = (
+          <Button
+            key="delete"
+            variant="outlined"
+            size="small"
+            color="error"
+            disabled={isUsed}
+            onClick={() => {
+              deleteGasDelivery(params.row.id);
+            }}
+          >
+            Usuń
+          </Button>
+        );
+
+        if (isUsed) {
+          return [
+            <Tooltip
+              key="edit-tooltip"
+              title="Nie można edytować zużytej dostawy"
+            >
+              <span>{editButton}</span>
+            </Tooltip>,
+            <Tooltip
+              key="delete-tooltip"
+              title="Nie można usunąć zużytej dostawy"
+            >
+              <span>{deleteButton}</span>
+            </Tooltip>,
+          ];
+        }
+
+        return [editButton, deleteButton];
+      },
     },
   ];
 };
