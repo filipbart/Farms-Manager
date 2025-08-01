@@ -2,7 +2,6 @@
 using Azure;
 using Azure.AI.DocumentIntelligence;
 using FarmsManager.Application.Interfaces;
-using FarmsManager.Application.Models.AzureDi;
 using FarmsManager.Shared.Attributes;
 using FarmsManager.Shared.Extensions;
 using Microsoft.Extensions.Configuration;

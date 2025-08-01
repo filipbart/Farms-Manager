@@ -1,7 +1,6 @@
 ﻿using FarmsManager.Application.Common;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Models;
-using FarmsManager.Application.Models.ProductionData;
 using MediatR;
 
 namespace FarmsManager.Application.Queries.ProductionData.Weighings;

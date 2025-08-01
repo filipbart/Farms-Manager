@@ -6,11 +6,20 @@ import {
   TextField,
   Box,
   MenuItem,
+  Typography,
+  TableContainer,
+  Paper,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  IconButton,
+  Grid,
 } from "@mui/material";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { MdSave } from "react-icons/md";
+import { useEffect, useReducer, useState } from "react";
 import { toast } from "react-toastify";
+import { MdDelete, MdSave } from "react-icons/md";
 import { useFarms } from "../../../../hooks/useFarms";
 import { useLatestCycle } from "../../../../hooks/useLatestCycle";
 import { useHatcheries } from "../../../../hooks/useHatcheries";
@@ -19,8 +28,8 @@ import LoadingButton from "../../../common/loading-button";
 import LoadingTextField from "../../../common/loading-textfield";
 import AppDialog from "../../../common/app-dialog";
 import type { HouseRowModel } from "../../../../models/farms/house-row-model";
-import type { AddWeighingData } from "../../../../models/production-data/weighings";
 import { ProductionDataWeighingsService } from "../../../../services/production-data/production-data-weighings-service";
+import type { WeighingDataEntry } from "../../../../models/production-data/weighings";
 
 interface AddProductionDataWeighingModalProps {
   open: boolean;
@@ -28,32 +37,73 @@ interface AddProductionDataWeighingModalProps {
   onSave: () => void;
 }
 
+interface WeighingFormState {
+  farmId: string;
+  cycleId: string;
+  cycleDisplay: string;
+  weighingNumber: number | "";
+  entries: WeighingDataEntry[];
+}
+
+interface WeighingFormErrors {
+  farmId?: string;
+  cycleId?: string;
+  weighingNumber?: string;
+  entries?: { [index: number]: any };
+}
+
+const initialState: WeighingFormState = {
+  farmId: "",
+  cycleId: "",
+  cycleDisplay: "",
+  weighingNumber: "",
+  entries: [],
+};
+
+function formReducer(state: WeighingFormState, action: any): WeighingFormState {
+  switch (action.type) {
+    case "SET_FIELD":
+      return { ...state, [action.name]: action.value };
+    case "UPDATE_ENTRY": {
+      const updatedEntries = [...state.entries];
+      updatedEntries[action.index] = {
+        ...updatedEntries[action.index],
+        [action.name]: action.value,
+      };
+      return { ...state, entries: updatedEntries };
+    }
+    case "ADD_ENTRY":
+      return {
+        ...state,
+        entries: [
+          ...state.entries,
+          { henhouseId: "", hatcheryId: "", day: 0, weight: 0 },
+        ],
+      };
+    case "REMOVE_ENTRY":
+      return {
+        ...state,
+        entries: state.entries.filter((_, idx) => idx !== action.index),
+      };
+    case "RESET":
+      return initialState;
+    default:
+      return state;
+  }
+}
+
 const AddProductionDataWeighingModal: React.FC<
   AddProductionDataWeighingModalProps
 > = ({ open, onClose, onSave }) => {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-    setValue,
-    setError,
-    clearErrors,
-    watch,
-  } = useForm<AddWeighingData & { cycleDisplay: string }>();
-
   const [loading, setLoading] = useState(false);
-  const [isFetchingHatchery, setIsFetchingHatchery] = useState(false);
   const { farms, loadingFarms, fetchFarms } = useFarms();
   const { hatcheries, loadingHatcheries, fetchHatcheries } = useHatcheries();
   const { loadLatestCycle, loadingCycle } = useLatestCycle();
   const [availableHenhouses, setAvailableHenhouses] = useState<HouseRowModel[]>(
     []
   );
-
-  const farmId = watch("farmId");
-  const cycleId = watch("cycleId");
-  const henhouseId = watch("henhouseId");
+  const [form, dispatch] = useReducer(formReducer, initialState);
+  const [errors, setErrors] = useState<WeighingFormErrors>({});
 
   useEffect(() => {
     if (open) {
@@ -63,66 +113,80 @@ const AddProductionDataWeighingModal: React.FC<
   }, [open, fetchFarms, fetchHatcheries]);
 
   useEffect(() => {
-    const fetchHatcheryForContext = async () => {
-      setValue("hatcheryId", "");
-
-      if (farmId && cycleId && henhouseId) {
-        setIsFetchingHatchery(true);
-        try {
-          const response =
-            await ProductionDataWeighingsService.getHatcheryForWeighing({
-              farmId,
-              cycleId,
-              henhouseId,
-            });
-
-          if (response.success && response.responseData?.hatcheryId) {
-            setValue("hatcheryId", response.responseData.hatcheryId);
-          }
-        } catch (error) {
-          console.error("Błąd podczas pobierania wylęgarni", error);
-        } finally {
-          setIsFetchingHatchery(false);
-        }
-      }
-    };
-
-    fetchHatcheryForContext();
-  }, [farmId, cycleId, henhouseId, setValue]);
+    if (open && form.entries.length === 0) {
+      dispatch({ type: "ADD_ENTRY" });
+    }
+  }, [open, form.entries.length]);
 
   const handleFarmChange = async (farmId: string) => {
-    setValue("cycleId", "");
-    setValue("cycleDisplay", "");
-    setValue("henhouseId", "");
-    setValue("hatcheryId", "");
-    clearErrors("cycleId");
-    setAvailableHenhouses([]);
+    dispatch({ type: "SET_FIELD", name: "farmId", value: farmId });
+    dispatch({ type: "SET_FIELD", name: "cycleId", value: "" });
+    dispatch({ type: "SET_FIELD", name: "cycleDisplay", value: "" });
+    dispatch({
+      type: "SET_FIELD",
+      name: "entries",
+      value: [{ henhouseId: "", hatcheryId: "", day: 0, weight: 0 }],
+    });
+    setErrors({});
 
     const selectedFarm = farms.find((f) => f.id === farmId);
-    if (selectedFarm) {
-      setAvailableHenhouses(selectedFarm.henhouses);
-    }
+    setAvailableHenhouses(selectedFarm?.henhouses ?? []);
 
     const cycle = await loadLatestCycle(farmId);
     if (cycle) {
-      setValue("cycleId", cycle.id);
-      setValue("cycleDisplay", `${cycle.identifier}/${cycle.year}`);
-      clearErrors("cycleId");
-    } else {
-      setError("cycleId", {
-        type: "manual",
-        message: "Brak aktywnego cyklu",
+      dispatch({ type: "SET_FIELD", name: "cycleId", value: cycle.id });
+      dispatch({
+        type: "SET_FIELD",
+        name: "cycleDisplay",
+        value: `${cycle.identifier}/${cycle.year}`,
       });
+    } else {
+      setErrors((prev) => ({ ...prev, cycleId: "Brak aktywnego cyklu" }));
     }
   };
 
-  const handleSave = async (data: AddWeighingData) => {
-    if (loading) return;
+  const validate = (): boolean => {
+    const newErrors: WeighingFormErrors = {};
+    if (!form.farmId) newErrors.farmId = "Ferma jest wymagana";
+    if (!form.cycleId) newErrors.cycleId = "Cykl jest wymagany";
+    if (!form.weighingNumber)
+      newErrors.weighingNumber = "Numer ważenia jest wymagany";
+
+    const entryErrors: { [index: number]: any } = {};
+    form.entries.forEach((entry, index) => {
+      const errorsForEntry: any = {};
+      if (!entry.henhouseId) errorsForEntry.henhouseId = "Wymagany";
+      if (!entry.hatcheryId) errorsForEntry.hatcheryId = "Wymagana";
+      if (Number(entry.day) <= 0) errorsForEntry.day = "Błędna wartość";
+      if (Number(entry.weight) <= 0) errorsForEntry.weight = "Błędna wartość";
+      if (Object.keys(errorsForEntry).length > 0) {
+        entryErrors[index] = errorsForEntry;
+      }
+    });
+
+    if (Object.keys(entryErrors).length > 0) newErrors.entries = entryErrors;
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSave = async () => {
+    if (!validate()) return;
     setLoading(true);
     await handleApiResponse(
-      () => ProductionDataWeighingsService.addWeighing(data),
+      () =>
+        ProductionDataWeighingsService.addWeighing({
+          farmId: form.farmId,
+          cycleId: form.cycleId,
+          weighingNumber: Number(form.weighingNumber),
+          entries: form.entries.map((e) => ({
+            ...e,
+            day: Number(e.day),
+            weight: Number(e.weight),
+          })),
+        }),
       () => {
-        toast.success("Pomyślnie dodano wpis ważenia");
+        toast.success("Pomyślnie dodano wpisy ważenia");
         onSave();
         close();
       },
@@ -133,132 +197,233 @@ const AddProductionDataWeighingModal: React.FC<
   };
 
   const close = () => {
-    reset();
+    dispatch({ type: "RESET" });
     setAvailableHenhouses([]);
+    setErrors({});
     onClose();
   };
 
   return (
-    <AppDialog open={open} onClose={close} fullWidth maxWidth="sm">
-      <DialogTitle>Dodaj nowy wpis ważenia</DialogTitle>
-      <form onSubmit={handleSubmit(handleSave)}>
-        <DialogContent>
-          <Box display="flex" flexDirection="column" gap={2.5} mt={1}>
-            <LoadingTextField
-              loading={loadingFarms}
-              select
-              label="Ferma"
-              fullWidth
-              error={!!errors.farmId}
-              helperText={errors.farmId?.message}
-              {...register("farmId", {
-                required: "Farma jest wymagana",
-                onChange: (e) => handleFarmChange(e.target.value),
-              })}
+    <AppDialog open={open} onClose={close} fullWidth maxWidth="lg">
+      <DialogTitle>Dodaj kolejne ważenie</DialogTitle>
+      <DialogContent>
+        <Box display="flex" flexDirection="column" gap={2.5} mt={1}>
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, sm: 4 }}>
+              <LoadingTextField
+                loading={loadingFarms}
+                select
+                label="Ferma"
+                fullWidth
+                value={form.farmId}
+                error={!!errors.farmId}
+                helperText={errors.farmId}
+                onChange={(e) => handleFarmChange(e.target.value)}
+              >
+                {farms.map((farm) => (
+                  <MenuItem key={farm.id} value={farm.id}>
+                    {farm.name}
+                  </MenuItem>
+                ))}
+              </LoadingTextField>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 4 }}>
+              <LoadingTextField
+                loading={loadingCycle}
+                label="Cykl"
+                value={form.cycleDisplay}
+                InputProps={{ readOnly: true }}
+                error={!!errors.cycleId}
+                helperText={errors.cycleId}
+                fullWidth
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 4 }}>
+              <TextField
+                select
+                label="Numer ważenia"
+                value={form.weighingNumber}
+                onChange={(e) =>
+                  dispatch({
+                    type: "SET_FIELD",
+                    name: "weighingNumber",
+                    value: e.target.value,
+                  })
+                }
+                error={!!errors.weighingNumber}
+                helperText={errors.weighingNumber}
+                fullWidth
+              >
+                {[2, 3, 4, 5].map((num) => (
+                  <MenuItem key={num} value={num}>
+                    Ważenie {num}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+          </Grid>
+
+          <Typography variant="h6" sx={{ mt: 1 }}>
+            Pozycje ważenia
+          </Typography>
+          <TableContainer component={Paper} variant="outlined">
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Kurnik</TableCell>
+                  <TableCell>Wylęgarnia</TableCell>
+                  <TableCell align="right">Doba</TableCell>
+                  <TableCell align="right">Śr. masa ciała [g]</TableCell>
+                  <TableCell align="center" sx={{ width: "60px" }}>
+                    Akcje
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {form.entries.map((entry, index) => {
+                  const entryErrors = errors.entries?.[index];
+                  const usedHenhouses = form.entries.map((e) => e.henhouseId);
+                  return (
+                    <TableRow key={index}>
+                      <TableCell sx={{ minWidth: 250 }}>
+                        <TextField
+                          select
+                          value={entry.henhouseId}
+                          onChange={(e) =>
+                            dispatch({
+                              type: "UPDATE_ENTRY",
+                              index,
+                              name: "henhouseId",
+                              value: e.target.value,
+                            })
+                          }
+                          error={!!entryErrors?.henhouseId}
+                          helperText={entryErrors?.henhouseId}
+                          fullWidth
+                          size="small"
+                          disabled={availableHenhouses.length === 0}
+                        >
+                          {availableHenhouses
+                            .filter(
+                              (h) =>
+                                h.id === entry.henhouseId ||
+                                !usedHenhouses.includes(h.id)
+                            )
+                            .map((h) => (
+                              <MenuItem key={h.id} value={h.id}>
+                                {h.name}
+                              </MenuItem>
+                            ))}
+                        </TextField>
+                      </TableCell>
+                      <TableCell sx={{ minWidth: 250 }}>
+                        <LoadingTextField
+                          loading={loadingHatcheries}
+                          select
+                          value={entry.hatcheryId}
+                          onChange={(e) =>
+                            dispatch({
+                              type: "UPDATE_ENTRY",
+                              index,
+                              name: "hatcheryId",
+                              value: e.target.value,
+                            })
+                          }
+                          error={!!entryErrors?.hatcheryId}
+                          helperText={entryErrors?.hatcheryId}
+                          fullWidth
+                          size="small"
+                        >
+                          {hatcheries.map((h) => (
+                            <MenuItem key={h.id} value={h.id}>
+                              {h.name}
+                            </MenuItem>
+                          ))}
+                        </LoadingTextField>
+                      </TableCell>
+                      <TableCell align="right">
+                        <TextField
+                          type="number"
+                          value={entry.day}
+                          onChange={(e) =>
+                            dispatch({
+                              type: "UPDATE_ENTRY",
+                              index,
+                              name: "day",
+                              value: e.target.value,
+                            })
+                          }
+                          error={!!entryErrors?.day}
+                          helperText={entryErrors?.day}
+                          size="small"
+                          sx={{ width: 100 }}
+                        />
+                      </TableCell>
+                      <TableCell align="right">
+                        <TextField
+                          type="number"
+                          value={entry.weight}
+                          onChange={(e) =>
+                            dispatch({
+                              type: "UPDATE_ENTRY",
+                              index,
+                              name: "weight",
+                              value: e.target.value,
+                            })
+                          }
+                          error={!!entryErrors?.weight}
+                          helperText={entryErrors?.weight}
+                          size="small"
+                          sx={{ width: 120 }}
+                        />
+                      </TableCell>
+                      <TableCell align="center">
+                        <IconButton
+                          color="error"
+                          onClick={() =>
+                            dispatch({ type: "REMOVE_ENTRY", index })
+                          }
+                        >
+                          <MdDelete />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
+          <Box>
+            <Button
+              variant="text"
+              onClick={() => dispatch({ type: "ADD_ENTRY" })}
+              disabled={!form.farmId}
             >
-              {farms.map((farm) => (
-                <MenuItem key={farm.id} value={farm.id}>
-                  {farm.name}
-                </MenuItem>
-              ))}
-            </LoadingTextField>
-
-            <LoadingTextField
-              loading={loadingCycle}
-              label="Cykl"
-              value={watch("cycleDisplay") || ""}
-              slotProps={{ input: { readOnly: true } }}
-              error={!!errors.cycleId}
-              helperText={errors.cycleId?.message}
-              fullWidth
-            />
-
-            <TextField
-              select
-              label="Kurnik"
-              fullWidth
-              disabled={!watch("farmId") || availableHenhouses.length === 0}
-              error={!!errors.henhouseId}
-              helperText={errors.henhouseId?.message}
-              {...register("henhouseId", {
-                required: "Kurnik jest wymagany",
-              })}
-            >
-              {availableHenhouses.map((henhouse) => (
-                <MenuItem key={henhouse.id} value={henhouse.id}>
-                  {henhouse.name}
-                </MenuItem>
-              ))}
-            </TextField>
-
-            <LoadingTextField
-              loading={loadingHatcheries || isFetchingHatchery}
-              select
-              label="Wylęgarnia"
-              fullWidth
-              value={watch("hatcheryId") || ""}
-              error={!!errors.hatcheryId}
-              helperText={errors.hatcheryId?.message}
-              {...register("hatcheryId", {
-                required: "Wylęgarnia jest wymagana",
-              })}
-            >
-              {hatcheries.map((hatchery) => (
-                <MenuItem key={hatchery.id} value={hatchery.id}>
-                  {hatchery.name}
-                </MenuItem>
-              ))}
-            </LoadingTextField>
-
-            <TextField
-              label="Doba ważenia"
-              type="number"
-              slotProps={{ htmlInput: { min: 0 } }}
-              error={!!errors.day}
-              helperText={errors.day?.message}
-              {...register("day", {
-                required: "Doba jest wymagana",
-                valueAsNumber: true,
-                min: { value: 0, message: "Doba nie może być ujemna" },
-              })}
-              fullWidth
-            />
-            <TextField
-              label="Średnia masa ciała [g]"
-              type="number"
-              slotProps={{ htmlInput: { min: 0 } }}
-              error={!!errors.weight}
-              helperText={errors.weight?.message}
-              {...register("weight", {
-                required: "Masa ciała jest wymagana",
-                valueAsNumber: true,
-                min: { value: 0, message: "Wartość nie może być ujemna" },
-              })}
-              fullWidth
-            />
+              + Dodaj pozycję
+            </Button>
           </Box>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button
-            onClick={close}
-            variant="outlined"
-            color="inherit"
-            disabled={loading}
-          >
-            Anuluj
-          </Button>
-          <LoadingButton
-            type="submit"
-            variant="contained"
-            color="primary"
-            startIcon={<MdSave />}
-            disabled={loading}
-            loading={loading}
-          >
-            Zapisz
-          </LoadingButton>
-        </DialogActions>
-      </form>
+        </Box>
+      </DialogContent>
+      <DialogActions sx={{ px: 3, pb: 2 }}>
+        <Button
+          onClick={close}
+          variant="outlined"
+          color="inherit"
+          disabled={loading}
+        >
+          Anuluj
+        </Button>
+        <LoadingButton
+          variant="contained"
+          color="primary"
+          startIcon={<MdSave />}
+          disabled={loading}
+          loading={loading}
+          onClick={handleSave}
+        >
+          Zapisz
+        </LoadingButton>
+      </DialogActions>
     </AppDialog>
   );
 };

@@ -1,7 +1,6 @@
 ﻿using FarmsManager.Api.Controllers.Base;
 using FarmsManager.Application.Commands.ProductionData.Weighings;
 using FarmsManager.Application.Common.Responses;
-using FarmsManager.Application.Models.ProductionData;
 using FarmsManager.Application.Queries.ProductionData.Weighings;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -49,7 +48,7 @@ public class WeighingsController(IMediator mediator) : BaseController
     }
 
     /// <summary>
-    /// Dodaje nowy ważenie
+    /// Dodaje nowe ważenia
     /// </summary>
     [HttpPost("add")]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]

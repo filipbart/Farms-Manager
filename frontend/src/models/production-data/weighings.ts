@@ -25,8 +25,13 @@ export interface ProductionDataWeighingListModel {
 
 export interface AddWeighingData {
   farmId: string;
-  henhouseId: string;
   cycleId: string;
+  weighingNumber: number;
+  entries: WeighingDataEntry[];
+}
+
+export interface WeighingDataEntry {
+  henhouseId: string;
   hatcheryId: string;
   day: number;
   weight: number;
