@@ -49,10 +49,25 @@ export const RenderFilterField = ({
         onChange={(val: Dayjs | null) =>
           onChange(val ? val.format("YYYY-MM-DD") : "")
         }
+        sx={{ width: 200 }}
         slotProps={{
-          textField: { fullWidth: true },
+          textField: { fullWidth: false },
           actionBar: { actions: ["clear"] },
         }}
+      />
+    );
+  }
+
+  if (filter.type === "number") {
+    return (
+      <TextField
+        label={filter.label}
+        type="number"
+        fullWidth
+        sx={{ minWidth: 200 }}
+        value={value || ""}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={filter.disabled}
       />
     );
   }

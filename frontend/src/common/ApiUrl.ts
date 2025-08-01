@@ -21,6 +21,20 @@ export default class ApiUrl {
   public static Hatcheries = this.BaseUrl + "hatcheries";
   public static AddHatchery = this.Hatcheries + "/add";
   public static DeleteHatchery = this.Hatcheries + "/delete";
+  public static HatcheriesPrices = this.Hatcheries + "/prices";
+  public static HatcheriesPricesDictionary =
+    this.HatcheriesPrices + "/dictionary";
+  public static AddHatcheryPrice = this.HatcheriesPrices + "/add";
+  public static UpdateHatcheryPrice = (id: string) =>
+    this.HatcheriesPrices + "/update/" + id;
+  public static DeleteHatcheryPrice = (id: string) =>
+    this.HatcheriesPrices + "/delete/" + id;
+  public static HatcheriesNotes = this.Hatcheries + "/notes";
+  public static AddHatcheryNote = this.HatcheriesNotes + "/add";
+  public static UpdateHatcheryNote = (id: string) =>
+    this.HatcheriesNotes + "/update/" + id;
+  public static DeleteHatcheryNote = (id: string) =>
+    this.HatcheriesNotes + "/delete/" + id;
 
   public static Slaughterhouses = this.BaseUrl + "slaughterhouses";
   public static AddSlaughterhouse = this.Slaughterhouses + "/add";

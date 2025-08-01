@@ -11,6 +11,7 @@ import LogoWhite from "../../assets/logo_white.png";
 import SidebarMenuItem from "./sidebar-menu-item";
 import { IoCard, IoHome, IoSettings } from "react-icons/io5";
 import {
+  FaAddressCard,
   FaBurn,
   FaClone,
   FaDatabase,
@@ -32,6 +33,7 @@ import {
 } from "react-icons/fa6";
 import {
   MdFactory,
+  MdNotes,
   MdPayments,
   MdPeopleAlt,
   MdPropane,
@@ -141,6 +143,23 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             icon={<FaBurn />}
           />
         </SidebarMenuItem>
+        <SidebarMenuItem
+          to="/hatcheries-notes"
+          title="Wylęgarnie - notatki"
+          icon={<MdNotes />}
+        />
+        <SidebarMenuItem to="/users" title="Pracownicy" icon={<MdPeopleAlt />}>
+          <SidebarMenuItem
+            to="/users/employees"
+            title="Kadry"
+            icon={<FaAddressCard />}
+          />
+          <SidebarMenuItem
+            to="/users/payslips"
+            title="Rozliczenie wypłat"
+            icon={<FaFileInvoiceDollar />}
+          />
+        </SidebarMenuItem>
         <SidebarMenuItem to="/data" title="Dane" icon={<FaDatabase />}>
           <SidebarMenuItem
             to="/data/farms"
@@ -163,12 +182,6 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             icon={<MdFactory />}
           />
         </SidebarMenuItem>
-
-        <SidebarMenuItem
-          to="/users"
-          title="Użytkownicy"
-          icon={<MdPeopleAlt />}
-        />
         <SidebarMenuItem
           to="/settings"
           title="Ustawienia"

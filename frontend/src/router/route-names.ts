@@ -22,6 +22,7 @@ export enum RouteName {
   ProductionDataWeighings = "production-data/weighings",
   GasDeliveries = "gas/deliveries",
   GasConsumptions = "gas/consumptions",
+  HatcheriesNotes = "hatcheries-notes",
   Settings = "settings",
   Users = "users",
   UserProfile = "user-profile",

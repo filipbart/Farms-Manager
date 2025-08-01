@@ -44,13 +44,12 @@ export const getWeighingsColumns = ({
 }: GetWeighingsColumnsProps): GridColDef<ProductionDataWeighingListModel>[] => {
   return [
     { field: "cycleText", headerName: "Identyfikator", width: 120 },
-    { field: "farmName", headerName: "Ferma", flex: 1.5 },
-    { field: "hatcheryName", headerName: "Wylęgarnia", flex: 1 },
+    { field: "farmName", headerName: "Ferma", width: 200 },
+    { field: "hatcheryName", headerName: "Wylęgarnia", width: 100 },
     { field: "henhouseName", headerName: "Kurnik", width: 100 },
     {
       field: "weighing1Day",
       headerName: "Ważenie I (doba)",
-
       width: 140,
     },
     {
