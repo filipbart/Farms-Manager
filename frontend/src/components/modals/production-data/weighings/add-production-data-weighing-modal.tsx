@@ -232,7 +232,7 @@ const AddProductionDataWeighingModal: React.FC<
                 loading={loadingCycle}
                 label="Cykl"
                 value={form.cycleDisplay}
-                InputProps={{ readOnly: true }}
+                slotProps={{ input: { readOnly: true } }}
                 error={!!errors.cycleId}
                 helperText={errors.cycleId}
                 fullWidth

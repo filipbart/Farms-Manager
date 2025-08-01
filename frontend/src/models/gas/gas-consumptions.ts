@@ -17,7 +17,6 @@ export interface AddGasConsumptionData {
 
 export interface UpdateGasConsumptionData {
   quantityConsumed: number;
-  cost: number;
 }
 
 export interface GasConsumptionCalculateCostParams {

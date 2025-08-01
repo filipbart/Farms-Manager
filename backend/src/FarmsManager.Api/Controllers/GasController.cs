@@ -166,4 +166,31 @@ public class GasController(IMediator mediator) : BaseController
     {
         return Ok(await mediator.Send(command));
     }
+
+    /// <summary>
+    /// "Usuwa" zużycie gazu
+    /// </summary>
+    /// <param name="gasConsumptionId"></param>
+    /// <returns></returns>
+    [HttpPost("consumptions/delete/{gasConsumptionId:guid}")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> DeleteGasConsumption([FromRoute] Guid gasConsumptionId)
+    {
+        return Ok(await mediator.Send(new DeleteGasConsumptionCommand(gasConsumptionId)));
+    }
+    
+    /// <summary>
+    /// Aktualizuje zużycie gazu
+    /// </summary>
+    /// <param name="gasConsumptionId"></param>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    [HttpPost("consumptions/update/{gasConsumptionId:guid}")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> UpdateGasConsumption([FromRoute] Guid gasConsumptionId, UpdateGasConsumptionDto data)
+    {
+        return Ok(await mediator.Send(new UpdateGasConsumptionCommand(gasConsumptionId,data)));
+    }
 }

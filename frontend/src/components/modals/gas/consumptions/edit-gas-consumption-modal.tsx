@@ -36,13 +36,13 @@ const EditGasConsumptionModal: React.FC<EditGasConsumptionModalProps> = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const [isCalculatingCost, setIsCalculatingCost] = useState(false);
+  const [calculatedCost, setCalculatedCost] = useState<number | null>(null);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
-    setValue,
     watch,
   } = useForm<UpdateGasConsumptionData>();
 
@@ -52,8 +52,8 @@ const EditGasConsumptionModal: React.FC<EditGasConsumptionModalProps> = ({
     if (gasConsumption) {
       reset({
         quantityConsumed: gasConsumption.quantityConsumed,
-        cost: gasConsumption.cost,
       });
+      setCalculatedCost(gasConsumption.cost);
     }
   }, [gasConsumption, reset]);
 
@@ -67,14 +67,16 @@ const EditGasConsumptionModal: React.FC<EditGasConsumptionModalProps> = ({
             quantity: quantityConsumed,
           });
           if (response.success && response.responseData) {
-            setValue("cost", response.responseData.cost);
+            setCalculatedCost(response.responseData.cost);
           }
         } catch (error) {
           console.error("Błąd podczas obliczania kosztu", error);
-          setValue("cost", 0);
+          setCalculatedCost(0);
         } finally {
           setIsCalculatingCost(false);
         }
+      } else {
+        setCalculatedCost(0);
       }
     };
 
@@ -83,10 +85,11 @@ const EditGasConsumptionModal: React.FC<EditGasConsumptionModalProps> = ({
     }, 500);
 
     return () => clearTimeout(debounceTimeout);
-  }, [quantityConsumed, gasConsumption, setValue]);
+  }, [quantityConsumed, gasConsumption]);
 
   const handleClose = () => {
     reset();
+    setCalculatedCost(null);
     onClose();
   };
 
@@ -116,7 +119,7 @@ const EditGasConsumptionModal: React.FC<EditGasConsumptionModalProps> = ({
               <TextField
                 label="Ferma"
                 value={gasConsumption?.farmName || ""}
-                InputProps={{ readOnly: true }}
+                slotProps={{ input: { readOnly: true } }}
                 fullWidth
               />
             </Grid>
@@ -125,7 +128,7 @@ const EditGasConsumptionModal: React.FC<EditGasConsumptionModalProps> = ({
               <TextField
                 label="Cykl"
                 value={gasConsumption?.cycleText || ""}
-                InputProps={{ readOnly: true }}
+                slotProps={{ input: { readOnly: true } }}
                 fullWidth
               />
             </Grid>
@@ -149,19 +152,11 @@ const EditGasConsumptionModal: React.FC<EditGasConsumptionModalProps> = ({
 
             <Grid size={{ xs: 12, sm: 6 }}>
               <LoadingTextField
-                label="Koszt gazu [zł]"
+                label="Szacowany koszt [zł]"
                 type="number"
                 loading={isCalculatingCost}
-                value={String(watch("cost") ?? "")}
-                InputProps={{ readOnly: true }}
-                error={!!errors.cost}
-                helperText={errors.cost?.message}
-                {...register("cost", {
-                  required: "Koszt jest wymagany",
-                  valueAsNumber: true,
-                  validate: (value) =>
-                    value > 0 || "Koszt musi być większy od 0",
-                })}
+                value={calculatedCost?.toFixed(2) ?? ""}
+                slotProps={{ input: { readOnly: true } }}
                 fullWidth
               />
             </Grid>
