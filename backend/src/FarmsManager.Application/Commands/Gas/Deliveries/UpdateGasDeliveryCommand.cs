@@ -6,7 +6,7 @@ using FarmsManager.Domain.Exceptions;
 using FluentValidation;
 using MediatR;
 
-namespace FarmsManager.Application.Commands.Gas;
+namespace FarmsManager.Application.Commands.Gas.Deliveries;
 
 public record UpdateGasDeliveryData
 {

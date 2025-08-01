@@ -1,5 +1,6 @@
 export interface GasConsumptionListModel {
   id: string;
+  farmId: string;
   farmName: string;
   cycleText: string;
   quantityConsumed: number;
@@ -11,5 +12,19 @@ export interface AddGasConsumptionData {
   farmId: string;
   cycleId: string;
   quantityConsumed: number;
+  cost: number;
+}
+
+export interface UpdateGasConsumptionData {
+  quantityConsumed: number;
+  cost: number;
+}
+
+export interface GasConsumptionCalculateCostParams {
+  farmId: string;
+  quantity: number;
+}
+
+export interface GasConsumptionCalculateCostResponse {
   cost: number;
 }

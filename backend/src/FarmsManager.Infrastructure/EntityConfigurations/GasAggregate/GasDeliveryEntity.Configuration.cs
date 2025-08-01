@@ -15,6 +15,5 @@ public class GasDeliveryEntityConfiguration : BaseConfiguration<GasDeliveryEntit
         builder.HasOne(t => t.GasContractor).WithMany().HasForeignKey(t => t.GasContractorId);
 
         builder.Property(t => t.FilePath).IsRequired(false);
-        builder.Property(t => t.FilePath).IsRequired(false);
     }
 }

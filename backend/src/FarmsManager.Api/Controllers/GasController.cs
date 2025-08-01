@@ -1,7 +1,8 @@
 ﻿using FarmsManager.Api.Controllers.Base;
-using FarmsManager.Application.Commands.Gas;
+using FarmsManager.Application.Commands.Gas.Deliveries;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Queries.Gas;
+using FarmsManager.Application.Queries.Gas.Consumptions;
 using FarmsManager.Application.Queries.Gas.Deliveries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -113,4 +114,50 @@ public class GasController(IMediator mediator) : BaseController
     {
         return Ok(await mediator.Send(new DeleteGasDeliveryCommand(gasDeliveryId)));
     }
+
+    /// <summary>
+    /// Zwraca słownik filtrów dla zużycia gazu
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet("consumptions/dictionary")]
+    [ProducesResponseType(typeof(BaseResponse<GetGasConsumptionsDictionaryQueryResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetGasConsumptionsDictionary()
+    {
+        return Ok(await mediator.Send(new GetGasConsumptionsDictionaryQuery()));
+    }
+
+    /// <summary>
+    /// Zwraca zużycia gazu
+    /// </summary>
+    /// <param name="filters"></param>
+    /// <returns></returns>
+    [HttpGet("consumptions")]
+    [ProducesResponseType(typeof(BaseResponse<GetGasDeliveriesQueryResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetGasConsumptions([FromQuery] GetGasDeliveriesQueryFilters filters)
+    {
+        return Ok(await mediator.Send(new GetGasDeliveriesQuery(filters)));
+    }
+
+    /// <summary>
+    /// Zwraca koszt użytego gazu
+    /// </summary>
+    /// <param name="query"></param>
+    /// <returns></returns>
+    [HttpGet("consumptions/calculate-cost")]
+    [ProducesResponseType(typeof(BaseResponse<CalculateCostForConsumptionQueryResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> CalculateCostForConsumption([FromQuery] CalculateCostForConsumptionQuery query)
+    {
+        return Ok(await mediator.Send(query));
+    }
+
+    // [HttpPost("consumptions/add")]
+    // [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    // [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    // public async Task<IActionResult> AddGasConsumption()
+    // {
+    //     
+    // }
 }

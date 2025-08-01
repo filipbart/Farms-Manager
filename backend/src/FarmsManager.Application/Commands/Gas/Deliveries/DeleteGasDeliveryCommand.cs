@@ -7,7 +7,7 @@ using FarmsManager.Domain.Exceptions;
 using FarmsManager.Shared.Extensions;
 using MediatR;
 
-namespace FarmsManager.Application.Commands.Gas;
+namespace FarmsManager.Application.Commands.Gas.Deliveries;
 
 public record DeleteGasDeliveryCommand(Guid Id) : IRequest<EmptyBaseResponse>;
 

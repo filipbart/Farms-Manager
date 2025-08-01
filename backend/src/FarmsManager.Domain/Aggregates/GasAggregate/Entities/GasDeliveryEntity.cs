@@ -15,11 +15,22 @@ public class GasDeliveryEntity : Entity
     public string Comment { get; protected internal set; }
     public string FilePath { get; protected internal set; }
 
+    public decimal UsedQuantity { get; private set; }
 
     public virtual FarmEntity Farm { get; set; }
     public virtual GasContractorEntity GasContractor { get; set; }
 
     public void SetFilePath(string filePath) => FilePath = filePath;
+
+    public void AddUsedQuantity(decimal quantity)
+    {
+        if (quantity > Quantity - UsedQuantity)
+        {
+            throw new Exception("Próba zużycia większej ilości gazu niż dostępna w dostawie.");
+        }
+
+        UsedQuantity += quantity;
+    }
 
     public static GasDeliveryEntity CreateNew(
         Guid farmId,

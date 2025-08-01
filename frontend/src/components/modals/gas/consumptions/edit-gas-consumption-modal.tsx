@@ -4,7 +4,6 @@ import {
   Grid,
   DialogActions,
   TextField,
-  MenuItem,
   Button,
 } from "@mui/material";
 import { useState, useEffect } from "react";
@@ -15,25 +14,26 @@ import { MdSave } from "react-icons/md";
 import LoadingTextField from "../../../common/loading-textfield";
 import LoadingButton from "../../../common/loading-button";
 import AppDialog from "../../../common/app-dialog";
-import { useFarms } from "../../../../hooks/useFarms";
-import { useLatestCycle } from "../../../../hooks/useLatestCycle";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
-import type { AddGasConsumptionData } from "../../../../models/gas/gas-consumptions";
 import { GasService } from "../../../../services/gas-service";
+import type {
+  GasConsumptionListModel,
+  UpdateGasConsumptionData,
+} from "../../../../models/gas/gas-consumptions";
 
-interface AddGasConsumptionModalProps {
+interface EditGasConsumptionModalProps {
   open: boolean;
   onClose: () => void;
   onSave: () => void;
+  gasConsumption: GasConsumptionListModel | null;
 }
 
-const AddGasConsumptionModal: React.FC<AddGasConsumptionModalProps> = ({
+const EditGasConsumptionModal: React.FC<EditGasConsumptionModalProps> = ({
   open,
   onClose,
   onSave,
+  gasConsumption,
 }) => {
-  const { farms, loadingFarms, fetchFarms } = useFarms();
-  const { loadLatestCycle, loadingCycle } = useLatestCycle();
   const [loading, setLoading] = useState(false);
   const [isCalculatingCost, setIsCalculatingCost] = useState(false);
 
@@ -43,27 +43,27 @@ const AddGasConsumptionModal: React.FC<AddGasConsumptionModalProps> = ({
     formState: { errors },
     reset,
     setValue,
-    setError,
-    clearErrors,
     watch,
-  } = useForm<AddGasConsumptionData & { cycleDisplay: string }>();
+  } = useForm<UpdateGasConsumptionData>();
 
-  const farmId = watch("farmId");
   const quantityConsumed = watch("quantityConsumed");
 
   useEffect(() => {
-    if (open) {
-      fetchFarms();
+    if (gasConsumption) {
+      reset({
+        quantityConsumed: gasConsumption.quantityConsumed,
+        cost: gasConsumption.cost,
+      });
     }
-  }, [open, fetchFarms]);
+  }, [gasConsumption, reset]);
 
   useEffect(() => {
     const calculateCost = async () => {
-      if (farmId && quantityConsumed > 0) {
+      if (gasConsumption?.farmId && quantityConsumed > 0) {
         setIsCalculatingCost(true);
         try {
           const response = await GasService.calculateCost({
-            farmId,
+            farmId: gasConsumption.farmId,
             quantity: quantityConsumed,
           });
           if (response.success && response.responseData) {
@@ -83,81 +83,49 @@ const AddGasConsumptionModal: React.FC<AddGasConsumptionModalProps> = ({
     }, 500);
 
     return () => clearTimeout(debounceTimeout);
-  }, [farmId, quantityConsumed, setValue]);
-
-  const handleFarmChange = async (farmId: string) => {
-    setValue("cycleId", "");
-    setValue("cycleDisplay", "");
-    clearErrors("cycleId");
-
-    const cycle = await loadLatestCycle(farmId);
-    if (cycle) {
-      setValue("cycleId", cycle.id);
-      setValue("cycleDisplay", `${cycle.identifier}/${cycle.year}`);
-      clearErrors("cycleId");
-    } else {
-      setError("cycleId", {
-        type: "manual",
-        message: "Brak aktywnego cyklu dla wybranej fermy",
-      });
-    }
-  };
+  }, [quantityConsumed, gasConsumption, setValue]);
 
   const handleClose = () => {
     reset();
     onClose();
   };
 
-  const handleSave = async (data: AddGasConsumptionData) => {
+  const handleSave = async (data: UpdateGasConsumptionData) => {
+    if (!gasConsumption) return;
     setLoading(true);
     await handleApiResponse(
-      () => GasService.addGasConsumption(data),
+      () => GasService.updateGasConsumption(gasConsumption.id, data),
       () => {
-        toast.success("Pomyślnie dodano wpis zużycia gazu");
+        toast.success("Pomyślnie zaktualizowano wpis zużycia gazu");
         handleClose();
         onSave();
       },
       undefined,
-      "Wystąpił błąd podczas dodawania wpisu"
+      "Wystąpił błąd podczas aktualizacji wpisu"
     );
     setLoading(false);
   };
 
   return (
     <AppDialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Dodaj wpis zużycia gazu</DialogTitle>
+      <DialogTitle>Edytuj wpis zużycia gazu</DialogTitle>
       <form onSubmit={handleSubmit(handleSave)}>
         <DialogContent>
           <Grid container spacing={2.5} sx={{ mt: 0.5 }}>
             <Grid size={{ xs: 12 }}>
-              <LoadingTextField
+              <TextField
                 label="Ferma"
-                select
+                value={gasConsumption?.farmName || ""}
+                InputProps={{ readOnly: true }}
                 fullWidth
-                loading={loadingFarms}
-                error={!!errors.farmId}
-                helperText={errors.farmId?.message}
-                {...register("farmId", {
-                  required: "Farma jest wymagana",
-                  onChange: (e) => handleFarmChange(e.target.value),
-                })}
-              >
-                {farms.map((farm) => (
-                  <MenuItem key={farm.id} value={farm.id}>
-                    {farm.name}
-                  </MenuItem>
-                ))}
-              </LoadingTextField>
+              />
             </Grid>
 
             <Grid size={{ xs: 12 }}>
-              <LoadingTextField
-                loading={loadingCycle}
+              <TextField
                 label="Cykl"
-                value={watch("cycleDisplay") || ""}
-                slotProps={{ input: { readOnly: true } }}
-                error={!!errors.cycleId}
-                helperText={errors.cycleId?.message}
+                value={gasConsumption?.cycleText || ""}
+                InputProps={{ readOnly: true }}
                 fullWidth
               />
             </Grid>
@@ -185,7 +153,7 @@ const AddGasConsumptionModal: React.FC<AddGasConsumptionModalProps> = ({
                 type="number"
                 loading={isCalculatingCost}
                 value={String(watch("cost") ?? "")}
-                slotProps={{ input: { readOnly: true } }}
+                InputProps={{ readOnly: true }}
                 error={!!errors.cost}
                 helperText={errors.cost?.message}
                 {...register("cost", {
@@ -210,7 +178,7 @@ const AddGasConsumptionModal: React.FC<AddGasConsumptionModalProps> = ({
             disabled={loading || isCalculatingCost}
             loading={loading}
           >
-            Zapisz
+            Zapisz zmiany
           </LoadingButton>
         </DialogActions>
       </form>
@@ -218,4 +186,4 @@ const AddGasConsumptionModal: React.FC<AddGasConsumptionModalProps> = ({
   );
 };
 
-export default AddGasConsumptionModal;
+export default EditGasConsumptionModal;

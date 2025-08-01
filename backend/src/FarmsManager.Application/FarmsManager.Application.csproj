@@ -28,4 +28,8 @@
       <ProjectReference Include="..\FarmsManager.Shared\FarmsManager.Shared.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Commands\Gas\Consumptions\" />
+    </ItemGroup>
+
 </Project>

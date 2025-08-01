@@ -14,7 +14,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 
-namespace FarmsManager.Application.Commands.Gas;
+namespace FarmsManager.Application.Commands.Gas.Deliveries;
 
 public record UploadGasDeliveriesInvoicesDto
 {

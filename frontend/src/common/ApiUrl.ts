@@ -156,4 +156,13 @@ export default class ApiUrl {
     this.GasDeliveries + "/delete/" + id;
   public static UploadGasInvoices = this.GasDeliveries + "/upload";
   public static SaveGasInvoiceData = this.GasDeliveries + "/save-invoice";
+  public static GasConsumptions = this.Gas + "/consumptions";
+  public static GetGasConsumptionsDictionary =
+    this.GasConsumptions + "/dictionary";
+  public static AddGasConsumption = this.GasConsumptions + "/add";
+  public static UpdateGasConsumption = (id: string) =>
+    this.GasConsumptions + "/update/" + id;
+  public static DeleteGasConsumption = (id: string) =>
+    this.GasConsumptions + "/delete/" + id;
+  public static CalculateGasCost = this.GasConsumptions + "/calculate-cost";
 }

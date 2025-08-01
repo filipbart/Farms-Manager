@@ -8,7 +8,7 @@ using FarmsManager.Domain.Aggregates.GasAggregate.Entities;
 using FarmsManager.Domain.Aggregates.GasAggregate.Interfaces;
 using MediatR;
 
-namespace FarmsManager.Application.Queries.Gas;
+namespace FarmsManager.Application.Queries.Gas.Deliveries;
 
 public record GetGasDeliveriesDictionaryQueryResponse
 {

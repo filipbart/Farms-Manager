@@ -20,6 +20,7 @@ import { GasService } from "../../../services/gas-service";
 import { getGasConsumptionsColumns } from "./gas-consumptions-columns";
 import { getGasConsumptionsFiltersConfig } from "./filter-config.gas-consumptions";
 import AddGasConsumptionModal from "../../../components/modals/gas/consumptions/add-gas-consumption-modal";
+import EditGasConsumptionModal from "../../../components/modals/gas/consumptions/edit-gas-consumption-modal";
 
 const GasConsumptionsPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -71,7 +72,7 @@ const GasConsumptionsPage: React.FC = () => {
     const fetchDictionaries = async () => {
       try {
         await handleApiResponse(
-          () => GasService.getDictionaries(),
+          () => GasService.getConsumptionsDictionaries(),
           (data) => setDictionary(data.responseData),
           undefined,
           "Błąd podczas pobierania słowników filtrów"
@@ -194,7 +195,7 @@ const GasConsumptionsPage: React.FC = () => {
         />
       </Box>
 
-      {/* <EditGasConsumptionModal
+      <EditGasConsumptionModal
         open={isEditModalOpen}
         onClose={() => {
           setIsEditModalOpen(false);
@@ -206,7 +207,7 @@ const GasConsumptionsPage: React.FC = () => {
           dispatch({ type: "setMultiple", payload: { page: filters.page } });
         }}
         gasConsumption={selectedGasConsumption}
-      /> */}
+      />
 
       <AddGasConsumptionModal
         open={openAddModal}

@@ -8,9 +8,20 @@ import type {
   SaveGasInvoiceData,
   UpdateGasDeliveryData,
 } from "../models/gas/gas-deliveries";
-import type { GasDeliveriesDictionary } from "../models/gas/gas-dictionaries";
+import type {
+  GasConsumptionsDictionary,
+  GasDeliveriesDictionary,
+} from "../models/gas/gas-dictionaries";
 import type { GasDeliveriesFilterPaginationModel } from "../models/gas/gas-deliveries-filters";
 import AxiosWrapper from "../utils/axios/wrapper";
+import type { GasConsumptionsFilterPaginationModel } from "../models/gas/gas-consumptions-filters";
+import type {
+  AddGasConsumptionData,
+  GasConsumptionCalculateCostParams,
+  GasConsumptionCalculateCostResponse,
+  GasConsumptionListModel,
+  UpdateGasConsumptionData,
+} from "../models/gas/gas-consumptions";
 
 export interface UploadGasInvoicesResponse {
   files: DraftGasInvoice[];
@@ -86,5 +97,54 @@ export class GasService {
 
   public static async saveGasInvoice(invoiceData: SaveGasInvoiceData) {
     return await AxiosWrapper.post(ApiUrl.SaveGasInvoiceData, invoiceData);
+  }
+
+  public static async getConsumptionsDictionaries() {
+    return await AxiosWrapper.get<GasConsumptionsDictionary>(
+      ApiUrl.GetGasConsumptionsDictionary
+    );
+  }
+
+  public static async getGasConsumptions(
+    filters: GasConsumptionsFilterPaginationModel
+  ) {
+    return await AxiosWrapper.get<PaginateModel<GasConsumptionListModel>>(
+      ApiUrl.GasConsumptions,
+      { ...filters }
+    );
+  }
+
+  /**
+   * Oblicza koszt zużycia gazu
+   */
+  public static async calculateCost(params: GasConsumptionCalculateCostParams) {
+    return await AxiosWrapper.get<GasConsumptionCalculateCostResponse>(
+      ApiUrl.CalculateGasCost,
+      params
+    );
+  }
+
+  /**
+   * Dodaje nowy wpis zużycia gazu
+   */
+  public static async addGasConsumption(data: AddGasConsumptionData) {
+    return await AxiosWrapper.post(ApiUrl.AddGasConsumption, data);
+  }
+
+  /**
+   * Aktualizuje istniejący wpis zużycia gazu
+   */
+  public static async updateGasConsumption(
+    id: string,
+    payload: UpdateGasConsumptionData
+  ) {
+    return await AxiosWrapper.patch(ApiUrl.UpdateGasConsumption(id), payload);
+  }
+
+  /**
+   * Usuwa (lub anuluje) istniejący wpis zużycia gazu
+   */
+  public static async deleteGasConsumption(id: string) {
+    return await AxiosWrapper.delete(ApiUrl.DeleteGasConsumption(id));
   }
 }
