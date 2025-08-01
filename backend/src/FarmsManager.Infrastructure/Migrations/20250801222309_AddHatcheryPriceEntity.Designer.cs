@@ -4,6 +4,7 @@ using FarmsManager.Domain.Aggregates.UserAggregate.Models;
 using FarmsManager.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FarmsManager.Infrastructure.Migrations
 {
     [DbContext(typeof(FarmsManagerContext))]
-    partial class FarmsManagerContextModelSnapshot : ModelSnapshot
+    [Migration("20250801222309_AddHatcheryPriceEntity")]
+    partial class AddHatcheryPriceEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1383,9 +1386,9 @@ namespace FarmsManager.Infrastructure.Migrations
                     b.HasKey("Id")
                         .HasName("pk_hatchery_price");
 
-                    b.HasIndex("HatcheryId", "Date")
+                    b.HasIndex("HatcheryId", "Price", "Date")
                         .IsUnique()
-                        .HasDatabaseName("ix_hatchery_price_hatchery_id_date")
+                        .HasDatabaseName("ix_hatchery_price_hatchery_id_price_date")
                         .HasFilter("date_deleted_utc IS NULL");
 
                     b.ToTable("hatchery_price", "farms_manager");

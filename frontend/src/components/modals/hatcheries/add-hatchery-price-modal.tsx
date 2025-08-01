@@ -103,7 +103,7 @@ const AddHatcheryPriceModal: React.FC<AddHatcheryPriceModalProps> = ({
           comment: form.comment,
         }),
       () => {
-        toast.success("Dodano nową cenę pisklęcia");
+        toast.success("Dodano nową cenę");
         onSave();
         handleClose();
       },

@@ -107,7 +107,7 @@ const EditHatcheryPriceModal: React.FC<EditHatcheryPriceModalProps> = ({
           comment: form.comment,
         }),
       () => {
-        toast.success("Cena pisklęcia została zaktualizowana");
+        toast.success("Cena została zaktualizowana");
         onSave();
         handleClose();
       },
@@ -125,7 +125,7 @@ const EditHatcheryPriceModal: React.FC<EditHatcheryPriceModalProps> = ({
 
   return (
     <AppDialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
-      <DialogTitle>Edytuj cenę pisklęcia</DialogTitle>
+      <DialogTitle>Edytuj cenę</DialogTitle>
       <DialogContent>
         <Box display="flex" flexDirection="column" gap={2.5} mt={1}>
           <TextField
