@@ -196,6 +196,7 @@ const AddProductionDataWeighingModal: React.FC<
               select
               label="Wylęgarnia"
               fullWidth
+              value={watch("hatcheryId") || ""}
               error={!!errors.hatcheryId}
               helperText={errors.hatcheryId?.message}
               {...register("hatcheryId", {
@@ -212,7 +213,7 @@ const AddProductionDataWeighingModal: React.FC<
             <TextField
               label="Doba ważenia"
               type="number"
-              InputProps={{ inputProps: { min: 0 } }}
+              slotProps={{ htmlInput: { min: 0 } }}
               error={!!errors.day}
               helperText={errors.day?.message}
               {...register("day", {
@@ -225,7 +226,7 @@ const AddProductionDataWeighingModal: React.FC<
             <TextField
               label="Średnia masa ciała [g]"
               type="number"
-              InputProps={{ inputProps: { min: 0 } }}
+              slotProps={{ htmlInput: { min: 0 } }}
               error={!!errors.weight}
               helperText={errors.weight?.message}
               {...register("weight", {

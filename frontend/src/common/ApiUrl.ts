@@ -129,6 +129,8 @@ export default class ApiUrl {
     this.ProductionDataTransferFeed + "/delete/" + id;
 
   public static ProductionDataWeighings = this.ProductionData + "/weighings";
+  public static ProductionDataWeighingsDictionary =
+    this.ProductionDataWeighings + "/dictionary";
   public static AddProductionDataWeighing =
     this.ProductionDataWeighings + "/add";
   public static UpdateProductionDataWeighing = (id: string) =>

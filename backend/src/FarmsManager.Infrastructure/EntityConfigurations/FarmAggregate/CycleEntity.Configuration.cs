@@ -1,4 +1,5 @@
 ﻿using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace FarmsManager.Infrastructure.EntityConfigurations.FarmAggregate;
@@ -11,6 +12,6 @@ public class CycleEntityConfiguration : BaseConfiguration<CycleEntity>
 
         builder.HasKey(t => t.Id);
 
-        builder.HasIndex(t => new { t.Identifier, t.Year, t.FarmId }).IsUnique();
+        builder.HasIndex(t => new { t.Identifier, t.Year, t.FarmId }).IsUnique().HasFilter("date_deleted_utc IS NULL");
     }
 }

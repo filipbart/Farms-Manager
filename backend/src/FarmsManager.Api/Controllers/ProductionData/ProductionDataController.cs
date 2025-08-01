@@ -10,7 +10,7 @@ namespace FarmsManager.Api.Controllers.ProductionData;
 public class ProductionDataController(IMediator mediator) : BaseController
 {
     /// <summary>
-    /// Zwraca słownik filtrów dla Upadki i wybrakowania
+    /// Zwraca słownik filtrów dla stron
     /// </summary>
     /// <returns></returns>
     [HttpGet("dictionary")]

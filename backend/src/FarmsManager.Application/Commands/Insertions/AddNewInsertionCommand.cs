@@ -1,6 +1,7 @@
 ﻿using Ardalis.Specification;
 using FarmsManager.Application.Commands.Farms;
 using FarmsManager.Application.Commands.Hatcheries;
+using FarmsManager.Application.Commands.ProductionData.Weighings;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications;
@@ -9,6 +10,8 @@ using FarmsManager.Application.Specifications.Farms;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.HatcheryAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.ProductionDataAggregate.Entities;
+using FarmsManager.Domain.Aggregates.ProductionDataAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
 using FluentValidation;
 using MediatR;
@@ -49,10 +52,11 @@ public class
     private readonly IInsertionRepository _insertionRepository;
     private readonly IHenhouseRepository _henhouseRepository;
     private readonly IHatcheryRepository _hatcheryRepository;
+    private readonly IProductionDataWeighingRepository _productionDataWeighingRepository;
 
     public AddNewInsertionCommandHandler(IUserDataResolver userDataResolver, IInsertionRepository insertionRepository,
         IHenhouseRepository henhouseRepository, IFarmRepository farmRepository, ICycleRepository cycleRepository,
-        IHatcheryRepository hatcheryRepository)
+        IHatcheryRepository hatcheryRepository, IProductionDataWeighingRepository productionDataWeighingRepository)
     {
         _userDataResolver = userDataResolver;
         _insertionRepository = insertionRepository;
@@ -60,6 +64,7 @@ public class
         _farmRepository = farmRepository;
         _cycleRepository = cycleRepository;
         _hatcheryRepository = hatcheryRepository;
+        _productionDataWeighingRepository = productionDataWeighingRepository;
     }
 
     public async Task<BaseResponse<AddNewInsertionCommandResponse>> Handle(AddNewInsertionCommand request,
@@ -113,6 +118,23 @@ public class
             var newInsertion = InsertionEntity.CreateNew(internalGroupId, farm.Id, cycle.Id, henhouse.Id, hatchery.Id,
                 request.InsertionDate, entry.Quantity, entry.BodyWeight, userId);
             newInsertions.Add(newInsertion);
+            var existingWeighing = await _productionDataWeighingRepository.FirstOrDefaultAsync(
+                new GetWeighingByKeysSpec(farm.Id, cycle.Id, henhouse.Id, hatchery.Id), ct);
+
+            if (existingWeighing is null)
+            {
+                var newWeighing = ProductionDataWeighingEntity.CreateNew(
+                    farm.Id,
+                    henhouse.Id,
+                    cycle.Id,
+                    hatchery.Id,
+                    0,
+                    entry.BodyWeight,
+                    userId
+                );
+
+                await _productionDataWeighingRepository.AddAsync(newWeighing, ct);
+            }
         }
 
         if (newInsertions.Count != 0)

@@ -1,6 +1,5 @@
 import ApiUrl from "../../common/ApiUrl";
 import type { PaginateModel } from "../../common/interfaces/paginate";
-import type { ProductionDataFilterPaginationModel } from "../../models/production-data/production-data-filters";
 import type {
   AddWeighingData,
   GetHatcheryParams,
@@ -9,6 +8,10 @@ import type {
   ProductionDataWeighingListModel,
   UpdateWeighingData,
 } from "../../models/production-data/weighings";
+import type {
+  ProductionDataWeighingsDictionary,
+  ProductionDataWeighingsFilterPaginationModel,
+} from "../../models/production-data/weighings-filters";
 import AxiosWrapper from "../../utils/axios/wrapper";
 
 export class ProductionDataWeighingsService {
@@ -16,11 +19,20 @@ export class ProductionDataWeighingsService {
    * Pobiera listę wpisów o ważeniach
    */
   public static async getWeighings(
-    filters: ProductionDataFilterPaginationModel
+    filters: ProductionDataWeighingsFilterPaginationModel
   ) {
     return await AxiosWrapper.get<
       PaginateModel<ProductionDataWeighingListModel>
     >(ApiUrl.ProductionDataWeighings, { ...filters });
+  }
+
+  /**
+   * Pobiera słowniki potrzebne do filtrów
+   */
+  public static async getDictionaries() {
+    return await AxiosWrapper.get<ProductionDataWeighingsDictionary>(
+      ApiUrl.ProductionDataWeighingsDictionary
+    );
   }
 
   /**

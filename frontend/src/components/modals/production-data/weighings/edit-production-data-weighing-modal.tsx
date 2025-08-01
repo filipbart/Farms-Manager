@@ -37,9 +37,13 @@ const EditProductionDataWeighingModal: React.FC<
     handleSubmit,
     formState: { errors },
     reset,
+    watch,
+    setValue,
   } = useForm<UpdateWeighingData>();
 
   const [loading, setLoading] = useState(false);
+
+  const selectedWeighingNumber = watch("weighingNumber");
 
   useEffect(() => {
     if (weighing) {
@@ -50,6 +54,21 @@ const EditProductionDataWeighingModal: React.FC<
       });
     }
   }, [weighing, reset]);
+
+  useEffect(() => {
+    if (selectedWeighingNumber && weighing) {
+      const dayKey =
+        `weighing${selectedWeighingNumber}Day` as keyof ProductionDataWeighingListModel;
+      const weightKey =
+        `weighing${selectedWeighingNumber}Weight` as keyof ProductionDataWeighingListModel;
+
+      const currentDay = weighing[dayKey] as number | undefined;
+      const currentWeight = weighing[weightKey] as number | undefined;
+
+      setValue("day", currentDay || 0);
+      setValue("weight", currentWeight || 0);
+    }
+  }, [selectedWeighingNumber, weighing, setValue]);
 
   const handleSave = async (data: UpdateWeighingData) => {
     if (!weighing) return;
@@ -129,7 +148,8 @@ const EditProductionDataWeighingModal: React.FC<
             <TextField
               label="Doba ważenia"
               type="number"
-              InputProps={{ inputProps: { min: 0 } }}
+              value={watch("day") ?? ""}
+              slotProps={{ htmlInput: { min: 0 } }}
               error={!!errors.day}
               helperText={errors.day?.message}
               {...register("day", {
@@ -142,7 +162,8 @@ const EditProductionDataWeighingModal: React.FC<
             <TextField
               label="Średnia masa ciała [g]"
               type="number"
-              InputProps={{ inputProps: { min: 0 } }}
+              value={watch("weight") ?? ""}
+              slotProps={{ htmlInput: { min: 0 } }}
               error={!!errors.weight}
               helperText={errors.weight?.message}
               {...register("weight", {

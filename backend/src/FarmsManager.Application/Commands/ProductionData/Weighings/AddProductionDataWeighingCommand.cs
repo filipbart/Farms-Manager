@@ -104,6 +104,8 @@ public sealed class GetWeighingByKeysSpec : BaseSpecification<ProductionDataWeig
 {
     public GetWeighingByKeysSpec(Guid farmId, Guid cycleId, Guid henhouseId, Guid hatcheryId)
     {
+        EnsureExists();
+
         Query.Where(t =>
             t.FarmId == farmId && t.CycleId == cycleId && t.HenhouseId == henhouseId && t.HatcheryId == hatcheryId);
     }

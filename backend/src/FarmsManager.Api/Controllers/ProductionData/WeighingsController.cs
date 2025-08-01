@@ -17,9 +17,22 @@ public class WeighingsController(IMediator mediator) : BaseController
     [HttpGet]
     [ProducesResponseType(typeof(BaseResponse<GetProductionDataWeighingsQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetWeighings([FromQuery] ProductionDataQueryFilters filters)
+    public async Task<IActionResult> GetWeighings([FromQuery] GetProductionDataWeighingsQueryFilters filters)
     {
         return Ok(await mediator.Send(new GetProductionDataWeighingsQuery(filters)));
+    }
+    
+    /// <summary>
+    /// Zwraca słownik filtrów dla Upadki i wybrakowania
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet("dictionary")]
+    [ProducesResponseType(typeof(BaseResponse<GetProductionDataWeighingsDictionaryQueryResponse>),
+        StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetProductionDataDictionary()
+    {
+        return Ok(await mediator.Send(new GetProductionDataWeighingsDictionaryQuery()));
     }
 
     /// <summary>

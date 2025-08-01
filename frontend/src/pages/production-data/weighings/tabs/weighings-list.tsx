@@ -1,30 +1,30 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
-import { useEffect, useMemo, useReducer, useState } from "react";
+import { useReducer, useState, useMemo, useEffect } from "react";
 import { toast } from "react-toastify";
+import NoRowsOverlay from "../../../../components/datagrid/custom-norows";
+import CustomToolbar from "../../../../components/datagrid/custom-toolbar";
+import FiltersForm from "../../../../components/filters/filters-form";
+import AddProductionDataWeighingModal from "../../../../components/modals/production-data/weighings/add-production-data-weighing-modal";
+import EditProductionDataWeighingModal from "../../../../components/modals/production-data/weighings/edit-production-data-weighing-modal";
+import type { CycleDictModel } from "../../../../models/common/dictionaries";
 import type { ProductionDataWeighingListModel } from "../../../../models/production-data/weighings";
 import {
   filterReducer,
   initialFilters,
-  mapProductionDataOrderTypeToField,
-  ProductionDataOrderType,
-  type ProductionDataDictionary,
-} from "../../../../models/production-data/production-data-filters";
-import type { CycleDictModel } from "../../../../models/common/dictionaries";
-import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
-import { ProductionDataService } from "../../../../services/production-data/production-data-service";
-import { getWeighingsColumns } from "./weighings-columns";
-import { getProductionDataFiltersConfig } from "../../filter-config.production-data";
-import FiltersForm from "../../../../components/filters/filters-form";
-import CustomToolbar from "../../../../components/datagrid/custom-toolbar";
-import NoRowsOverlay from "../../../../components/datagrid/custom-norows";
+  mapProductionDataWeighingsOrderTypeToField,
+  ProductionDataWeighingsOrderType,
+  type ProductionDataWeighingsDictionary,
+} from "../../../../models/production-data/weighings-filters";
 import { ProductionDataWeighingsService } from "../../../../services/production-data/production-data-weighings-service";
-import AddProductionDataWeighingModal from "../../../../components/modals/production-data/weighings/add-production-data-weighing-modal";
-import EditProductionDataWeighingModal from "../../../../components/modals/production-data/weighings/edit-production-data-weighing-modal";
+import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
+import { getWeighingsColumns } from "./weighings-columns";
+import { getProductionDataWeighingsFiltersConfig } from "./filter-config.production-data-weighings";
 
 const ProductionDataWeighingsTab: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
-  const [dictionary, setDictionary] = useState<ProductionDataDictionary>();
+  const [dictionary, setDictionary] =
+    useState<ProductionDataWeighingsDictionary>();
   const [openModal, setOpenModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [weighings, setWeighings] = useState<ProductionDataWeighingListModel[]>(
@@ -55,7 +55,7 @@ const ProductionDataWeighingsTab: React.FC = () => {
     const fetchDictionaries = async () => {
       try {
         await handleApiResponse(
-          () => ProductionDataService.getDictionaries(),
+          () => ProductionDataWeighingsService.getDictionaries(),
           (data) => {
             setDictionary(data.responseData);
           },
@@ -143,7 +143,7 @@ const ProductionDataWeighingsTab: React.FC = () => {
       </Box>
 
       <FiltersForm
-        config={getProductionDataFiltersConfig(
+        config={getProductionDataWeighingsFiltersConfig(
           dictionary,
           uniqueCycles,
           filters
@@ -199,9 +199,12 @@ const ProductionDataWeighingsTab: React.FC = () => {
           onSortModelChange={(model) => {
             if (model.length > 0) {
               const sortField = model[0].field;
-              const foundOrderBy = Object.values(ProductionDataOrderType).find(
+              const foundOrderBy = Object.values(
+                ProductionDataWeighingsOrderType
+              ).find(
                 (orderType) =>
-                  mapProductionDataOrderTypeToField(orderType) === sortField
+                  mapProductionDataWeighingsOrderTypeToField(orderType) ===
+                  sortField
               );
               dispatch({
                 type: "setMultiple",

@@ -194,7 +194,7 @@ const GasConsumptionsPage: React.FC = () => {
         />
       </Box>
 
-      <EditGasConsumptionModal
+      {/* <EditGasConsumptionModal
         open={isEditModalOpen}
         onClose={() => {
           setIsEditModalOpen(false);
@@ -206,7 +206,7 @@ const GasConsumptionsPage: React.FC = () => {
           dispatch({ type: "setMultiple", payload: { page: filters.page } });
         }}
         gasConsumption={selectedGasConsumption}
-      />
+      /> */}
 
       <AddGasConsumptionModal
         open={openAddModal}

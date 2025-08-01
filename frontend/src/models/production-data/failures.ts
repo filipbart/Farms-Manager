@@ -10,8 +10,12 @@ export interface ProductionDataFailureListModel {
 
 export interface AddProductionDataFailureData {
   farmId: string;
-  henhouseId: string;
   cycleId: string;
+  failureEntries: ProductionDataFailureEntry[];
+}
+
+export interface ProductionDataFailureEntry {
+  henhouseId: string;
   deadCount: number;
   defectiveCount: number;
 }

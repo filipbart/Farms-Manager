@@ -10,5 +10,6 @@ public sealed class HenhousesByFarmIdSpec : BaseSpecification<HenhouseEntity>
         EnsureExists();
 
         Query.Where(t => t.FarmId == farmId);
+        Query.OrderBy(t => t.Name);
     }
 }

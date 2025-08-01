@@ -1,5 +1,4 @@
 ﻿using Ardalis.Specification;
-using FarmsManager.Application.Models.ProductionData;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.ProductionDataAggregate.Entities;
 
@@ -7,10 +6,15 @@ namespace FarmsManager.Application.Queries.ProductionData.Weighings;
 
 public sealed class GetAllProductionDataWeighingsSpec : BaseSpecification<ProductionDataWeighingEntity>
 {
-    public GetAllProductionDataWeighingsSpec(ProductionDataQueryFilters filters, bool withPagination)
+    public GetAllProductionDataWeighingsSpec(GetProductionDataWeighingsQueryFilters filters, bool withPagination)
     {
         EnsureExists();
         DisableTracking();
+
+        Query.Include(t => t.Farm);
+        Query.Include(t => t.Henhouse);
+        Query.Include(t => t.Cycle);
+        Query.Include(t => t.Hatchery);
 
         PopulateFilters(filters);
         ApplyOrdering(filters);
@@ -20,7 +24,7 @@ public sealed class GetAllProductionDataWeighingsSpec : BaseSpecification<Produc
         }
     }
 
-    private void PopulateFilters(ProductionDataQueryFilters filters)
+    private void PopulateFilters(GetProductionDataWeighingsQueryFilters filters)
     {
         if (filters.FarmIds is not null && filters.FarmIds.Any())
         {
@@ -30,6 +34,11 @@ public sealed class GetAllProductionDataWeighingsSpec : BaseSpecification<Produc
         if (filters.HenhouseIds is not null && filters.HenhouseIds.Any())
         {
             Query.Where(t => filters.HenhouseIds.Contains(t.HenhouseId));
+        }
+
+        if (filters.HatcheryIds is not null && filters.HatcheryIds.Any())
+        {
+            Query.Where(t => filters.HatcheryIds.Contains(t.HatcheryId));
         }
 
         if (filters.Cycles is not null && filters.Cycles.Any())
@@ -57,26 +66,24 @@ public sealed class GetAllProductionDataWeighingsSpec : BaseSpecification<Produc
         }
     }
 
-    private void ApplyOrdering(ProductionDataQueryFilters filters)
+    private void ApplyOrdering(GetProductionDataWeighingsQueryFilters filters)
     {
         var isDescending = filters.IsDescending;
         switch (filters.OrderBy)
         {
-            case ProductionDataOrderBy.Cycle:
+            case ProductionDataWeighingsOrderBy.Cycle:
                 if (isDescending)
                 {
-                    Query.OrderByDescending(t => t.Cycle.Identifier)
-                        .ThenByDescending(t => t.Cycle.Year);
+                    Query.OrderByDescending(t => t.Cycle.Identifier).ThenByDescending(t => t.Cycle.Year);
                 }
                 else
                 {
-                    Query.OrderBy(t => t.Cycle.Year)
-                        .ThenBy(t => t.Cycle.Identifier);
+                    Query.OrderBy(t => t.Cycle.Year).ThenBy(t => t.Cycle.Identifier);
                 }
 
                 break;
 
-            case ProductionDataOrderBy.Farm:
+            case ProductionDataWeighingsOrderBy.Farm:
                 if (isDescending)
                 {
                     Query.OrderByDescending(t => t.Farm.Name);
@@ -88,7 +95,7 @@ public sealed class GetAllProductionDataWeighingsSpec : BaseSpecification<Produc
 
                 break;
 
-            case ProductionDataOrderBy.Henhouse:
+            case ProductionDataWeighingsOrderBy.Henhouse:
                 if (isDescending)
                 {
                     Query.OrderByDescending(t => t.Henhouse.Name);
@@ -100,7 +107,79 @@ public sealed class GetAllProductionDataWeighingsSpec : BaseSpecification<Produc
 
                 break;
 
-            case ProductionDataOrderBy.DateCreatedUtc:
+            case ProductionDataWeighingsOrderBy.Hatchery:
+                if (isDescending)
+                {
+                    Query.OrderByDescending(t => t.Hatchery.Name);
+                }
+                else
+                {
+                    Query.OrderBy(t => t.Hatchery.Name);
+                }
+
+                break;
+
+            case ProductionDataWeighingsOrderBy.Weighing1Weight:
+                if (isDescending)
+                {
+                    Query.OrderByDescending(t => t.Weighing1Weight);
+                }
+                else
+                {
+                    Query.OrderBy(t => t.Weighing1Weight);
+                }
+
+                break;
+
+            case ProductionDataWeighingsOrderBy.Weighing2Weight:
+                if (isDescending)
+                {
+                    Query.OrderByDescending(t => t.Weighing2Weight);
+                }
+                else
+                {
+                    Query.OrderBy(t => t.Weighing2Weight);
+                }
+
+                break;
+
+            case ProductionDataWeighingsOrderBy.Weighing3Weight:
+                if (isDescending)
+                {
+                    Query.OrderByDescending(t => t.Weighing3Weight);
+                }
+                else
+                {
+                    Query.OrderBy(t => t.Weighing3Weight);
+                }
+
+                break;
+
+            case ProductionDataWeighingsOrderBy.Weighing4Weight:
+                if (isDescending)
+                {
+                    Query.OrderByDescending(t => t.Weighing4Weight);
+                }
+                else
+                {
+                    Query.OrderBy(t => t.Weighing4Weight);
+                }
+
+                break;
+
+            case ProductionDataWeighingsOrderBy.Weighing5Weight:
+                if (isDescending)
+                {
+                    Query.OrderByDescending(t => t.Weighing5Weight);
+                }
+                else
+                {
+                    Query.OrderBy(t => t.Weighing5Weight);
+                }
+
+                break;
+
+            case ProductionDataWeighingsOrderBy.DateCreatedUtc:
             default:
                 if (isDescending)
                 {
