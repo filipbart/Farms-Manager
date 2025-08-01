@@ -23,9 +23,6 @@ public class UpdateHatcheryPriceCommandValidator : AbstractValidator<UpdateHatch
 {
     public UpdateHatcheryPriceCommandValidator()
     {
-        RuleFor(x => x.Id)
-            .NotEmpty().WithMessage("ID ceny jest wymagane.");
-
         RuleFor(x => x.Data.Price)
             .GreaterThan(0).WithMessage("Cena musi być większa od zera.");
 

@@ -112,4 +112,56 @@ public class HatcheriesController(IMediator mediator) : BaseController
     {
         return Ok(await mediator.Send(new DeleteHatcheryPriceCommand(hatcheryPriceId)));
     }
+
+    /// <summary>
+    /// Zwraca notatki 
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet("notes")]
+    [ProducesResponseType(typeof(BaseResponse<GetHatcheryNotesQueryResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetHatcheryNotes()
+    {
+        return Ok(await mediator.Send(new GetHatcheryNotesQuery()));
+    }
+
+    /// <summary>
+    /// Dodaje notatkę
+    /// </summary>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    [HttpPost("notes/add")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> AddHatcheryNote(HatcheryNoteData data)
+    {
+        return Ok(await mediator.Send(new AddHatcheryNoteCommand(data)));
+    }
+
+    /// <summary>
+    /// Aktulizuję notatkę
+    /// </summary>
+    /// <param name="hatcheryNoteId"></param>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    [HttpPatch("notes/update/{hatcheryNoteId:guid}")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> UpdateHatcheryNote([FromRoute] Guid hatcheryNoteId, HatcheryNoteData data)
+    {
+        return Ok(await mediator.Send(new UpdateHatcheryNoteCommand(hatcheryNoteId, data)));
+    }
+
+    /// <summary>
+    /// Usuwa notatkę
+    /// </summary>
+    /// <param name="hatcheryNoteId"></param>
+    /// <returns></returns>
+    [HttpDelete("notes/delete/{hatcheryNoteId:guid}")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> DeleteHatcheryNote([FromRoute] Guid hatcheryNoteId)
+    {
+        return Ok(await mediator.Send(new DeleteHatcheryNoteCommand(hatcheryNoteId)));
+    }
 }
