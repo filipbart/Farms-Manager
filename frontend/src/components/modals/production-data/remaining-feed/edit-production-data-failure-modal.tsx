@@ -127,7 +127,7 @@ const EditProductionDataRemainingFeedModal: React.FC<
             helperText={errors.remainingTonnage}
             fullWidth
             type="number"
-            InputProps={{ inputProps: { min: 0, step: "0.01" } }}
+            slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
           />
 
           <TextField
@@ -143,7 +143,7 @@ const EditProductionDataRemainingFeedModal: React.FC<
             helperText={errors.remainingValue}
             fullWidth
             type="number"
-            InputProps={{ inputProps: { min: 0, step: "0.01" } }}
+            slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
           />
         </Box>
       </DialogContent>

@@ -395,7 +395,7 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
                     <TextField
                       label="Ilość"
                       type="number"
-                      InputProps={{ inputProps: { min: 0, step: "0.01" } }}
+                      slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
                       error={!!errors.quantity}
                       helperText={errors.quantity?.message}
                       {...register("quantity", {
@@ -410,7 +410,8 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
                     <TextField
                       label="Cena jednostkowa [zł]"
                       type="number"
-                      InputProps={{ inputProps: { min: 0, step: "0.01" } }}
+                      slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
+                      slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
                       error={!!errors.unitPrice}
                       helperText={errors.unitPrice?.message}
                       {...register("unitPrice", {
@@ -483,7 +484,7 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
                     <TextField
                       label="Wartość brutto [zł]"
                       type="number"
-                      InputProps={{ inputProps: { min: 0, step: "0.01" } }}
+                      slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
                       error={!!errors.invoiceTotal}
                       helperText={errors.invoiceTotal?.message}
                       {...register("invoiceTotal", {
@@ -498,7 +499,7 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
                     <TextField
                       label="Wartość netto [zł]"
                       type="number"
-                      InputProps={{ inputProps: { min: 0, step: "0.01" } }}
+                      slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
                       error={!!errors.subTotal}
                       helperText={errors.subTotal?.message}
                       {...register("subTotal", {
@@ -513,7 +514,7 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
                     <TextField
                       label="VAT [zł]"
                       type="number"
-                      InputProps={{ inputProps: { min: 0, step: "0.01" } }}
+                      slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
                       error={!!errors.vatAmount}
                       helperText={errors.vatAmount?.message}
                       {...register("vatAmount", {
