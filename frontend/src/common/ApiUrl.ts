@@ -182,7 +182,14 @@ export default class ApiUrl {
 
   public static Employees = this.BaseUrl + "employees";
   public static EmployeesDictionary = this.Employees + "/dictionary";
+  public static EmployeeDetails = (id: string) => this.Employees + "/" + id;
   public static AddEmployee = this.Employees + "/add";
+  public static UpdateEmployee = (id: string) =>
+    this.EmployeeDetails(id) + "/update";
   public static DeleteEmployee = (id: string) =>
-    this.Employees + "/" + id + "/delete";
+    this.EmployeeDetails(id) + "/delete";
+  public static UploadEmployeeFiles = (id: string) =>
+    this.EmployeeDetails(id) + "/upload-files";
+  public static DeleteEmployeeFile = (id: string, fileId: string) =>
+    this.EmployeeDetails(id) + "/delete-file/" + fileId;
 }

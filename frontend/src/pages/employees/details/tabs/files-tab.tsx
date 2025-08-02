@@ -32,9 +32,13 @@ const EmployeeFilesTab: React.FC = () => {
     });
   };
 
-  const handleDelete = async (path: string) => {
+  const handleDelete = async (fileId: string) => {
+    if (!employee) return;
     try {
-      const res = await EmployeesService.deleteEmployeeFile(employee.id, path);
+      const res = await EmployeesService.deleteEmployeeFile(
+        employee.id,
+        fileId
+      );
       if (res.success) {
         toast.success("Plik został usunięty");
         refetch();
@@ -51,6 +55,7 @@ const EmployeeFilesTab: React.FC = () => {
   };
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!employee) return;
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
@@ -111,7 +116,7 @@ const EmployeeFilesTab: React.FC = () => {
                   </IconButton>
                   <IconButton
                     edge="end"
-                    onClick={() => handleDelete(file.filePath)}
+                    onClick={() => handleDelete(file.id)}
                     title="Usuń"
                   >
                     <MdDelete />

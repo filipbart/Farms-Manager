@@ -20,7 +20,7 @@ export const EmployeeContext = createContext<EmployeeContextType>({
 });
 
 const EmployeeDetailsPage: React.FC = () => {
-  const { id: employeeId } = useParams<{ id: string }>();
+  const { employeeId } = useParams();
   const [employee, setEmployee] = useState<EmployeeDetailsModel>();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
@@ -29,7 +29,7 @@ const EmployeeDetailsPage: React.FC = () => {
     if (!employeeId) return;
     setLoading(true);
     try {
-      const response = await EmployeesService.getEmployeeById(employeeId);
+      const response = await EmployeesService.getEmployeeDetails(employeeId);
       if (response.success) {
         setEmployee(response.responseData);
       } else {
@@ -72,7 +72,7 @@ const EmployeeDetailsPage: React.FC = () => {
     >
       <Box className="m-5 p-5 xs:m-3 xs:p-3 text-darkfont">
         <Typography variant="h4" mb={2}>
-          {employee.fullName}
+          Szczegóły pracownika {employee.fullName}
         </Typography>
 
         <Box sx={{ borderBottom: 1, borderColor: "divider" }}>

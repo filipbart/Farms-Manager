@@ -27,7 +27,7 @@ public class EmployeesController(IMediator mediator) : BaseController
     /// <param name="filters"></param>
     /// <returns></returns>
     [HttpGet]
-    [ProducesResponseType(typeof(BaseResponse<GetEmployeesQueryHandler>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(BaseResponse<GetEmployeesQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetEmployees([FromQuery] GetEmployeesQueryFilters filters)
     {
@@ -55,8 +55,64 @@ public class EmployeesController(IMediator mediator) : BaseController
     [HttpDelete("{employeeId:guid}/delete")]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> DeleteEmployee(Guid employeeId)
+    public async Task<IActionResult> DeleteEmployee([FromRoute] Guid employeeId)
     {
         return Ok(await mediator.Send(new DeleteEmployeeCommand(employeeId)));
+    }
+
+    /// <summary>
+    /// Zwraca szczegóły pracownika
+    /// </summary>
+    /// <param name="employeeId"></param>
+    /// <returns></returns>
+    [HttpGet("{employeeId:guid}")]
+    [ProducesResponseType(typeof(BaseResponse<GetEmployeesQueryHandler>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetEmployeeDetails([FromRoute] Guid employeeId)
+    {
+        return Ok(await mediator.Send(new GetEmployeeDetailsQuery(employeeId)));
+    }
+
+    /// <summary>
+    /// Aktualizuje pracownika
+    /// </summary>
+    /// <param name="employeeId"></param>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    [HttpPatch("{employeeId:guid}/update")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> UpdateEmployee([FromRoute] Guid employeeId, UpdateEmployeeData data)
+    {
+        return Ok(await mediator.Send(new UpdateEmployeeCommand(employeeId, data)));
+    }
+
+    /// <summary>
+    /// Dodaje pliki do pracownika
+    /// </summary>
+    /// <param name="employeeId"></param>
+    /// <param name="files"></param>
+    /// <returns></returns>
+    [HttpPost("{employeeId:guid}/upload-files")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> UploadEmployeeFiles([FromRoute] Guid employeeId,
+        [FromForm] IFormFileCollection files)
+    {
+        return Ok(await mediator.Send(new UploadEmployeeFilesCommand(employeeId, files)));
+    }
+
+    /// <summary>
+    /// Usuwa plik pracownika
+    /// </summary>
+    /// <param name="employeeId"></param>
+    /// <param name="fileId"></param>
+    /// <returns></returns>
+    [HttpDelete("{employeeId:guid}/delete-file/{fileId:guid}")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> DeleteEmployeeFile([FromRoute] Guid employeeId, [FromRoute] Guid fileId)
+    {
+        return Ok(await mediator.Send(new DeleteEmployeeFileCommand(employeeId, fileId)));
     }
 }

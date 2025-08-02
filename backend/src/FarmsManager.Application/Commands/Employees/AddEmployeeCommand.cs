@@ -77,16 +77,31 @@ public class AddEmployeeCommandValidator : AbstractValidator<AddEmployeeCommand>
 {
     public AddEmployeeCommandValidator()
     {
-        RuleFor(x => x.Data).NotNull();
         RuleFor(x => x.Data.FarmId).NotEmpty();
+
         RuleFor(x => x.Data.FullName)
             .NotEmpty()
             .MinimumLength(3)
-            .Must(name => name.Contains(' ')).WithMessage("Należy podać imię i nazwisko.");
-        RuleFor(x => x.Data.Position).NotEmpty();
-        RuleFor(x => x.Data.ContractType).NotEmpty();
-        RuleFor(x => x.Data.Salary).GreaterThanOrEqualTo(0);
-        RuleFor(x => x.Data.StartDate).NotEmpty();
+            .Must(name => name.Contains(' '))
+            .WithMessage("Należy podać imię i nazwisko.");
+
+        RuleFor(x => x.Data.Position)
+            .NotEmpty();
+
+        RuleFor(x => x.Data.ContractType)
+            .NotEmpty();
+
+        RuleFor(x => x.Data.Salary)
+            .GreaterThanOrEqualTo(0)
+            .WithMessage("Wynagrodzenie nie może być ujemne.");
+
+        RuleFor(x => x.Data.StartDate)
+            .NotEmpty();
+
+        RuleFor(x => x.Data.EndDate)
+            .GreaterThan(x => x.Data.StartDate)
+            .WithMessage("Data zakończenia musi być późniejsza niż data rozpoczęcia.")
+            .When(x => x.Data.EndDate.HasValue);
     }
 }
 

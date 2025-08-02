@@ -9,8 +9,7 @@ public sealed class GetEmployeeByIdWithFilesSpec : BaseSpecification<EmployeeEnt
     public GetEmployeeByIdWithFilesSpec(Guid employeeId)
     {
         EnsureExists();
-        Query
-            .Where(e => e.Id == employeeId)
-            .Include(e => e.Files);
+        Query.Where(e => e.Id == employeeId);
+        Query.Include(e => e.Files);
     }
 }

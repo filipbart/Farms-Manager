@@ -1,5 +1,6 @@
 using AutoMapper;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Models.Employees;
 using FarmsManager.Domain.Aggregates.EmployeeAggregate.Entities;
 using FarmsManager.Domain.Aggregates.EmployeeAggregate.Interfaces;
 using MediatR;
@@ -37,6 +38,7 @@ public class EmployeeProfile : Profile
     public EmployeeProfile()
     {
         CreateMap<EmployeeEntity, EmployeeRowDto>()
+            .ForMember(m => m.Files, opt => opt.MapFrom(t => t.Files.Where(f => f.DateDeletedUtc.HasValue == false)))
             .ForMember(m => m.FarmName, opt => opt.MapFrom(t => t.Farm.Name));
 
         CreateMap<EmployeeFileEntity, EmployeeFileDto>();

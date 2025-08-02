@@ -7,10 +7,16 @@ import { toast } from "react-toastify";
 import dayjs from "dayjs";
 import { EmployeeContext } from "..";
 import { EmployeesService } from "../../../../services/employees-service";
+import {
+  EmployeeStatus,
+  type UpdateEmployeeData,
+} from "../../../../models/employees/employees";
+import { useFarms } from "../../../../hooks/useFarms";
+import LoadingTextField from "../../../../components/common/loading-textfield";
 
 const EmployeeInfoTab: React.FC = () => {
-  const { employee, setEmployee, refetch, loading } =
-    useContext(EmployeeContext);
+  const { employee, refetch, loading } = useContext(EmployeeContext);
+  const { farms, loadingFarms, fetchFarms } = useFarms();
 
   const {
     control,
@@ -18,7 +24,7 @@ const EmployeeInfoTab: React.FC = () => {
     register,
     reset,
     formState: { errors, isDirty },
-  } = useForm({
+  } = useForm<UpdateEmployeeData>({
     defaultValues: {
       fullName: "",
       farmId: "",
@@ -32,6 +38,7 @@ const EmployeeInfoTab: React.FC = () => {
   });
 
   useEffect(() => {
+    fetchFarms();
     if (employee) {
       reset({
         fullName: employee.fullName,
@@ -46,7 +53,7 @@ const EmployeeInfoTab: React.FC = () => {
     }
   }, [employee, reset]);
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: UpdateEmployeeData) => {
     if (!employee) return;
 
     const updated = { ...employee, ...data };
@@ -58,7 +65,6 @@ const EmployeeInfoTab: React.FC = () => {
       );
       if (response.success) {
         toast.success("Dane pracownika zostały zaktualizowane");
-        setEmployee(response.responseData);
         refetch();
         reset(data);
       } else {
@@ -75,7 +81,28 @@ const EmployeeInfoTab: React.FC = () => {
   return (
     <Box component="form" onSubmit={handleSubmit(onSubmit)} mt={2}>
       <Grid container spacing={2.5}>
-        <Grid size={{ xs: 12 }}>
+        <Grid size={{ xs: 12, sm: 6 }}>
+          <LoadingTextField
+            label="Ferma"
+            select
+            fullWidth
+            defaultValue={employee.farmId}
+            loading={loadingFarms}
+            error={!!errors.farmId}
+            helperText={errors.farmId?.message}
+            {...register("farmId", {
+              required: "Ferma jest wymagana",
+            })}
+          >
+            {farms.map((farm) => (
+              <MenuItem key={farm.id} value={farm.id}>
+                {farm.name}
+              </MenuItem>
+            ))}
+          </LoadingTextField>
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6 }}>
           <TextField
             label="Imię i nazwisko"
             fullWidth
@@ -83,6 +110,24 @@ const EmployeeInfoTab: React.FC = () => {
             helperText={errors.fullName?.message}
             {...register("fullName", { required: "To pole jest wymagane" })}
           />
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6 }}>
+          <TextField
+            label="Status"
+            select
+            fullWidth
+            defaultValue={employee.status}
+            error={!!errors.status}
+            helperText={errors.status?.message}
+            {...register("status", { required: "Wybierz status" })}
+          >
+            {Object.entries(EmployeeStatus).map(([key, value]) => (
+              <MenuItem key={key} value={value}>
+                {value === EmployeeStatus.Active ? "Aktywny" : "Nieaktywny"}
+              </MenuItem>
+            ))}
+          </TextField>
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6 }}>
@@ -99,6 +144,7 @@ const EmployeeInfoTab: React.FC = () => {
           <TextField
             label="Rodzaj umowy"
             select
+            defaultValue={employee.contractType}
             fullWidth
             error={!!errors.contractType}
             helperText={errors.contractType?.message}
@@ -158,7 +204,7 @@ const EmployeeInfoTab: React.FC = () => {
             control={control}
             render={({ field }) => (
               <DatePicker
-                label="Data zakończenia (opcjonalnie)"
+                label="Data zakończenia"
                 format="DD.MM.YYYY"
                 value={field.value ? dayjs(field.value) : null}
                 onChange={(date) =>
@@ -172,7 +218,7 @@ const EmployeeInfoTab: React.FC = () => {
 
         <Grid size={{ xs: 12 }}>
           <TextField
-            label="Komentarz"
+            label="Uwagi"
             multiline
             rows={3}
             fullWidth

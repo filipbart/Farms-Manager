@@ -1,14 +1,9 @@
 using FarmsManager.Application.Common;
 using FarmsManager.Application.Extensions;
+using FarmsManager.Application.Models.Employees;
 using FarmsManager.Domain.Aggregates.EmployeeAggregate.Enums;
 
 namespace FarmsManager.Application.Queries.Employees;
-
-public class EmployeeFileDto
-{
-    public string FileName { get; init; }
-    public string FilePath { get; init; }
-}
 
 public class EmployeeRowDto
 {

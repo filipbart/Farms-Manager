@@ -55,6 +55,7 @@ public class EmployeeEntity : Entity
         string position,
         string contractType,
         decimal salary,
+        EmployeeStatus status,
         DateOnly startDate,
         DateOnly? endDate,
         string comment)
@@ -64,6 +65,7 @@ public class EmployeeEntity : Entity
         Position = position;
         ContractType = contractType;
         Salary = salary;
+        Status = status;
         StartDate = startDate;
         EndDate = endDate;
         Comment = comment;

@@ -19,6 +19,7 @@ export enum EmployeeStatus {
 }
 
 export interface EmployeeFileModel {
+  id: string;
   fileName: string;
   filePath: string;
 }
@@ -49,10 +50,22 @@ export interface EmployeeDetailsModel {
   contractType: string;
   salary: number;
   startDate: string;
-  endDate: string;
+  endDate?: string;
   status: EmployeeStatus;
   statusDesc: string;
-  comment: string;
+  comment?: string;
   files: EmployeeFileModel[];
   reminders: EmployeeReminderModel[];
+}
+
+export interface UpdateEmployeeData {
+  farmId: string;
+  fullName: string;
+  position: string;
+  contractType: string;
+  salary: number;
+  startDate: string;
+  endDate?: string;
+  status: EmployeeStatus;
+  comment?: string;
 }

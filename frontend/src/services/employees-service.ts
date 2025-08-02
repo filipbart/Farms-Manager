@@ -2,7 +2,9 @@ import ApiUrl from "../common/ApiUrl";
 import type { PaginateModel } from "../common/interfaces/paginate";
 import type {
   AddEmployeeData,
+  EmployeeDetailsModel,
   EmployeeListModel,
+  UpdateEmployeeData,
 } from "../models/employees/employees";
 import type {
   EmployeesDictionary,
@@ -24,11 +26,37 @@ export class EmployeesService {
     );
   }
 
+  public static async getEmployeeDetails(id: string) {
+    return await AxiosWrapper.get<EmployeeDetailsModel>(
+      ApiUrl.EmployeeDetails(id)
+    );
+  }
+
   public static async addEmployee(data: AddEmployeeData) {
     return await AxiosWrapper.post(ApiUrl.AddEmployee, data);
   }
 
+  public static async updateEmployee(id: string, data: UpdateEmployeeData) {
+    return await AxiosWrapper.patch(ApiUrl.UpdateEmployee(id), data);
+  }
+
   public static async deleteEmployee(id: string) {
     return await AxiosWrapper.delete(ApiUrl.DeleteEmployee(id));
+  }
+
+  public static async uploadEmployeeFiles(id: string, files: File[]) {
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append("files", file);
+    });
+    return await AxiosWrapper.post(ApiUrl.UploadEmployeeFiles(id), formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  }
+
+  public static async deleteEmployeeFile(id: string, fileId: string) {
+    return await AxiosWrapper.delete(ApiUrl.DeleteEmployeeFile(id, fileId));
   }
 }
