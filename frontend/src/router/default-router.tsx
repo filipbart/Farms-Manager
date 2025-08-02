@@ -29,6 +29,7 @@ import GasConsumptionsPage from "../pages/gas/consumptions";
 import HatcheriesNotesPage from "../pages/hatcheries-notes";
 import EmployeesPage from "../pages/employees";
 import EmployeeDetailsPage from "../pages/employees/details";
+import EmployeePayslipsPage from "../pages/employees/payslips";
 
 const DefaultRouter: React.FC = () => {
   const { getRoute } = useRouter();
@@ -127,6 +128,10 @@ const DefaultRouter: React.FC = () => {
         <Route
           path={getRoute(RouteName.EmployeesDetails)}
           element={<EmployeeDetailsPage />}
+        />
+        <Route
+          path={getRoute(RouteName.EmployeesPayslips)}
+          element={<EmployeePayslipsPage />}
         />
       </Route>
     </Routes>

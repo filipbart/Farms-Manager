@@ -196,4 +196,14 @@ export default class ApiUrl {
     this.EmployeeDetails(id) + "/add-reminder";
   public static DeleteEmployeeReminder = (id: string, reminderId: string) =>
     this.EmployeeDetails(id) + "/delete-reminder/" + reminderId;
+
+  public static EmployeePayslips = this.BaseUrl + "employees-payslips";
+  public static EmployeePayslipsDictionary =
+    this.EmployeePayslips + "/dictionary";
+  public static EmployeePayslipsFarms = this.EmployeePayslips + "/farms";
+  public static AddEmployeePayslip = this.EmployeePayslips + "/add";
+  public static UpdateEmployeePayslip = (id: string) =>
+    this.EmployeePayslips + "/update/" + id;
+  public static DeleteEmployeePayslip = (id: string) =>
+    this.EmployeePayslips + "/delete/" + id;
 }

@@ -10,11 +10,11 @@ import {
 import { MdDelete, MdDownload, MdUploadFile } from "react-icons/md";
 import { useContext, useRef, useState } from "react";
 import { toast } from "react-toastify";
-import { EmployeeContext } from "..";
 import ApiUrl from "../../../../common/ApiUrl";
 import { EmployeesService } from "../../../../services/employees-service";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import { downloadFile } from "../../../../utils/download-file";
+import { EmployeeContext } from "../../../../context/employee-context";
 
 const EmployeeFilesTab: React.FC = () => {
   const { employee, refetch } = useContext(EmployeeContext);

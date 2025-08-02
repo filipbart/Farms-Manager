@@ -1,0 +1,67 @@
+export interface EmployeePayslipListModel {
+  id: string;
+  farmName: string;
+  cycleText: string;
+  payrollPeriodDesc: string;
+  employeeFullName: string;
+
+  baseSalary: number; // pensja podstawowa
+  bankTransferAmount: number; // kwota przelana na konto
+  bonusAmount: number; // premia
+  overtimePay: number; // kwota za nadgodziny
+  overtimeHours: number; // liczba nadgodzin
+  deductions: number; // potrącenia
+  otherAllowances: number; // inne dodatki
+  netPay: number; // kwota do wypłaty (netto)
+
+  comment?: string;
+  dateCreatedUtc: string;
+}
+
+export enum PayrollPeriod {
+  January = "January",
+  February = "February",
+  March = "March",
+  April = "April",
+  May = "May",
+  June = "June",
+  July = "July",
+  August = "August",
+  September = "September",
+  October = "October",
+  November = "November",
+  December = "December",
+}
+
+export interface AddEmployeePayslipData {
+  farmId: string;
+  cycleId: string;
+  payrollPeriod: PayrollPeriod;
+  entries: AddEmployeePayslipEntry[];
+}
+
+export interface AddEmployeePayslipEntry {
+  employeeId: string;
+
+  baseSalary: number;
+  bankTransferAmount: number;
+  bonusAmount: number;
+  overtimePay: number;
+  overtimeHours: number;
+  deductions: number;
+  otherAllowances: number;
+
+  comment?: string;
+}
+
+export interface UpdateEmployeePayslip {
+  baseSalary: number;
+  bankTransferAmount: number;
+  bonusAmount: number;
+  overtimePay: number;
+  overtimeHours: number;
+  deductions: number;
+  otherAllowances: number;
+
+  comment?: string;
+}

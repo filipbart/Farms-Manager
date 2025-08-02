@@ -52,6 +52,7 @@ export const RenderFilterField = ({
         onChange={(e) => onChange(e.target.value)}
         disabled={filter.disabled}
       >
+        <MenuItem value="">— Brak wyboru —</MenuItem>
         {filter.options.length > 0 ? (
           filter.options.map((opt) => (
             <MenuItem key={opt.value} value={opt.value}>

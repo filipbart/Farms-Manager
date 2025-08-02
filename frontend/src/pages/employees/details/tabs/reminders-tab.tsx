@@ -11,9 +11,9 @@ import { MdAddAlert, MdDelete } from "react-icons/md";
 import { useContext, useState } from "react";
 import { toast } from "react-toastify";
 import dayjs from "dayjs";
-import { EmployeeContext } from "..";
 import { EmployeesService } from "../../../../services/employees-service";
 import AddEmployeeReminderModal from "../../../../components/modals/employees/add-employee-reminder-modal";
+import { EmployeeContext } from "../../../../context/employee-context";
 
 const EmployeeRemindersTab: React.FC = () => {
   const { employee, refetch } = useContext(EmployeeContext);

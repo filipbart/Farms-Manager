@@ -5,7 +5,6 @@ import { useContext, useEffect } from "react";
 import { MdSave } from "react-icons/md";
 import { toast } from "react-toastify";
 import dayjs from "dayjs";
-import { EmployeeContext } from "..";
 import { EmployeesService } from "../../../../services/employees-service";
 import {
   EmployeeStatus,
@@ -13,6 +12,7 @@ import {
 } from "../../../../models/employees/employees";
 import { useFarms } from "../../../../hooks/useFarms";
 import LoadingTextField from "../../../../components/common/loading-textfield";
+import { EmployeeContext } from "../../../../context/employee-context";
 
 const EmployeeInfoTab: React.FC = () => {
   const { employee, refetch, loading } = useContext(EmployeeContext);

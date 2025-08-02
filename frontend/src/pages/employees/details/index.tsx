@@ -1,23 +1,12 @@
 import { Box, Tab, Tabs, Typography, CircularProgress } from "@mui/material";
-import { createContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { EmployeesService } from "../../../services/employees-service";
 import type { EmployeeDetailsModel } from "../../../models/employees/employees";
 import EmployeeInfoTab from "./tabs/details-info-tab";
 import EmployeeFilesTab from "./tabs/files-tab";
 import EmployeeRemindersTab from "./tabs/reminders-tab";
-
-type EmployeeContextType = {
-  employee: EmployeeDetailsModel | undefined;
-  refetch: () => void;
-  loading: boolean;
-};
-
-export const EmployeeContext = createContext<EmployeeContextType>({
-  employee: undefined,
-  refetch: () => {},
-  loading: false,
-});
+import { EmployeeContext } from "../../../context/employee-context";
 
 const EmployeeDetailsPage: React.FC = () => {
   const { employeeId } = useParams();
