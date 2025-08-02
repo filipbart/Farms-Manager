@@ -1,5 +1,6 @@
 import type { FarmDictModel } from "../common/dictionaries";
 import type { OrderedPaginationParams } from "../common/pagination-params";
+import type { EmployeeStatus } from "./employees";
 
 export const initialFilters: EmployeesFilterPaginationModel = {
   farmIds: [],
@@ -68,6 +69,8 @@ export const mapEmployeeOrderTypeToField = (
 
 export interface EmployeesFilter {
   farmIds: string[];
+  searchPhrase?: string;
+  status?: EmployeeStatus;
   dateSince: string;
   dateTo: string;
 }

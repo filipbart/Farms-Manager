@@ -1,4 +1,5 @@
 import type { FilterConfig } from "../../components/filters/filter-types";
+import { EmployeeStatus } from "../../models/employees/employees";
 import type {
   EmployeesDictionary,
   EmployeesFilterPaginationModel,
@@ -22,5 +23,14 @@ export const getEmployeesFiltersConfig = (
         label: farm.name,
       })) || [],
     disabled: !dictionary,
+  },
+  {
+    key: "status",
+    label: "Status pracownika",
+    type: "select",
+    options: [
+      { value: EmployeeStatus.Active, label: "Aktywny" },
+      { value: EmployeeStatus.Inactive, label: "Nieaktywny" },
+    ],
   },
 ];

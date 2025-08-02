@@ -41,6 +41,30 @@ export const RenderFilterField = ({
     );
   }
 
+  if (filter.type === "select") {
+    return (
+      <TextField
+        label={filter.label}
+        select
+        fullWidth
+        sx={{ minWidth: 200 }}
+        value={value || ""}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={filter.disabled}
+      >
+        {filter.options.length > 0 ? (
+          filter.options.map((opt) => (
+            <MenuItem key={opt.value} value={opt.value}>
+              {opt.label}
+            </MenuItem>
+          ))
+        ) : (
+          <MenuItem disabled>Brak opcji</MenuItem>
+        )}
+      </TextField>
+    );
+  }
+
   if (filter.type === "date") {
     return (
       <DatePicker
@@ -63,6 +87,20 @@ export const RenderFilterField = ({
       <TextField
         label={filter.label}
         type="number"
+        fullWidth
+        sx={{ minWidth: 200 }}
+        value={value || ""}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={filter.disabled}
+      />
+    );
+  }
+
+  if (filter.type === "text") {
+    return (
+      <TextField
+        label={filter.label}
+        type="text"
         fullWidth
         sx={{ minWidth: 200 }}
         value={value || ""}

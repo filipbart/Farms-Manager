@@ -88,7 +88,7 @@ const EmployeesPage: React.FC = () => {
         alignItems={{ xs: "flex-start", sm: "center" }}
         gap={2}
       >
-        <Typography variant="h4">Pracownicy / Kadry</Typography>
+        <Typography variant="h4">Kadry</Typography>
         <Box display="flex" gap={2}>
           <Button
             variant="contained"

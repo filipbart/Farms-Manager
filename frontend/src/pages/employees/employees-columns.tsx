@@ -1,4 +1,4 @@
-import { Button, Tooltip, Typography } from "@mui/material";
+import { Box, Button, Tooltip, Typography } from "@mui/material";
 import type { GridColDef } from "@mui/x-data-grid";
 import dayjs from "dayjs";
 import { CommentCell } from "../../components/datagrid/comment-cell";
@@ -63,7 +63,7 @@ export const getEmployeesColumns = ({
     },
     {
       field: "comment",
-      headerName: "Komentarz",
+      headerName: "Uwagi",
       flex: 1,
       sortable: false,
       renderCell: (params) => <CommentCell value={params.value} />,
@@ -76,15 +76,25 @@ export const getEmployeesColumns = ({
       renderCell: (params) => {
         const files = params.value as EmployeeFileModel[];
         if (!files || files.length === 0) {
-          return "Brak";
+          return (
+            <Box display="flex" alignItems="center" height="100%">
+              <Typography variant="body2" noWrap>
+                Brak
+              </Typography>
+            </Box>
+          );
         }
 
+        const fileNames = files.map((file) => file.fileName).join(", ");
+
         return (
-          <Tooltip title={files.map((file) => file.fileName).join(", ")}>
-            <Typography variant="body2" noWrap>
-              {files.map((file) => file.fileName).join(", ")}
-            </Typography>
-          </Tooltip>
+          <Box display="flex" alignItems="center" height="100%">
+            <Tooltip title={fileNames}>
+              <Typography variant="body2" noWrap>
+                {fileNames}
+              </Typography>
+            </Tooltip>
+          </Box>
         );
       },
     },
