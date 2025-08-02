@@ -2,6 +2,7 @@ import ApiUrl from "../common/ApiUrl";
 import type { PaginateModel } from "../common/interfaces/paginate";
 import type {
   AddEmployeeData,
+  AddEmployeeReminderData,
   EmployeeDetailsModel,
   EmployeeListModel,
   UpdateEmployeeData,
@@ -58,5 +59,18 @@ export class EmployeesService {
 
   public static async deleteEmployeeFile(id: string, fileId: string) {
     return await AxiosWrapper.delete(ApiUrl.DeleteEmployeeFile(id, fileId));
+  }
+
+  public static async addEmployeeReminder(
+    id: string,
+    data: AddEmployeeReminderData
+  ) {
+    return await AxiosWrapper.post(ApiUrl.AddEmployeeReminder(id), data);
+  }
+
+  public static async deleteEmployeeReminder(id: string, reminderId: string) {
+    return await AxiosWrapper.delete(
+      ApiUrl.DeleteEmployeeReminder(id, reminderId)
+    );
   }
 }

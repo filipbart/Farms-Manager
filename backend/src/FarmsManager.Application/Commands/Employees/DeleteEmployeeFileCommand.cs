@@ -17,22 +17,19 @@ public record DeleteEmployeeFileCommand(Guid EmployeeId, Guid FileId) : IRequest
 public class DeleteEmployeeFileCommandHandler : IRequestHandler<DeleteEmployeeFileCommand, EmptyBaseResponse>
 {
     private readonly IS3Service _s3Service;
-    private readonly IUserDataResolver _userDataResolver;
     private readonly IEmployeeRepository _employeeRepository;
     private readonly IEmployeeFileRepository _employeeFileRepository;
 
-    public DeleteEmployeeFileCommandHandler(IS3Service s3Service, IUserDataResolver userDataResolver,
-        IEmployeeRepository employeeRepository, IEmployeeFileRepository employeeFileRepository)
+    public DeleteEmployeeFileCommandHandler(IS3Service s3Service, IEmployeeRepository employeeRepository,
+        IEmployeeFileRepository employeeFileRepository)
     {
         _s3Service = s3Service;
-        _userDataResolver = userDataResolver;
         _employeeRepository = employeeRepository;
         _employeeFileRepository = employeeFileRepository;
     }
 
     public async Task<EmptyBaseResponse> Handle(DeleteEmployeeFileCommand request, CancellationToken cancellationToken)
     {
-        var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var employee =
             await _employeeRepository.GetAsync(new GetEmployeeByIdWithFilesSpec(request.EmployeeId), cancellationToken);
 

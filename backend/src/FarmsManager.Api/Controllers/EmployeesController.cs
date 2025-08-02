@@ -115,4 +115,32 @@ public class EmployeesController(IMediator mediator) : BaseController
     {
         return Ok(await mediator.Send(new DeleteEmployeeFileCommand(employeeId, fileId)));
     }
+
+    /// <summary>
+    /// Dodaje przypomnienie do uzytkownika
+    /// </summary>
+    /// <param name="employeeId"></param>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    [HttpPost("{employeeId:guid}/add-reminder")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> AddEmployeeReminder([FromRoute] Guid employeeId, AddEmployeeReminderData data)
+    {
+        return Ok(await mediator.Send(new AddEmployeeReminderCommand(employeeId, data)));
+    }
+
+    /// <summary>
+    /// Usuwa przypomnienie uzytkownika
+    /// </summary>
+    /// <param name="employeeId"></param>
+    /// <param name="reminderId"></param>
+    /// <returns></returns>
+    [HttpDelete("{employeeId:guid}/delete-reminder/{reminderId:guid}")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> DeleteEmployeeReminder([FromRoute] Guid employeeId, Guid reminderId)
+    {
+        return Ok(await mediator.Send(new DeleteEmployeeReminderCommand(employeeId, reminderId)));
+    }
 }

@@ -18,5 +18,9 @@ public class EmployeeEntityConfiguration : BaseConfiguration<EmployeeEntity>
         builder.HasMany(e => e.Files)
             .WithOne(f => f.Employee)
             .HasForeignKey(f => f.EmployeeId);
+
+        builder.HasMany(e => e.Reminders)
+            .WithOne(r => r.Employee)
+            .HasForeignKey(r => r.EmployeeId);
     }
 }

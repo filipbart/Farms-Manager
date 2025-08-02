@@ -102,12 +102,13 @@ const EmployeeFilesTab: React.FC = () => {
         <List>
           {employee?.files.map((file) => (
             <ListItem
-              key={file.filePath}
+              key={file.id}
               divider
               secondaryAction={
                 <>
                   <IconButton
                     edge="end"
+                    color="primary"
                     onClick={() => handleDownload(file.filePath)}
                     disabled={loadingFilePath === file.filePath}
                     title="Pobierz"
@@ -116,6 +117,7 @@ const EmployeeFilesTab: React.FC = () => {
                   </IconButton>
                   <IconButton
                     edge="end"
+                    color="error"
                     onClick={() => handleDelete(file.id)}
                     title="Usuń"
                   >

@@ -17,7 +17,12 @@ public class EmployeeEntity : Entity
     public string Comment { get; private set; }
 
     public virtual FarmEntity Farm { get; private set; }
-    public virtual ICollection<EmployeeFileEntity> Files { get; private set; } = new List<EmployeeFileEntity>();
+
+    private readonly List<EmployeeFileEntity> _files = [];
+
+    private readonly List<EmployeeReminderEntity> _reminders = [];
+    public virtual IReadOnlyCollection<EmployeeFileEntity> Files => _files.AsReadOnly();
+    public virtual IReadOnlyCollection<EmployeeReminderEntity> Reminders => _reminders.AsReadOnly();
 
     protected EmployeeEntity()
     {
@@ -73,6 +78,11 @@ public class EmployeeEntity : Entity
 
     public void AddFile(EmployeeFileEntity file)
     {
-        Files.Add(file);
+        _files.Add(file);
+    }
+
+    public void AddReminder(EmployeeReminderEntity reminder)
+    {
+        _reminders.Add(reminder);
     }
 }

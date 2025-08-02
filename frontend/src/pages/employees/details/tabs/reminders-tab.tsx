@@ -13,6 +13,7 @@ import { toast } from "react-toastify";
 import dayjs from "dayjs";
 import { EmployeeContext } from "..";
 import { EmployeesService } from "../../../../services/employees-service";
+import AddEmployeeReminderModal from "../../../../components/modals/employees/add-employee-reminder-modal";
 
 const EmployeeRemindersTab: React.FC = () => {
   const { employee, refetch } = useContext(EmployeeContext);
@@ -49,42 +50,42 @@ const EmployeeRemindersTab: React.FC = () => {
         </Button>
       </Box>
 
-      {employee?.reminders?.length ? (
+      {employee?.reminders.length === 0 ? (
+        <Typography>Brak przypomnień przypisanych do pracownika.</Typography>
+      ) : (
         <List>
-          {employee.reminders.map((reminder) => (
-            <ListItem key={reminder.id} divider>
-              <ListItemText
-                primary={reminder.title}
-                secondary={
-                  <>
-                    <Typography variant="body2" color="textSecondary">
-                      Termin: {dayjs(reminder.dueDate).format("DD.MM.YYYY")}
-                    </Typography>
-                  </>
-                }
-              />
-              <ListItem>
+          {employee?.reminders.map((reminder) => (
+            <ListItem
+              key={reminder.id}
+              divider
+              secondaryAction={
                 <IconButton
+                  color="error"
                   edge="end"
                   onClick={() => handleDelete(reminder.id)}
                   title="Usuń"
                 >
                   <MdDelete />
                 </IconButton>
-              </ListItem>
+              }
+            >
+              <ListItemText
+                primary={reminder.title}
+                secondary={`Termin: ${dayjs(reminder.dueDate).format(
+                  "DD.MM.YYYY"
+                )}`}
+              />
             </ListItem>
           ))}
         </List>
-      ) : (
-        <Typography>Brak przypomnień dla pracownika.</Typography>
       )}
 
-      {/* <AddReminderModal
+      <AddEmployeeReminderModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        onSaved={refetch}
-        employeeId={employee.id}
-      /> */}
+        onSuccess={refetch}
+        employeeId={employee!.id}
+      />
     </Box>
   );
 };

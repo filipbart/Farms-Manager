@@ -192,4 +192,8 @@ export default class ApiUrl {
     this.EmployeeDetails(id) + "/upload-files";
   public static DeleteEmployeeFile = (id: string, fileId: string) =>
     this.EmployeeDetails(id) + "/delete-file/" + fileId;
+  public static AddEmployeeReminder = (id: string) =>
+    this.EmployeeDetails(id) + "/add-reminder";
+  public static DeleteEmployeeReminder = (id: string, reminderId: string) =>
+    this.EmployeeDetails(id) + "/delete-reminder/" + reminderId;
 }

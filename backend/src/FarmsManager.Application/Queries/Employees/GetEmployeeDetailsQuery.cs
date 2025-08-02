@@ -25,7 +25,7 @@ public record EmployeeDetailsQueryResponse
     public string StatusDesc => Status.GetDescription();
     public string Comment { get; init; }
     public List<EmployeeFileDto> Files { get; init; }
-    public List<object> Reminders { get; init; }
+    public List<EmployeeReminderDto> Reminders { get; init; }
 }
 
 public record GetEmployeeDetailsQuery(Guid EmployeeId) : IRequest<BaseResponse<EmployeeDetailsQueryResponse>>;
@@ -59,6 +59,9 @@ public class EmployeeDetailsProfile : Profile
         CreateMap<EmployeeEntity, EmployeeDetailsQueryResponse>()
             .ForMember(m => m.Files, opt => opt.MapFrom(m => m.Files.Where(f => f.DateDeletedUtc.HasValue == false)))
             .ForMember(m => m.FarmName, opt => opt.MapFrom(src => src.Farm.Name))
-            .ForMember(m => m.Reminders, opt => opt.Ignore());
+            .ForMember(m => m.Reminders,
+                opt => opt.MapFrom(t => t.Reminders.Where(r => r.DateDeletedUtc.HasValue == false)));
+
+        CreateMap<EmployeeReminderEntity, EmployeeReminderDto>();
     }
 }

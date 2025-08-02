@@ -69,3 +69,8 @@ export interface UpdateEmployeeData {
   status: EmployeeStatus;
   comment?: string;
 }
+
+export interface AddEmployeeReminderData {
+  title: string;
+  dueDate: string;
+}
