@@ -8,4 +8,5 @@ public enum FileType
     Sales,
     ExpenseProduction,
     GasDelivery,
+    Employees,
 }

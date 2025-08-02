@@ -1,4 +1,5 @@
-﻿using FarmsManager.Domain.SeedWork;
+﻿using FarmsManager.Domain.Aggregates.EmployeeAggregate.Entities;
+using FarmsManager.Domain.SeedWork;
 
 namespace FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
 
@@ -20,7 +21,10 @@ public class FarmEntity : Entity
     /// </summary>
     private readonly List<HenhouseEntity> _henhouses = [];
 
+    private readonly List<EmployeeEntity> _employees = [];
+
     public virtual IReadOnlyCollection<HenhouseEntity> Henhouses => _henhouses.AsReadOnly();
+    public virtual IReadOnlyCollection<EmployeeEntity> Employees => _employees.AsReadOnly();
 
     /// <summary>
     /// Cykle

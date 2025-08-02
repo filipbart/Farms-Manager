@@ -1,0 +1,29 @@
+using FarmsManager.Application.Common;
+using FarmsManager.Application.Extensions;
+using FarmsManager.Domain.Aggregates.EmployeeAggregate.Enums;
+
+namespace FarmsManager.Application.Queries.Employees;
+
+public class EmployeeFileDto
+{
+    public string FileName { get; init; }
+    public string FilePath { get; init; }
+}
+
+public class EmployeeRowDto
+{
+    public Guid Id { get; init; }
+    public string FarmName { get; init; }
+    public string FullName { get; init; }
+    public string Position { get; init; }
+    public string ContractType { get; init; }
+    public decimal Salary { get; init; }
+    public DateOnly StartDate { get; init; }
+    public DateOnly? EndDate { get; init; }
+    public EmployeeStatus Status { get; init; }
+    public string StatusDesc => Status.GetDescription();
+    public string Comment { get; init; }
+    public List<EmployeeFileDto> Files { get; init; } = [];
+}
+
+public class GetEmployeesQueryResponse : PaginationModel<EmployeeRowDto>;

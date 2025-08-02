@@ -5,7 +5,6 @@ using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.HatcheryAggregate.Entities;
 using FarmsManager.Domain.Aggregates.HatcheryAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
-using FluentValidation;
 using MediatR;
 
 namespace FarmsManager.Application.Commands.Hatcheries;

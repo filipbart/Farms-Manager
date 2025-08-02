@@ -179,4 +179,10 @@ export default class ApiUrl {
   public static DeleteGasConsumption = (id: string) =>
     this.GasConsumptions + "/delete/" + id;
   public static CalculateGasCost = this.GasConsumptions + "/calculate-cost";
+
+  public static Employees = this.BaseUrl + "employees";
+  public static EmployeesDictionary = this.Employees + "/dictionary";
+  public static AddEmployee = this.Employees + "/add";
+  public static DeleteEmployee = (id: string) =>
+    this.Employees + "/" + id + "/delete";
 }

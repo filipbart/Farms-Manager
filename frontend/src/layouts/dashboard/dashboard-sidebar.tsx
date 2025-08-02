@@ -148,14 +148,18 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           title="Wylęgarnie - notatki"
           icon={<MdNotes />}
         />
-        <SidebarMenuItem to="/users" title="Pracownicy" icon={<MdPeopleAlt />}>
+        <SidebarMenuItem
+          to="/employees"
+          title="Pracownicy"
+          icon={<MdPeopleAlt />}
+        >
           <SidebarMenuItem
-            to="/users/employees"
+            to="/employees"
             title="Kadry"
             icon={<FaAddressCard />}
           />
           <SidebarMenuItem
-            to="/users/payslips"
+            to="/employees/payslips"
             title="Rozliczenie wypłat"
             icon={<FaFileInvoiceDollar />}
           />
