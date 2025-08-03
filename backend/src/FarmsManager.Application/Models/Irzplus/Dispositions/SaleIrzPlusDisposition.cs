@@ -1,4 +1,4 @@
-﻿using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
+﻿using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
 
 namespace FarmsManager.Application.Models.Irzplus.Dispositions;
 

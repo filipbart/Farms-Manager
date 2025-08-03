@@ -1,7 +1,7 @@
 ﻿using FarmsManager.Application.Common;
 using FarmsManager.Application.Extensions;
-using FarmsManager.Domain.Aggregates.FarmAggregate.Enums;
-using FarmsManager.Domain.Aggregates.FarmAggregate.Models;
+using FarmsManager.Domain.Aggregates.SaleAggregate.Enums;
+using FarmsManager.Domain.Aggregates.SaleAggregate.Models;
 
 namespace FarmsManager.Application.Queries.Sales;
 

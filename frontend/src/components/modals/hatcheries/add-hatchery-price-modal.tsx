@@ -155,7 +155,6 @@ const AddHatcheryPriceModal: React.FC<AddHatcheryPriceModalProps> = ({
               dispatch({ type: "SET_FIELD", name: "date", value });
               setErrors((p) => ({ ...p, date: undefined }));
             }}
-            disableFuture
             format="DD.MM.YYYY"
             slotProps={{
               textField: {

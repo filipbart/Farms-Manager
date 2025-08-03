@@ -1,6 +1,7 @@
 ﻿using FarmsManager.Application.Common;
 using FarmsManager.Application.Models.Irzplus.Common;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
+using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
 using FarmsManager.Domain.Aggregates.UserAggregate.Models;
 
 namespace FarmsManager.Application.Interfaces;

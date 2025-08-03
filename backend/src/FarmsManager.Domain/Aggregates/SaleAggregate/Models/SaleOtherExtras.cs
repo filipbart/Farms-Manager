@@ -1,4 +1,4 @@
-﻿namespace FarmsManager.Domain.Aggregates.FarmAggregate.Models;
+﻿namespace FarmsManager.Domain.Aggregates.SaleAggregate.Models;
 
 public class SaleOtherExtras
 {

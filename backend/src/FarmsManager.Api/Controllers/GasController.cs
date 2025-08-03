@@ -134,11 +134,11 @@ public class GasController(IMediator mediator) : BaseController
     /// <param name="filters"></param>
     /// <returns></returns>
     [HttpGet("consumptions")]
-    [ProducesResponseType(typeof(BaseResponse<GetGasDeliveriesQueryResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(BaseResponse<GetGasConsumptionsQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetGasConsumptions([FromQuery] GetGasDeliveriesQueryFilters filters)
+    public async Task<IActionResult> GetGasConsumptions([FromQuery] GetGasConsumptionsQueryFilters filters)
     {
-        return Ok(await mediator.Send(new GetGasDeliveriesQuery(filters)));
+        return Ok(await mediator.Send(new GetGasConsumptionsQuery(filters)));
     }
 
     /// <summary>
@@ -172,7 +172,7 @@ public class GasController(IMediator mediator) : BaseController
     /// </summary>
     /// <param name="gasConsumptionId"></param>
     /// <returns></returns>
-    [HttpPost("consumptions/delete/{gasConsumptionId:guid}")]
+    [HttpDelete("consumptions/delete/{gasConsumptionId:guid}")]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> DeleteGasConsumption([FromRoute] Guid gasConsumptionId)
@@ -186,7 +186,7 @@ public class GasController(IMediator mediator) : BaseController
     /// <param name="gasConsumptionId"></param>
     /// <param name="data"></param>
     /// <returns></returns>
-    [HttpPost("consumptions/update/{gasConsumptionId:guid}")]
+    [HttpPatch("consumptions/update/{gasConsumptionId:guid}")]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UpdateGasConsumption([FromRoute] Guid gasConsumptionId, UpdateGasConsumptionDto data)

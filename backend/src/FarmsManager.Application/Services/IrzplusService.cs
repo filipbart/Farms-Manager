@@ -8,6 +8,7 @@ using FarmsManager.Application.Models.Irzplus.Dispositions;
 using FarmsManager.Application.Models.Irzplus.ZZSSD;
 using FarmsManager.Application.Models.Irzplus.ZZSSD.Enums;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
+using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
 using FarmsManager.Domain.Aggregates.UserAggregate.Models;
 using FarmsManager.Shared.Extensions;
 using Microsoft.Extensions.Options;

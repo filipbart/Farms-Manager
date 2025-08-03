@@ -21,7 +21,7 @@ public class SlaughterhouseEntity : Entity
         {
             Name = name,
             ProducerNumber = producerNumber,
-            Nip = nip.Replace("-", ""),
+            Nip = nip.Replace("PL", "").Replace("-", "").Replace(" ", "").Trim(),
             Address = address,
             CreatedBy = userId
         };

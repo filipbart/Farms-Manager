@@ -24,7 +24,7 @@ import {
 } from "../../../models/employees/employees-payslips";
 import type { EmployeeFarmPayslipModel } from "../../../models/employees/payslips-farms";
 import PayslipEntriesTable from "./employee-payslip-entries-table";
-import { getCurrentPayrollPeriod } from "../../../utils/payrollPeriod";
+import { getCurrentPayrollPeriod as getPreviousPayrollPeriod } from "../../../utils/payrollPeriod";
 
 const polishMonthsMap = {
   [PayrollPeriod.January]: "Styczeń",
@@ -59,7 +59,7 @@ interface PayslipFormErrors {
 const initialState: AddEmployeePayslipData = {
   farmId: "",
   cycleId: "",
-  payrollPeriod: getCurrentPayrollPeriod(),
+  payrollPeriod: getPreviousPayrollPeriod(),
   entries: [],
 };
 

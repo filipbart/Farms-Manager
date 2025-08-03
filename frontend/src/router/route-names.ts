@@ -4,6 +4,7 @@ export enum RouteName {
   Dashboard = "dashboard",
   Insertions = "insertions",
   SalesList = "sales",
+  SalesInvoices = "sales/invoices",
   SalesFieldsSettings = "sales/settings",
   Farms = "data/farms",
   Houses = "data/houses",

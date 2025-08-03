@@ -768,189 +768,6 @@ namespace FarmsManager.Infrastructure.Migrations
                     b.ToTable("insertion", "farms_manager");
                 });
 
-            modelBuilder.Entity("FarmsManager.Domain.Aggregates.FarmAggregate.Entities.SaleEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<decimal>("BasePrice")
-                        .HasColumnType("numeric")
-                        .HasColumnName("base_price");
-
-                    b.Property<string>("Comment")
-                        .HasColumnType("text")
-                        .HasColumnName("comment");
-
-                    b.Property<int>("ConfiscatedCount")
-                        .HasColumnType("integer")
-                        .HasColumnName("confiscated_count");
-
-                    b.Property<decimal>("ConfiscatedWeight")
-                        .HasColumnType("numeric")
-                        .HasColumnName("confiscated_weight");
-
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
-
-                    b.Property<Guid>("CycleId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("cycle_id");
-
-                    b.Property<DateTime>("DateCreatedUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("date_created_utc");
-
-                    b.Property<DateTime?>("DateDeletedUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("date_deleted_utc");
-
-                    b.Property<DateTime?>("DateIrzSentUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("date_irz_sent_utc");
-
-                    b.Property<DateTime?>("DateModifiedUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("date_modified_utc");
-
-                    b.Property<int>("DeadCount")
-                        .HasColumnType("integer")
-                        .HasColumnName("dead_count");
-
-                    b.Property<decimal>("DeadWeight")
-                        .HasColumnType("numeric")
-                        .HasColumnName("dead_weight");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("deleted_by");
-
-                    b.Property<string>("DirectoryPath")
-                        .HasColumnType("text")
-                        .HasColumnName("directory_path");
-
-                    b.Property<string>("DocumentNumber")
-                        .HasColumnType("text")
-                        .HasColumnName("document_number");
-
-                    b.Property<Guid>("FarmId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("farm_id");
-
-                    b.Property<decimal>("FarmerWeight")
-                        .HasColumnType("numeric")
-                        .HasColumnName("farmer_weight");
-
-                    b.Property<Guid>("HenhouseId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("henhouse_id");
-
-                    b.Property<Guid>("InternalGroupId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("internal_group_id");
-
-                    b.Property<bool>("IsSentToIrz")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_sent_to_irz");
-
-                    b.Property<Guid?>("ModifiedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("modified_by");
-
-                    b.Property<string>("OtherExtras")
-                        .HasColumnType("jsonb")
-                        .HasColumnName("other_extras");
-
-                    b.Property<decimal>("PriceWithExtras")
-                        .HasColumnType("numeric")
-                        .HasColumnName("price_with_extras");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("integer")
-                        .HasColumnName("quantity");
-
-                    b.Property<DateOnly>("SaleDate")
-                        .HasColumnType("date")
-                        .HasColumnName("sale_date");
-
-                    b.Property<Guid?>("SentToIrzBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("sent_to_irz_by");
-
-                    b.Property<Guid>("SlaughterhouseId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("slaughterhouse_id");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("type");
-
-                    b.Property<decimal>("Weight")
-                        .HasColumnType("numeric")
-                        .HasColumnName("weight");
-
-                    b.HasKey("Id")
-                        .HasName("pk_sale");
-
-                    b.HasIndex("CycleId")
-                        .HasDatabaseName("ix_sale_cycle_id");
-
-                    b.HasIndex("FarmId")
-                        .HasDatabaseName("ix_sale_farm_id");
-
-                    b.HasIndex("HenhouseId")
-                        .HasDatabaseName("ix_sale_henhouse_id");
-
-                    b.HasIndex("SlaughterhouseId")
-                        .HasDatabaseName("ix_sale_slaughterhouse_id");
-
-                    b.ToTable("sale", "farms_manager");
-                });
-
-            modelBuilder.Entity("FarmsManager.Domain.Aggregates.FarmAggregate.Entities.SaleFieldExtraEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTime>("DateCreatedUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("date_created_utc");
-
-                    b.Property<DateTime?>("DateDeletedUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("date_deleted_utc");
-
-                    b.Property<DateTime?>("DateModifiedUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("date_modified_utc");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("deleted_by");
-
-                    b.Property<Guid?>("ModifiedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("modified_by");
-
-                    b.Property<string>("Name")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("name");
-
-                    b.HasKey("Id")
-                        .HasName("pk_sale_field_extra");
-
-                    b.ToTable("sale_field_extra", "farms_manager");
-                });
-
             modelBuilder.Entity("FarmsManager.Domain.Aggregates.FeedAggregate.Entities.FeedInvoiceCorrectionEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2101,6 +1918,274 @@ namespace FarmsManager.Infrastructure.Migrations
                     b.ToTable("production_data_weight_standard", "farms_manager");
                 });
 
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.SaleAggregate.Entities.SaleEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("BasePrice")
+                        .HasColumnType("numeric")
+                        .HasColumnName("base_price");
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("text")
+                        .HasColumnName("comment");
+
+                    b.Property<int>("ConfiscatedCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("confiscated_count");
+
+                    b.Property<decimal>("ConfiscatedWeight")
+                        .HasColumnType("numeric")
+                        .HasColumnName("confiscated_weight");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<Guid>("CycleId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("cycle_id");
+
+                    b.Property<DateTime>("DateCreatedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_created_utc");
+
+                    b.Property<DateTime?>("DateDeletedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_deleted_utc");
+
+                    b.Property<DateTime?>("DateIrzSentUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_irz_sent_utc");
+
+                    b.Property<DateTime?>("DateModifiedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_modified_utc");
+
+                    b.Property<int>("DeadCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("dead_count");
+
+                    b.Property<decimal>("DeadWeight")
+                        .HasColumnType("numeric")
+                        .HasColumnName("dead_weight");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<string>("DirectoryPath")
+                        .HasColumnType("text")
+                        .HasColumnName("directory_path");
+
+                    b.Property<string>("DocumentNumber")
+                        .HasColumnType("text")
+                        .HasColumnName("document_number");
+
+                    b.Property<Guid>("FarmId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("farm_id");
+
+                    b.Property<decimal>("FarmerWeight")
+                        .HasColumnType("numeric")
+                        .HasColumnName("farmer_weight");
+
+                    b.Property<Guid>("HenhouseId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("henhouse_id");
+
+                    b.Property<Guid>("InternalGroupId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("internal_group_id");
+
+                    b.Property<bool>("IsSentToIrz")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_sent_to_irz");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_by");
+
+                    b.Property<string>("OtherExtras")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("other_extras");
+
+                    b.Property<decimal>("PriceWithExtras")
+                        .HasColumnType("numeric")
+                        .HasColumnName("price_with_extras");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer")
+                        .HasColumnName("quantity");
+
+                    b.Property<DateOnly>("SaleDate")
+                        .HasColumnType("date")
+                        .HasColumnName("sale_date");
+
+                    b.Property<Guid?>("SentToIrzBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("sent_to_irz_by");
+
+                    b.Property<Guid>("SlaughterhouseId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("slaughterhouse_id");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("type");
+
+                    b.Property<decimal>("Weight")
+                        .HasColumnType("numeric")
+                        .HasColumnName("weight");
+
+                    b.HasKey("Id")
+                        .HasName("pk_sale");
+
+                    b.HasIndex("CycleId")
+                        .HasDatabaseName("ix_sale_cycle_id");
+
+                    b.HasIndex("FarmId")
+                        .HasDatabaseName("ix_sale_farm_id");
+
+                    b.HasIndex("HenhouseId")
+                        .HasDatabaseName("ix_sale_henhouse_id");
+
+                    b.HasIndex("SlaughterhouseId")
+                        .HasDatabaseName("ix_sale_slaughterhouse_id");
+
+                    b.ToTable("sale", "farms_manager");
+                });
+
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.SaleAggregate.Entities.SaleFieldExtraEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("DateCreatedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_created_utc");
+
+                    b.Property<DateTime?>("DateDeletedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_deleted_utc");
+
+                    b.Property<DateTime?>("DateModifiedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_modified_utc");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_by");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("name");
+
+                    b.HasKey("Id")
+                        .HasName("pk_sale_field_extra");
+
+                    b.ToTable("sale_field_extra", "farms_manager");
+                });
+
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.SaleAggregate.Entities.SaleInvoiceEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<Guid>("CycleId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("cycle_id");
+
+                    b.Property<DateTime>("DateCreatedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_created_utc");
+
+                    b.Property<DateTime?>("DateDeletedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_deleted_utc");
+
+                    b.Property<DateTime?>("DateModifiedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_modified_utc");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<DateOnly>("DueDate")
+                        .HasColumnType("date")
+                        .HasColumnName("due_date");
+
+                    b.Property<Guid>("FarmId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("farm_id");
+
+                    b.Property<string>("FilePath")
+                        .HasColumnType("text")
+                        .HasColumnName("file_path");
+
+                    b.Property<DateOnly>("InvoiceDate")
+                        .HasColumnType("date")
+                        .HasColumnName("invoice_date");
+
+                    b.Property<string>("InvoiceNumber")
+                        .HasColumnType("text")
+                        .HasColumnName("invoice_number");
+
+                    b.Property<decimal>("InvoiceTotal")
+                        .HasColumnType("numeric")
+                        .HasColumnName("invoice_total");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_by");
+
+                    b.Property<Guid>("SlaughterhouseId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("slaughterhouse_id");
+
+                    b.Property<decimal>("SubTotal")
+                        .HasColumnType("numeric")
+                        .HasColumnName("sub_total");
+
+                    b.Property<decimal>("VatAmount")
+                        .HasColumnType("numeric")
+                        .HasColumnName("vat_amount");
+
+                    b.HasKey("Id")
+                        .HasName("pk_sale_invoice");
+
+                    b.HasIndex("CycleId")
+                        .HasDatabaseName("ix_sale_invoice_cycle_id");
+
+                    b.HasIndex("FarmId")
+                        .HasDatabaseName("ix_sale_invoice_farm_id");
+
+                    b.HasIndex("SlaughterhouseId")
+                        .HasDatabaseName("ix_sale_invoice_slaughterhouse_id");
+
+                    b.ToTable("sale_invoice", "farms_manager");
+                });
+
             modelBuilder.Entity("FarmsManager.Domain.Aggregates.SlaughterhouseAggregate.Entities.SlaughterhouseEntity", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2443,45 +2528,6 @@ namespace FarmsManager.Infrastructure.Migrations
                     b.Navigation("Henhouse");
                 });
 
-            modelBuilder.Entity("FarmsManager.Domain.Aggregates.FarmAggregate.Entities.SaleEntity", b =>
-                {
-                    b.HasOne("FarmsManager.Domain.Aggregates.FarmAggregate.Entities.CycleEntity", "Cycle")
-                        .WithMany()
-                        .HasForeignKey("CycleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_sale_cycle_cycle_id");
-
-                    b.HasOne("FarmsManager.Domain.Aggregates.FarmAggregate.Entities.FarmEntity", "Farm")
-                        .WithMany()
-                        .HasForeignKey("FarmId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_sale_farm_farm_id");
-
-                    b.HasOne("FarmsManager.Domain.Aggregates.FarmAggregate.Entities.HenhouseEntity", "Henhouse")
-                        .WithMany()
-                        .HasForeignKey("HenhouseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_sale_henhouse_henhouse_id");
-
-                    b.HasOne("FarmsManager.Domain.Aggregates.SlaughterhouseAggregate.Entities.SlaughterhouseEntity", "Slaughterhouse")
-                        .WithMany()
-                        .HasForeignKey("SlaughterhouseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_sale_slaughterhouse_entity_slaughterhouse_id");
-
-                    b.Navigation("Cycle");
-
-                    b.Navigation("Farm");
-
-                    b.Navigation("Henhouse");
-
-                    b.Navigation("Slaughterhouse");
-                });
-
             modelBuilder.Entity("FarmsManager.Domain.Aggregates.FeedAggregate.Entities.FeedInvoiceCorrectionEntity", b =>
                 {
                     b.HasOne("FarmsManager.Domain.Aggregates.FarmAggregate.Entities.CycleEntity", "Cycle")
@@ -2809,6 +2855,75 @@ namespace FarmsManager.Infrastructure.Migrations
                     b.Navigation("Hatchery");
 
                     b.Navigation("Henhouse");
+                });
+
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.SaleAggregate.Entities.SaleEntity", b =>
+                {
+                    b.HasOne("FarmsManager.Domain.Aggregates.FarmAggregate.Entities.CycleEntity", "Cycle")
+                        .WithMany()
+                        .HasForeignKey("CycleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_sale_cycle_cycle_id");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.FarmAggregate.Entities.FarmEntity", "Farm")
+                        .WithMany()
+                        .HasForeignKey("FarmId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_sale_farm_farm_id");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.FarmAggregate.Entities.HenhouseEntity", "Henhouse")
+                        .WithMany()
+                        .HasForeignKey("HenhouseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_sale_henhouse_henhouse_id");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.SlaughterhouseAggregate.Entities.SlaughterhouseEntity", "Slaughterhouse")
+                        .WithMany()
+                        .HasForeignKey("SlaughterhouseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_sale_slaughterhouse_entity_slaughterhouse_id");
+
+                    b.Navigation("Cycle");
+
+                    b.Navigation("Farm");
+
+                    b.Navigation("Henhouse");
+
+                    b.Navigation("Slaughterhouse");
+                });
+
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.SaleAggregate.Entities.SaleInvoiceEntity", b =>
+                {
+                    b.HasOne("FarmsManager.Domain.Aggregates.FarmAggregate.Entities.CycleEntity", "Cycle")
+                        .WithMany()
+                        .HasForeignKey("CycleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_sale_invoice_cycle_cycle_id");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.FarmAggregate.Entities.FarmEntity", "Farm")
+                        .WithMany()
+                        .HasForeignKey("FarmId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_sale_invoice_farm_farm_id");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.SlaughterhouseAggregate.Entities.SlaughterhouseEntity", "Slaughterhouse")
+                        .WithMany()
+                        .HasForeignKey("SlaughterhouseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_sale_invoice_slaughterhouse_entity_slaughterhouse_id");
+
+                    b.Navigation("Cycle");
+
+                    b.Navigation("Farm");
+
+                    b.Navigation("Slaughterhouse");
                 });
 
             modelBuilder.Entity("FarmsManager.Domain.Aggregates.EmployeeAggregate.Entities.EmployeeEntity", b =>

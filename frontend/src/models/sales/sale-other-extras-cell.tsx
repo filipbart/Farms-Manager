@@ -10,6 +10,7 @@ import {
   TableBody,
   TableRow,
   TableCell,
+  Box,
 } from "@mui/material";
 import type { SaleOtherExtras } from "../../models/sales/sales";
 import AppDialog from "../../components/common/app-dialog";
@@ -19,9 +20,18 @@ export const OtherExtrasCell = ({ value }: { value: SaleOtherExtras }) => {
 
   if (!Array.isArray(value) || value.length === 0) {
     return (
-      <Typography variant="body2" color="textSecondary">
-        Brak
-      </Typography>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100%",
+        }}
+      >
+        <Typography variant="body2" color="textSecondary">
+          Brak
+        </Typography>
+      </Box>
     );
   }
 

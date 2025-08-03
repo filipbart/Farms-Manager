@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using FarmsManager.Application.Extensions;
-using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
+using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
 
 namespace FarmsManager.Application.Queries.Sales.ExportFile;
 

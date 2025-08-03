@@ -31,7 +31,7 @@ export const getExpensesProductionsFiltersConfig = (
   {
     key: "contractorIds",
     label: "Kontrahent",
-    type: "multiSelect",
+    type: "multiSelectSearch",
     options:
       dictionary?.contractors.map((contractor) => ({
         value: contractor.id,

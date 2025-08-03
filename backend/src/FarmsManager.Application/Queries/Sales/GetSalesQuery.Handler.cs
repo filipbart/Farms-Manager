@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using FarmsManager.Application.Common.Responses;
-using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
-using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
+using FarmsManager.Domain.Aggregates.SaleAggregate.Interfaces;
 using MediatR;
 
 namespace FarmsManager.Application.Queries.Sales;

@@ -1,9 +1,10 @@
-﻿using FarmsManager.Domain.Aggregates.FarmAggregate.Enums;
-using FarmsManager.Domain.Aggregates.FarmAggregate.Models;
+﻿using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
+using FarmsManager.Domain.Aggregates.SaleAggregate.Enums;
+using FarmsManager.Domain.Aggregates.SaleAggregate.Models;
 using FarmsManager.Domain.Aggregates.SlaughterhouseAggregate.Entities;
 using FarmsManager.Domain.SeedWork;
 
-namespace FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
+namespace FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
 
 public class SaleEntity : Entity
 {

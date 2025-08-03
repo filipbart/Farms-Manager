@@ -8,6 +8,7 @@ public sealed class ExpenseContractorByNipSpec : BaseSpecification<ExpenseContra
 {
     public ExpenseContractorByNipSpec(string nip)
     {
+        nip = nip.Replace("PL", "").Replace("-", "").Replace(" ", "").Trim();
         EnsureExists();
         DisableTracking();
 

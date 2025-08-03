@@ -4,8 +4,10 @@ import Toolbar from "@mui/material/Toolbar";
 import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
 import { IconButton, useMediaQuery } from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
 import { IoMenu } from "react-icons/io5";
 import { useAuth } from "../../auth/useAuth";
+import { RouteName } from "../../router/route-names";
 
 interface DashboardNavbarProps {
   onSidebarOpened: () => void;
@@ -52,7 +54,14 @@ const DashboardNavbar: React.FC<DashboardNavbarProps> = ({
         <Button sx={{ mr: 2 }} onClick={handleLogout} variant="text">
           Wyloguj
         </Button>
-        <Avatar alt="User Avatar" />
+        <IconButton
+          component={RouterLink}
+          to={RouteName.Settings}
+          size="large"
+          color="inherit"
+        >
+          <Avatar alt="User Avatar" />
+        </IconButton>
       </Toolbar>
     </AppBar>
   );

@@ -3,6 +3,13 @@ import type { PaginateModel } from "../common/interfaces/paginate";
 import type { SaleListModel, SaleType } from "../models/sales/sales";
 import type { SalesDictionary } from "../models/sales/sales-dictionary";
 import type { SalesFilterPaginationModel } from "../models/sales/sales-filters";
+import type {
+  SalesInvoiceListModel,
+  SaveSalesInvoiceData,
+  UpdateSalesInvoiceData,
+  UploadSalesInvoicesFilesResponse,
+} from "../models/sales/sales-invoices";
+import type { SalesInvoicesFilterPaginationModel } from "../models/sales/sales-invoices-filters";
 import AxiosWrapper from "../utils/axios/wrapper";
 
 export interface AddSaleData {
@@ -85,5 +92,46 @@ export class SalesService {
     saleId?: string;
   }) {
     return await AxiosWrapper.post(ApiUrl.SaleSendToIrz, payload);
+  }
+
+  public static async getSalesInvoices(
+    filters: SalesInvoicesFilterPaginationModel
+  ) {
+    return await AxiosWrapper.get<PaginateModel<SalesInvoiceListModel>>(
+      ApiUrl.SalesInvoices,
+      { ...filters }
+    );
+  }
+
+  public static async updateSaleInvoice(
+    id: string,
+    data: UpdateSalesInvoiceData
+  ) {
+    return await AxiosWrapper.patch(ApiUrl.UpdateSaleInvoice(id), data);
+  }
+
+  public static async deleteSaleInvoice(id: string) {
+    return await AxiosWrapper.delete(ApiUrl.DeleteSaveInvoice(id));
+  }
+
+  public static async uploadInvoices(files: File[]) {
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append("files", file);
+    });
+
+    return await AxiosWrapper.post<UploadSalesInvoicesFilesResponse>(
+      ApiUrl.UploadSalesInvoices,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+  }
+
+  public static async saveSaleInvoice(invoiceData: SaveSalesInvoiceData) {
+    return await AxiosWrapper.post(ApiUrl.SaveSalesInvoicesData, invoiceData);
   }
 }

@@ -12,6 +12,6 @@ public sealed class GetExpenseProductionInvoiceByInvoiceNumberSpec : BaseSpecifi
         EnsureExists();
         DisableTracking();
 
-        Query.Where(t => EF.Functions.ILike(invoiceNumber, t.InvoiceNumber));
+        Query.Where(t => EF.Functions.ILike(t.InvoiceNumber, invoiceNumber));
     }
 }

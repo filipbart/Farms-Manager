@@ -1,6 +1,6 @@
 ﻿using Ardalis.Specification;
 using FarmsManager.Application.Specifications;
-using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
+using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
 
 namespace FarmsManager.Application.Queries.Sales;
 

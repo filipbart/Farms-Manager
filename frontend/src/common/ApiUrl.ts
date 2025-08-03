@@ -61,6 +61,13 @@ export default class ApiUrl {
   public static SaleSendToIrz = this.Sales + "/send-to-irz";
   public static SaleExportFile = this.Sales + "/export";
   public static SaleDownloadZip = this.Sales + "/download";
+  public static SalesInvoices = this.Sales + "/invoices";
+  public static UploadSalesInvoices = this.SalesInvoices + "/upload";
+  public static SaveSalesInvoicesData = this.SalesInvoices + "/save-invoice";
+  public static UpdateSaleInvoice = (id: string) =>
+    this.SalesInvoices + "/update/" + id;
+  public static DeleteSaveInvoice = (id: string) =>
+    this.SalesInvoices + "/delete/" + id;
 
   public static SalesSettings = this.BaseUrl + "sales-settings";
   public static AddSaleFieldExtra = this.SalesSettings + "/add";

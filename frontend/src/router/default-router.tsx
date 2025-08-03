@@ -10,7 +10,6 @@ import { RouteName } from "./route-names";
 import FarmsPage from "../pages/data/farms";
 import HousesPage from "../pages/data/houses";
 import HatcheriesPage from "../pages/data/hatcheries";
-import SettingsPageTab from "../pages/settings";
 import SalesPage from "../pages/sales";
 import SlaughterhousesPage from "../pages/data/slaughterhouse";
 import SaleFieldsSettingsPage from "../pages/sales/fields-settings";
@@ -30,6 +29,8 @@ import HatcheriesNotesPage from "../pages/hatcheries-notes";
 import EmployeesPage from "../pages/employees";
 import EmployeeDetailsPage from "../pages/employees/details";
 import EmployeePayslipsPage from "../pages/employees/payslips";
+import SettingsPage from "../pages/settings";
+import SalesInvoicesPage from "../pages/sales/invoices";
 
 const DefaultRouter: React.FC = () => {
   const { getRoute } = useRouter();
@@ -61,9 +62,10 @@ const DefaultRouter: React.FC = () => {
           path={getRoute(RouteName.Slaughterhouses)}
           element={<SlaughterhousesPage />}
         />
+        <Route path={getRoute(RouteName.Settings)} element={<SettingsPage />} />
         <Route
-          path={getRoute(RouteName.Settings)}
-          element={<SettingsPageTab />}
+          path={getRoute(RouteName.SalesInvoices)}
+          element={<SalesInvoicesPage />}
         />
         <Route
           path={getRoute(RouteName.SalesFieldsSettings)}

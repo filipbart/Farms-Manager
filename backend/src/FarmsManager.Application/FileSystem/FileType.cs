@@ -6,6 +6,7 @@ public enum FileType
     FeedDeliveryPayment,
     FeedDeliveryCorrection,
     Sales,
+    SalesInvoices,
     ExpenseProduction,
     GasDelivery,
     Employees,

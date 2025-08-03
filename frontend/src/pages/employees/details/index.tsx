@@ -1,6 +1,13 @@
-import { Box, Tab, Tabs, Typography, CircularProgress } from "@mui/material";
+import {
+  Box,
+  Tab,
+  Tabs,
+  Typography,
+  CircularProgress,
+  Button,
+} from "@mui/material";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { EmployeesService } from "../../../services/employees-service";
 import type { EmployeeDetailsModel } from "../../../models/employees/employees";
 import EmployeeInfoTab from "./tabs/details-info-tab";
@@ -13,6 +20,7 @@ const EmployeeDetailsPage: React.FC = () => {
   const [employee, setEmployee] = useState<EmployeeDetailsModel>();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
+  const nav = useNavigate();
 
   const fetchEmployee = async () => {
     if (!employeeId) return;
@@ -60,10 +68,26 @@ const EmployeeDetailsPage: React.FC = () => {
       }}
     >
       <Box className="m-5 p-5 xs:m-3 xs:p-3 text-darkfont">
-        <Typography variant="h4" mb={2}>
-          Szczegóły pracownika {employee.fullName}
-        </Typography>
+        <Box
+          mb={2}
+          display="flex"
+          flexDirection={{ xs: "column", sm: "row" }}
+          justifyContent="space-between"
+          alignItems={{ xs: "flex-start", sm: "center" }}
+          gap={2}
+        >
+          <Typography variant="h4" mb={2}>
+            Szczegóły pracownika {employee.fullName}
+          </Typography>
 
+          <Button
+            variant="outlined"
+            color="inherit"
+            onClick={() => nav("/employees")}
+          >
+            Cofnij do listy
+          </Button>
+        </Box>
         <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
           <Tabs
             value={activeTab}

@@ -3,6 +3,7 @@ using FarmsManager.Application.Common;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Queries.Farms;
 using FarmsManager.Domain.Aggregates.EmployeeAggregate.Entities;
+using FarmsManager.Domain.Aggregates.EmployeeAggregate.Enums;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
 using MediatR;
@@ -62,7 +63,10 @@ public class PayslipsFarmsProfile : Profile
     public PayslipsFarmsProfile()
     {
         CreateMap<FarmEntity, FarmPayslipRowModel>()
-            .ForMember(m => m.Cycle, opt => opt.MapFrom(t => t.ActiveCycle));
+            .ForMember(m => m.Cycle, opt => opt.MapFrom(t => t.ActiveCycle))
+            .ForMember(m => m.Employees,
+                opt => opt.MapFrom(t =>
+                    t.Employees.Where(e => e.DateDeletedUtc.HasValue == false && e.Status == EmployeeStatus.Active)));
 
         CreateMap<CycleEntity, CyclePayslipModel>();
         CreateMap<EmployeeEntity, EmployeeFarmPayslipModel>();

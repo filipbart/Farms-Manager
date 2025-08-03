@@ -1,9 +1,9 @@
 ﻿using AutoMapper;
-using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
-using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
+using FarmsManager.Domain.Aggregates.SaleAggregate.Interfaces;
 using FarmsManager.Domain.SeedWork;
 
-namespace FarmsManager.Infrastructure.Repositories.FarmAggregate;
+namespace FarmsManager.Infrastructure.Repositories.SaleAggregate;
 
 public class SaleRepository : AbstractRepository<SaleEntity>, ISaleRepository
 {

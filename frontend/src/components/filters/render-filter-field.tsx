@@ -1,4 +1,4 @@
-import { TextField, MenuItem } from "@mui/material";
+import { TextField, MenuItem, Autocomplete } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs, { Dayjs } from "dayjs";
 import type { FilterConfig } from "./filter-types";
@@ -25,7 +25,24 @@ export const RenderFilterField = ({
         onChange={(e) =>
           onChange(Array.from(e.target.value as unknown as string[]))
         }
-        slotProps={{ select: { multiple: true } }}
+        slotProps={{
+          select: {
+            multiple: true,
+
+            renderValue: (selected) => {
+              const selectedItems = selected as string[];
+              if (selectedItems.length === 0) {
+                return <em>Wybierz opcje...</em>;
+              }
+              if (selectedItems.length === 1) {
+                return filter.options.find(
+                  (opt) => opt.value === selectedItems[0]
+                )?.label;
+              }
+              return `Wybrano: ${selectedItems.length}`;
+            },
+          },
+        }}
         disabled={filter.disabled}
       >
         {filter.options.length > 0 ? (
@@ -38,6 +55,35 @@ export const RenderFilterField = ({
           <MenuItem disabled>Brak opcji</MenuItem>
         )}
       </TextField>
+    );
+  }
+
+  if (filter.type === "multiSelectSearch") {
+    return (
+      <Autocomplete
+        multiple
+        options={filter.options}
+        getOptionLabel={(option) => option.label}
+        value={filter.options.filter((opt) =>
+          (value as string[])?.includes(opt.value)
+        )}
+        onChange={(_event, newValues) => {
+          onChange(newValues.map((val) => val.value));
+        }}
+        disableCloseOnSelect
+        disabled={filter.disabled}
+        renderValue={(selectedOptions) => {
+          if (selectedOptions.length === 0) {
+            return null;
+          }
+          if (selectedOptions.length === 1) {
+            return selectedOptions[0].label;
+          }
+          return `Wybrano: ${selectedOptions.length}`;
+        }}
+        sx={{ minWidth: 250 }}
+        renderInput={(params) => <TextField {...params} label={filter.label} />}
+      />
     );
   }
 

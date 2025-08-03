@@ -39,6 +39,7 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onUpdate, onDelete }) => {
         flexDirection: "column",
         height: "100%",
         minHeight: 150,
+        overflow: "hidden",
       }}
     >
       {isEditing ? (
@@ -62,12 +63,23 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onUpdate, onDelete }) => {
         </>
       ) : (
         <>
-          <Typography variant="h6" sx={{ wordWrap: "break-word" }}>
+          <Typography
+            variant="h6"
+            sx={{
+              wordBreak: "break-word",
+            }}
+          >
             {note.title}
           </Typography>
           <Typography
             variant="body2"
-            sx={{ flexGrow: 1, my: 1, whiteSpace: "pre-wrap" }}
+            sx={{
+              flexGrow: 1,
+              my: 1,
+              whiteSpace: "pre-wrap",
+
+              wordBreak: "break-word",
+            }}
           >
             {note.content}
           </Typography>

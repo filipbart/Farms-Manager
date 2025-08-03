@@ -1,8 +1,8 @@
 ﻿using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications.Sales;
-using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
-using FarmsManager.Domain.Aggregates.FarmAggregate.Models;
+using FarmsManager.Domain.Aggregates.SaleAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.SaleAggregate.Models;
 using FarmsManager.Domain.Exceptions;
 using MediatR;
 

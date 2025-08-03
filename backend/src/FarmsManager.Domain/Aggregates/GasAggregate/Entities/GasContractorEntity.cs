@@ -14,7 +14,7 @@ public class GasContractorEntity : Entity
         return new GasContractorEntity
         {
             Name = name,
-            Nip = nip.Replace("-", "").Trim(),
+            Nip = nip.Replace("PL", "").Replace("-", "").Replace(" ", "").Trim(),
             Address = address,
             CreatedBy = userId
         };

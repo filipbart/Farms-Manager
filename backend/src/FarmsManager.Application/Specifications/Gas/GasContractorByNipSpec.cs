@@ -8,6 +8,7 @@ public sealed class GasContractorByNipSpec : BaseSpecification<GasContractorEnti
 {
     public GasContractorByNipSpec(string nip)
     {
+        nip = nip.Replace("PL", "").Replace("-", "").Replace(" ", "").Trim();
         EnsureExists();
         DisableTracking();
 

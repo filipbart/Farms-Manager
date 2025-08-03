@@ -1,4 +1,10 @@
-export type FilterType = "multiSelect" | "date" | "number" | "text" | "select";
+export type FilterType =
+  | "multiSelect"
+  | "date"
+  | "number"
+  | "text"
+  | "select"
+  | "multiSelectSearch";
 
 interface BaseFilterConfig<K extends string> {
   key: K;
@@ -10,6 +16,12 @@ interface BaseFilterConfig<K extends string> {
 export interface MultiSelectFilter<K extends string>
   extends BaseFilterConfig<K> {
   type: "multiSelect";
+  options: { value: string; label: string }[];
+}
+
+export interface MultiSelectSearchFilter<K extends string>
+  extends BaseFilterConfig<K> {
+  type: "multiSelectSearch";
   options: { value: string; label: string }[];
 }
 
@@ -35,4 +47,5 @@ export type FilterConfig<K extends string = string> =
   | SelectFilter<K>
   | DateFilter<K>
   | NumberFilter<K>
-  | TextFilter<K>;
+  | TextFilter<K>
+  | MultiSelectSearchFilter<K>;

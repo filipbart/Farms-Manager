@@ -1,10 +1,12 @@
 ﻿using FarmsManager.Api.Controllers.Base;
 using FarmsManager.Application.Commands.Sales;
+using FarmsManager.Application.Commands.Sales.Invoices;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Queries.Sales;
 using FarmsManager.Application.Queries.Sales.Dictionary;
 using FarmsManager.Application.Queries.Sales.ExportFile;
+using FarmsManager.Application.Queries.Sales.Invoices;
 using FarmsManager.Shared.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -132,5 +134,73 @@ public class SalesController(IMediator mediator, IS3Service s3Service) : BaseCon
 
 
         return file is null ? NotFound() : File(file.Data, file.ContentType, file.FileName);
+    }
+
+    /// <summary>
+    /// Zwraca faktury sprzedażowe
+    /// </summary>
+    /// <param name="filters"></param>
+    /// <returns></returns>
+    [HttpGet("invoices")]
+    [ProducesResponseType(typeof(BaseResponse<GetSalesInvoicesQueryResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetSalesInvoices([FromQuery] GetSalesInvoicesQueryFilters filters)
+    {
+        return Ok(await mediator.Send(new GetSalesInvoicesQuery(filters)));
+    }
+
+    /// <summary>
+    /// Aktualizuje dane faktury sprzedażowej
+    /// </summary>
+    /// <param name="saleInvoiceId"></param>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    [HttpPatch("invoices/update/{saleInvoiceId:guid}")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> UpdateSaleInvoice([FromRoute] Guid saleInvoiceId,
+        UpdateSalesInvoiceData data)
+    {
+        return Ok(await mediator.Send(new UpdateSaleInvoiceCommand(saleInvoiceId, data)));
+    }
+
+    /// <summary>
+    /// Usuwa fakturę sprzedażową
+    /// </summary>
+    /// <param name="saleInvoiceId"></param>
+    /// <returns></returns>
+    [HttpDelete("invoices/delete/{saleInvoiceId:guid}")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> DeleteSaleInvoice([FromRoute] Guid saleInvoiceId)
+    {
+        return Ok(await mediator.Send(new DeleteSaleInvoiceCommand(saleInvoiceId)));
+    }
+
+    /// <summary>
+    /// Wrzuca tymczasowo pliki faktur i je odczytuje dla sprzedaży
+    /// </summary>
+    /// <param name="dto"></param>
+    /// <returns></returns>
+    [HttpPost("invoices/upload")]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType(typeof(BaseResponse<UploadSalesInvoicesCommandResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> UploadSalesInvoices([FromForm] UploadSalesInvoicesDto dto)
+    {
+        return Ok(await mediator.Send(new UploadSalesInvoicesCommand(dto)));
+    }
+
+    /// <summary>
+    /// Zapisuje dane faktury sprzedaży
+    /// </summary>
+    /// <param name="command"></param>
+    /// <returns></returns>
+    [HttpPost("invoices/save-invoice")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> SaveSaleInvoice(SaveSalesInvoiceCommand command)
+    {
+        return Ok(await mediator.Send(command));
     }
 }

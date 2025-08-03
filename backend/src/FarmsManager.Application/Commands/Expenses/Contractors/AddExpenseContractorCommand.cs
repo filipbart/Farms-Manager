@@ -79,9 +79,10 @@ public sealed class GetExpenseContractorByNipOrNameSpec : BaseSpecification<Expe
 {
     public GetExpenseContractorByNipOrNameSpec(string nip, string name)
     {
+        nip = nip.Replace("PL", "").Replace("-", "").Replace(" ", "").Trim();
         EnsureExists();
         DisableTracking();
 
-        Query.Where(t => EF.Functions.ILike(t.Nip, nip) || EF.Functions.ILike(t.Name, name));
+        Query.Where(t => t.Nip == nip || EF.Functions.ILike(t.Name, name));
     }
 }

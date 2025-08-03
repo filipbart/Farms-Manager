@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using ClosedXML.Excel;
-using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.SaleAggregate.Interfaces;
 using FarmsManager.Shared.Attributes;
 using MediatR;
 

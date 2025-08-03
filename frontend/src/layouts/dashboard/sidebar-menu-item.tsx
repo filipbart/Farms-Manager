@@ -6,7 +6,7 @@ import {
   ListItemText,
   styled,
 } from "@mui/material";
-import { useCallback, useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { MdExpandLess, MdExpandMore } from "react-icons/md";
 import { Link, useLocation } from "react-router-dom";
 
@@ -15,6 +15,8 @@ interface SidebarMenuItemProps {
   icon?: ReactNode;
   title: string;
   to: string;
+  isOpen?: boolean;
+  onClick?: () => void;
 }
 
 const ListItemStyle: any = styled((props) => (
@@ -54,20 +56,14 @@ const SidebarMenuItem: React.FC<SidebarMenuItemProps> = ({
   icon,
   title,
   to,
+  isOpen,
+  onClick,
 }) => {
-  const [open, setOpen] = useState(false);
   const location = useLocation();
-
-  const handleClick = useCallback(() => {
-    if (!children) return;
-
-    setOpen((prevOpen) => !prevOpen);
-  }, [open, children]);
 
   if (!children) {
     return (
       <ListItemStyle
-        onClick={handleClick}
         selected={location.pathname === to}
         component={Link}
         to={to}
@@ -95,7 +91,7 @@ const SidebarMenuItem: React.FC<SidebarMenuItemProps> = ({
   return (
     <>
       <ListItemStyle
-        onClick={handleClick}
+        onClick={onClick}
         selected={childrenActive || location.pathname === to}
       >
         {icon && <ListItemIconStyle>{icon}</ListItemIconStyle>}
@@ -108,13 +104,13 @@ const SidebarMenuItem: React.FC<SidebarMenuItemProps> = ({
               childrenActive || location.pathname === to ? "bold" : "normal",
           }}
         />
-        {open ? (
+        {isOpen ? (
           <MdExpandLess className="mr-3" />
         ) : (
           <MdExpandMore className="mr-3" />
         )}
       </ListItemStyle>
-      <Collapse in={open} timeout="auto" unmountOnExit>
+      <Collapse in={isOpen} timeout="auto" unmountOnExit>
         <List sx={{ pl: 2 }} component="div" disablePadding>
           {children}
         </List>

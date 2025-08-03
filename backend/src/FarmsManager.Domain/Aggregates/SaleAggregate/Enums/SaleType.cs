@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace FarmsManager.Domain.Aggregates.FarmAggregate.Enums;
+namespace FarmsManager.Domain.Aggregates.SaleAggregate.Enums;
 
 public enum SaleType
 {

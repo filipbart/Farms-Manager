@@ -22,7 +22,7 @@ public class ExpenseContractorEntity : Entity
         {
             ExpenseTypeId = expenseTypeId,
             Name = name,
-            Nip = nip.Replace("-", "").Trim(),
+            Nip = nip.Replace("PL", "").Replace("-", "").Replace(" ", "").Trim(),
             Address = address,
             CreatedBy = userId
         };
@@ -34,7 +34,7 @@ public class ExpenseContractorEntity : Entity
         return new ExpenseContractorEntity
         {
             Name = name,
-            Nip = nip.Replace("-", "").Trim(),
+            Nip = nip.Replace("PL", "").Replace("-", "").Replace(" ", "").Trim(),
             Address = address,
             CreatedBy = userId
         };
@@ -44,7 +44,7 @@ public class ExpenseContractorEntity : Entity
     {
         ExpenseTypeId = expenseTypeId;
         Name = name;
-        Nip = nip.Replace("-", "");
+        Nip = nip.Replace("PL", "").Replace("-", "").Replace(" ", "").Trim();
         Address = address;
     }
 }

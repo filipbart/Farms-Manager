@@ -7,7 +7,7 @@ public static class ValidationHelpers
         if (string.IsNullOrWhiteSpace(nip))
             return false;
 
-        nip = nip.Replace("-", "").Replace(" ", "");
+        nip = nip.Replace("PL", "").Replace("-", "").Replace(" ", "").Trim();
 
         if (nip.Length != 10 || !nip.All(char.IsDigit))
             return false;

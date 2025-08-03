@@ -1,10 +1,10 @@
 ﻿using System.Text.Json;
-using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
-using FarmsManager.Domain.Aggregates.FarmAggregate.Models;
+using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
+using FarmsManager.Domain.Aggregates.SaleAggregate.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace FarmsManager.Infrastructure.EntityConfigurations.FarmAggregate;
+namespace FarmsManager.Infrastructure.EntityConfigurations.SaleAggregate;
 
 public class SaleEntityConfiguration : BaseConfiguration<SaleEntity>
 {

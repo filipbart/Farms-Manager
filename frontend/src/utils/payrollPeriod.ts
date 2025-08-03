@@ -1,7 +1,7 @@
 import { PayrollPeriod } from "../models/employees/employees-payslips";
 
 export const getCurrentPayrollPeriod = (): PayrollPeriod => {
-  const monthIndex = new Date().getMonth();
+  const monthIndex = new Date().getMonth() - 1;
 
   const periods: PayrollPeriod[] = [
     PayrollPeriod.January,

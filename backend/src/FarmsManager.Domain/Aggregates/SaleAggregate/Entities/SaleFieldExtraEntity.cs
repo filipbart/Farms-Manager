@@ -1,6 +1,6 @@
 ﻿using FarmsManager.Domain.SeedWork;
 
-namespace FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
+namespace FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
 
 public class SaleFieldExtraEntity : Entity
 {

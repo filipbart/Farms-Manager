@@ -28,7 +28,7 @@ public class EmployeesPayslipsController(IMediator mediator) : BaseController
     /// <param name="filters"></param>
     /// <returns></returns>
     [HttpGet]
-    [ProducesResponseType(typeof(BaseResponse<>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(BaseResponse<GetEmployeePayslipsQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetPayslips([FromQuery] GetEmployeePayslipsQueryFilters filters)
     {

@@ -1,7 +1,7 @@
-﻿using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
+﻿using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace FarmsManager.Infrastructure.EntityConfigurations.FarmAggregate;
+namespace FarmsManager.Infrastructure.EntityConfigurations.SaleAggregate;
 
 public class SaleFieldExtraEntityConfiguration : BaseConfiguration<SaleFieldExtraEntity>
 {

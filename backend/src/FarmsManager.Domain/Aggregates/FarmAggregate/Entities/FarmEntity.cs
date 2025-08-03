@@ -40,7 +40,7 @@ public class FarmEntity : Entity
         {
             Name = name,
             ProducerNumber = producerNumber,
-            Nip = nip.Replace("-", ""),
+            Nip = nip.Replace("PL", "").Replace("-", "").Replace(" ", "").Trim(),
             Address = address,
             CreatedBy = createdBy
         };
