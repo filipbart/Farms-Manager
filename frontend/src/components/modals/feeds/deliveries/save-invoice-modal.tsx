@@ -411,7 +411,6 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
                       label="Cena jednostkowa [zł]"
                       type="number"
                       slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
-                      slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
                       error={!!errors.unitPrice}
                       helperText={errors.unitPrice?.message}
                       {...register("unitPrice", {
