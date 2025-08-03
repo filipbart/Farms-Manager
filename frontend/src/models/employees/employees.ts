@@ -39,6 +39,7 @@ export interface EmployeeReminderModel {
   id: string;
   title: string;
   dueDate: string;
+  daysToRemind: number;
 }
 
 export interface EmployeeDetailsModel {
@@ -73,4 +74,5 @@ export interface UpdateEmployeeData {
 export interface AddEmployeeReminderData {
   title: string;
   dueDate: string;
+  daysToRemind: number;
 }

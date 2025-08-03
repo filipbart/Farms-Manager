@@ -73,7 +73,7 @@ const EmployeeRemindersTab: React.FC = () => {
                 primary={reminder.title}
                 secondary={`Termin: ${dayjs(reminder.dueDate).format(
                   "DD.MM.YYYY"
-                )}`}
+                )} | Przypomnij: ${reminder.daysToRemind} dni przed`}
               />
             </ListItem>
           ))}

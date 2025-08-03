@@ -13,6 +13,7 @@ public record AddEmployeeReminderData
 {
     public string Title { get; init; }
     public DateOnly DueDate { get; init; }
+    public int DaysToRemind { get; init; }
 }
 
 public record AddEmployeeReminderCommand(Guid EmployeeId, AddEmployeeReminderData Data) : IRequest<EmptyBaseResponse>;
@@ -22,6 +23,8 @@ public class AddEmployeeReminderValidator : AbstractValidator<AddEmployeeReminde
     public AddEmployeeReminderValidator()
     {
         RuleFor(t => t.Data.Title).NotEmpty().WithMessage("Wiadomość przypomnienia jest wymagana");
+        RuleFor(t => t.Data.DaysToRemind).NotEmpty().GreaterThanOrEqualTo(0)
+            .WithMessage("Liczba dni do przypomnienia nie może być ujemna");
         RuleFor(t => t.Data.DueDate)
             .NotEmpty().WithMessage("Data przypomnienia jest wymagana.")
             .Must(date => date >= DateOnly.FromDateTime(DateTime.Today))
@@ -47,7 +50,7 @@ public class AddEmployeeReminderCommandHandler : IRequestHandler<AddEmployeeRemi
         var employee = await _employeeRepository.GetAsync(new EmployeeByIdSpec(request.EmployeeId), cancellationToken);
 
         employee.AddReminder(EmployeeReminderEntity.CreateNew(employee.Id, request.Data.Title, request.Data.DueDate,
-            userId));
+            request.Data.DaysToRemind, userId));
         await _employeeRepository.UpdateAsync(employee, cancellationToken);
         return BaseResponse.EmptyResponse;
     }

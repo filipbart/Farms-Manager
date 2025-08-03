@@ -7,6 +7,7 @@ public class EmployeeReminderEntity : Entity
     public Guid EmployeeId { get; init; }
     public string Title { get; private set; }
     public DateOnly DueDate { get; private set; }
+    public int DaysToRemind { get; private set; }
 
     public virtual EmployeeEntity Employee { get; init; }
 
@@ -18,6 +19,7 @@ public class EmployeeReminderEntity : Entity
         Guid employeeId,
         string title,
         DateOnly dueDate,
+        int daysToRemind,
         Guid? userId = null)
     {
         return new EmployeeReminderEntity
@@ -25,6 +27,7 @@ public class EmployeeReminderEntity : Entity
             EmployeeId = employeeId,
             Title = title,
             DueDate = dueDate,
+            DaysToRemind = daysToRemind,
             CreatedBy = userId
         };
     }

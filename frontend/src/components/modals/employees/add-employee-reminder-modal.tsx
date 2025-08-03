@@ -14,6 +14,7 @@ import { toast } from "react-toastify";
 import { EmployeesService } from "../../../services/employees-service";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import type { AddEmployeeReminderData } from "../../../models/employees/employees";
+import LoadingButton from "../../common/loading-button";
 
 interface AddEmployeeReminderModalProps {
   open: boolean;
@@ -40,6 +41,7 @@ const AddEmployeeReminderModal: React.FC<AddEmployeeReminderModalProps> = ({
     defaultValues: {
       title: "",
       dueDate: "",
+      daysToRemind: 7,
     },
   });
 
@@ -67,7 +69,14 @@ const AddEmployeeReminderModal: React.FC<AddEmployeeReminderModalProps> = ({
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
       <DialogTitle>Dodaj przypomnienie</DialogTitle>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <DialogContent>
+        <DialogContent
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 2,
+            pt: "8px !important",
+          }}
+        >
           <TextField
             label="Tytuł"
             fullWidth
@@ -102,14 +111,32 @@ const AddEmployeeReminderModal: React.FC<AddEmployeeReminderModalProps> = ({
               />
             )}
           />
+          <TextField
+            label="Przypomnij X dni przed"
+            type="number"
+            fullWidth
+            margin="normal"
+            error={!!errors.daysToRemind}
+            helperText={errors.daysToRemind?.message}
+            {...register("daysToRemind", {
+              required: "Liczba dni jest wymagana",
+              valueAsNumber: true,
+              min: { value: 0, message: "Wartość nie może być ujemna" },
+            })}
+          />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} variant="outlined" color="inherit">
             Anuluj
           </Button>
-          <Button type="submit" variant="contained" disabled={loading}>
+          <LoadingButton
+            type="submit"
+            variant="contained"
+            disabled={loading}
+            loading={loading}
+          >
             Zapisz
-          </Button>
+          </LoadingButton>
         </DialogActions>
       </form>
     </Dialog>
