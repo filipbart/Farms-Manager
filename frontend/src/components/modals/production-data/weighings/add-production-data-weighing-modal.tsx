@@ -145,6 +145,41 @@ const AddProductionDataWeighingModal: React.FC<
     }
   };
 
+  const handleHenhouseChange = async (index: number, henhouseId: string) => {
+    dispatch({
+      type: "UPDATE_ENTRY",
+      index,
+      name: "henhouseId",
+      value: henhouseId,
+    });
+
+    dispatch({ type: "UPDATE_ENTRY", index, name: "hatcheryId", value: "" });
+
+    if (form.farmId && form.cycleId && henhouseId) {
+      await handleApiResponse(
+        () =>
+          ProductionDataWeighingsService.getHatcheryForWeighing({
+            farmId: form.farmId,
+            cycleId: form.cycleId,
+            henhouseId: henhouseId,
+          }),
+        (data) => {
+          const hatcheryId = data.responseData?.hatcheryId;
+          if (hatcheryId) {
+            dispatch({
+              type: "UPDATE_ENTRY",
+              index,
+              name: "hatcheryId",
+              value: hatcheryId,
+            });
+          }
+        },
+        undefined,
+        "Błąd podczas pobierania wylęgarni dla kurnika"
+      );
+    }
+  };
+
   const validate = (): boolean => {
     const newErrors: WeighingFormErrors = {};
     if (!form.farmId) newErrors.farmId = "Ferma jest wymagana";
@@ -290,12 +325,7 @@ const AddProductionDataWeighingModal: React.FC<
                           select
                           value={entry.henhouseId}
                           onChange={(e) =>
-                            dispatch({
-                              type: "UPDATE_ENTRY",
-                              index,
-                              name: "henhouseId",
-                              value: e.target.value,
-                            })
+                            handleHenhouseChange(index, e.target.value)
                           }
                           error={!!entryErrors?.henhouseId}
                           helperText={entryErrors?.henhouseId}
@@ -321,14 +351,6 @@ const AddProductionDataWeighingModal: React.FC<
                           loading={loadingHatcheries}
                           select
                           value={entry.hatcheryId}
-                          onChange={(e) =>
-                            dispatch({
-                              type: "UPDATE_ENTRY",
-                              index,
-                              name: "hatcheryId",
-                              value: e.target.value,
-                            })
-                          }
                           error={!!entryErrors?.hatcheryId}
                           helperText={entryErrors?.hatcheryId}
                           fullWidth

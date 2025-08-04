@@ -25,9 +25,6 @@ public record AddNewInsertionCommand : IRequest<BaseResponse<AddNewInsertionComm
     public DateOnly InsertionDate { get; init; }
     public List<InsertionEntry> Entries { get; init; } = [];
 
-    /// <summary>
-    /// Entries
-    /// </summary>
     public record InsertionEntry
     {
         public Guid HenhouseId { get; init; }
@@ -85,39 +82,49 @@ public class
             .Select(group => group.Key)
             .ToList();
 
-        if (duplicateHenhouseIds.Count != 0)
+        if (duplicateHenhouseIds.Any())
         {
             response.AddError("Henhouses", "W podanych danych wejściowych powtarzają się dane dla tego samego kurnika");
+            return response;
         }
 
-        var existedInsertions = await _insertionRepository.ListAsync(
-            new GetInsertionByFarmCycleAndHenhouseIdSpec(request.FarmId, request.CycleId,
-                request.Entries.Select(t => t.HenhouseId).ToArray()),
-            ct);
+        var henhouseIds = request.Entries.Select(e => e.HenhouseId).ToArray();
+        var existingInsertionsInHenhouses = await _insertionRepository.ListAsync(
+            new GetInsertionsByFarmCycleAndHenhouseIdsSpec(request.FarmId, request.CycleId, henhouseIds), ct);
 
-        if (existedInsertions.Count != 0)
+        if (existingInsertionsInHenhouses.Any())
         {
-            foreach (var existedInsertion in existedInsertions)
-            {
-                var henhouse = await _henhouseRepository.GetAsync(new HenhouseByIdSpec(existedInsertion.HenhouseId),
-                    ct);
+            var existingHenhouseId = existingInsertionsInHenhouses.First().HenhouseId;
+            var henhouse = await _henhouseRepository.GetByIdAsync(existingHenhouseId, ct);
+            throw new Exception($"Kurnik '{henhouse?.Name}' ma już wstawienie w tym cyklu na tej fermie.");
+        }
 
-                throw DomainException.InsertionExists(henhouse.Name);
+        var firstInsertionInCycle =
+            await _insertionRepository.FirstOrDefaultAsync(
+                new GetFirstInsertionInCycleSpec(request.FarmId, request.CycleId), ct);
+        if (firstInsertionInCycle is not null)
+        {
+            var requestHatcheryId = request.Entries.First().HatcheryId;
+            if (firstInsertionInCycle.HatcheryId != requestHatcheryId)
+            {
+                var existingHatchery = await _hatcheryRepository.GetByIdAsync(firstInsertionInCycle.HatcheryId, ct);
+                throw new Exception(
+                    $"Wstawienia w tym cyklu muszą pochodzić z tej samej wylęgarni ('{existingHatchery?.Name}').");
             }
         }
+
 
         var newInsertions = new List<InsertionEntity>();
         var internalGroupId = Guid.NewGuid();
         foreach (var entry in request.Entries)
         {
-            var henhouse = await _henhouseRepository.GetAsync(new HenhouseByIdSpec(entry.HenhouseId),
-                ct);
-            var hatchery =
-                await _hatcheryRepository.GetAsync(new HatcheryByIdSpec(entry.HatcheryId), ct);
+            var henhouse = await _henhouseRepository.GetAsync(new HenhouseByIdSpec(entry.HenhouseId), ct);
+            var hatchery = await _hatcheryRepository.GetAsync(new HatcheryByIdSpec(entry.HatcheryId), ct);
 
             var newInsertion = InsertionEntity.CreateNew(internalGroupId, farm.Id, cycle.Id, henhouse.Id, hatchery.Id,
                 request.InsertionDate, entry.Quantity, entry.BodyWeight, userId);
             newInsertions.Add(newInsertion);
+
             var existingWeighing = await _productionDataWeighingRepository.FirstOrDefaultAsync(
                 new GetWeighingByKeysSpec(farm.Id, cycle.Id, henhouse.Id, hatchery.Id), ct);
 
@@ -132,12 +139,11 @@ public class
                     entry.BodyWeight,
                     userId
                 );
-
                 await _productionDataWeighingRepository.AddAsync(newWeighing, ct);
             }
         }
 
-        if (newInsertions.Count != 0)
+        if (newInsertions.Any())
             await _insertionRepository.AddRangeAsync(newInsertions, ct);
 
         response.ResponseData.InternalGroupId = internalGroupId;
@@ -157,16 +163,34 @@ public class AddNewInsertionValidator : AbstractValidator<AddNewInsertionCommand
             t.RuleFor(x => x.Quantity).GreaterThan(0);
             t.RuleFor(x => x.BodyWeight).GreaterThan(0);
         });
+
+        // Walidacja, czy wszystkie wstawienia w jednym żądaniu mają tę samą wylęgarnię
+        RuleFor(x => x.Entries.Select(e => e.HatcheryId).Distinct().Count())
+            .Equal(1)
+            .When(x => x.Entries.Any())
+            .WithMessage("Wszystkie pozycje wstawienia muszą pochodzić z tej samej wylęgarni.");
     }
 }
 
-public sealed class GetInsertionByFarmCycleAndHenhouseIdSpec : BaseSpecification<InsertionEntity>
+public sealed class GetInsertionsByFarmCycleAndHenhouseIdsSpec : BaseSpecification<InsertionEntity>
 {
-    public GetInsertionByFarmCycleAndHenhouseIdSpec(Guid farmId, Guid cycleId, Guid[] henhouseIds)
+    public GetInsertionsByFarmCycleAndHenhouseIdsSpec(Guid farmId, Guid cycleId, Guid[] henhouseIds)
     {
         EnsureExists();
         Query.Where(t => t.FarmId == farmId);
         Query.Where(t => t.CycleId == cycleId);
         Query.Where(t => henhouseIds.Contains(t.HenhouseId));
+    }
+}
+
+public sealed class GetFirstInsertionInCycleSpec : BaseSpecification<InsertionEntity>,
+    ISingleResultSpecification<InsertionEntity>
+{
+    public GetFirstInsertionInCycleSpec(Guid farmId, Guid cycleId)
+    {
+        Query
+            .Where(t => t.FarmId == farmId)
+            .Where(t => t.CycleId == cycleId)
+            .Take(1);
     }
 }

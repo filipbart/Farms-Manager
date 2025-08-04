@@ -32,6 +32,11 @@ public class AddNewCycleCommandHandler : IRequestHandler<AddNewCycleCommand, Emp
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var farm = await _farmRepository.GetAsync(new FarmByIdSpec(request.FarmId), cancellationToken);
 
+        if (request.Identifier > 6)
+        {
+            throw new Exception("Przekroczono limit cykli na rok");
+        }
+
         var newCycle = CycleEntity.CreateNew(request.Identifier, request.Year, farm.Id, userId);
         farm.SetLatestCycle(newCycle);
         await _farmRepository.UpdateAsync(farm, cancellationToken);

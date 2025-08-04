@@ -14,6 +14,7 @@ export default class ApiUrl {
   public static GetFile = `${this.Files}/file`;
 
   public static Farms = this.BaseUrl + "farms";
+  public static UpdateFarmCycle = this.Farms + "/update-cycle";
   public static AddFarm = this.Farms + "/add";
   public static DeleteFarm = this.Farms + "/delete";
   public static DeleteHenhouse = this.Farms + "/henhouse/delete";

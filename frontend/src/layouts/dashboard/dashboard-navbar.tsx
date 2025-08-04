@@ -56,7 +56,7 @@ const DashboardNavbar: React.FC<DashboardNavbarProps> = ({
         </Button>
         <IconButton
           component={RouterLink}
-          to={RouteName.Settings}
+          to={RouteName.UserProfile}
           size="large"
           color="inherit"
         >

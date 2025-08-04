@@ -28,6 +28,8 @@ export enum RouteName {
   EmployeesDetails = "employees/:employeeId",
   EmployeesPayslips = "employees/payslips",
   Settings = "settings",
+  SettingsUsers = "settings/users",
+  SettingsCycles = "settings/cycles",
   Users = "users",
   UserProfile = "user-profile",
   NotFound = "not-found",

@@ -5,7 +5,7 @@ import IrzPlusSettingsTab from "./tabs/irzplus";
 import { useUserDetails } from "../../hooks/useUserDetails";
 import Loading from "../../components/loading/loading";
 
-const SettingsPage: React.FC = () => {
+const UserProfilePage: React.FC = () => {
   const [value, setValue] = React.useState(0);
 
   const { userDetails, loadingUser, fetchUserDetails } = useUserDetails();
@@ -44,7 +44,7 @@ const SettingsPage: React.FC = () => {
       ) : (
         <Box m={2}>
           <Typography variant="h4" gutterBottom>
-            Ustawienia
+            Profil
           </Typography>
           <Box
             position="static"
@@ -70,4 +70,4 @@ const SettingsPage: React.FC = () => {
   );
 };
 
-export default SettingsPage;
+export default UserProfilePage;

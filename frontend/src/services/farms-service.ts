@@ -3,6 +3,7 @@ import type { PaginateModel } from "../common/interfaces/paginate";
 import type FarmRowModel from "../models/farms/farm-row-model";
 import type { HouseRowModel } from "../models/farms/house-row-model";
 import type LatestCycle from "../models/farms/latest-cycle";
+import type { CycleSettingsData } from "../pages/settings/cycle-settings";
 import AxiosWrapper from "../utils/axios/wrapper";
 
 export interface AddFarmFormData {
@@ -54,5 +55,9 @@ export class FarmsService {
 
   public static async deleteHenhouseAsync(id: string) {
     return await AxiosWrapper.post(ApiUrl.DeleteHenhouse + "/" + id);
+  }
+
+  public static async updateFarmCycle(data: CycleSettingsData) {
+    return await AxiosWrapper.post(ApiUrl.UpdateFarmCycle, data);
   }
 }

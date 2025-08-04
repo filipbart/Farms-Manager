@@ -40,6 +40,8 @@ import {
   MdPayments,
   MdPeopleAlt,
   MdPropane,
+  MdSettings,
+  MdTimelapse,
   MdTrendingDown,
 } from "react-icons/md";
 import { PiFarmFill } from "react-icons/pi";
@@ -73,6 +75,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
     else if (path.startsWith("/gas")) setOpenItem("Gaz");
     else if (path.startsWith("/employees")) setOpenItem("Pracownicy");
     else if (path.startsWith("/data")) setOpenItem("Dane");
+    else if (path.startsWith("/settings")) setOpenItem("Ustawienia");
     else setOpenItem(null);
   }, [location.pathname]);
 
@@ -243,7 +246,24 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         />
       </SidebarMenuItem>
 
-      <SidebarMenuItem to="/users" title="Użytkownicy" icon={<FaUserCog />} />
+      <SidebarMenuItem
+        to="/settings"
+        isOpen={openItem === "Ustawienia"}
+        onClick={() => handleItemClick("Ustawienia")}
+        title="Ustawienia"
+        icon={<MdSettings />}
+      >
+        <SidebarMenuItem
+          to="/settings/users"
+          title="Użytkownicy"
+          icon={<FaUserCog />}
+        />
+        <SidebarMenuItem
+          to="/settings/cycles"
+          title="Cykle"
+          icon={<MdTimelapse />}
+        />
+      </SidebarMenuItem>
     </List>
   );
 

@@ -29,8 +29,9 @@ import HatcheriesNotesPage from "../pages/hatcheries-notes";
 import EmployeesPage from "../pages/employees";
 import EmployeeDetailsPage from "../pages/employees/details";
 import EmployeePayslipsPage from "../pages/employees/payslips";
-import SettingsPage from "../pages/settings";
+import UserProfilePage from "../pages/user-profile";
 import SalesInvoicesPage from "../pages/sales/invoices";
+import SettingsCyclesPage from "../pages/settings/cycle-settings";
 
 const DefaultRouter: React.FC = () => {
   const { getRoute } = useRouter();
@@ -62,7 +63,10 @@ const DefaultRouter: React.FC = () => {
           path={getRoute(RouteName.Slaughterhouses)}
           element={<SlaughterhousesPage />}
         />
-        <Route path={getRoute(RouteName.Settings)} element={<SettingsPage />} />
+        <Route
+          path={getRoute(RouteName.UserProfile)}
+          element={<UserProfilePage />}
+        />
         <Route
           path={getRoute(RouteName.SalesInvoices)}
           element={<SalesInvoicesPage />}
@@ -134,6 +138,10 @@ const DefaultRouter: React.FC = () => {
         <Route
           path={getRoute(RouteName.EmployeesPayslips)}
           element={<EmployeePayslipsPage />}
+        />
+        <Route
+          path={getRoute(RouteName.SettingsCycles)}
+          element={<SettingsCyclesPage />}
         />
       </Route>
     </Routes>
