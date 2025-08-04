@@ -18,6 +18,7 @@ import {
   FaClone,
   FaDatabase,
   FaFileInvoiceDollar,
+  FaHandHoldingUsd,
   FaHandshake,
   FaIndustry,
   FaList,
@@ -139,6 +140,11 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           to="/expenses/production"
           title="Koszty produkcyjne"
           icon={<MdFactory />}
+        />
+        <SidebarMenuItem
+          to="/expenses/advances"
+          title="Ewidencja zaliczek"
+          icon={<FaHandHoldingUsd />}
         />
         <SidebarMenuItem
           to="/expenses/contractors"

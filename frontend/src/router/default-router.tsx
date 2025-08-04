@@ -32,6 +32,7 @@ import EmployeePayslipsPage from "../pages/employees/payslips";
 import UserProfilePage from "../pages/user-profile";
 import SalesInvoicesPage from "../pages/sales/invoices";
 import SettingsCyclesPage from "../pages/settings/cycle-settings";
+import ExpenseAdvancesPage from "../pages/expenses/advances";
 
 const DefaultRouter: React.FC = () => {
   const { getRoute } = useRouter();
@@ -90,6 +91,10 @@ const DefaultRouter: React.FC = () => {
         <Route
           path={getRoute(RouteName.ExpensesProduction)}
           element={<ExpenseProductionPage />}
+        />
+        <Route
+          path={getRoute(RouteName.ExpensesAdvances)}
+          element={<ExpenseAdvancesPage />}
         />
         <Route
           path={getRoute(RouteName.ExpensesTypes)}
