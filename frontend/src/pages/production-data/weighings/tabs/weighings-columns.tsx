@@ -1,6 +1,7 @@
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import type { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import type { ProductionDataWeighingListModel } from "../../../../models/production-data/weighings";
+import ActionsCell from "../../../../components/datagrid/actions-cell";
 
 interface GetWeighingsColumnsProps {
   setSelectedWeighing: (row: ProductionDataWeighingListModel) => void;
@@ -51,6 +52,9 @@ export const getWeighingsColumns = ({
       field: "weighing1Day",
       headerName: "Ważenie I (doba)",
       width: 140,
+      type: "number",
+      headerAlign: "left",
+      align: "left",
     },
     {
       field: "weighing1Weight",
@@ -63,13 +67,17 @@ export const getWeighingsColumns = ({
     {
       field: "weighing2Day",
       headerName: "Ważenie II (doba)",
-
+      type: "number",
+      headerAlign: "left",
+      align: "left",
       width: 140,
     },
     {
       field: "weighing2Weight",
       headerName: "Masa ciała",
-
+      type: "number",
+      headerAlign: "left",
+      align: "left",
       width: 120,
       renderCell: (params) =>
         renderWeightCell(params, "weighing2Weight", "weighing2Deviation"),
@@ -77,13 +85,17 @@ export const getWeighingsColumns = ({
     {
       field: "weighing3Day",
       headerName: "Ważenie III (doba)",
-
+      type: "number",
+      headerAlign: "left",
+      align: "left",
       width: 140,
     },
     {
       field: "weighing3Weight",
       headerName: "Masa ciała",
-
+      type: "number",
+      headerAlign: "left",
+      align: "left",
       width: 120,
       renderCell: (params) =>
         renderWeightCell(params, "weighing3Weight", "weighing3Deviation"),
@@ -91,13 +103,17 @@ export const getWeighingsColumns = ({
     {
       field: "weighing4Day",
       headerName: "Ważenie IV (doba)",
-
+      type: "number",
+      headerAlign: "left",
+      align: "left",
       width: 140,
     },
     {
       field: "weighing4Weight",
       headerName: "Masa ciała",
-
+      type: "number",
+      headerAlign: "left",
+      align: "left",
       width: 120,
       renderCell: (params) =>
         renderWeightCell(params, "weighing4Weight", "weighing4Deviation"),
@@ -105,13 +121,17 @@ export const getWeighingsColumns = ({
     {
       field: "weighing5Day",
       headerName: "Ważenie V (doba)",
-
+      type: "number",
+      headerAlign: "left",
+      align: "left",
       width: 140,
     },
     {
       field: "weighing5Weight",
       headerName: "Masa ciała",
-
+      type: "number",
+      headerAlign: "left",
+      align: "left",
       width: 120,
       renderCell: (params) =>
         renderWeightCell(params, "weighing5Weight", "weighing5Deviation"),
@@ -122,28 +142,15 @@ export const getWeighingsColumns = ({
       headerName: "Akcje",
       width: 200,
       getActions: (params) => [
-        <Button
-          key="edit"
-          variant="outlined"
-          size="small"
-          onClick={() => {
-            setSelectedWeighing(params.row);
+        <ActionsCell
+          key="actions"
+          params={params}
+          onEdit={(row) => {
+            setSelectedWeighing(row);
             setIsEditModalOpen(true);
           }}
-        >
-          Edytuj
-        </Button>,
-        <Button
-          key="delete"
-          variant="outlined"
-          size="small"
-          color="error"
-          onClick={() => {
-            deleteWeighing(params.row.id);
-          }}
-        >
-          Usuń
-        </Button>,
+          onDelete={deleteWeighing}
+        />,
       ],
     },
   ];

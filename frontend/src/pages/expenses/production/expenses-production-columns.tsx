@@ -1,9 +1,8 @@
-import { Button, Typography, IconButton, Box } from "@mui/material";
 import type { GridColDef } from "@mui/x-data-grid";
 import dayjs from "dayjs";
-import { MdFileDownload } from "react-icons/md";
 import type { ExpenseProductionListModel } from "../../../models/expenses/production/expenses-productions";
-import Loading from "../../../components/loading/loading";
+import ActionsCell from "../../../components/datagrid/actions-cell";
+import FileDownloadCell from "../../../components/datagrid/file-download-cell";
 
 interface GetExpenseProductionColumnsProps {
   setSelectedExpenseProduction: (row: ExpenseProductionListModel) => void;
@@ -21,11 +20,6 @@ export const getExpenseProductionColumns = ({
   downloadingFilePath,
 }: GetExpenseProductionColumnsProps): GridColDef<ExpenseProductionListModel>[] => {
   return [
-    {
-      field: "id",
-      headerName: "Id",
-      width: 70,
-    },
     {
       field: "cycleText",
       headerName: "Cykl",
@@ -53,21 +47,28 @@ export const getExpenseProductionColumns = ({
     },
     {
       field: "invoiceTotal",
-      headerName: "Wartość brutto",
-      type: "number",
+      headerName: "Wartość brutto [zł]",
       flex: 1,
+      type: "number",
+      headerAlign: "left",
+      align: "left",
     },
     {
       field: "subTotal",
-      headerName: "Wartość netto",
-      type: "number",
+      headerName: "Wartość netto [zł]",
       flex: 1,
+      type: "number",
+      headerAlign: "left",
+      align: "left",
     },
     {
       field: "vatAmount",
-      headerName: "Wartość VAT",
-      type: "number",
+      headerName: "Wartość VAT [zł]",
+
       flex: 1,
+      type: "number",
+      headerAlign: "left",
+      align: "left",
     },
     {
       field: "invoiceDate",
@@ -87,44 +88,18 @@ export const getExpenseProductionColumns = ({
     },
     {
       field: "filePath",
-      headerName: "Dokument",
+      headerName: "Faktura",
       align: "center",
       headerAlign: "center",
       sortable: false,
       flex: 0.5,
-      renderCell: (params) => {
-        const filePath = params.row.filePath;
-
-        if (!filePath) {
-          return (
-            <Box
-              sx={{
-                width: "100%",
-                height: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Typography variant="body2" color="text.secondary">
-                Brak
-              </Typography>
-            </Box>
-          );
-        }
-
-        const isDownloading = downloadingFilePath === filePath;
-
-        return (
-          <IconButton
-            onClick={() => downloadExpenseProductionFile(filePath)}
-            color="primary"
-            disabled={isDownloading}
-          >
-            {isDownloading ? <Loading size={10} /> : <MdFileDownload />}
-          </IconButton>
-        );
-      },
+      renderCell: (params) => (
+        <FileDownloadCell
+          filePath={params.row.filePath}
+          downloadingFilePath={downloadingFilePath}
+          onDownload={downloadExpenseProductionFile}
+        />
+      ),
     },
     {
       field: "actions",
@@ -132,28 +107,15 @@ export const getExpenseProductionColumns = ({
       headerName: "Akcje",
       width: 200,
       getActions: (params) => [
-        <Button
-          key="edit"
-          variant="outlined"
-          size="small"
-          onClick={() => {
-            setSelectedExpenseProduction(params.row);
+        <ActionsCell
+          key="actions"
+          params={params}
+          onEdit={(row) => {
+            setSelectedExpenseProduction(row);
             setIsEditModalOpen(true);
           }}
-        >
-          Edytuj
-        </Button>,
-        <Button
-          key="delete"
-          variant="outlined"
-          size="small"
-          color="error"
-          onClick={() => {
-            deleteExpenseProduction(params.row.id);
-          }}
-        >
-          Usuń
-        </Button>,
+          onDelete={deleteExpenseProduction}
+        />,
       ],
     },
   ];

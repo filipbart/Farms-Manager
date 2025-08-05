@@ -1,8 +1,7 @@
-import { Box, Button, IconButton } from "@mui/material";
 import type { GridColDef } from "@mui/x-data-grid";
 import dayjs from "dayjs";
-import { MdFileDownload } from "react-icons/md";
-import Loading from "../../../components/loading/loading";
+import FileDownloadCell from "../../../components/datagrid/file-download-cell";
+import ActionsCell from "../../../components/datagrid/actions-cell";
 
 export const getFeedsPaymentsColumns = ({
   deleteFeedPayment,
@@ -14,7 +13,6 @@ export const getFeedsPaymentsColumns = ({
   downloadFilePath: string | null;
 }): GridColDef[] => {
   return [
-    { field: "id", headerName: "Id", width: 70 },
     { field: "farmName", headerName: "Nazwa farmy", flex: 1 },
     { field: "fileName", headerName: "Nazwa pliku", flex: 1 },
     {
@@ -28,28 +26,14 @@ export const getFeedsPaymentsColumns = ({
     },
     {
       field: "fileDownload",
-      headerName: "Plik faktury",
+      headerName: "Faktura",
       flex: 1,
       renderCell: (params) => (
-        <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          width="100%"
-          height="100%"
-        >
-          <IconButton
-            onClick={() => downloadPaymentFile(params.row.filePath)}
-            color="primary"
-            disabled={downloadFilePath === params.row.filePath}
-          >
-            {downloadFilePath === params.row.filePath ? (
-              <Loading size={10} />
-            ) : (
-              <MdFileDownload />
-            )}
-          </IconButton>
-        </Box>
+        <FileDownloadCell
+          filePath={params.row.filePath}
+          downloadingFilePath={downloadFilePath}
+          onDownload={downloadPaymentFile}
+        />
       ),
     },
     {
@@ -58,16 +42,11 @@ export const getFeedsPaymentsColumns = ({
       headerName: "Akcje",
       flex: 1,
       getActions: (params) => [
-        <Box key="delete" display="flex" justifyContent="center" width="100%">
-          <Button
-            variant="outlined"
-            size="small"
-            color="error"
-            onClick={() => deleteFeedPayment(params.row.id)}
-          >
-            Usuń
-          </Button>
-        </Box>,
+        <ActionsCell
+          key="actions"
+          params={params}
+          onDelete={deleteFeedPayment}
+        />,
       ],
     },
   ];

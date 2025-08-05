@@ -1,7 +1,8 @@
-import { Button } from "@mui/material";
 import type { GridColDef } from "@mui/x-data-grid";
 import dayjs from "dayjs";
 import type { HatcheryPriceListModel } from "../../models/hatcheries/hatcheries-prices";
+import ActionsCell from "../../components/datagrid/actions-cell";
+import { CommentCell } from "../../components/datagrid/comment-cell";
 
 export const getHatcheriesPriceColumns = ({
   setSelectedHatcheryPrice,
@@ -23,36 +24,35 @@ export const getHatcheriesPriceColumns = ({
         return value ? dayjs(value).format("YYYY-MM-DD") : "";
       },
     },
-    { field: "price", headerName: "Cena [zł]", flex: 1 },
-    { field: "comment", headerName: "Komentarz", flex: 1 },
+    {
+      field: "price",
+      headerName: "Cena [zł]",
+      flex: 1,
+      type: "number",
+      headerAlign: "left",
+      align: "left",
+    },
+    {
+      field: "comment",
+      headerName: "Komentarz",
+      flex: 1,
+      renderCell: (params) => <CommentCell value={params.value} />,
+    },
     {
       field: "actions",
       type: "actions",
       headerName: "Akcje",
-      flex: 1,
+      width: 200,
       getActions: (params) => [
-        <Button
-          key="edit"
-          variant="outlined"
-          size="small"
-          onClick={() => {
-            setSelectedHatcheryPrice(params.row);
+        <ActionsCell
+          key="actions"
+          params={params}
+          onEdit={(row) => {
+            setSelectedHatcheryPrice(row);
             setIsEditModalOpen(true);
           }}
-        >
-          Edytuj
-        </Button>,
-        <Button
-          key="delete"
-          variant="outlined"
-          size="small"
-          color="error"
-          onClick={() => {
-            deleteHatcheryPrice(params.row.id);
-          }}
-        >
-          Usuń
-        </Button>,
+          onDelete={deleteHatcheryPrice}
+        />,
       ],
     },
   ];

@@ -1,7 +1,7 @@
-import { Button } from "@mui/material";
 import type { GridColDef } from "@mui/x-data-grid";
 import { CommentCell } from "../../../components/datagrid/comment-cell";
 import type { EmployeePayslipListModel } from "../../../models/employees/employees-payslips";
+import ActionsCell from "../../../components/datagrid/actions-cell";
 
 interface GetEmployeePayslipColumnsProps {
   setSelectedPayslip: (payslip: EmployeePayslipListModel) => void;
@@ -40,41 +40,65 @@ export const getEmployeePayslipColumns = ({
       field: "baseSalary",
       headerName: "Wypłata [zł]",
       flex: 1,
+      type: "number",
+      headerAlign: "left",
+      align: "left",
     },
     {
       field: "bankTransferAmount",
       headerName: "Konto [zł]",
       flex: 1,
+      type: "number",
+      headerAlign: "left",
+      align: "left",
     },
     {
       field: "bonusAmount",
       headerName: "Premia [zł]",
       flex: 1,
+      type: "number",
+      headerAlign: "left",
+      align: "left",
     },
     {
       field: "overtimePay",
       headerName: "Nadgodziny [zł]",
       flex: 1,
+      type: "number",
+      headerAlign: "left",
+      align: "left",
     },
     {
       field: "overtimeHours",
       headerName: "Nadgodziny [h]",
       flex: 1,
+      type: "number",
+      headerAlign: "left",
+      align: "left",
     },
     {
       field: "deductions",
       headerName: "Potrącenia [zł]",
       flex: 1,
+      type: "number",
+      headerAlign: "left",
+      align: "left",
     },
     {
       field: "otherAllowances",
       headerName: "Inne dodatki [zł]",
       flex: 1,
+      type: "number",
+      headerAlign: "left",
+      align: "left",
     },
     {
       field: "netPay",
       headerName: "Do wypłaty [zł]",
       flex: 1,
+      type: "number",
+      headerAlign: "left",
+      align: "left",
     },
     {
       field: "comment",
@@ -89,28 +113,15 @@ export const getEmployeePayslipColumns = ({
       headerName: "Akcje",
       width: 200,
       getActions: (params) => [
-        <Button
-          key="edit"
-          variant="outlined"
-          size="small"
-          onClick={() => {
-            setSelectedPayslip(params.row);
+        <ActionsCell
+          key="actions"
+          params={params}
+          onEdit={(row) => {
+            setSelectedPayslip(row);
             setIsEditModalOpen(true);
           }}
-        >
-          Edytuj
-        </Button>,
-        <Button
-          key="delete"
-          variant="outlined"
-          size="small"
-          color="error"
-          onClick={() => {
-            deletePayslip(params.row.id);
-          }}
-        >
-          Usuń
-        </Button>,
+          onDelete={deletePayslip}
+        />,
       ],
     },
   ];

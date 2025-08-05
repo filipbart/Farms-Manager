@@ -1,9 +1,8 @@
-import { Box, Button, IconButton, Typography } from "@mui/material";
 import type { GridColDef } from "@mui/x-data-grid";
 import dayjs from "dayjs";
-import { MdFileDownload } from "react-icons/md";
-import Loading from "../../../components/loading/loading";
 import type { SalesInvoiceListModel } from "../../../models/sales/sales-invoices";
+import ActionsCell from "../../../components/datagrid/actions-cell";
+import FileDownloadCell from "../../../components/datagrid/file-download-cell";
 
 interface GetSalesInvoicesColumnsProps {
   setSelectedSalesInvoice: (row: SalesInvoiceListModel) => void;
@@ -59,16 +58,25 @@ export const getSalesInvoicesColumns = ({
       field: "invoiceTotal",
       headerName: "Brutto [zł]",
       flex: 1,
+      type: "number",
+      headerAlign: "left",
+      align: "left",
     },
     {
       field: "subTotal",
       headerName: "Netto [zł]",
       flex: 1,
+      type: "number",
+      headerAlign: "left",
+      align: "left",
     },
     {
       field: "vatAmount",
       headerName: "VAT [zł]",
       flex: 1,
+      type: "number",
+      headerAlign: "left",
+      align: "left",
     },
     {
       field: "filePath",
@@ -77,36 +85,13 @@ export const getSalesInvoicesColumns = ({
       headerAlign: "center",
       sortable: false,
       width: 100,
-      renderCell: (params) => {
-        const filePath = params.row.filePath;
-        if (!filePath) {
-          return (
-            <Box
-              sx={{
-                width: "100%",
-                height: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Typography variant="body2" color="text.secondary">
-                Brak
-              </Typography>
-            </Box>
-          );
-        }
-        const isDownloading = downloadingFilePath === filePath;
-        return (
-          <IconButton
-            onClick={() => downloadSalesInvoiceFile(filePath)}
-            color="primary"
-            disabled={isDownloading}
-          >
-            {isDownloading ? <Loading size={24} /> : <MdFileDownload />}
-          </IconButton>
-        );
-      },
+      renderCell: (params) => (
+        <FileDownloadCell
+          filePath={params.row.filePath}
+          downloadingFilePath={downloadingFilePath}
+          onDownload={downloadSalesInvoiceFile}
+        />
+      ),
     },
     {
       field: "actions",
@@ -114,28 +99,15 @@ export const getSalesInvoicesColumns = ({
       headerName: "Akcje",
       width: 200,
       getActions: (params) => [
-        <Button
-          key="edit"
-          variant="outlined"
-          size="small"
-          onClick={() => {
-            setSelectedSalesInvoice(params.row);
+        <ActionsCell
+          key="actions"
+          params={params}
+          onEdit={(row) => {
+            setSelectedSalesInvoice(row);
             setIsEditModalOpen(true);
           }}
-        >
-          Edytuj
-        </Button>,
-        <Button
-          key="delete"
-          variant="outlined"
-          size="small"
-          color="error"
-          onClick={() => {
-            deleteSalesInvoice(params.row.id);
-          }}
-        >
-          Usuń
-        </Button>,
+          onDelete={deleteSalesInvoice}
+        />,
       ],
     },
   ];

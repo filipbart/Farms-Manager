@@ -1,6 +1,6 @@
-import { Button } from "@mui/material";
 import type { GridColDef } from "@mui/x-data-grid";
 import type { GasConsumptionListModel } from "../../../models/gas/gas-consumptions";
+import ActionsCell from "../../../components/datagrid/actions-cell";
 
 interface GetGasConsumptionsColumnsProps {
   setSelectedGasConsumption: (row: GasConsumptionListModel) => void;
@@ -28,11 +28,17 @@ export const getGasConsumptionsColumns = ({
       field: "quantityConsumed",
       headerName: "Ilość zużytego gazu [l]",
       flex: 1,
+      type: "number",
+      headerAlign: "left",
+      align: "left",
     },
     {
       field: "cost",
       headerName: "Koszt gazu [zł]",
       flex: 1,
+      type: "number",
+      headerAlign: "left",
+      align: "left",
     },
     {
       field: "actions",
@@ -40,28 +46,15 @@ export const getGasConsumptionsColumns = ({
       headerName: "Akcje",
       width: 200,
       getActions: (params) => [
-        <Button
-          key="edit"
-          variant="outlined"
-          size="small"
-          onClick={() => {
-            setSelectedGasConsumption(params.row);
+        <ActionsCell
+          key="actions"
+          params={params}
+          onEdit={(row) => {
+            setSelectedGasConsumption(row);
             setIsEditModalOpen(true);
           }}
-        >
-          Edytuj
-        </Button>,
-        <Button
-          key="delete"
-          variant="outlined"
-          size="small"
-          color="error"
-          onClick={() => {
-            deleteGasConsumption(params.row.id);
-          }}
-        >
-          Usuń
-        </Button>,
+          onDelete={deleteGasConsumption}
+        />,
       ],
     },
   ];

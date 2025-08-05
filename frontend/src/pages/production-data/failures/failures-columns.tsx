@@ -1,7 +1,7 @@
-import { Button } from "@mui/material";
 import type { GridColDef } from "@mui/x-data-grid";
 import dayjs from "dayjs";
 import type { ProductionDataFailureListModel } from "../../../models/production-data/failures";
+import ActionsCell from "../../../components/datagrid/actions-cell";
 
 interface GetProductionDataFailuresColumnsProps {
   setSelectedFailure: (row: ProductionDataFailureListModel) => void;
@@ -15,11 +15,6 @@ export const getProductionDataFailuresColumns = ({
   setIsEditModalOpen,
 }: GetProductionDataFailuresColumnsProps): GridColDef<ProductionDataFailureListModel>[] => {
   return [
-    {
-      field: "id",
-      headerName: "Id",
-      width: 70,
-    },
     {
       field: "cycleText",
       headerName: "Cykl",
@@ -39,11 +34,17 @@ export const getProductionDataFailuresColumns = ({
       field: "deadCount",
       headerName: "Upadki [szt.]",
       flex: 1,
+      type: "number",
+      headerAlign: "left",
+      align: "left",
     },
     {
       field: "defectiveCount",
       headerName: "Wybrakowania [szt.]",
       flex: 1,
+      type: "number",
+      headerAlign: "left",
+      align: "left",
     },
     {
       field: "dateCreatedUtc",
@@ -59,28 +60,15 @@ export const getProductionDataFailuresColumns = ({
       headerName: "Akcje",
       width: 200,
       getActions: (params) => [
-        <Button
-          key="edit"
-          variant="outlined"
-          size="small"
-          onClick={() => {
-            setSelectedFailure(params.row);
+        <ActionsCell
+          key="actions"
+          params={params}
+          onEdit={(row) => {
+            setSelectedFailure(row);
             setIsEditModalOpen(true);
           }}
-        >
-          Edytuj
-        </Button>,
-        <Button
-          key="delete"
-          variant="outlined"
-          size="small"
-          color="error"
-          onClick={() => {
-            deleteFailure(params.row.id);
-          }}
-        >
-          Usuń
-        </Button>,
+          onDelete={deleteFailure}
+        />,
       ],
     },
   ];

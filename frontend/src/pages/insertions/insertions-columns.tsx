@@ -34,9 +34,23 @@ export const getInsertionsColumns = ({
         return date ? dayjs(date).format("YYYY-MM-DD") : "";
       },
     },
-    { field: "quantity", headerName: "Sztuki wstawione", flex: 1 },
+    {
+      field: "quantity",
+      headerName: "Sztuki wstawione",
+      flex: 1,
+      type: "number",
+      headerAlign: "left",
+      align: "left",
+    },
     { field: "hatcheryName", headerName: "Wylęgarnia", flex: 1 },
-    { field: "bodyWeight", headerName: "Śr. masa ciała", flex: 1 },
+    {
+      field: "bodyWeight",
+      headerName: "Śr. masa ciała",
+      flex: 1,
+      type: "number",
+      headerAlign: "left",
+      align: "left",
+    },
     {
       field: "sendToIrz",
       headerName: "Wyślij do IRZplus",

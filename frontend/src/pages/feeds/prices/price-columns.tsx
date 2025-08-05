@@ -1,6 +1,6 @@
-import { Button } from "@mui/material";
 import type { GridColDef } from "@mui/x-data-grid";
 import dayjs from "dayjs";
+import ActionsCell from "../../../components/datagrid/actions-cell";
 
 export const getFeedsPriceColumns = ({
   setSelectedFeedPrice,
@@ -12,7 +12,6 @@ export const getFeedsPriceColumns = ({
   deleteFeedPrice: (id: string) => void;
 }): GridColDef[] => {
   return [
-    { field: "id", headerName: "Id", width: 70 },
     { field: "cycleText", headerName: "Identyfikator", flex: 1 },
     { field: "farmName", headerName: "Ferma", flex: 1 },
     {
@@ -25,36 +24,29 @@ export const getFeedsPriceColumns = ({
       },
     },
     { field: "name", headerName: "Typ (nazwa) paszy", flex: 1 },
-    { field: "price", headerName: "Cena [zł]", flex: 1 },
+    {
+      field: "price",
+      headerName: "Cena [zł]",
+      flex: 1,
+      type: "number",
+      headerAlign: "left",
+      align: "left",
+    },
     {
       field: "actions",
       type: "actions",
       headerName: "Akcje",
-      flex: 1,
+      width: 200,
       getActions: (params) => [
-        <Button
-          key="edit"
-          variant="outlined"
-          size="small"
-          onClick={() => {
-            setSelectedFeedPrice(params.row);
+        <ActionsCell
+          key="actions"
+          params={params}
+          onEdit={(row) => {
+            setSelectedFeedPrice(row);
             setIsEditModalOpen(true);
           }}
-        >
-          Edytuj
-        </Button>,
-
-        <Button
-          key="delete"
-          variant="outlined"
-          size="small"
-          color="error"
-          onClick={() => {
-            deleteFeedPrice(params.row.id);
-          }}
-        >
-          Usuń
-        </Button>,
+          onDelete={deleteFeedPrice}
+        />,
       ],
     },
     { field: "dateCreatedUtc", headerName: "Data utworzenia wpisu", flex: 1 },

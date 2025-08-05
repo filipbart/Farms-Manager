@@ -1,9 +1,11 @@
-import { Box, Button, IconButton, Tooltip } from "@mui/material";
+import { Box, Tooltip } from "@mui/material";
 import type { GridColDef } from "@mui/x-data-grid";
 import dayjs from "dayjs";
-import { MdFileDownload, MdWarningAmber } from "react-icons/md";
-import Loading from "../../../components/loading/loading";
+import { MdWarningAmber } from "react-icons/md";
 import { orange, red } from "@mui/material/colors";
+import { CommentCell } from "../../../components/datagrid/comment-cell";
+import FileDownloadCell from "../../../components/datagrid/file-download-cell";
+import ActionsCell from "../../../components/datagrid/actions-cell";
 
 export const getFeedsDeliveriesColumns = ({
   setSelectedFeedDelivery,
@@ -25,7 +27,6 @@ export const getFeedsDeliveriesColumns = ({
   downloadFilePath: string | null;
 }): GridColDef[] => {
   return [
-    { field: "id", headerName: "Id", width: 70 },
     { field: "cycleText", headerName: "Identyfikator", flex: 1 },
     { field: "farmName", headerName: "Ferma", flex: 1 },
     { field: "henhouseName", headerName: "Kurnik", flex: 1 },
@@ -36,27 +37,41 @@ export const getFeedsDeliveriesColumns = ({
       field: "quantity",
       headerName: "Ilość towaru",
       flex: 1,
-      renderCell: (params) => {
-        const value = params.value;
-        return <span>{value != null ? value : "—"}</span>;
-      },
+      type: "number",
+      headerAlign: "left",
+      align: "left",
     },
     {
       field: "unitPrice",
       headerName: "Cena jednostkowa netto [zł]",
       flex: 1,
+      type: "number",
       renderCell: (params) => {
         const unitPrice = params.value;
         const correctUnitPrice = params.row?.correctUnitPrice;
 
+        const formattedPrice =
+          unitPrice != null
+            ? new Intl.NumberFormat("pl-PL", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              }).format(unitPrice)
+            : "—";
+
+        const formattedCorrectPrice =
+          correctUnitPrice != null
+            ? new Intl.NumberFormat("pl-PL", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              }).format(correctUnitPrice)
+            : "";
+
         return (
-          <Box display="flex" alignItems="center">
-            <span>{unitPrice != null ? unitPrice : "—"}</span>
+          <Box display="flex" alignItems="center" gap={1}>
+            <span>{formattedPrice}</span>
             {correctUnitPrice != null && (
-              <Tooltip title={`Prawidłowa cena: ${correctUnitPrice} zł`}>
-                <MdWarningAmber
-                  style={{ marginLeft: 8, fontSize: 20, color: red[900] }}
-                />
+              <Tooltip title={`Prawidłowa cena: ${formattedCorrectPrice} zł`}>
+                <MdWarningAmber style={{ fontSize: 20, color: red[700] }} />
               </Tooltip>
             )}
           </Box>
@@ -102,9 +117,30 @@ export const getFeedsDeliveriesColumns = ({
         );
       },
     },
-    { field: "invoiceTotal", headerName: "Wartość brutto [zł]", flex: 1 },
-    { field: "subTotal", headerName: "Wartość netto [zł]", flex: 1 },
-    { field: "vatAmount", headerName: "VAT [zł]", flex: 1 },
+    {
+      field: "invoiceTotal",
+      headerName: "Wartość brutto [zł]",
+      flex: 1,
+      type: "number",
+      headerAlign: "left",
+      align: "left",
+    },
+    {
+      field: "subTotal",
+      headerName: "Wartość netto [zł]",
+      flex: 1,
+      type: "number",
+      headerAlign: "left",
+      align: "left",
+    },
+    {
+      field: "vatAmount",
+      headerName: "VAT [zł]",
+      flex: 1,
+      type: "number",
+      headerAlign: "left",
+      align: "left",
+    },
     {
       field: "paymentDateUtc",
       headerName: "Data opłacenia",
@@ -120,41 +156,26 @@ export const getFeedsDeliveriesColumns = ({
     {
       field: "download",
       type: "actions",
-      headerName: "Plik faktury",
+      headerName: "Faktura",
       flex: 1,
-      renderCell: (params) => (
-        <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          width="100%"
-          height="100%"
-        >
-          <IconButton
-            onClick={() =>
-              params.row.isCorrection
-                ? downloadCorrectionFile(params.row.filePath)
-                : downloadInvoiceFile(params.row.id)
-            }
-            color="primary"
-            disabled={
-              params.row.isCorrection
-                ? downloadFilePath === params.row.filePath
-                : downloadFilePath === params.row.id
-            }
-          >
-            {(
-              params.row.isCorrection
-                ? downloadFilePath === params.row.filePath
-                : downloadFilePath === params.row.id
-            ) ? (
-              <Loading size={10} />
-            ) : (
-              <MdFileDownload />
-            )}
-          </IconButton>
-        </Box>
-      ),
+      renderCell: (params) => {
+        const isCorrection = params.row.isCorrection;
+        const filePath = params.row.filePath;
+        const id = params.row.id;
+
+        const effectiveFilePath = isCorrection ? filePath : id;
+        const onDownload = isCorrection
+          ? downloadCorrectionFile
+          : downloadInvoiceFile;
+
+        return (
+          <FileDownloadCell
+            filePath={effectiveFilePath}
+            downloadingFilePath={downloadFilePath}
+            onDownload={onDownload}
+          />
+        );
+      },
     },
     {
       field: "actions",
@@ -163,40 +184,34 @@ export const getFeedsDeliveriesColumns = ({
       flex: 1,
       minWidth: 150,
       getActions: (params) => [
-        <Button
-          key="edit"
-          variant="outlined"
-          size="small"
-          onClick={() => {
-            setSelectedFeedDelivery(params.row);
-            if (params.row.isCorrection) {
+        <ActionsCell
+          key="actions"
+          params={params}
+          onEdit={(row) => {
+            setSelectedFeedDelivery(row);
+            if (row.isCorrection) {
               setIsEditCorrectionModalOpen(true);
             } else {
               setIsEditModalOpen(true);
             }
           }}
-        >
-          Edytuj
-        </Button>,
-
-        <Button
-          key="delete"
-          variant="outlined"
-          size="small"
-          color="error"
-          onClick={() => {
+          onDelete={(id) => {
             if (params.row.isCorrection) {
-              deleteFeedCorrection(params.row.id);
+              deleteFeedCorrection(id);
             } else {
-              deleteFeedDelivery(params.row.id);
+              deleteFeedDelivery(id);
             }
           }}
-        >
-          Usuń
-        </Button>,
+        />,
       ],
     },
-    { field: "comment", headerName: "Notatka", flex: 1 },
+
+    {
+      field: "comment",
+      headerName: "Komentarz",
+      flex: 1,
+      renderCell: (params) => <CommentCell value={params.value} />,
+    },
     { field: "dateCreatedUtc", headerName: "Data utworzenia wpisu", flex: 1 },
   ];
 };

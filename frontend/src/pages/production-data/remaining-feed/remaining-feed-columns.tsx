@@ -1,7 +1,7 @@
-import { Button } from "@mui/material";
 import dayjs from "dayjs";
 import type { ProductionDataRemainingFeedListModel } from "../../../models/production-data/remaining-feed";
 import type { GridColDef } from "@mui/x-data-grid";
+import ActionsCell from "../../../components/datagrid/actions-cell";
 
 interface GetRemainingFeedColumnsProps {
   setSelectedRemainingFeed: (row: ProductionDataRemainingFeedListModel) => void;
@@ -15,11 +15,6 @@ export const getRemainingFeedColumns = ({
   setIsEditModalOpen,
 }: GetRemainingFeedColumnsProps): GridColDef<ProductionDataRemainingFeedListModel>[] => {
   return [
-    {
-      field: "id",
-      headerName: "Id",
-      width: 70,
-    },
     {
       field: "cycleText",
       headerName: "Cykl",
@@ -44,11 +39,17 @@ export const getRemainingFeedColumns = ({
       field: "remainingTonnage",
       headerName: "Tonaż pozostały [t]",
       flex: 1,
+      type: "number",
+      headerAlign: "left",
+      align: "left",
     },
     {
       field: "remainingValue",
       headerName: "Wartość [zł]",
       flex: 1,
+      type: "number",
+      headerAlign: "left",
+      align: "left",
     },
     {
       field: "actions",
@@ -56,28 +57,15 @@ export const getRemainingFeedColumns = ({
       headerName: "Akcje",
       width: 200,
       getActions: (params) => [
-        <Button
-          key="edit"
-          variant="outlined"
-          size="small"
-          onClick={() => {
-            setSelectedRemainingFeed(params.row);
+        <ActionsCell
+          key="actions"
+          params={params}
+          onEdit={(row) => {
+            setSelectedRemainingFeed(row);
             setIsEditModalOpen(true);
           }}
-        >
-          Edytuj
-        </Button>,
-        <Button
-          key="delete"
-          variant="outlined"
-          size="small"
-          color="error"
-          onClick={() => {
-            deleteRemainingFeed(params.row.id);
-          }}
-        >
-          Usuń
-        </Button>,
+          onDelete={deleteRemainingFeed}
+        />,
       ],
     },
     {

@@ -37,8 +37,11 @@ export const getEmployeesColumns = ({
     },
     {
       field: "salary",
-      headerName: "Wynagrodzenie",
+      headerName: "Wynagrodzenie [zł]",
       flex: 1,
+      type: "number",
+      headerAlign: "left",
+      align: "left",
     },
     {
       field: "startDate",

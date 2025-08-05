@@ -307,7 +307,7 @@ const SaveSalesInvoicesModal: React.FC<SaveSalesInvoicesModalProps> = ({
                     <Divider sx={{ my: 1 }} />
                   </Grid>
 
-                  <Grid size={{ xs: 12, sm: 6 }}>
+                  <Grid size={{ xs: 12, sm: 4 }}>
                     <TextField
                       label="Numer faktury"
                       value={watch("invoiceNumber") || ""}
@@ -319,7 +319,7 @@ const SaveSalesInvoicesModal: React.FC<SaveSalesInvoicesModalProps> = ({
                       fullWidth
                     />
                   </Grid>
-                  <Grid size={{ xs: 12, sm: 6 }}>
+                  <Grid size={{ xs: 12, sm: 4 }}>
                     <Controller
                       name="invoiceDate"
                       control={control}
@@ -327,6 +327,33 @@ const SaveSalesInvoicesModal: React.FC<SaveSalesInvoicesModalProps> = ({
                       render={({ field }) => (
                         <DatePicker
                           label="Data faktury"
+                          format="DD.MM.YYYY"
+                          value={field.value ? dayjs(field.value) : null}
+                          onChange={(date) =>
+                            field.onChange(
+                              date ? dayjs(date).format("YYYY-MM-DD") : null
+                            )
+                          }
+                          slotProps={{
+                            textField: {
+                              fullWidth: true,
+                              error: !!errors.invoiceDate,
+                              helperText: errors.invoiceDate?.message,
+                            },
+                          }}
+                        />
+                      )}
+                    />
+                  </Grid>
+
+                  <Grid size={{ xs: 12, sm: 4 }}>
+                    <Controller
+                      name="dueDate"
+                      control={control}
+                      rules={{ required: "Termin płatności jest wymagany" }}
+                      render={({ field }) => (
+                        <DatePicker
+                          label="Data terminu płatności"
                           format="DD.MM.YYYY"
                           value={field.value ? dayjs(field.value) : null}
                           onChange={(date) =>

@@ -1,7 +1,7 @@
-import { Button } from "@mui/material";
 import type { GridColDef, GridColumnGroupingModel } from "@mui/x-data-grid";
 import type { ProductionDataTransferFeedListModel } from "../../../models/production-data/transfer-feed";
 import dayjs from "dayjs";
+import ActionsCell from "../../../components/datagrid/actions-cell";
 
 interface GetFeedTransfersColumnsProps {
   setSelectedTransfer: (row: ProductionDataTransferFeedListModel) => void;
@@ -18,11 +18,6 @@ export const getFeedTransfersColumns = ({
   columnGroupingModel: GridColumnGroupingModel;
 } => {
   const columns: GridColDef<ProductionDataTransferFeedListModel>[] = [
-    {
-      field: "id",
-      headerName: "Id",
-      width: 70,
-    },
     // Kolumny dla grupy "Z"
     { field: "fromCycleText", headerName: "Identyfikator", flex: 1 },
     { field: "fromFarmName", headerName: "Ferma", flex: 1.5 },
@@ -37,11 +32,17 @@ export const getFeedTransfersColumns = ({
       field: "tonnage",
       headerName: "Tonaż pozostały [t]",
       flex: 1,
+      type: "number",
+      headerAlign: "left",
+      align: "left",
     },
     {
       field: "value",
       headerName: "Wartość [zł]",
       flex: 1,
+      type: "number",
+      headerAlign: "left",
+      align: "left",
     },
     {
       field: "actions",
@@ -49,28 +50,15 @@ export const getFeedTransfersColumns = ({
       headerName: "Akcje",
       width: 200,
       getActions: (params) => [
-        <Button
-          key="edit"
-          variant="outlined"
-          size="small"
-          onClick={() => {
-            setSelectedTransfer(params.row);
+        <ActionsCell
+          key="actions"
+          params={params}
+          onEdit={(row) => {
+            setSelectedTransfer(row);
             setIsEditModalOpen(true);
           }}
-        >
-          Edytuj
-        </Button>,
-        <Button
-          key="delete"
-          variant="outlined"
-          size="small"
-          color="error"
-          onClick={() => {
-            deleteTransfer(params.row.id);
-          }}
-        >
-          Usuń
-        </Button>,
+          onDelete={deleteTransfer}
+        />,
       ],
     },
     {
