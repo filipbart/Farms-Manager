@@ -21,6 +21,7 @@ import {
 import { getEmployeePayslipsFiltersConfig } from "./filter-config.employee-payslips";
 import AddEmployeePayslipModal from "../../../components/modals/employees/add-employee-payslip-modal";
 import EditEmployeePayslipModal from "../../../components/modals/employees/edit-employee-payslip-modal";
+import { CustomFooter } from "../../../components/datagrid/custom-footer";
 
 const EmployeePayslipsPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -161,7 +162,11 @@ const EmployeePayslipsPage: React.FC = () => {
           rowCount={totalRows}
           rowSelection={false}
           pageSizeOptions={[5, 10, 25, { value: -1, label: "Wszystkie" }]}
-          slots={{ toolbar: CustomToolbar, noRowsOverlay: NoRowsOverlay }}
+          slots={{
+            toolbar: CustomToolbar,
+            noRowsOverlay: NoRowsOverlay,
+            footer: () => <CustomFooter rows={payslips} />,
+          }}
           showToolbar
           sx={{
             [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },
