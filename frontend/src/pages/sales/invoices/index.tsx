@@ -1,5 +1,5 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
-import { DataGrid } from "@mui/x-data-grid";
+import { DataGrid, type GridRowSelectionModel } from "@mui/x-data-grid";
 import { useReducer, useState, useMemo, useEffect } from "react";
 import { toast } from "react-toastify";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
@@ -27,6 +27,7 @@ import type { SalesDictionary } from "../../../models/sales/sales-dictionary";
 import UploadSalesInvoicesModal from "../../../components/modals/sales/invoices/upload-sales-invoices-modal";
 import SaveSalesInvoicesModal from "../../../components/modals/sales/invoices/save-sales-invoices-modal";
 import EditSaleInvoiceModal from "../../../components/modals/sales/invoices/edit-sale-invoice-modal";
+import BookPaymentModal from "../../../components/modals/sales/invoices/book-payment-modal";
 
 const SalesInvoicesPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -39,6 +40,13 @@ const SalesInvoicesPage: React.FC = () => {
   const [draftSalesInvoices, setDraftSalesInvoices] = useState<
     DraftSalesInvoice[]
   >([]);
+
+  const [selectedRows, setSelectedRows] = useState<GridRowSelectionModel>({
+    type: "include",
+    ids: new Set(),
+  });
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isBookingPayment, setIsBookingPayment] = useState(false);
 
   const { salesInvoices, totalRows, loading, fetchSalesInvoices } =
     useSalesInvoices(filters);
@@ -77,13 +85,38 @@ const SalesInvoicesPage: React.FC = () => {
         () => SalesService.deleteSaleInvoice(id),
         async () => {
           toast.success("Faktura sprzedaży została poprawnie usunięta");
-          dispatch({ type: "setMultiple", payload: { page: filters.page } });
+          await fetchSalesInvoices();
         },
         undefined,
         "Błąd podczas usuwania faktury"
       );
     } catch {
       toast.error("Błąd podczas usuwania faktury");
+    }
+  };
+
+  const handleBookPayment = async (paymentDate: string) => {
+    try {
+      setIsBookingPayment(true);
+      await handleApiResponse(
+        () =>
+          SalesService.bookInvoicesPayment({
+            invoicesIds: Array.from(selectedRows.ids).map(String),
+            paymentDate,
+          }),
+        async () => {
+          toast.success("Płatność została pomyślnie zaksięgowana");
+          setIsPaymentModalOpen(false);
+          setSelectedRows({ type: "include", ids: new Set() });
+          await fetchSalesInvoices();
+        },
+        undefined,
+        "Błąd podczas księgowania płatności"
+      );
+    } catch {
+      toast.error("Błąd podczas księgowania płatności");
+    } finally {
+      setIsBookingPayment(false);
     }
   };
 
@@ -156,7 +189,17 @@ const SalesInvoicesPage: React.FC = () => {
         gap={2}
       >
         <Typography variant="h4">Faktury Sprzedażowe</Typography>
-        <Box display="flex" gap={2}>
+        <Box display="flex" gap={2} alignItems="center">
+          {selectedRows.ids.size > 0 && (
+            <Button
+              variant="outlined"
+              color="primary"
+              onClick={() => setIsPaymentModalOpen(true)}
+            >
+              Zaksięguj płatność
+            </Button>
+          )}
+
           <Button
             variant="contained"
             color="primary"
@@ -192,6 +235,13 @@ const SalesInvoicesPage: React.FC = () => {
             },
           }}
           localeText={{
+            footerRowSelected: (count) => {
+              if (count === 1) return "1 wiersz zaznaczony";
+              if (count >= 2 && count <= 4)
+                return `${count} wiersze zaznaczone`;
+              return `${count} wierszy zaznaczonych`;
+            },
+            checkboxSelectionHeaderName: "Zaznaczanie wierszy",
             paginationRowsPerPage: "Wierszy na stronę:",
             paginationDisplayedRows: ({ from, to, count }) =>
               `${from} do ${to} z ${count}`,
@@ -208,7 +258,12 @@ const SalesInvoicesPage: React.FC = () => {
             })
           }
           rowCount={totalRows}
-          rowSelection={false}
+          checkboxSelection
+          disableRowSelectionOnClick
+          onRowSelectionModelChange={(newSelection) => {
+            setSelectedRows(newSelection);
+          }}
+          rowSelectionModel={selectedRows}
           pageSizeOptions={[5, 10, 25, { value: -1, label: "Wszystkie" }]}
           slots={{ toolbar: CustomToolbar, noRowsOverlay: NoRowsOverlay }}
           showToolbar
@@ -269,6 +324,13 @@ const SalesInvoicesPage: React.FC = () => {
           dispatch({ type: "setMultiple", payload: { page: filters.page } });
         }}
         salesInvoice={selectedSalesInvoice}
+      />
+
+      <BookPaymentModal
+        open={isPaymentModalOpen}
+        loading={isBookingPayment}
+        onClose={() => setIsPaymentModalOpen(false)}
+        onBookPayment={handleBookPayment}
       />
     </Box>
   );

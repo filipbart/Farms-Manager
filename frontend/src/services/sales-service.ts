@@ -42,6 +42,11 @@ export interface AddNewSaleResponse {
   internalGroupId: string;
 }
 
+export interface BookInvoicesPaymentData {
+  invoicesIds: string[];
+  paymentDate: string;
+}
+
 export class SalesService {
   public static async getDictionaries() {
     return await AxiosWrapper.get<SalesDictionary>(ApiUrl.SalesDict);
@@ -133,5 +138,9 @@ export class SalesService {
 
   public static async saveSaleInvoice(invoiceData: SaveSalesInvoiceData) {
     return await AxiosWrapper.post(ApiUrl.SaveSalesInvoicesData, invoiceData);
+  }
+
+  public static async bookInvoicesPayment(data: BookInvoicesPaymentData) {
+    return await AxiosWrapper.post(ApiUrl.BookSalesInvoicesPayment, data);
   }
 }

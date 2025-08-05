@@ -11,6 +11,7 @@ export interface SalesInvoiceListModel {
   vatAmount: number;
   dateCreatedUtc: string;
   filePath?: string;
+  paymentDate?: string;
 }
 
 export interface UpdateSalesInvoiceData {

@@ -203,4 +203,17 @@ public class SalesController(IMediator mediator, IS3Service s3Service) : BaseCon
     {
         return Ok(await mediator.Send(command));
     }
+
+    /// <summary>
+    /// Oznacza faktury jako zapłacone
+    /// </summary>
+    /// <param name="command"></param>
+    /// <returns></returns>
+    [HttpPost("invoices/book-payment")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> SaleInvoicesBookPayment(SalesInvoicesBookPaymentCommand command)
+    {
+        return Ok(await mediator.Send(command));
+    }
 }

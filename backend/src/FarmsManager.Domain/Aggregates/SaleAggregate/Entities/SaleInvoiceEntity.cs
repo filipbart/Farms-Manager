@@ -16,6 +16,7 @@ public class SaleInvoiceEntity : Entity
     public decimal SubTotal { get; protected internal set; }
     public decimal VatAmount { get; protected internal set; }
     public string FilePath { get; protected internal set; }
+    public DateOnly? PaymentDate { get; protected internal set; }
 
     public virtual FarmEntity Farm { get; init; }
     public virtual CycleEntity Cycle { get; init; }
@@ -71,5 +72,10 @@ public class SaleInvoiceEntity : Entity
     public void SetFilePath(string path)
     {
         FilePath = path;
+    }
+
+    public void BookPayment(DateOnly paymentDate)
+    {
+        PaymentDate = paymentDate;
     }
 }

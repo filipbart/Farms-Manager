@@ -55,6 +55,13 @@ export const getSalesInvoicesColumns = ({
         value ? dayjs(value).format("YYYY-MM-DD") : "",
     },
     {
+      field: "paymentDate",
+      headerName: "Data płatności",
+      width: 150,
+      valueGetter: (value: string | null) =>
+        value ? dayjs(value).format("YYYY-MM-DD") : "—",
+    },
+    {
       field: "invoiceTotal",
       headerName: "Brutto [zł]",
       flex: 1,

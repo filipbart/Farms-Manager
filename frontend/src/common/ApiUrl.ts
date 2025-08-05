@@ -65,6 +65,7 @@ export default class ApiUrl {
   public static SalesInvoices = this.Sales + "/invoices";
   public static UploadSalesInvoices = this.SalesInvoices + "/upload";
   public static SaveSalesInvoicesData = this.SalesInvoices + "/save-invoice";
+  public static BookSalesInvoicesPayment = this.SalesInvoices + "/book-payment";
   public static UpdateSaleInvoice = (id: string) =>
     this.SalesInvoices + "/update/" + id;
   public static DeleteSaveInvoice = (id: string) =>

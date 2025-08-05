@@ -16,6 +16,7 @@ public class SalesInvoiceRowDto
     public decimal VatAmount { get; init; }
     public DateTime DateCreatedUtc { get; init; }
     public string FilePath { get; init; }
+    public DateOnly? PaymentDate { get; init; }
 }
 
 public class GetSalesInvoicesQueryResponse : PaginationModel<SalesInvoiceRowDto>;
