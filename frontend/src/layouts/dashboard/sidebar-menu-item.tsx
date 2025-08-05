@@ -5,10 +5,13 @@ import {
   ListItemIcon,
   ListItemText,
   styled,
+  Box,
+  useTheme,
 } from "@mui/material";
 import { type ReactNode } from "react";
 import { MdExpandLess, MdExpandMore } from "react-icons/md";
 import { Link, useLocation } from "react-router-dom";
+import { NotificationType } from "../../models/common/notifications";
 
 interface SidebarMenuItemProps {
   children?: any;
@@ -17,6 +20,8 @@ interface SidebarMenuItemProps {
   to: string;
   isOpen?: boolean;
   onClick?: () => void;
+  notificationCount?: number;
+  notificationPriority?: NotificationType;
 }
 
 const ListItemStyle: any = styled((props) => (
@@ -24,6 +29,7 @@ const ListItemStyle: any = styled((props) => (
     disableGutters
     {...props}
     sx={{
+      paddingRight: 2,
       "&.Mui-selected": {
         backgroundColor: (theme) => theme.palette.primary.main,
         color: (theme) => theme.palette.primary.contrastText,
@@ -58,8 +64,49 @@ const SidebarMenuItem: React.FC<SidebarMenuItemProps> = ({
   to,
   isOpen,
   onClick,
+  notificationCount,
+  notificationPriority,
 }) => {
   const location = useLocation();
+  const theme = useTheme();
+
+  const getBadgeColor = () => {
+    switch (notificationPriority) {
+      case NotificationType.High:
+        return theme.palette.error.main;
+      case NotificationType.Medium:
+        return theme.palette.warning.main;
+      case NotificationType.Low:
+        return theme.palette.info.main;
+      default:
+        return "transparent";
+    }
+  };
+
+  const renderBadge = () => {
+    if (!notificationCount || notificationCount === 0) {
+      return null;
+    }
+    return (
+      <Box
+        sx={{
+          width: 22,
+          height: 22,
+          borderRadius: "50%",
+          backgroundColor: getBadgeColor(),
+          color: theme.palette.getContrastText(getBadgeColor()),
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: "0.75rem",
+          fontWeight: "bold",
+          ml: 1,
+        }}
+      >
+        {notificationCount}
+      </Box>
+    );
+  };
 
   if (!children) {
     return (
@@ -73,20 +120,19 @@ const SidebarMenuItem: React.FC<SidebarMenuItemProps> = ({
           disableTypography
           primary={title}
           sx={{
+            flexGrow: 1,
             fontSize: "1rem",
             fontWeight: location.pathname === to ? "bold" : "normal",
           }}
         />
+        {renderBadge()}
       </ListItemStyle>
     );
   }
 
-  let childrenActive = false;
-  if (Array.isArray(children)) {
-    childrenActive = !!children.find(
-      (child: any) => location.pathname === child.props.to
-    );
-  }
+  const childrenActive = Array.isArray(children)
+    ? !!children.find((child: any) => location.pathname === child.props.to)
+    : false;
 
   return (
     <>
@@ -99,16 +145,14 @@ const SidebarMenuItem: React.FC<SidebarMenuItemProps> = ({
           disableTypography
           primary={title}
           sx={{
+            flexGrow: 1,
             fontSize: "1rem",
             fontWeight:
               childrenActive || location.pathname === to ? "bold" : "normal",
           }}
         />
-        {isOpen ? (
-          <MdExpandLess className="mr-3" />
-        ) : (
-          <MdExpandMore className="mr-3" />
-        )}
+        {renderBadge()}
+        {isOpen ? <MdExpandLess /> : <MdExpandMore />}
       </ListItemStyle>
       <Collapse in={isOpen} timeout="auto" unmountOnExit>
         <List sx={{ pl: 2 }} component="div" disablePadding>

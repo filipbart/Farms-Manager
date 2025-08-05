@@ -19,7 +19,7 @@ public class UserController(IMediator mediator) : BaseController
     {
         return Ok(await mediator.Send(new MeQuery()));
     }
-    
+
     /// <summary>
     /// Zwraca szczegóły użytkownika
     /// </summary>
@@ -30,5 +30,17 @@ public class UserController(IMediator mediator) : BaseController
     public async Task<IActionResult> Details()
     {
         return Ok(await mediator.Send(new DetailsQuery()));
+    }
+
+    /// <summary>
+    /// Zwraca alerty
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet("notifications")]
+    [ProducesResponseType(typeof(BaseResponse<GetNotificationsQueryResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetNotifications()
+    {
+        return Ok(await mediator.Send(new GetNotificationsQuery()));
     }
 }

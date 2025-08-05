@@ -7,10 +7,14 @@ import {
   Drawer,
   useMediaQuery,
   Avatar,
+  IconButton,
+  CircularProgress,
 } from "@mui/material";
+import { MdRefresh } from "react-icons/md";
 import LogoWhite from "../../assets/logo_white.png";
 import SidebarMenuItem from "./sidebar-menu-item";
 import { useAuth } from "../../auth/useAuth";
+import { useNotifications } from "../../context/notification-context";
 import { IoCard, IoHome } from "react-icons/io5";
 import {
   FaAddressCard,
@@ -59,6 +63,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   const location = useLocation();
   const lgUp = useMediaQuery((theme: any) => theme.breakpoints.up("lg"));
   const auth = useAuth();
+  const { notifications, refetch, isRefreshing } = useNotifications();
 
   const [openItem, setOpenItem] = useState<string | null>(null);
 
@@ -91,6 +96,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         icon={<IoCard />}
         isOpen={openItem === "Sprzedaże"}
         onClick={() => handleItemClick("Sprzedaże")}
+        notificationCount={notifications?.salesInvoices.count}
+        notificationPriority={notifications?.salesInvoices.priority}
       >
         <SidebarMenuItem to="/sales" title="Lista" icon={<FaList />} />
         <SidebarMenuItem
@@ -116,6 +123,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           to="/feeds/deliveries"
           title="Dostawy pasz"
           icon={<FaTruck />}
+          notificationCount={notifications?.feedDeliveries.count}
+          notificationPriority={notifications?.feedDeliveries.priority}
         />
         <SidebarMenuItem
           to="/feeds/prices"
@@ -218,6 +227,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         icon={<MdPeopleAlt />}
         isOpen={openItem === "Pracownicy"}
         onClick={() => handleItemClick("Pracownicy")}
+        notificationCount={notifications?.employees.count}
+        notificationPriority={notifications?.employees.priority}
       >
         <SidebarMenuItem
           to="/employees"
@@ -299,10 +310,18 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           </Box>
           <div className="flex items-center m-3 p-3 rounded-lg bg-gray-100 select-none">
             <Avatar />
-            <div className="ml-3 flex flex-col">
+            <div className="ml-3 flex flex-col flex-grow">
               <Typography variant="h6">{auth.userData?.name}</Typography>
               <Typography variant="body2">{auth.userData?.login}</Typography>
             </div>
+            <IconButton
+              onClick={refetch}
+              disabled={isRefreshing}
+              size="small"
+              title="Odśwież powiadomienia"
+            >
+              {isRefreshing ? <CircularProgress size={20} /> : <MdRefresh />}
+            </IconButton>
           </div>
           {contentList}
         </div>
