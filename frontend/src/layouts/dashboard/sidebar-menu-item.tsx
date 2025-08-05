@@ -11,7 +11,7 @@ import {
 import { type ReactNode } from "react";
 import { MdExpandLess, MdExpandMore } from "react-icons/md";
 import { Link, useLocation } from "react-router-dom";
-import { NotificationType } from "../../models/common/notifications";
+import { NotificationPriority } from "../../models/common/notifications";
 
 interface SidebarMenuItemProps {
   children?: any;
@@ -21,7 +21,7 @@ interface SidebarMenuItemProps {
   isOpen?: boolean;
   onClick?: () => void;
   notificationCount?: number;
-  notificationPriority?: NotificationType;
+  notificationPriority?: NotificationPriority;
 }
 
 const ListItemStyle: any = styled((props) => (
@@ -72,11 +72,11 @@ const SidebarMenuItem: React.FC<SidebarMenuItemProps> = ({
 
   const getBadgeColor = () => {
     switch (notificationPriority) {
-      case NotificationType.High:
+      case NotificationPriority.High:
         return theme.palette.error.main;
-      case NotificationType.Medium:
+      case NotificationPriority.Medium:
         return theme.palette.warning.main;
-      case NotificationType.Low:
+      case NotificationPriority.Low:
         return theme.palette.info.main;
       default:
         return "transparent";
@@ -101,6 +101,7 @@ const SidebarMenuItem: React.FC<SidebarMenuItemProps> = ({
           fontSize: "0.75rem",
           fontWeight: "bold",
           ml: 1,
+          marginRight: 1,
         }}
       >
         {notificationCount}

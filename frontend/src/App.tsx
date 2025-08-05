@@ -14,6 +14,7 @@ import {
 } from "./context/global/global-context";
 import Loading from "./components/loading/loading";
 import { AuthContextProvider } from "./auth/auth-context-provider";
+import { NotificationProvider } from "./context/notification-context-provider";
 
 function App() {
   return (
@@ -21,18 +22,23 @@ function App() {
       <RouterProvider>
         <GlobalContextProvider>
           <AuthContextProvider>
-            <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pl">
-              <GlobalContext.Consumer>
-                {(ctx) => {
-                  if (!ctx.state.pageLoaded) {
-                    return <Loading />;
-                  }
+            <NotificationProvider>
+              <LocalizationProvider
+                dateAdapter={AdapterDayjs}
+                adapterLocale="pl"
+              >
+                <GlobalContext.Consumer>
+                  {(ctx) => {
+                    if (!ctx.state.pageLoaded) {
+                      return <Loading />;
+                    }
 
-                  return <DefaultRouter />;
-                }}
-              </GlobalContext.Consumer>
-              <CssBaseline />
-            </LocalizationProvider>
+                    return <DefaultRouter />;
+                  }}
+                </GlobalContext.Consumer>
+                <CssBaseline />
+              </LocalizationProvider>
+            </NotificationProvider>
           </AuthContextProvider>
         </GlobalContextProvider>
       </RouterProvider>

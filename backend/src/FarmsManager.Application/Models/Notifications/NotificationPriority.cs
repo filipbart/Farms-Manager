@@ -2,7 +2,7 @@
 
 namespace FarmsManager.Application.Models.Notifications;
 
-public enum NotificationType
+public enum NotificationPriority
 {
     [Description("Niski")] Low,
     [Description("Średni")] Medium,

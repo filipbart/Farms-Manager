@@ -7,10 +7,7 @@ import {
   Drawer,
   useMediaQuery,
   Avatar,
-  IconButton,
-  CircularProgress,
 } from "@mui/material";
-import { MdRefresh } from "react-icons/md";
 import LogoWhite from "../../assets/logo_white.png";
 import SidebarMenuItem from "./sidebar-menu-item";
 import { useAuth } from "../../auth/useAuth";
@@ -63,7 +60,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   const location = useLocation();
   const lgUp = useMediaQuery((theme: any) => theme.breakpoints.up("lg"));
   const auth = useAuth();
-  const { notifications, refetch, isRefreshing } = useNotifications();
+  const { notifications } = useNotifications();
 
   const [openItem, setOpenItem] = useState<string | null>(null);
 
@@ -314,14 +311,6 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
               <Typography variant="h6">{auth.userData?.name}</Typography>
               <Typography variant="body2">{auth.userData?.login}</Typography>
             </div>
-            <IconButton
-              onClick={refetch}
-              disabled={isRefreshing}
-              size="small"
-              title="Odśwież powiadomienia"
-            >
-              {isRefreshing ? <CircularProgress size={20} /> : <MdRefresh />}
-            </IconButton>
           </div>
           {contentList}
         </div>

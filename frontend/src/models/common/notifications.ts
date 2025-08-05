@@ -1,4 +1,4 @@
-export enum NotificationType {
+export enum NotificationPriority {
   Low = "Low",
   Medium = "Medium",
   High = "High",
@@ -6,7 +6,7 @@ export enum NotificationType {
 
 export interface NotificationInfo {
   count: number;
-  priority: NotificationType;
+  priority: NotificationPriority;
 }
 
 export interface NotificationData {
