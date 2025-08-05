@@ -14,10 +14,12 @@ import dayjs from "dayjs";
 import { EmployeesService } from "../../../../services/employees-service";
 import AddEmployeeReminderModal from "../../../../components/modals/employees/add-employee-reminder-modal";
 import { EmployeeContext } from "../../../../context/employee-context";
+import { NotificationContext } from "../../../../context/notification-context";
 
 const EmployeeRemindersTab: React.FC = () => {
   const { employee, refetch } = useContext(EmployeeContext);
   const [modalOpen, setModalOpen] = useState(false);
+  const { refetch: refetchNotifications } = useContext(NotificationContext);
 
   const handleDelete = async (reminderId: string) => {
     if (employee) {
@@ -29,6 +31,7 @@ const EmployeeRemindersTab: React.FC = () => {
         if (res.success) {
           toast.success("Przypomnienie usunięte");
           refetch();
+          refetchNotifications();
         } else {
           toast.error("Nie udało się usunąć przypomnienia");
         }

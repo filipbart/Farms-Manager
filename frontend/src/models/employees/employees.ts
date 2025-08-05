@@ -66,7 +66,7 @@ export interface UpdateEmployeeData {
   contractType: string;
   salary: number;
   startDate: string;
-  endDate?: string;
+  endDate?: string | null;
   status: EmployeeStatus;
   comment?: string;
 }

@@ -38,7 +38,7 @@ public class DeleteEmployeeReminderCommandHandler : IRequestHandler<DeleteEmploy
     {
         var employee = await _employeeRepository.GetAsync(new EmployeeByIdSpec(request.EmployeeId), cancellationToken);
         var reminder =
-            await _employeeReminderRepository.GetAsync(new EmployeeReminderByIdSpec(request.EmployeeId),
+            await _employeeReminderRepository.GetAsync(new EmployeeReminderByIdSpec(request.ReminderId),
                 cancellationToken);
 
         if (employee.Id != reminder.EmployeeId)

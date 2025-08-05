@@ -1,6 +1,6 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
 import { DataGrid, type GridRowSelectionModel } from "@mui/x-data-grid";
-import { useReducer, useState, useMemo, useEffect } from "react";
+import { useReducer, useState, useMemo, useEffect, useContext } from "react";
 import { toast } from "react-toastify";
 import NoRowsOverlay from "../../../components/datagrid/custom-norows";
 import CustomToolbar from "../../../components/datagrid/custom-toolbar";
@@ -29,10 +29,12 @@ import GeneratePaymentModal from "../../../components/modals/feeds/deliveries/ge
 import { downloadFile } from "../../../utils/download-file";
 import AddCorrectionModal from "../../../components/modals/feeds/deliveries/add-correction-modal";
 import EditCorrectionModal from "../../../components/modals/feeds/deliveries/edit-correction-modal";
+import { NotificationContext } from "../../../context/notification-context";
 
 const FeedsDeliveriesPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
   const [dictionary, setDictionary] = useState<FeedsDictionary>();
+  const { refetch: refetchNotifications } = useContext(NotificationContext);
 
   const [loading, setLoading] = useState(false);
   const [feedsDeliveries, setFeedsDeliveries] = useState<
@@ -147,6 +149,7 @@ const FeedsDeliveriesPage: React.FC = () => {
       errorMessage: "Błąd podczas pobierania pliku przelewu",
     });
     dispatch({ type: "setMultiple", payload: { page: filters.page } });
+    refetchNotifications();
   };
 
   const columns = useMemo(

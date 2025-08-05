@@ -101,6 +101,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           to="/sales/invoices"
           title="Faktury sprzedażowe"
           icon={<FaFileInvoiceDollar />}
+          notificationCount={notifications?.salesInvoices.count}
+          notificationPriority={notifications?.salesInvoices.priority}
         />
         <SidebarMenuItem
           to="/sales/settings"
@@ -115,6 +117,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         icon={<FaJarWheat />}
         isOpen={openItem === "Pasze"}
         onClick={() => handleItemClick("Pasze")}
+        notificationCount={notifications?.feedDeliveries.count}
+        notificationPriority={notifications?.feedDeliveries.priority}
       >
         <SidebarMenuItem
           to="/feeds/deliveries"
@@ -231,6 +235,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           to="/employees"
           title="Kadry"
           icon={<FaAddressCard />}
+          notificationCount={notifications?.employees.count}
+          notificationPriority={notifications?.employees.priority}
         />
         <SidebarMenuItem
           to="/employees/payslips"

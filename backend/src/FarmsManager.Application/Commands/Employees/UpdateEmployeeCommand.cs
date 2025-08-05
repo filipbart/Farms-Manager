@@ -9,9 +9,8 @@ using MediatR;
 
 namespace FarmsManager.Application.Commands.Employees;
 
-public record UpdateEmployeeData
+public class UpdateEmployeeData
 {
-    public Guid Id { get; init; }
     public Guid FarmId { get; init; }
     public string FullName { get; init; }
     public string Position { get; init; }
@@ -64,7 +63,7 @@ public class UpdateEmployeeCommandValidator : AbstractValidator<UpdateEmployeeCo
     {
         RuleFor(x => x.Id).NotEmpty();
 
-        RuleFor(x => x.Data.Id).NotEmpty();
+
         RuleFor(x => x.Data.FarmId).NotEmpty();
 
         RuleFor(x => x.Data.FullName)

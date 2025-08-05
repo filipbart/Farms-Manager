@@ -2,13 +2,16 @@ import { createContext, useContext } from "react";
 import type { NotificationData } from "../models/common/notifications";
 
 interface NotificationContextValue {
-  notifications: NotificationData | null;
-  isRefreshing: boolean;
+  notifications: NotificationData | undefined;
   refetch: () => void;
+  isRefreshing: boolean;
 }
 
-export const NotificationContext =
-  createContext<NotificationContextValue | null>(null);
+export const NotificationContext = createContext<NotificationContextValue>({
+  notifications: undefined,
+  refetch: () => {},
+  isRefreshing: false,
+} as NotificationContextValue);
 
 export const useNotifications = () => {
   const context = useContext(NotificationContext);

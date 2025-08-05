@@ -13,26 +13,31 @@ import {
 import { useFarms } from "../../../../hooks/useFarms";
 import LoadingTextField from "../../../../components/common/loading-textfield";
 import { EmployeeContext } from "../../../../context/employee-context";
+import { NotificationContext } from "../../../../context/notification-context";
+import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 
 const EmployeeInfoTab: React.FC = () => {
   const { employee, refetch, loading } = useContext(EmployeeContext);
   const { farms, loadingFarms, fetchFarms } = useFarms();
+  const { refetch: refetchNotifications } = useContext(NotificationContext);
 
   const {
     control,
     handleSubmit,
     register,
     reset,
+    watch,
     formState: { errors, isDirty },
   } = useForm<UpdateEmployeeData>({
     defaultValues: {
       fullName: "",
       farmId: "",
       position: "",
+      status: EmployeeStatus.Active,
       contractType: "",
       salary: 0,
       startDate: "",
-      endDate: "",
+      endDate: undefined,
       comment: "",
     },
   });
@@ -44,10 +49,11 @@ const EmployeeInfoTab: React.FC = () => {
         fullName: employee.fullName,
         farmId: employee.farmId,
         position: employee.position,
+        status: employee.status,
         contractType: employee.contractType,
         salary: employee.salary,
         startDate: employee.startDate,
-        endDate: employee.endDate ?? "",
+        endDate: employee.endDate ?? null,
         comment: employee.comment ?? "",
       });
     }
@@ -56,22 +62,22 @@ const EmployeeInfoTab: React.FC = () => {
   const onSubmit = async (data: UpdateEmployeeData) => {
     if (!employee) return;
 
-    const updated = { ...employee, ...data };
-
+    console.log(data);
     try {
-      const response = await EmployeesService.updateEmployee(
-        employee.id,
-        updated
+      await handleApiResponse(
+        () => EmployeesService.updateEmployee(employee.id, data),
+        () => {
+          toast.success("Dane pracownika zostały zaktualizowane");
+          refetch();
+          refetchNotifications();
+          reset(data);
+        },
+        (error) => {
+          console.log(error);
+        },
+        "Nie udało się zaktualizować danych"
       );
-      if (response.success) {
-        toast.success("Dane pracownika zostały zaktualizowane");
-        refetch();
-        reset(data);
-      } else {
-        toast.error("Nie udało się zaktualizować danych");
-      }
-    } catch (err) {
-      console.error("Błąd aktualizacji:", err);
+    } catch {
       toast.error("Wystąpił błąd podczas aktualizacji");
     }
   };
@@ -117,6 +123,7 @@ const EmployeeInfoTab: React.FC = () => {
             label="Status"
             select
             fullWidth
+            value={watch("status") || ""}
             defaultValue={employee.status}
             error={!!errors.status}
             helperText={errors.status?.message}
@@ -208,9 +215,12 @@ const EmployeeInfoTab: React.FC = () => {
                 format="DD.MM.YYYY"
                 value={field.value ? dayjs(field.value) : null}
                 onChange={(date) =>
-                  field.onChange(date ? dayjs(date).format("YYYY-MM-DD") : "")
+                  field.onChange(date ? dayjs(date).format("YYYY-MM-DD") : null)
                 }
-                slotProps={{ textField: { fullWidth: true } }}
+                slotProps={{
+                  textField: { fullWidth: true },
+                  actionBar: { actions: ["clear", "cancel", "accept"] },
+                }}
               />
             )}
           />

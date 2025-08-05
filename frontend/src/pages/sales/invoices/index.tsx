@@ -1,6 +1,6 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
 import { DataGrid, type GridRowSelectionModel } from "@mui/x-data-grid";
-import { useReducer, useState, useMemo, useEffect } from "react";
+import { useReducer, useState, useMemo, useEffect, useContext } from "react";
 import { toast } from "react-toastify";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import { downloadFile } from "../../../utils/download-file";
@@ -28,10 +28,12 @@ import UploadSalesInvoicesModal from "../../../components/modals/sales/invoices/
 import SaveSalesInvoicesModal from "../../../components/modals/sales/invoices/save-sales-invoices-modal";
 import EditSaleInvoiceModal from "../../../components/modals/sales/invoices/edit-sale-invoice-modal";
 import BookPaymentModal from "../../../components/modals/sales/invoices/book-payment-modal";
+import { NotificationContext } from "../../../context/notification-context";
 
 const SalesInvoicesPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
   const [dictionary, setDictionary] = useState<SalesDictionary>();
+  const { refetch: refetchNotifications } = useContext(NotificationContext);
   const [selectedSalesInvoice, setSelectedSalesInvoice] =
     useState<SalesInvoiceListModel | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -109,6 +111,7 @@ const SalesInvoicesPage: React.FC = () => {
           setIsPaymentModalOpen(false);
           setSelectedRows({ type: "include", ids: new Set() });
           await fetchSalesInvoices();
+          refetchNotifications();
         },
         undefined,
         "Błąd podczas księgowania płatności"
