@@ -1,11 +1,7 @@
-import { Box, Button, Typography } from "@mui/material";
 import type { GridColDef } from "@mui/x-data-grid";
 import dayjs from "dayjs";
-import { toast } from "react-toastify";
-import { handleApiResponse } from "../../utils/axios/handle-api-response";
-import Loading from "../../components/loading/loading";
-import { useState } from "react";
-import { InsertionsService } from "../../services/insertions-service";
+import ActionsCell from "../../components/datagrid/actions-cell";
+import InsertionSendToIrzCell from "../../components/datagrid/insertion-send-to-irz-cell";
 
 export const getInsertionsColumns = ({
   setSelectedInsertion,
@@ -21,7 +17,6 @@ export const getInsertionsColumns = ({
   filters: any;
 }): GridColDef[] => {
   return [
-    { field: "id", headerName: "Id", width: 70 },
     { field: "cycleText", headerName: "Identyfikator", flex: 1 },
     { field: "farmName", headerName: "Ferma", flex: 1 },
     { field: "henhouseName", headerName: "Kurnik", flex: 1 },
@@ -54,124 +49,37 @@ export const getInsertionsColumns = ({
     {
       field: "sendToIrz",
       headerName: "Wyślij do IRZplus",
+      headerAlign: "center",
       flex: 1,
-
       minWidth: 200,
-      type: "actions",
-      renderCell: (params) => {
-        const { isSentToIrz, dateIrzSentUtc } = params.row;
-        const [loadingSendToIrz, setLoadingSendToIrz] = useState(false);
-        const handleSendToIrz = async (data: {
-          internalGroupId?: string;
-          insertionId?: string;
-        }) => {
-          setLoadingSendToIrz(true);
-          await handleApiResponse(
-            () => InsertionsService.sendToIrzPlus(data),
-            async () => {
-              toast.success("Wysłano do IRZplus");
-              dispatch({
-                type: "setMultiple",
-                payload: { page: filters.page },
-              });
-              setLoadingSendToIrz(false);
-            },
-            undefined,
-            "Wystąpił błąd podczas wysyłania do IRZplus"
-          );
-          setLoadingSendToIrz(false);
-        };
-        if (dateIrzSentUtc) {
-          const formattedDate = new Date(dateIrzSentUtc).toLocaleString(
-            "pl-PL",
-            {
-              dateStyle: "short",
-              timeStyle: "short",
-            }
-          );
-
-          return (
-            <Typography variant="body2" sx={{ whiteSpace: "nowrap" }}>
-              Wysłano - {formattedDate}
-            </Typography>
-          );
-        }
-
-        if (isSentToIrz) {
-          return null;
-        }
-
-        return (
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 1,
-              flexWrap: "nowrap",
-            }}
-          >
-            {loadingSendToIrz ? (
-              <Loading height="0" size={10} />
-            ) : (
-              <>
-                <Button
-                  variant="contained"
-                  color="error"
-                  size="small"
-                  onClick={() =>
-                    handleSendToIrz({ insertionId: params.row.id })
-                  }
-                >
-                  Osobno
-                </Button>
-
-                <Button
-                  variant="outlined"
-                  color="error"
-                  size="small"
-                  onClick={() =>
-                    handleSendToIrz({
-                      internalGroupId: params.row.internalGroupId,
-                    })
-                  }
-                >
-                  Z grupą
-                </Button>
-              </>
-            )}
-          </Box>
-        );
-      },
+      sortable: false,
+      renderCell: (params) => (
+        <InsertionSendToIrzCell
+          isSentToIrz={params.row.isSentToIrz}
+          dateIrzSentUtc={params.row.dateIrzSentUtc}
+          insertionId={params.row.id}
+          internalGroupId={params.row.internalGroupId}
+          dispatch={dispatch}
+          filters={filters}
+        />
+      ),
     },
+
     {
       field: "actions",
       type: "actions",
       headerName: "Akcje",
-      flex: 1,
+      width: 200,
       getActions: (params) => [
-        <Button
-          key="edit"
-          variant="outlined"
-          size="small"
-          onClick={() => {
-            setSelectedInsertion(params.row);
+        <ActionsCell
+          key="actions"
+          params={params}
+          onEdit={(row) => {
+            setSelectedInsertion(row);
             setIsEditModalOpen(true);
           }}
-        >
-          Edytuj
-        </Button>,
-        <Button
-          key="delete"
-          variant="outlined"
-          size="small"
-          color="error"
-          onClick={() => {
-            deleteInsertion(params.row.id);
-          }}
-        >
-          Usuń
-        </Button>,
+          onDelete={deleteInsertion}
+        />,
       ],
     },
 

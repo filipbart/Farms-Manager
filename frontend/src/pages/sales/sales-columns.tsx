@@ -2,7 +2,7 @@ import type { GridColDef } from "@mui/x-data-grid";
 import dayjs from "dayjs";
 import { OtherExtrasCell } from "../../models/sales/sale-other-extras-cell";
 import { CommentCell } from "../../components/datagrid/comment-cell";
-import SendToIrzCell from "../../components/datagrid/send-to-irz-cell";
+import SaleSendToIrzCell from "../../components/datagrid/sale-send-to-irz-cell";
 import ActionsCell from "../../components/datagrid/actions-cell";
 import FileDownloadCell from "../../components/datagrid/file-download-cell";
 
@@ -129,7 +129,11 @@ export const getSalesColumns = ({
       minWidth: 200,
       type: "actions",
       renderCell: (params) => (
-        <SendToIrzCell dispatch={dispatch} row={params.row} filters={filters} />
+        <SaleSendToIrzCell
+          dispatch={dispatch}
+          row={params.row}
+          filters={filters}
+        />
       ),
     },
     {

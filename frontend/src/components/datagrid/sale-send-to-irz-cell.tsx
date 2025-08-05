@@ -5,7 +5,7 @@ import { SalesService } from "../../services/sales-service";
 import { handleApiResponse } from "../../utils/axios/handle-api-response";
 import Loading from "../loading/loading";
 
-interface SendToIrzCellProps {
+interface SaleSendToIrzCellProps {
   dispatch: any;
   row: {
     id: string;
@@ -18,7 +18,11 @@ interface SendToIrzCellProps {
   };
 }
 
-const SendToIrzCell = ({ dispatch, row, filters }: SendToIrzCellProps) => {
+const SaleSendToIrzCell = ({
+  dispatch,
+  row,
+  filters,
+}: SaleSendToIrzCellProps) => {
   const { isSentToIrz, dateIrzSentUtc, internalGroupId, id } = row;
   const [loadingSendToIrz, setLoadingSendToIrz] = useState(false);
 
@@ -96,4 +100,4 @@ const SendToIrzCell = ({ dispatch, row, filters }: SendToIrzCellProps) => {
   );
 };
 
-export default SendToIrzCell;
+export default SaleSendToIrzCell;
