@@ -37,9 +37,9 @@ export const getEmployeePayslipColumns = ({
       flex: 1.5,
       renderCell: (params) => {
         if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
-          return <strong>Sumy:</strong>;
+          return <strong>Suma:</strong>;
         }
-        return "";
+        return params.value;
       },
     },
 
