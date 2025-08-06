@@ -20,14 +20,14 @@ const AdvancesListTab: React.FC = () => {
     dateTo: "",
   });
 
-  const navigate = useNavigate();
+  const nav = useNavigate();
 
   useEffect(() => {
     fetchEmployees();
   }, []);
 
   const handleEmployeeClick = (employeeId: string) => {
-    navigate(`/expenses/advances/${employeeId}`);
+    nav(`/expenses/advances/${employeeId}`);
   };
 
   if (loading) {

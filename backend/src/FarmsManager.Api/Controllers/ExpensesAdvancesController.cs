@@ -11,6 +11,64 @@ namespace FarmsManager.Api.Controllers;
 public class ExpensesAdvancesController(IMediator mediator) : BaseController
 {
     /// <summary>
+    /// Zwraca ewidencje zaliczek dla danego pracownika
+    /// </summary>
+    /// <param name="employeeId"></param>
+    /// <param name="filters"></param>
+    /// <returns></returns>
+    [HttpGet("{employeeId:guid}")]
+    [ProducesResponseType(typeof(BaseResponse<GetExpensesAdvancesQueryResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetExpensesAdvances([FromRoute] Guid employeeId,
+        [FromQuery] GetExpensesAdvancesQueryFilters filters)
+    {
+        return Ok(await mediator.Send(new GetExpensesAdvancesQuery(employeeId, filters)));
+    }
+
+    /// <summary>
+    /// Dodaje ewidencje zaliczek dla pracownika
+    /// </summary>
+    /// <param name="employeeId"></param>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    [HttpPost("{employeeId:guid}/add")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> AddExpenseAdvance([FromRoute] Guid employeeId,
+        [FromForm] AddExpenseAdvanceData data)
+    {
+        return Ok(await mediator.Send(new AddExpenseAdvanceCommand(employeeId, data)));
+    }
+
+    /// <summary>
+    /// Aktualizuje ewidencje zaliczek pracownika
+    /// </summary>
+    /// <param name="expenseAdvanceId"></param>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    [HttpPatch("{expenseAdvanceId:guid}/update")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> UpdateExpenseAdvance([FromRoute] Guid expenseAdvanceId,
+        [FromForm] UpdateExpenseAdvanceData data)
+    {
+        return Ok(await mediator.Send(new UpdateExpenseAdvanceCommand(expenseAdvanceId, data)));
+    }
+
+    /// <summary>
+    /// Usuwa ewidencje zaliczek pracownika
+    /// </summary>
+    /// <param name="expenseAdvanceId"></param>
+    /// <returns></returns>
+    [HttpDelete("{expenseAdvanceId:guid}/delete")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> DeleteExpenseAdvance([FromRoute] Guid expenseAdvanceId)
+    {
+        return Ok(await mediator.Send(new DeleteExpenseAdvanceCommand(expenseAdvanceId)));
+    }
+
+    /// <summary>
     /// Zwraca kategorie ewidencji zaliczek
     /// </summary>
     /// <returns></returns>

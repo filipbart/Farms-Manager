@@ -123,6 +123,14 @@ export default class ApiUrl {
     this.ExpensesProductions + "/save-invoice";
 
   public static ExpensesAdvances = this.Expenses + "/advances";
+  public static ExpensesAdvancesDetails = (employeeId: string) =>
+    this.ExpensesAdvances + "/" + employeeId;
+  public static AddExpenseAdvance = (employeeId: string) =>
+    this.ExpensesAdvances + "/" + employeeId + "/add";
+  public static UpdateExpenseAdvance = (expenseAdvanceId: string) =>
+    this.ExpensesAdvances + "/" + expenseAdvanceId + "/update";
+  public static DeleteExpenseAdvance = (expenseAdvanceId: string) =>
+    this.ExpensesAdvances + "/" + expenseAdvanceId + "/delete";
   public static ExpensesAdvancesCategories =
     this.ExpensesAdvances + "/categories";
   public static AddAdvanceCategory = this.ExpensesAdvancesCategories + "/add";

@@ -15,12 +15,15 @@ public class DeleteAdvanceCategoryCommandHandler : IRequestHandler<DeleteAdvance
 {
     private readonly IUserDataResolver _userDataResolver;
     private readonly IExpenseAdvanceCategoryRepository _expenseAdvanceCategoryRepository;
+    private readonly IExpenseAdvanceRepository _expenseAdvanceRepository;
 
     public DeleteAdvanceCategoryCommandHandler(IUserDataResolver userDataResolver,
-        IExpenseAdvanceCategoryRepository expenseAdvanceCategoryRepository)
+        IExpenseAdvanceCategoryRepository expenseAdvanceCategoryRepository,
+        IExpenseAdvanceRepository expenseAdvanceRepository)
     {
         _userDataResolver = userDataResolver;
         _expenseAdvanceCategoryRepository = expenseAdvanceCategoryRepository;
+        _expenseAdvanceRepository = expenseAdvanceRepository;
     }
 
     public async Task<EmptyBaseResponse> Handle(DeleteAdvanceCategoryCommand request,
@@ -31,17 +34,20 @@ public class DeleteAdvanceCategoryCommandHandler : IRequestHandler<DeleteAdvance
             await _expenseAdvanceCategoryRepository.GetAsync(new GetAdvanceCategoryByIdSpec(request.Id),
                 cancellationToken);
 
+        var advances =
+            await _expenseAdvanceRepository.ListAsync(new GetExpenseAdvancesByCategoryIdSpec(entity.Id),
+                cancellationToken);
 
-        // if (advances.Any())
-        // {
-        //     foreach (var advance in advances)
-        //     {
-        //         advance.ClearCategory();
-        //         advance.SetModified(userId);
-        //     }
-        //
-        //     await _expenseAdvanceRepository.UpdateRangeAsync(advances, cancellationToken);
-        // } TODO jak dodam ExpenseAdvanceEntity
+        if (advances.Count != 0)
+        {
+            foreach (var advance in advances)
+            {
+                advance.SetExpenseAdvanceCategory(null);
+                advance.SetModified(userId);
+            }
+
+            await _expenseAdvanceRepository.UpdateRangeAsync(advances, cancellationToken);
+        }
 
         entity.Delete(userId);
         await _expenseAdvanceCategoryRepository.UpdateAsync(entity, cancellationToken);
@@ -56,5 +62,14 @@ public sealed class GetAdvanceCategoryByIdSpec : BaseSpecification<ExpenseAdvanc
     {
         EnsureExists();
         Query.Where(e => e.Id == id);
+    }
+}
+
+public sealed class GetExpenseAdvancesByCategoryIdSpec : BaseSpecification<ExpenseAdvanceEntity>
+{
+    public GetExpenseAdvancesByCategoryIdSpec(Guid categoryId)
+    {
+        EnsureExists();
+        Query.Where(t => t.ExpenseAdvanceCategoryId == categoryId);
     }
 }

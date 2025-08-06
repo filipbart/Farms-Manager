@@ -433,6 +433,24 @@ public class S3Service : IS3Service
         return _s3Client.GetPreSignedURL(request);
     }
 
+    public async Task<bool> FolderExistsAsync(FileType fileType, string prefix)
+    {
+        await EnsureBucketExistsAsync();
+        var key = GetPath(fileType, prefix);
+
+        var request = new ListObjectsV2Request
+        {
+            BucketName = _bucketName,
+            Prefix = key,
+            MaxKeys = 1
+        };
+
+        var response = await _s3Client.ListObjectsV2Async(request);
+
+
+        return response.S3Objects.Count != 0;
+    }
+
 
     private static string GetPath(FileType fileType, string path)
     {

@@ -16,6 +16,7 @@ export enum RouteName {
   FeedsPayments = "feeds/payments",
   ExpensesProduction = "expenses/production",
   ExpensesAdvances = "expenses/advances",
+  ExpensesAdvancesDetails = "expenses/advances/:employeeId",
   ExpensesContractors = "expenses/contractors",
   ExpensesTypes = "expenses/types",
   ProductionDataFailures = "production-data/failures",

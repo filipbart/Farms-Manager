@@ -42,6 +42,12 @@ public class DeleteEmployeeCommandHandler : IRequestHandler<DeleteEmployeeComman
             }
         }
 
+        var folderPath = entity.Id.ToString();
+        if (await _s3Service.FolderExistsAsync(FileType.ExpenseAdvance, folderPath))
+        {
+            await _s3Service.DeleteFolderAsync(FileType.ExpenseAdvance, folderPath);
+        }
+
         entity.Delete(userId);
         await _employeeRepository.UpdateAsync(entity, cancellationToken);
 

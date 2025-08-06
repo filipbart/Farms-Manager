@@ -4,6 +4,7 @@ using FarmsManager.Domain.Aggregates.UserAggregate.Models;
 using FarmsManager.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FarmsManager.Infrastructure.Migrations
 {
     [DbContext(typeof(FarmsManagerContext))]
-    partial class FarmsManagerContextModelSnapshot : ModelSnapshot
+    [Migration("20250806181831_AddExpenseAdvanceEntity")]
+    partial class AddExpenseAdvanceEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -411,7 +414,7 @@ namespace FarmsManager.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("employee_id");
 
-                    b.Property<Guid?>("ExpenseAdvanceCategoryId")
+                    b.Property<Guid>("ExpenseAdvanceCategoryId")
                         .HasColumnType("uuid")
                         .HasColumnName("expense_advance_category_id");
 
@@ -2557,6 +2560,8 @@ namespace FarmsManager.Infrastructure.Migrations
                     b.HasOne("FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities.ExpenseAdvanceCategoryEntity", "ExpenseAdvanceCategory")
                         .WithMany()
                         .HasForeignKey("ExpenseAdvanceCategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
                         .HasConstraintName("fk_expense_advance_expense_advance_category_expense_advance_ca");
 
                     b.Navigation("Employee");

@@ -20,4 +20,5 @@ public interface IS3Service : IService
     Task DeleteFileAsync(FileType fileType, string path);
     Task DeleteFolderAsync(FileType fileType, string folderPath);
     string GeneratePreSignedUrl(FileType fileType, string path, string fileName = null);
+    Task<bool> FolderExistsAsync(FileType fileType, string prefix);
 }
