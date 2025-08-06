@@ -1,11 +1,12 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
-import { DataGrid, type GridColDef } from "@mui/x-data-grid";
+import { type GridColDef } from "@mui/x-data-grid";
 import { useEffect, useMemo, useState } from "react";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import type { HatcheryRowModel } from "../../../models/hatcheries/hatchery-row-model";
 import type { PaginateModel } from "../../../common/interfaces/paginate";
 import { HatcheriesService } from "../../../services/hatcheries-service";
 import AddHatcheryModal from "../../../components/modals/hatcheries/add-hatchery-modal";
+import { DataGridPro } from "@mui/x-data-grid-pro";
 
 const HatcheriesPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -118,14 +119,15 @@ const HatcheriesPage: React.FC = () => {
           overflowX: "auto",
         }}
       >
-        <DataGrid
+        <DataGridPro
           loading={loading}
           {...data}
           columns={columns}
           localeText={{
             noRowsLabel: "Brak wpisów",
+            footerTotalRows: "Łączna liczba wierszy:",
           }}
-          hideFooterPagination={true}
+          hideFooterPagination
           rowSelection={false}
           showToolbar={false}
           sx={{

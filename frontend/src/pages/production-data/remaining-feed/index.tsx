@@ -1,5 +1,5 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
-import { DataGrid } from "@mui/x-data-grid";
+import { DataGridPro } from "@mui/x-data-grid-pro";
 import { useEffect, useMemo, useReducer, useState } from "react";
 import { toast } from "react-toastify";
 import type { CycleDictModel } from "../../../models/common/dictionaries";
@@ -153,7 +153,7 @@ const ProductionDataRemainingFeedPage: React.FC = () => {
       />
 
       <Box mt={4} sx={{ width: "100%", overflowX: "auto" }}>
-        <DataGrid
+        <DataGridPro
           loading={loading}
           rows={remainingFeeds}
           columns={columns}
@@ -176,6 +176,7 @@ const ProductionDataRemainingFeedPage: React.FC = () => {
               `${from} do ${to} z ${count}`,
           }}
           paginationMode="server"
+          pagination
           paginationModel={{
             pageSize: filters.pageSize ?? 10,
             page: filters.page ?? 0,

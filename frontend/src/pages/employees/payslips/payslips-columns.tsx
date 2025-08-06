@@ -43,6 +43,7 @@ export const getEmployeePayslipColumns = ({
       type: "number",
       headerAlign: "left",
       align: "left",
+      aggregable: true,
     },
     {
       field: "bankTransferAmount",
@@ -51,6 +52,7 @@ export const getEmployeePayslipColumns = ({
       type: "number",
       headerAlign: "left",
       align: "left",
+      aggregable: true,
     },
     {
       field: "bonusAmount",
@@ -59,6 +61,7 @@ export const getEmployeePayslipColumns = ({
       type: "number",
       headerAlign: "left",
       align: "left",
+      aggregable: true,
     },
     {
       field: "overtimePay",
@@ -67,6 +70,7 @@ export const getEmployeePayslipColumns = ({
       type: "number",
       headerAlign: "left",
       align: "left",
+      aggregable: true,
     },
     {
       field: "overtimeHours",
@@ -75,6 +79,7 @@ export const getEmployeePayslipColumns = ({
       type: "number",
       headerAlign: "left",
       align: "left",
+      aggregable: true,
     },
     {
       field: "deductions",
@@ -83,6 +88,7 @@ export const getEmployeePayslipColumns = ({
       type: "number",
       headerAlign: "left",
       align: "left",
+      aggregable: true,
     },
     {
       field: "otherAllowances",
@@ -91,6 +97,7 @@ export const getEmployeePayslipColumns = ({
       type: "number",
       headerAlign: "left",
       align: "left",
+      aggregable: true,
     },
     {
       field: "netPay",
@@ -99,6 +106,7 @@ export const getEmployeePayslipColumns = ({
       type: "number",
       headerAlign: "left",
       align: "left",
+      aggregable: true,
     },
     {
       field: "comment",

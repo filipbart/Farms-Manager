@@ -1,5 +1,5 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
-import { DataGrid, type GridRowSelectionModel } from "@mui/x-data-grid";
+import { type GridRowSelectionModel } from "@mui/x-data-grid";
 import { useReducer, useState, useMemo, useEffect, useContext } from "react";
 import { toast } from "react-toastify";
 import NoRowsOverlay from "../../../components/datagrid/custom-norows";
@@ -30,6 +30,7 @@ import { downloadFile } from "../../../utils/download-file";
 import AddCorrectionModal from "../../../components/modals/feeds/deliveries/add-correction-modal";
 import EditCorrectionModal from "../../../components/modals/feeds/deliveries/edit-correction-modal";
 import { NotificationContext } from "../../../context/notification-context";
+import { DataGridPro } from "@mui/x-data-grid-pro";
 
 const FeedsDeliveriesPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -287,7 +288,7 @@ const FeedsDeliveriesPage: React.FC = () => {
       />
 
       <Box mt={4} sx={{ width: "100%", overflowX: "auto" }}>
-        <DataGrid
+        <DataGridPro
           loading={loading}
           rows={feedsDeliveries}
           columns={columns}
@@ -324,6 +325,7 @@ const FeedsDeliveriesPage: React.FC = () => {
           }}
           rowSelectionModel={selectedRows}
           paginationMode="server"
+          pagination
           paginationModel={{
             pageSize: filters.pageSize ?? 10,
             page: filters.page ?? 0,

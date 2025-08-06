@@ -1,5 +1,5 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
-import { DataGrid } from "@mui/x-data-grid";
+import { DataGridPro } from "@mui/x-data-grid-pro";
 import { useEffect, useMemo, useState } from "react";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import { getExpensesContractorsColumns } from "./expenses-contractors-columns";
@@ -85,7 +85,7 @@ const ExpensesContractorsPage: React.FC = () => {
           overflowX: "auto",
         }}
       >
-        <DataGrid
+        <DataGridPro
           loading={loadingExpensesContractors}
           rows={expensesContractors}
           columns={columns}
@@ -102,6 +102,7 @@ const ExpensesContractorsPage: React.FC = () => {
           }}
           rowSelection={false}
           showToolbar={false}
+          pagination
           pageSizeOptions={[5, 10, 25, 100, { value: -1, label: "Wszystkie" }]}
           sx={{
             [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },

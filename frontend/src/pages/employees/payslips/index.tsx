@@ -1,5 +1,5 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
-import { DataGrid } from "@mui/x-data-grid";
+import { DataGridPremium } from "@mui/x-data-grid-premium";
 import { useReducer, useState, useMemo, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
 import FiltersForm from "../../../components/filters/filters-form";
@@ -21,7 +21,6 @@ import {
 import { getEmployeePayslipsFiltersConfig } from "./filter-config.employee-payslips";
 import AddEmployeePayslipModal from "../../../components/modals/employees/add-employee-payslip-modal";
 import EditEmployeePayslipModal from "../../../components/modals/employees/edit-employee-payslip-modal";
-import { CustomFooter } from "../../../components/datagrid/custom-footer";
 
 const EmployeePayslipsPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -125,7 +124,7 @@ const EmployeePayslipsPage: React.FC = () => {
       />
 
       <Box mt={4} sx={{ width: "100%", overflowX: "auto" }}>
-        <DataGrid
+        <DataGridPremium
           loading={loading}
           rows={payslips}
           columns={columns}
@@ -149,6 +148,7 @@ const EmployeePayslipsPage: React.FC = () => {
           }}
           scrollbarSize={17}
           paginationMode="server"
+          pagination
           paginationModel={{
             pageSize: filters.pageSize ?? 10,
             page: filters.page ?? 0,
@@ -165,7 +165,6 @@ const EmployeePayslipsPage: React.FC = () => {
           slots={{
             toolbar: CustomToolbar,
             noRowsOverlay: NoRowsOverlay,
-            footer: () => <CustomFooter rows={payslips} />,
           }}
           showToolbar
           sx={{

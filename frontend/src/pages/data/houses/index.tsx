@@ -6,7 +6,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { DataGrid, type GridColDef } from "@mui/x-data-grid";
+import { type GridColDef } from "@mui/x-data-grid";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FarmsService } from "../../../services/farms-service";
 import type FarmRowModel from "../../../models/farms/farm-row-model";
@@ -17,6 +17,7 @@ import Loading from "../../../components/loading/loading";
 import AddHenhouseModal from "../../../components/modals/farms/add-henhouse-modal";
 import { toast } from "react-toastify";
 import { useFarms } from "../../../hooks/useFarms";
+import { DataGridPro } from "@mui/x-data-grid-pro";
 
 const HousesPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -172,15 +173,16 @@ const HousesPage: React.FC = () => {
           overflowX: "auto",
         }}
       >
-        <DataGrid
+        <DataGridPro
           loading={loading}
           {...data}
           columns={columns}
           localeText={{
             noRowsLabel:
               chosenFarm === undefined ? "Wybierz fermę" : "Brak wpisów",
+            footerTotalRows: "Łączna liczba wierszy:",
           }}
-          hideFooterPagination={true}
+          hideFooterPagination
           rowSelection={false}
           showToolbar={false}
           sx={{

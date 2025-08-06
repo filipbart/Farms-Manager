@@ -250,7 +250,7 @@ const SalesInvoicesPage: React.FC = () => {
             paginationDisplayedRows: ({ from, to, count }) =>
               `${from} do ${to} z ${count}`,
           }}
-          pagination={true}
+          pagination
           paginationMode="server"
           paginationModel={{
             pageSize: filters.pageSize ?? 10,

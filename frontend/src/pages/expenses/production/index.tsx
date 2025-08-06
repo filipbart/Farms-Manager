@@ -1,5 +1,5 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
-import { DataGrid } from "@mui/x-data-grid";
+import { DataGridPro } from "@mui/x-data-grid-pro";
 import { useReducer, useState, useMemo, useEffect } from "react";
 import { toast } from "react-toastify";
 import FiltersForm from "../../../components/filters/filters-form";
@@ -194,7 +194,7 @@ const ExpenseProductionPage: React.FC = () => {
       />
 
       <Box mt={4} sx={{ width: "100%", overflowX: "auto" }}>
-        <DataGrid
+        <DataGridPro
           loading={loading}
           rows={expenseProductions}
           columns={columns}
@@ -218,6 +218,7 @@ const ExpenseProductionPage: React.FC = () => {
           }}
           scrollbarSize={17}
           paginationMode="server"
+          pagination
           paginationModel={{
             pageSize: filters.pageSize ?? 10,
             page: filters.page ?? 0,

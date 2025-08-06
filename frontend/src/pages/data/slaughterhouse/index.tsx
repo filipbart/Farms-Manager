@@ -1,11 +1,12 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
-import { DataGrid, type GridColDef } from "@mui/x-data-grid";
+import { type GridColDef } from "@mui/x-data-grid";
 import { useEffect, useMemo, useState } from "react";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import type { PaginateModel } from "../../../common/interfaces/paginate";
 import type { SlaughterhouseRowModel } from "../../../models/slaughterhouses/slaughterhouse-row-model";
 import { SlaughterhousesService } from "../../../services/slaughterhouses-service";
 import AddSlaughterhouseModal from "../../../components/modals/slaughterhouses/add-slaugtherhouse-modal";
+import { DataGridPro } from "@mui/x-data-grid-pro";
 
 const SlaughterhousesPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -122,14 +123,15 @@ const SlaughterhousesPage: React.FC = () => {
           overflowX: "auto",
         }}
       >
-        <DataGrid
+        <DataGridPro
           loading={loading}
           {...data}
           columns={columns}
           localeText={{
             noRowsLabel: "Brak wpisów",
+            footerTotalRows: "Łączna liczba wierszy:",
           }}
-          hideFooterPagination={true}
+          hideFooterPagination
           rowSelection={false}
           showToolbar={false}
           sx={{

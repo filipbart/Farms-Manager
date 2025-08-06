@@ -1,10 +1,11 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
-import { DataGrid, type GridColDef } from "@mui/x-data-grid";
+import { type GridColDef } from "@mui/x-data-grid";
 import { useEffect, useMemo, useState } from "react";
 import { FarmsService } from "../../../services/farms-service";
 import AddFarmModal from "../../../components/modals/farms/add-farm-modal";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import { useFarms } from "../../../hooks/useFarms";
+import { DataGridPro } from "@mui/x-data-grid-pro";
 
 const FarmsPage: React.FC = () => {
   const { farms, loadingFarms, fetchFarms } = useFarms();
@@ -107,14 +108,15 @@ const FarmsPage: React.FC = () => {
           overflowX: "auto",
         }}
       >
-        <DataGrid
+        <DataGridPro
           loading={loadingFarms}
           {...data}
           columns={columns}
           localeText={{
             noRowsLabel: "Brak wpisów",
+            footerTotalRows: "Łączna liczba wierszy:",
           }}
-          hideFooterPagination={true}
+          hideFooterPagination
           rowSelection={false}
           showToolbar={false}
           sx={{

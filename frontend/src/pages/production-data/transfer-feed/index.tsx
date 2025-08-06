@@ -17,7 +17,7 @@ import type { ProductionDataTransferFeedListModel } from "../../../models/produc
 import { ProductionDataService } from "../../../services/production-data/production-data-service";
 import { getFeedTransfersColumns } from "./transfer-feed-columns";
 import { getProductionDataFiltersConfig } from "../filter-config.production-data";
-import { DataGrid } from "@mui/x-data-grid";
+import { DataGridPro } from "@mui/x-data-grid-pro";
 import { ProductionDataTransferFeedService } from "../../../services/production-data/production-data-transfer-feed-service";
 import AddProductionDataTransferFeedModal from "../../../components/modals/production-data/transfer-feed/add-production-data-transfer-feed-modal";
 import EditProductionDataTransferFeedModal from "../../../components/modals/production-data/transfer-feed/edit-production-data-transfer-feed-modal";
@@ -153,7 +153,7 @@ const ProductionDataTransferFeedPage: React.FC = () => {
       />
 
       <Box mt={4} sx={{ width: "100%", overflowX: "auto" }}>
-        <DataGrid
+        <DataGridPro
           loading={loading}
           rows={feedTransfers}
           columns={columns}
@@ -177,6 +177,7 @@ const ProductionDataTransferFeedPage: React.FC = () => {
               `${from} do ${to} z ${count}`,
           }}
           paginationMode="server"
+          pagination
           paginationModel={{
             pageSize: filters.pageSize ?? 10,
             page: filters.page ?? 0,
