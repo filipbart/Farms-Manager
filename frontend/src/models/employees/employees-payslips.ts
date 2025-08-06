@@ -1,3 +1,5 @@
+import type { PaginateModel } from "../../common/interfaces/paginate";
+
 export interface EmployeePayslipListModel {
   id: string;
   farmName: string;
@@ -16,6 +18,22 @@ export interface EmployeePayslipListModel {
 
   comment?: string;
   dateCreatedUtc: string;
+}
+
+export interface EmployeePayslipAggregation {
+  baseSalary: number;
+  bankTransferAmount: number;
+  bonusAmount: number;
+  overtimePay: number;
+  overtimeHours: number;
+  deductions: number;
+  otherAllowances: number;
+  netPay: number;
+}
+
+export interface GetEmployeePayslipsResponse {
+  list: PaginateModel<EmployeePayslipListModel>;
+  aggregation: EmployeePayslipAggregation;
 }
 
 export enum PayrollPeriod {

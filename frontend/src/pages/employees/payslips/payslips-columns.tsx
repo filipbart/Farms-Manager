@@ -2,6 +2,7 @@ import type { GridColDef } from "@mui/x-data-grid";
 import { CommentCell } from "../../../components/datagrid/comment-cell";
 import type { EmployeePayslipListModel } from "../../../models/employees/employees-payslips";
 import ActionsCell from "../../../components/datagrid/actions-cell";
+import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
 
 interface GetEmployeePayslipColumnsProps {
   setSelectedPayslip: (payslip: EmployeePayslipListModel) => void;
@@ -34,6 +35,12 @@ export const getEmployeePayslipColumns = ({
       field: "employeeFullName",
       headerName: "Pracownik",
       flex: 1.5,
+      renderCell: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return <strong>Sumy:</strong>;
+        }
+        return "";
+      },
     },
 
     {
@@ -44,6 +51,7 @@ export const getEmployeePayslipColumns = ({
       headerAlign: "left",
       align: "left",
       aggregable: true,
+      availableAggregationFunctions: ["sum"],
     },
     {
       field: "bankTransferAmount",
@@ -53,6 +61,7 @@ export const getEmployeePayslipColumns = ({
       headerAlign: "left",
       align: "left",
       aggregable: true,
+      availableAggregationFunctions: ["sum"],
     },
     {
       field: "bonusAmount",
@@ -62,6 +71,7 @@ export const getEmployeePayslipColumns = ({
       headerAlign: "left",
       align: "left",
       aggregable: true,
+      availableAggregationFunctions: ["sum"],
     },
     {
       field: "overtimePay",
@@ -71,6 +81,7 @@ export const getEmployeePayslipColumns = ({
       headerAlign: "left",
       align: "left",
       aggregable: true,
+      availableAggregationFunctions: ["sum"],
     },
     {
       field: "overtimeHours",
@@ -80,6 +91,7 @@ export const getEmployeePayslipColumns = ({
       headerAlign: "left",
       align: "left",
       aggregable: true,
+      availableAggregationFunctions: ["sum"],
     },
     {
       field: "deductions",
@@ -89,6 +101,7 @@ export const getEmployeePayslipColumns = ({
       headerAlign: "left",
       align: "left",
       aggregable: true,
+      availableAggregationFunctions: ["sum"],
     },
     {
       field: "otherAllowances",
@@ -98,6 +111,7 @@ export const getEmployeePayslipColumns = ({
       headerAlign: "left",
       align: "left",
       aggregable: true,
+      availableAggregationFunctions: ["sum"],
     },
     {
       field: "netPay",
@@ -107,6 +121,7 @@ export const getEmployeePayslipColumns = ({
       headerAlign: "left",
       align: "left",
       aggregable: true,
+      availableAggregationFunctions: ["sum"],
     },
     {
       field: "comment",
@@ -120,17 +135,24 @@ export const getEmployeePayslipColumns = ({
       type: "actions",
       headerName: "Akcje",
       width: 200,
-      getActions: (params) => [
-        <ActionsCell
-          key="actions"
-          params={params}
-          onEdit={(row) => {
-            setSelectedPayslip(row);
-            setIsEditModalOpen(true);
-          }}
-          onDelete={deletePayslip}
-        />,
-      ],
+      sortable: false,
+      getActions: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return [];
+        }
+
+        return [
+          <ActionsCell
+            key="actions"
+            params={params}
+            onEdit={(row) => {
+              setSelectedPayslip(row);
+              setIsEditModalOpen(true);
+            }}
+            onDelete={deletePayslip}
+          />,
+        ];
+      },
     },
   ];
 };

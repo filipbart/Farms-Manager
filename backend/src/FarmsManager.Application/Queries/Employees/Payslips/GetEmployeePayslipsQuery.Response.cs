@@ -26,4 +26,20 @@ public class EmployeePayslipRowDto
     public DateTime DateCreatedUtc { get; init; }
 }
 
-public class GetEmployeePayslipsQueryResponse : PaginationModel<EmployeePayslipRowDto>;
+public class EmployeePayslipAggregationDto
+{
+    public decimal BaseSalary { get; init; }
+    public decimal BankTransferAmount { get; init; }
+    public decimal BonusAmount { get; init; }
+    public decimal OvertimePay { get; init; }
+    public decimal OvertimeHours { get; init; }
+    public decimal Deductions { get; init; }
+    public decimal OtherAllowances { get; init; }
+    public decimal NetPay { get; init; }
+}
+
+public class GetEmployeePayslipsQueryResponse
+{
+    public PaginationModel<EmployeePayslipRowDto> List { get; init; }
+    public EmployeePayslipAggregationDto Aggregation { get; init; }
+}

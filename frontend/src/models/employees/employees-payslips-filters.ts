@@ -1,3 +1,4 @@
+import type { GridAggregationModel } from "@mui/x-data-grid-premium";
 import type { FarmDictModel, CycleDictModel } from "../common/dictionaries";
 import type { OrderedPaginationParams } from "../common/pagination-params";
 import type { PayrollPeriod } from "./employees-payslips";
@@ -76,7 +77,9 @@ export interface EmployeePayslipsFilter {
 
 export interface EmployeePayslipsFilterPaginationModel
   extends EmployeePayslipsFilter,
-    OrderedPaginationParams<EmployeePayslipsOrderType> {}
+    OrderedPaginationParams<EmployeePayslipsOrderType> {
+  aggregationModel?: GridAggregationModel;
+}
 
 export interface EmployeePayslipsDictionary {
   farms: FarmDictModel[];

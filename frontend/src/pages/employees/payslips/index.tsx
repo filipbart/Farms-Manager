@@ -1,5 +1,9 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
-import { DataGridPremium } from "@mui/x-data-grid-premium";
+import {
+  DataGridPremium,
+  GRID_AGGREGATION_ROOT_FOOTER_ROW_ID,
+  type GridDataSource,
+} from "@mui/x-data-grid-premium";
 import { useReducer, useState, useMemo, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
 import FiltersForm from "../../../components/filters/filters-form";
@@ -17,6 +21,7 @@ import {
   initialFilters,
   mapEmployeePayslipOrderTypeToField,
   type EmployeePayslipsDictionary,
+  type EmployeePayslipsFilterPaginationModel,
 } from "../../../models/employees/employees-payslips-filters";
 import { getEmployeePayslipsFiltersConfig } from "./filter-config.employee-payslips";
 import AddEmployeePayslipModal from "../../../components/modals/employees/add-employee-payslip-modal";
@@ -30,13 +35,101 @@ const EmployeePayslipsPage: React.FC = () => {
     useState<EmployeePayslipListModel | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  const { payslips, totalRows, loading, fetchPayslips } =
-    useEmployeePayslips(filters);
+  const { totalRows, loading, fetchPayslips } = useEmployeePayslips(filters);
 
   const [visibilityModel, setVisibilityModel] = useState(() => {
     const saved = localStorage.getItem("columnVisibilityModelEmployeePayslips");
     return saved ? JSON.parse(saved) : {};
   });
+
+  const dataSource: GridDataSource = useMemo(
+    () => ({
+      getRows: async (params) => {
+        // Mapowanie sortowania
+        let orderBy: EmployeePayslipsOrderType | undefined;
+        let isDescending: boolean | undefined;
+        if (params.sortModel.length > 0) {
+          const sortField = params.sortModel[0].field;
+          const foundOrderBy = Object.values(EmployeePayslipsOrderType).find(
+            (orderType) =>
+              mapEmployeePayslipOrderTypeToField(orderType) === sortField
+          );
+          orderBy = foundOrderBy;
+          isDescending = params.sortModel[0].sort === "desc";
+        }
+
+        const filtersForApi: EmployeePayslipsFilterPaginationModel = {
+          ...filters,
+          page: params.paginationModel?.page,
+          pageSize: params.paginationModel?.pageSize,
+          aggregationModel: params.aggregationModel,
+          orderBy,
+          isDescending,
+        };
+
+        try {
+          const response = await EmployeePayslipsService.getPayslips(
+            filtersForApi
+          );
+
+          const responseData = response.responseData;
+          return {
+            rows: responseData?.list.items ?? [],
+            rowCount: responseData?.list.totalRows ?? 0,
+            aggregateRow: responseData?.aggregation,
+          };
+        } catch {
+          toast.error("Nie udało się pobrać danych rozliczeń.");
+
+          return { rows: [], rowCount: 0 };
+        }
+      },
+
+      /**
+       * Ta funkcja mówi siatce, jak odczytać wartość z obiektu `aggregateRow`.
+       * Ponieważ Twoje API zwraca klucze pasujące do nazw pól (np. 'netPay'),
+       * funkcja jest bardzo prosta.
+       */
+      getAggregatedValue: (row, field) => {
+        return row[field];
+      },
+    }),
+    [filters]
+  );
+
+  const aggregationFunctions = {
+    sum: { columnTypes: ["number"] },
+    avg: {},
+    min: {},
+    max: {},
+    size: {},
+  };
+
+  const initialState = {
+    pagination: {
+      paginationModel: {
+        page: 0,
+        pageSize: 10,
+      },
+    },
+
+    sorting: {
+      sortModel: [{ field: "employeeFullName", sort: "asc" as "asc" | "desc" }],
+    },
+
+    aggregation: {
+      model: {
+        baseSalary: "sum",
+        bankTransferAmount: "sum",
+        bonusAmount: "sum",
+        overtimePay: "sum",
+        overtimeHours: "sum",
+        deductions: "sum",
+        otherAllowances: "sum",
+        netPay: "sum",
+      },
+    },
+  };
 
   const uniqueCycles = useMemo(() => {
     if (!dictionary?.cycles) return [];
@@ -126,8 +219,11 @@ const EmployeePayslipsPage: React.FC = () => {
       <Box mt={4} sx={{ width: "100%", overflowX: "auto" }}>
         <DataGridPremium
           loading={loading}
-          rows={payslips}
           columns={columns}
+          //rows={payslips}
+          dataSource={dataSource}
+          initialState={initialState}
+          aggregationFunctions={aggregationFunctions}
           columnVisibilityModel={visibilityModel}
           onColumnVisibilityModelChange={(model) => {
             setVisibilityModel(model);
@@ -136,19 +232,9 @@ const EmployeePayslipsPage: React.FC = () => {
               JSON.stringify(model)
             );
           }}
-          initialState={{
-            columns: {
-              columnVisibilityModel: { id: false, dateCreatedUtc: false },
-            },
-          }}
-          localeText={{
-            paginationRowsPerPage: "Wierszy na stronę:",
-            paginationDisplayedRows: ({ from, to, count }) =>
-              `${from} do ${to} z ${count}`,
-          }}
           scrollbarSize={17}
-          paginationMode="server"
           pagination
+          paginationMode="server"
           paginationModel={{
             pageSize: filters.pageSize ?? 10,
             page: filters.page ?? 0,
@@ -167,9 +253,23 @@ const EmployeePayslipsPage: React.FC = () => {
             noRowsOverlay: NoRowsOverlay,
           }}
           showToolbar
+          getRowClassName={(params) => {
+            if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+              return "aggregated-row";
+            }
+            return "";
+          }}
           sx={{
             [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },
             [`& .${tablePaginationClasses.input}`]: { display: "inline-flex" },
+            "& .aggregated-row": {
+              fontWeight: "bold",
+
+              "& .MuiDataGrid-cell": {
+                borderTop: "1px solid rgba(224, 224, 224, 1)",
+                backgroundColor: "rgba(240, 240, 240, 0.7)",
+              },
+            },
           }}
           sortingMode="server"
           onSortModelChange={(model) => {

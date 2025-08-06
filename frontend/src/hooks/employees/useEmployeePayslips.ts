@@ -1,8 +1,10 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { handleApiResponse } from "../../utils/axios/handle-api-response";
-import type { PaginateModel } from "../../common/interfaces/paginate";
-import type { EmployeePayslipListModel } from "../../models/employees/employees-payslips";
 import { EmployeePayslipsService } from "../../services/employee-payslips-service";
+import type {
+  EmployeePayslipAggregation,
+  EmployeePayslipListModel,
+} from "../../models/employees/employees-payslips";
 import type { EmployeePayslipsFilterPaginationModel } from "../../models/employees/employees-payslips-filters";
 
 export function useEmployeePayslips(
@@ -10,16 +12,20 @@ export function useEmployeePayslips(
 ) {
   const [payslips, setPayslips] = useState<EmployeePayslipListModel[]>([]);
   const [totalRows, setTotalRows] = useState(0);
+  const [aggregation, setAggregation] = useState<
+    EmployeePayslipAggregation | undefined
+  >(undefined);
   const [loading, setLoading] = useState(false);
 
   const fetchPayslips = useCallback(async () => {
     setLoading(true);
     try {
-      await handleApiResponse<PaginateModel<EmployeePayslipListModel>>(
+      await handleApiResponse(
         () => EmployeePayslipsService.getPayslips(filters),
         (data) => {
-          setPayslips(data.responseData?.items ?? []);
-          setTotalRows(data.responseData?.totalRows ?? 0);
+          setPayslips(data.responseData?.list.items ?? []);
+          setTotalRows(data.responseData?.list.totalRows ?? 0);
+          setAggregation(data.responseData?.aggregation);
         },
         undefined,
         "Nie udało się pobrać listy wypłat"
@@ -29,9 +35,14 @@ export function useEmployeePayslips(
     }
   }, [filters]);
 
+  useEffect(() => {
+    fetchPayslips();
+  }, [fetchPayslips]);
+
   return {
     payslips,
     totalRows,
+    aggregation,
     loading,
     fetchPayslips,
   };

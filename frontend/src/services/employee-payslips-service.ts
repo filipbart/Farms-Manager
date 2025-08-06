@@ -2,7 +2,7 @@ import ApiUrl from "../common/ApiUrl";
 import type { PaginateModel } from "../common/interfaces/paginate";
 import type {
   AddEmployeePayslipData,
-  EmployeePayslipListModel,
+  GetEmployeePayslipsResponse,
   UpdateEmployeePayslip,
 } from "../models/employees/employees-payslips";
 import type {
@@ -26,7 +26,7 @@ export class EmployeePayslipsService {
   public static async getPayslips(
     filters: EmployeePayslipsFilterPaginationModel
   ) {
-    return await AxiosWrapper.get<PaginateModel<EmployeePayslipListModel>>(
+    return await AxiosWrapper.get<GetEmployeePayslipsResponse>(
       ApiUrl.EmployeePayslips,
       { ...filters }
     );
