@@ -122,6 +122,13 @@ export default class ApiUrl {
   public static SaveExpenseInvoiceData =
     this.ExpensesProductions + "/save-invoice";
 
+  public static ExpensesAdvances = this.Expenses + "/advances";
+  public static ExpensesAdvancesCategories =
+    this.ExpensesAdvances + "/categories";
+  public static AddAdvanceCategory = this.ExpensesAdvancesCategories + "/add";
+  public static DeleteAdvanceCategory = (id: string) =>
+    this.ExpensesAdvancesCategories + "/delete/" + id;
+
   public static ProductionData = this.BaseUrl + "production-data";
   public static ProductionDataDictionary = this.ProductionData + "/dictionary";
   public static CalculateRemainingFeedValue =
