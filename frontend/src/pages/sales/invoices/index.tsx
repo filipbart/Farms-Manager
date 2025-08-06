@@ -1,5 +1,5 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
-import { DataGrid, type GridRowSelectionModel } from "@mui/x-data-grid";
+import { type GridRowSelectionModel } from "@mui/x-data-grid";
 import { useReducer, useState, useMemo, useEffect, useContext } from "react";
 import { toast } from "react-toastify";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
@@ -29,6 +29,7 @@ import SaveSalesInvoicesModal from "../../../components/modals/sales/invoices/sa
 import EditSaleInvoiceModal from "../../../components/modals/sales/invoices/edit-sale-invoice-modal";
 import BookPaymentModal from "../../../components/modals/sales/invoices/book-payment-modal";
 import { NotificationContext } from "../../../context/notification-context";
+import { DataGridPro } from "@mui/x-data-grid-pro";
 
 const SalesInvoicesPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -220,7 +221,7 @@ const SalesInvoicesPage: React.FC = () => {
       />
 
       <Box mt={4} sx={{ width: "100%", overflowX: "auto" }}>
-        <DataGrid
+        <DataGridPro
           loading={loading}
           rows={salesInvoices}
           columns={columns}
@@ -249,6 +250,7 @@ const SalesInvoicesPage: React.FC = () => {
             paginationDisplayedRows: ({ from, to, count }) =>
               `${from} do ${to} z ${count}`,
           }}
+          pagination={true}
           paginationMode="server"
           paginationModel={{
             pageSize: filters.pageSize ?? 10,

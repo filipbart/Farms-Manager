@@ -21,6 +21,7 @@ export interface UpdateSalesInvoiceData {
   vatAmount: number;
   invoiceDate: string;
   dueDate: string;
+  paymentDate?: string;
 }
 
 export interface SalesInvoiceData {

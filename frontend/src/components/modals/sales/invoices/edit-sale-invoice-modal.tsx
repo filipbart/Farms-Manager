@@ -54,6 +54,7 @@ const EditSaleInvoiceModal: React.FC<EditSalesInvoiceModalProps> = ({
         vatAmount: salesInvoice.vatAmount,
         invoiceDate: salesInvoice.invoiceDate,
         dueDate: salesInvoice.dueDate,
+        paymentDate: salesInvoice.paymentDate,
       });
     }
   }, [salesInvoice, reset]);
@@ -151,7 +152,33 @@ const EditSaleInvoiceModal: React.FC<EditSalesInvoiceModalProps> = ({
                 )}
               />
             </Grid>
-            <Grid size={{ xs: 12, sm: 6 }} />
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Controller
+                name="paymentDate"
+                control={control}
+                render={({ field }) => (
+                  <DatePicker
+                    label="Data płatności (opcjonalnie)"
+                    format="DD.MM.YYYY"
+                    value={field.value ? dayjs(field.value) : null}
+                    onChange={(date) =>
+                      field.onChange(
+                        date ? dayjs(date).format("YYYY-MM-DD") : null
+                      )
+                    }
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                      },
+
+                      actionBar: {
+                        actions: ["clear", "cancel", "accept"],
+                      },
+                    }}
+                  />
+                )}
+              />
+            </Grid>
             <Grid size={{ xs: 12, sm: 4 }}>
               <TextField
                 label="Netto [zł]"

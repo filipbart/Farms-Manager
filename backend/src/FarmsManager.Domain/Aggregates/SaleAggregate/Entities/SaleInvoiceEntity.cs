@@ -57,6 +57,7 @@ public class SaleInvoiceEntity : Entity
         string invoiceNumber,
         DateOnly invoiceDate,
         DateOnly dueDate,
+        DateOnly? paymentDate,
         decimal invoiceTotal,
         decimal subTotal,
         decimal vatAmount)
@@ -64,6 +65,7 @@ public class SaleInvoiceEntity : Entity
         InvoiceNumber = invoiceNumber;
         InvoiceDate = invoiceDate;
         DueDate = dueDate;
+        PaymentDate = paymentDate;
         InvoiceTotal = invoiceTotal;
         SubTotal = subTotal;
         VatAmount = vatAmount;

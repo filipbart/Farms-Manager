@@ -156,7 +156,10 @@ export const getSalesColumns = ({
     {
       field: "fileDownload",
       headerName: "Zawarte dokumenty",
-      flex: 1,
+      align: "center",
+      headerAlign: "center",
+      sortable: false,
+      width: 100,
       renderCell: (params) => {
         const directoryPath = params.row.directoryPath;
 

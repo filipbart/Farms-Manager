@@ -66,8 +66,10 @@ const InsertionSendToIrzCell: React.FC<InsertionSendToIrzCellProps> = ({
         display: "flex",
         flexDirection: "row",
         alignItems: "center",
+        justifyContent: "center",
         gap: 1,
         flexWrap: "nowrap",
+        height: "100%",
       }}
     >
       {loading ? (

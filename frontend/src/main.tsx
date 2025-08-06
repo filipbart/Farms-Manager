@@ -5,6 +5,9 @@ import App from "./App.tsx";
 import { BrowserRouter } from "react-router";
 import { ToastContainer } from "react-toastify";
 
+import { LicenseInfo } from "@mui/x-license";
+LicenseInfo.setLicenseKey(import.meta.env.VITE_MUI_LICENSE_KEY);
+
 createRoot(document.getElementById("root")!).render(
   <>
     <StrictMode>

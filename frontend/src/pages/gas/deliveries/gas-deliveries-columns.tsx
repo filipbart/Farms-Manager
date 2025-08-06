@@ -113,7 +113,7 @@ export const getGasDeliveriesColumns = ({
           return [
             <Tooltip
               key="edit-tooltip"
-              title="Nie można edytować zużytej dostawy"
+              title="Nie można edytować lub usunąć zużytej dostawy"
             >
               <span>
                 <ActionsCell

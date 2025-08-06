@@ -1,5 +1,5 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
-import { DataGrid } from "@mui/x-data-grid";
+import { DataGridPro } from "@mui/x-data-grid-pro";
 import { useReducer, useState, useMemo, useEffect } from "react";
 import { toast } from "react-toastify";
 import { mapSaleOrderTypeToField } from "../../common/helpers/sale-order-type-helper";
@@ -153,7 +153,7 @@ const SalesPage: React.FC = () => {
       />
 
       <Box mt={4} sx={{ width: "100%", overflowX: "auto" }}>
-        <DataGrid
+        <DataGridPro
           loading={loading}
           rows={sales}
           columns={columns}
@@ -175,6 +175,7 @@ const SalesPage: React.FC = () => {
             paginationDisplayedRows: ({ from, to, count }) =>
               `${from} do ${to} z ${count}`,
           }}
+          pagination={true}
           paginationMode="server"
           paginationModel={{
             pageSize: filters.pageSize ?? 10,

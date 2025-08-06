@@ -50,6 +50,7 @@ export const getInsertionsColumns = ({
       field: "sendToIrz",
       headerName: "Wyślij do IRZplus",
       headerAlign: "center",
+      align: "center",
       flex: 1,
       minWidth: 200,
       sortable: false,

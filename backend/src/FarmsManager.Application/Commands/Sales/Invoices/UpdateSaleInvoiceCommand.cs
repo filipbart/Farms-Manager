@@ -16,6 +16,7 @@ public record UpdateSalesInvoiceData
     public decimal VatAmount { get; init; }
     public DateOnly InvoiceDate { get; init; }
     public DateOnly DueDate { get; init; }
+    public DateOnly? PaymentDate { get; init; }
 }
 
 public record UpdateSaleInvoiceCommand(Guid Id, UpdateSalesInvoiceData Data) : IRequest<EmptyBaseResponse>;
@@ -44,6 +45,7 @@ public class UpdateSalesInvoiceCommandHandler : IRequestHandler<UpdateSaleInvoic
             request.Data.InvoiceNumber,
             request.Data.InvoiceDate,
             request.Data.DueDate,
+            request.Data.PaymentDate,
             request.Data.InvoiceTotal,
             request.Data.SubTotal,
             request.Data.VatAmount
