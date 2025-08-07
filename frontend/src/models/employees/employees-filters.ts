@@ -71,6 +71,7 @@ export interface EmployeesFilter {
   farmIds: string[];
   searchPhrase?: string;
   status?: EmployeeStatus;
+  addToAdvances?: boolean;
   dateSince: string;
   dateTo: string;
 }

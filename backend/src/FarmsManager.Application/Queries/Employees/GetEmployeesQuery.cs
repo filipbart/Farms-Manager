@@ -21,6 +21,7 @@ public record GetEmployeesQueryFilters : OrderedPaginationParams<EmployeesOrderB
     public List<Guid> FarmIds { get; init; }
     public string SearchPhrase { get; init; }
     public EmployeeStatus? Status { get; init; }
+    public bool? AddToAdvances { get; init; }
 }
 
 public record GetEmployeesQuery(GetEmployeesQueryFilters Filters)

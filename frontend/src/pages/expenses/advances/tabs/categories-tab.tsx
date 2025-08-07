@@ -58,8 +58,12 @@ const AdvanceCategoriesTab: React.FC = () => {
     setSaving(true);
     await handleApiResponse(
       () => ExpensesAdvancesService.deleteAdvanceCategory(id),
-      async () => {},
-      undefined,
+      () => {
+        fetchCategories();
+      },
+      () => {
+        fetchCategories();
+      },
       "Wystąpił błąd podczas usuwania kategorii"
     );
     setSaving(false);
@@ -83,10 +87,12 @@ const AdvanceCategoriesTab: React.FC = () => {
     await handleApiResponse(
       () => ExpensesAdvancesService.addAdvanceCategories(categoriesToSave),
       async () => {
+        fetchCategories();
         setNewCategories([]);
-        await fetchCategories();
       },
-      undefined,
+      () => {
+        fetchCategories();
+      },
       "Wystąpił błąd podczas zapisywania kategorii"
     );
     setSaving(false);

@@ -98,7 +98,7 @@ const EmployeePayslipsPage: React.FC = () => {
   );
 
   const aggregationFunctions = {
-    sum: { columnTypes: ["number"] },
+    sum: { columnTypes: ["number"], label: "" },
     avg: {},
     min: {},
     max: {},

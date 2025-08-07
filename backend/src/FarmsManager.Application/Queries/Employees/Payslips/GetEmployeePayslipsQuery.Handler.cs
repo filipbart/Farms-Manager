@@ -11,10 +11,12 @@ public class
     GetEmployeePayslipsQueryHandler : IRequestHandler<GetEmployeePayslipsQuery,
     BaseResponse<GetEmployeePayslipsQueryResponse>>
 {
+    private readonly IMapper _mapper;
     private readonly IEmployeePayslipRepository _employeePayslipRepository;
 
-    public GetEmployeePayslipsQueryHandler(IEmployeePayslipRepository employeePayslipRepository)
+    public GetEmployeePayslipsQueryHandler(IMapper mapper, IEmployeePayslipRepository employeePayslipRepository)
     {
+        _mapper = mapper;
         _employeePayslipRepository = employeePayslipRepository;
     }
 
@@ -25,23 +27,23 @@ public class
         var fullSpec = new GetAllEmployeePayslipsSpec(request.Filters, false);
 
         // Pobieranie danych dla aktualnej strony i łącznej liczby
-        var data = await _employeePayslipRepository.ListAsync<EmployeePayslipRowDto>(paginatedSpec, cancellationToken);
+        var data = await _employeePayslipRepository.ListAsync(paginatedSpec, cancellationToken);
         var count = await _employeePayslipRepository.CountAsync(fullSpec, cancellationToken);
 
         // Pobieranie wszystkich pasujących rekordów w celu obliczenia sum
-        var allMatchingPayslips = await _employeePayslipRepository.ListAsync(fullSpec, cancellationToken);
+        var items = _mapper.Map<List<EmployeePayslipRowDto>>(data);
 
         // Obliczanie agregacji
         var aggregation = new EmployeePayslipAggregationDto
         {
-            BaseSalary = allMatchingPayslips.Sum(p => p.BaseSalary),
-            BankTransferAmount = allMatchingPayslips.Sum(p => p.BankTransferAmount),
-            BonusAmount = allMatchingPayslips.Sum(p => p.BonusAmount),
-            OvertimePay = allMatchingPayslips.Sum(p => p.OvertimePay),
-            OvertimeHours = allMatchingPayslips.Sum(p => p.OvertimeHours),
-            Deductions = allMatchingPayslips.Sum(p => p.Deductions),
-            OtherAllowances = allMatchingPayslips.Sum(p => p.OtherAllowances),
-            NetPay = allMatchingPayslips.Sum(p => p.NetPay)
+            BaseSalary = data.Sum(p => p.BaseSalary),
+            BankTransferAmount = data.Sum(p => p.BankTransferAmount),
+            BonusAmount = data.Sum(p => p.BonusAmount),
+            OvertimePay = data.Sum(p => p.OvertimePay),
+            OvertimeHours = data.Sum(p => p.OvertimeHours),
+            Deductions = data.Sum(p => p.Deductions),
+            OtherAllowances = data.Sum(p => p.OtherAllowances),
+            NetPay = data.Sum(p => p.NetPay)
         };
 
         return BaseResponse.CreateResponse(new GetEmployeePayslipsQueryResponse
@@ -49,7 +51,7 @@ public class
             List = new PaginationModel<EmployeePayslipRowDto>
             {
                 TotalRows = count,
-                Items = data
+                Items = items
             },
             Aggregation = aggregation
         });

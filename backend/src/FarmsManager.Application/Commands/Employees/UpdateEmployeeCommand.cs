@@ -20,6 +20,7 @@ public class UpdateEmployeeData
     public DateOnly? EndDate { get; init; }
     public EmployeeStatus Status { get; init; }
     public string Comment { get; init; }
+    public bool AddToAdvances { get; init; }
 }
 
 public record UpdateEmployeeCommand(Guid Id, UpdateEmployeeData Data) : IRequest<EmptyBaseResponse>;
@@ -48,7 +49,8 @@ public class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmployeeComman
             request.Data.Status,
             request.Data.StartDate,
             request.Data.EndDate,
-            request.Data.Comment);
+            request.Data.Comment,
+            request.Data.AddToAdvances);
 
         employee.SetModified(userId);
 

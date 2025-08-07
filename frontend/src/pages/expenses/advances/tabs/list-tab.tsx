@@ -11,11 +11,14 @@ import {
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useEmployees } from "../../../../hooks/employees/useEmployees";
+import { EmployeeStatus } from "../../../../models/employees/employees";
 
 const AdvancesListTab: React.FC = () => {
   const { employees, loading, fetchEmployees } = useEmployees({
     pageSize: -1,
     farmIds: [],
+    addToAdvances: true,
+    status: EmployeeStatus.Active,
     dateSince: "",
     dateTo: "",
   });

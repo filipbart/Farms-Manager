@@ -6,6 +6,8 @@ import {
   TextField,
   MenuItem,
   Button,
+  FormControlLabel,
+  Checkbox,
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -192,6 +194,24 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                     slotProps={{ textField: { fullWidth: true } }}
                   />
                 )}
+              />
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <FormControlLabel
+                control={
+                  <Controller
+                    name="addToAdvances"
+                    control={control}
+                    render={({ field }) => (
+                      <Checkbox
+                        {...field}
+                        checked={!!field.value}
+                        onChange={(e) => field.onChange(e.target.checked)}
+                      />
+                    )}
+                  />
+                }
+                label="Dodaj do ewidencji zaliczek"
               />
             </Grid>
             <Grid size={{ xs: 12 }}>

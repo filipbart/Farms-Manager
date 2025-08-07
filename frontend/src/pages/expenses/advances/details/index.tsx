@@ -35,7 +35,7 @@ import EditExpenseAdvanceModal from "../../../../components/modals/expenses/adva
 const generateYearOptions = () => {
   const currentYear = new Date().getFullYear();
   const years = [];
-  for (let i = 0; i < 5; i++) years.push(currentYear - i);
+  for (let i = 0; i < 10; i++) years.push(currentYear - i);
   return years;
 };
 const monthOptions = [
@@ -53,6 +53,19 @@ const monthOptions = [
   { value: 12, label: "Grudzień" },
 ];
 
+const formatCurrencyPLN = (value: number | null | undefined): string => {
+  const numberToFormat = value ?? 0;
+
+  const formatter = new Intl.NumberFormat("pl-PL", {
+    style: "currency",
+    currency: "PLN",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
+  return formatter.format(numberToFormat);
+};
+
 const ExpenseAdvanceDetailsPage: React.FC = () => {
   const { employeeId } = useParams<{ employeeId: string }>();
   const [openAddModal, setOpenAddModal] = useState(false);
@@ -68,10 +81,10 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
     return saved ? JSON.parse(saved) : {};
   });
 
-  const [selectedMonth, setSelectedMonth] = useState<number>(
+  const [selectedMonth, setSelectedMonth] = useState<number | "">(
     new Date().getMonth() + 1
   );
-  const [selectedYear, setSelectedYear] = useState<number>(
+  const [selectedYear, setSelectedYear] = useState<number | "">(
     new Date().getFullYear()
   );
 
@@ -100,12 +113,30 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
   const { items: advances = [], totalRows = 0 } = list || {};
 
   useEffect(() => {
-    const date = dayjs()
-      .year(selectedYear)
-      .month(selectedMonth - 1);
-    const dateSince = date.startOf("month").format("YYYY-MM-DD");
-    const dateTo = date.endOf("month").format("YYYY-MM-DD");
-    dispatch({ type: "setMultiple", payload: { dateSince, dateTo, page: 0 } });
+    let dateSince: string | undefined = undefined;
+    let dateTo: string | undefined = undefined;
+    const currentYear = new Date().getFullYear();
+
+    if (selectedYear && selectedMonth) {
+      const date = dayjs()
+        .year(selectedYear)
+        .month(selectedMonth - 1);
+      dateSince = date.startOf("month").format("YYYY-MM-DD");
+      dateTo = date.endOf("month").format("YYYY-MM-DD");
+    } else if (selectedYear && !selectedMonth) {
+      const date = dayjs().year(selectedYear);
+      dateSince = date.startOf("year").format("YYYY-MM-DD");
+      dateTo = date.endOf("year").format("YYYY-MM-DD");
+    } else if (!selectedYear && selectedMonth) {
+      const date = dayjs()
+        .year(currentYear)
+        .month(selectedMonth - 1);
+      dateSince = date.startOf("month").format("YYYY-MM-DD");
+      dateTo = date.endOf("month").format("YYYY-MM-DD");
+    }
+    //
+
+    dispatch({ type: "setMultiple", payload: { dateSince, dateTo } });
   }, [selectedMonth, selectedYear]);
 
   const deleteAdvance = async (id: string) => {
@@ -129,14 +160,14 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
         downloadAdvanceFile: downloadExpenseAdvanceFile,
         downloadingFilePath,
       }),
-    []
+    [downloadingFilePath]
   );
 
   useEffect(() => {
     if (employeeId) {
       fetchExpenseAdvances();
     }
-  }, [employeeId, filters.dateSince, filters.dateTo]);
+  }, [employeeId, filters]);
 
   if (loading && !employeeFullName) {
     return (
@@ -172,6 +203,7 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
             onChange={(e) => setSelectedMonth(Number(e.target.value))}
             fullWidth
           >
+            <MenuItem value="">Wszystkie</MenuItem>
             {monthOptions.map((option) => (
               <MenuItem key={option.value} value={option.value}>
                 {option.label}
@@ -187,6 +219,7 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
             onChange={(e) => setSelectedYear(Number(e.target.value))}
             fullWidth
           >
+            <MenuItem value="">Wszystkie</MenuItem>
             {generateYearOptions().map((year) => (
               <MenuItem key={year} value={year}>
                 {year}
@@ -213,19 +246,19 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
               variant="h5"
               color={(balance ?? 0) >= 0 ? "text.primary" : "error.main"}
             >
-              {(balance ?? 0).toFixed(2)} zł
+              {formatCurrencyPLN(balance)}
             </Typography>
           </Grid>
           <Grid size={{ xs: 12, md: 4 }} textAlign="center">
             <Typography variant="h6">Zaliczki</Typography>
             <Typography variant="h5" color="success.main">
-              {totalIncome?.toFixed(2)} zł
+              {formatCurrencyPLN(totalIncome)}
             </Typography>
           </Grid>
           <Grid size={{ xs: 12, md: 4 }} textAlign="center">
             <Typography variant="h6">Wydatki</Typography>
             <Typography variant="h5" color="error.main">
-              {totalExpenses?.toFixed(2)} zł
+              {formatCurrencyPLN(totalExpenses)}
             </Typography>
           </Grid>
         </Grid>

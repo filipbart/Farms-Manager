@@ -1,4 +1,12 @@
-import { Box, Button, Grid, MenuItem, TextField } from "@mui/material";
+import {
+  Box,
+  Button,
+  Checkbox,
+  FormControlLabel,
+  Grid,
+  MenuItem,
+  TextField,
+} from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers";
 import { Controller, useForm } from "react-hook-form";
 import { useContext, useEffect } from "react";
@@ -39,6 +47,7 @@ const EmployeeInfoTab: React.FC = () => {
       startDate: "",
       endDate: undefined,
       comment: "",
+      addToAdvances: false,
     },
   });
 
@@ -55,6 +64,7 @@ const EmployeeInfoTab: React.FC = () => {
         startDate: employee.startDate,
         endDate: employee.endDate ?? null,
         comment: employee.comment ?? "",
+        addToAdvances: employee.addToAdvances,
       });
     }
   }, [employee, reset]);
@@ -223,6 +233,25 @@ const EmployeeInfoTab: React.FC = () => {
                 }}
               />
             )}
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12 }}>
+          <FormControlLabel
+            control={
+              <Controller
+                name="addToAdvances"
+                control={control}
+                render={({ field }) => (
+                  <Checkbox
+                    {...field}
+                    checked={!!field.value}
+                    onChange={(e) => field.onChange(e.target.checked)}
+                  />
+                )}
+              />
+            }
+            label="Dodaj do ewidencji zaliczek"
           />
         </Grid>
 

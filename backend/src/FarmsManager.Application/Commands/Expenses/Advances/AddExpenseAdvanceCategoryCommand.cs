@@ -41,7 +41,8 @@ public class
         {
             var existedCategory =
                 await _expenseAdvanceCategoryRepository.AnyAsync(
-                    new GetExpenseAdvanceCategoryByNameSpec(addExpenseAdvanceCategoryField.Name),
+                    new GetExpenseAdvanceCategoryByTypeAndNameSpec(addExpenseAdvanceCategoryField.Type,
+                        addExpenseAdvanceCategoryField.Name),
                     cancellationToken);
             if (existedCategory)
             {
@@ -74,11 +75,12 @@ public class AddExpenseAdvanceCategoryCommandValidator : AbstractValidator<AddEx
     }
 }
 
-public sealed class GetExpenseAdvanceCategoryByNameSpec : BaseSpecification<ExpenseAdvanceCategoryEntity>
+public sealed class GetExpenseAdvanceCategoryByTypeAndNameSpec : BaseSpecification<ExpenseAdvanceCategoryEntity>
 {
-    public GetExpenseAdvanceCategoryByNameSpec(string name)
+    public GetExpenseAdvanceCategoryByTypeAndNameSpec(ExpenseAdvanceCategoryType type, string name)
     {
         EnsureExists();
+        Query.Where(t => t.Type == type);
         Query.Where(t => EF.Functions.ILike(t.Name, name));
     }
 }

@@ -33,6 +33,7 @@ export interface AddEmployeeData {
   startDate: string;
   endDate?: string;
   comment?: string;
+  addToAdvances: boolean;
 }
 
 export interface EmployeeReminderModel {
@@ -55,6 +56,7 @@ export interface EmployeeDetailsModel {
   status: EmployeeStatus;
   statusDesc: string;
   comment?: string;
+  addToAdvances: boolean;
   files: EmployeeFileModel[];
   reminders: EmployeeReminderModel[];
 }
@@ -69,6 +71,7 @@ export interface UpdateEmployeeData {
   endDate?: string | null;
   status: EmployeeStatus;
   comment?: string;
+  addToAdvances: boolean;
 }
 
 export interface AddEmployeeReminderData {

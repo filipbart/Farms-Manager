@@ -42,6 +42,11 @@ public sealed class GetAllEmployeesSpec : BaseSpecification<EmployeeEntity>
         {
             Query.Where(t => t.Status == filters.Status);
         }
+
+        if (filters.AddToAdvances is not null)
+        {
+            Query.Where(t => t.AddToAdvances == filters.AddToAdvances);
+        }
     }
 
     private void ApplyOrdering(GetEmployeesQueryFilters filters)

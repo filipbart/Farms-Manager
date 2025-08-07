@@ -23,6 +23,7 @@ public record AddEmployeeData
     public DateOnly StartDate { get; init; }
     public DateOnly? EndDate { get; init; }
     public string Comment { get; init; }
+    public bool AddToAdvances { get; init; }
 }
 
 public record AddEmployeeCommand(AddEmployeeData Data) : IRequest<EmptyBaseResponse>;
@@ -64,6 +65,7 @@ public class AddEmployeeCommandHandler : IRequestHandler<AddEmployeeCommand, Emp
             request.Data.StartDate,
             request.Data.EndDate,
             request.Data.Comment,
+            request.Data.AddToAdvances,
             userId
         );
 

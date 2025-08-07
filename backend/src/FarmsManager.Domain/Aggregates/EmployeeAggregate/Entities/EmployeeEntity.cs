@@ -15,6 +15,7 @@ public class EmployeeEntity : Entity
     public DateOnly? EndDate { get; private set; }
     public EmployeeStatus Status { get; private set; }
     public string Comment { get; private set; }
+    public bool AddToAdvances { get; private set; }
 
     public virtual FarmEntity Farm { get; private set; }
 
@@ -37,6 +38,7 @@ public class EmployeeEntity : Entity
         DateOnly startDate,
         DateOnly? endDate,
         string comment,
+        bool addToAdvances,
         Guid? userId = null)
     {
         return new EmployeeEntity
@@ -49,6 +51,7 @@ public class EmployeeEntity : Entity
             StartDate = startDate,
             EndDate = endDate,
             Comment = comment,
+            AddToAdvances = addToAdvances,
             Status = EmployeeStatus.Active,
             CreatedBy = userId
         };
@@ -63,7 +66,8 @@ public class EmployeeEntity : Entity
         EmployeeStatus status,
         DateOnly startDate,
         DateOnly? endDate,
-        string comment)
+        string comment,
+        bool addToAdvances)
     {
         FarmId = farmId;
         FullName = fullName;
@@ -74,6 +78,7 @@ public class EmployeeEntity : Entity
         StartDate = startDate;
         EndDate = endDate;
         Comment = comment;
+        AddToAdvances = addToAdvances;
     }
 
     public void AddFile(EmployeeFileEntity file)

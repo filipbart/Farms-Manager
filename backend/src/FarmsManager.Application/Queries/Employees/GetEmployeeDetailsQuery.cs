@@ -24,6 +24,7 @@ public record EmployeeDetailsQueryResponse
     public EmployeeStatus Status { get; init; }
     public string StatusDesc => Status.GetDescription();
     public string Comment { get; init; }
+    public bool AddToAdvances { get; init; }
     public List<EmployeeFileDto> Files { get; init; }
     public List<EmployeeReminderDto> Reminders { get; init; }
 }
