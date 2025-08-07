@@ -264,6 +264,11 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           title="Ubojnie"
           icon={<MdFactory />}
         />
+        <SidebarMenuItem
+          to="/data/utilization-plants"
+          title="Zakłady utylizacyjne"
+          icon={<FaIndustry />}
+        />
       </SidebarMenuItem>
 
       <SidebarMenuItem

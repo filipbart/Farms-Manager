@@ -42,6 +42,10 @@ export default class ApiUrl {
   public static AddSlaughterhouse = this.Slaughterhouses + "/add";
   public static DeleteSlaughterhouse = this.Slaughterhouses + "/delete";
 
+  public static UtilizationPlants = this.BaseUrl + "utilization-plants";
+  public static AddUtilizationPlant = this.UtilizationPlants + "/add";
+  public static DeleteUtilizationPlant = this.UtilizationPlants + "/delete";
+
   public static Insertions = this.BaseUrl + "insertions";
   public static UpdateInsertion = this.Insertions + "/update";
   public static DeleteInsertion = (id: string) =>

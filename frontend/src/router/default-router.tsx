@@ -34,6 +34,7 @@ import SalesInvoicesPage from "../pages/sales/invoices";
 import SettingsCyclesPage from "../pages/settings/cycle-settings";
 import ExpenseAdvancesPage from "../pages/expenses/advances";
 import ExpenseAdvanceDetailsPage from "../pages/expenses/advances/details";
+import UtilizationPlantsPage from "../pages/data/utilization-plants";
 
 const DefaultRouter: React.FC = () => {
   const { getRoute } = useRouter();
@@ -64,6 +65,10 @@ const DefaultRouter: React.FC = () => {
         <Route
           path={getRoute(RouteName.Slaughterhouses)}
           element={<SlaughterhousesPage />}
+        />
+        <Route
+          path={getRoute(RouteName.UtilizationPlants)}
+          element={<UtilizationPlantsPage />}
         />
         <Route
           path={getRoute(RouteName.UserProfile)}
