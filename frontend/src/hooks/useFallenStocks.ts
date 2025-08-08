@@ -11,7 +11,7 @@ export const useFallenStocks = (filters: FallenStockFilterModel) => {
   const [loading, setLoading] = useState(false);
 
   const fetchFallenStocks = useCallback(async () => {
-    if (!filters.farmId || !filters.cycleId) {
+    if (!filters.farmId || !filters.cycle) {
       setViewModel(null);
       return;
     }

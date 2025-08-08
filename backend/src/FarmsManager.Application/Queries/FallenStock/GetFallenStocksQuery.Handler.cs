@@ -11,6 +11,7 @@ namespace FarmsManager.Application.Queries.FallenStock;
 public class
     GetFallenStocksQueryHandler : IRequestHandler<GetFallenStocksQuery, BaseResponse<GetFallenStocksQueryResponse>>
 {
+    private readonly ICycleRepository _cycleRepository;
     private readonly IFallenStockRepository _fallenStockRepository;
     private readonly IHenhouseRepository _henhouseRepository;
     private readonly ISaleRepository _saleRepository;
@@ -20,12 +21,13 @@ public class
         IFallenStockRepository fallenStockRepository,
         IHenhouseRepository henhouseRepository,
         ISaleRepository saleRepository,
-        IInsertionRepository insertionRepository)
+        IInsertionRepository insertionRepository, ICycleRepository cycleRepository)
     {
         _fallenStockRepository = fallenStockRepository;
         _henhouseRepository = henhouseRepository;
         _saleRepository = saleRepository;
         _insertionRepository = insertionRepository;
+        _cycleRepository = cycleRepository;
     }
 
     public async Task<BaseResponse<GetFallenStocksQueryResponse>> Handle(GetFallenStocksQuery request,
@@ -41,24 +43,28 @@ public class
             return BaseResponse.CreateResponse(viewModel);
         }
 
+        var cycle = await _cycleRepository.GetAsync(
+            new GetCycleByYearIdentifierAndFarmSpec(request.FarmId, request.CycleYear, request.CycleIdentifier),
+            cancellationToken);
+
         viewModel.HenhouseColumns = henhouses
             .Select(h => new ColumnHeaderModel { Id = h.Id.ToString(), Name = h.Name })
             .ToList();
 
         // KROK 2: Pobierz WSZYSTKIE potrzebne dane na początku
         var insertionData = await _insertionRepository.ListAsync(
-            new GetInsertionsByFarmAndCycleSpec(request.FarmId, request.CycleId), cancellationToken);
+            new GetInsertionsByFarmAndCycleSpec(request.FarmId, cycle.Id), cancellationToken);
 
         var fallenStockData = await _fallenStockRepository.ListAsync(
-            new FallenStockByFarmAndCycleSpec(request.FarmId, request.CycleId), cancellationToken);
+            new FallenStockByFarmAndCycleSpec(request.FarmId, cycle.Id), cancellationToken);
 
         var salesData = await _saleRepository.ListAsync(
-            new GetSalesByFarmAndCycleSpec(request.FarmId, request.CycleId), cancellationToken);
+            new GetSalesByFarmAndCycleSpec(request.FarmId, cycle.Id), cancellationToken);
 
         // KROK 3: Stwórz PIERWSZY wiersz tabeli - sumę wstawień
         var totalInsertionRow = new TableRowModel
         {
-            Id = "total_insertions",
+            Id = "summary_insertions",
             RowTitle = "Wstawiono/Data zgłoszenia"
         };
         foreach (var henhouse in henhouses)

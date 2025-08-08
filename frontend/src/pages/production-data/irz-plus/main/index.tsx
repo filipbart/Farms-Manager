@@ -27,6 +27,7 @@ import NoRowsOverlay from "../../../../components/datagrid/custom-norows";
 import { useFallenStocks } from "../../../../hooks/useFallenStocks";
 import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
 import ActionsCell from "../../../../components/datagrid/actions-cell";
+import AddFallenStocksModal from "../../../../components/modals/production-data/fallen-stocks/add-fallen-stocks-modal";
 
 const MainFallenStockPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -143,21 +144,30 @@ const MainFallenStockPage: React.FC = () => {
       width: 120,
       align: "center",
       headerAlign: "center",
-      getActions: (params) => [
-        <ActionsCell
-          key="actions"
-          params={params}
-          onEdit={(row) => {
-            setSelectedFallenStock(row);
-            setIsEditModalOpen(true);
-          }}
-          onDelete={deleteFallenStockRecord}
-        />,
-      ],
+      getActions: (params) => {
+        const isSummaryRow = params.row.id.toString().startsWith("summary_");
+
+        if (isSummaryRow) {
+          return [];
+        }
+
+        return [
+          <ActionsCell
+            key="actions"
+            params={params}
+            onEdit={(row) => {
+              console.log(row);
+              setSelectedFallenStock(row);
+              setIsEditModalOpen(true);
+            }}
+            onDelete={deleteFallenStockRecord}
+          />,
+        ];
+      },
     };
 
     return [titleColumn, ...henhouseColumns, remainingColumn, actionsColumn];
-  }, [viewModel]);
+  }, [viewModel, deleteFallenStockRecord]);
 
   return (
     <Box p={4}>
@@ -204,9 +214,9 @@ const MainFallenStockPage: React.FC = () => {
           <TextField
             select
             label="Cykl"
-            value={filters.cycleId || ""}
+            value={filters.cycle || ""}
             onChange={(e) =>
-              dispatch({ type: "set", key: "cycleId", value: e.target.value })
+              dispatch({ type: "set", key: "cycle", value: e.target.value })
             }
             fullWidth
             disabled={loading}
@@ -215,7 +225,10 @@ const MainFallenStockPage: React.FC = () => {
               <em>Wszystkie</em>
             </MenuItem>
             {uniqueCycles.map((cycle) => (
-              <MenuItem key={cycle.id} value={cycle.id}>
+              <MenuItem
+                key={cycle.id}
+                value={`${cycle.identifier}-${cycle.year}`}
+              >
                 {`${cycle.identifier}/${cycle.year}`}
               </MenuItem>
             ))}
@@ -290,15 +303,14 @@ const MainFallenStockPage: React.FC = () => {
         </Typography>
       )}
 
-      {/* 
-      <AddFallenStockModal
+      <AddFallenStocksModal
         open={openAddModal}
         onClose={() => setOpenAddModal(false)}
         onSave={() => {
           setOpenAddModal(false);
-          fetchFallenStock();
+          fetchFallenStocks();
         }}
-      /> */}
+      />
     </Box>
   );
 };

@@ -4,7 +4,7 @@ using FarmsManager.Application.Queries.FallenStock;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
-namespace FarmsManager.Api.Controllers;
+namespace FarmsManager.Api.Controllers.ProductionData;
 
 [Route("api/fallen-stocks")]
 public class FallenStocksController(IMediator mediator) : BaseController

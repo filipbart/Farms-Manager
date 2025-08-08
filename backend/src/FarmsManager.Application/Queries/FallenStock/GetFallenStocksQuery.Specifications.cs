@@ -38,3 +38,16 @@ public sealed class GetInsertionsByFarmAndCycleSpec : BaseSpecification<Insertio
         Query.Where(t => t.CycleId == cycleId);
     }
 }
+
+public sealed class GetCycleByYearIdentifierAndFarmSpec : BaseSpecification<CycleEntity>,
+    ISingleResultSpecification<CycleEntity>
+{
+    public GetCycleByYearIdentifierAndFarmSpec(Guid farmId, int year, int identifier)
+    {
+        EnsureExists();
+        DisableTracking();
+        Query.Where(t => t.FarmId == farmId);
+        Query.Where(t => t.Year == year);
+        Query.Where(t => t.Identifier == identifier);
+    }
+}

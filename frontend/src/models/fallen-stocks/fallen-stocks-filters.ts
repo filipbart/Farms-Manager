@@ -7,12 +7,12 @@ export interface FallenStocksDictionary {
 
 export interface FallenStockFilterModel {
   farmId?: string;
-  cycleId?: string;
+  cycle?: string;
 }
 
 export const initialFilters: FallenStockFilterModel = {
   farmId: undefined,
-  cycleId: undefined,
+  cycle: undefined,
 };
 
 export function filterReducer(
