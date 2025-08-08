@@ -36,7 +36,7 @@ public sealed class GetAllSalesSpec : BaseSpecification<SaleEntity>
             Query.Where(t => filters.SlaughterhouseIds.Contains(t.SlaughterhouseId));
         }
 
-        if (filters.Cycles is not null && filters.Cycles.Count != 0)
+        if (filters.CyclesDict is not null && filters.CyclesDict.Count != 0)
         {
             var validPairs = filters.Cycles
                 .Select(c => new { c.Identifier, c.Year })

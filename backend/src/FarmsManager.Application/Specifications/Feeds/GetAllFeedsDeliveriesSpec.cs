@@ -26,7 +26,7 @@ public sealed class GetAllFeedsDeliveriesSpec : BaseSpecification<FeedInvoiceEnt
             Query.Where(t => filters.FarmIds.Contains(t.FarmId));
         }
 
-        if (filters.Cycles is not null && filters.Cycles.Count != 0)
+        if (filters.CyclesDict is not null && filters.CyclesDict.Count != 0)
         {
             var validPairs = filters.Cycles
                 .Select(c => new { c.Identifier, c.Year })

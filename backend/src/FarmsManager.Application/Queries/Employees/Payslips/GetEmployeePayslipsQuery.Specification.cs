@@ -32,7 +32,7 @@ public sealed class GetAllEmployeePayslipsSpec : BaseSpecification<EmployeePaysl
             Query.Where(p => filters.FarmIds.Contains(p.FarmId));
         }
 
-        if (filters.Cycles is not null && filters.Cycles.Any())
+        if (filters.CyclesDict is not null && filters.CyclesDict.Count != 0)
         {
             Query.Where(p => filters.Cycles.Contains(p.Cycle.Identifier + "/" + p.Cycle.Year));
         }

@@ -35,6 +35,7 @@ import SettingsCyclesPage from "../pages/settings/cycle-settings";
 import ExpenseAdvancesPage from "../pages/expenses/advances";
 import ExpenseAdvanceDetailsPage from "../pages/expenses/advances/details";
 import UtilizationPlantsPage from "../pages/data/utilization-plants";
+import MainFallenStockPage from "../pages/production-data/irz-plus/main";
 
 const DefaultRouter: React.FC = () => {
   const { getRoute } = useRouter();
@@ -129,6 +130,10 @@ const DefaultRouter: React.FC = () => {
         <Route
           path={getRoute(RouteName.ProductionDataWeighings)}
           element={<ProductionDataWeighingsPage />}
+        />
+        <Route
+          path={getRoute(RouteName.ProductionDataIrzplus)}
+          element={<MainFallenStockPage />} //TODO zmienić potem
         />
         <Route
           path={getRoute(RouteName.GasDeliveries)}

@@ -16,7 +16,14 @@ public record ProductionDataQueryFilters : OrderedPaginationParams<ProductionDat
 {
     public List<Guid> FarmIds { get; init; }
     public List<Guid> HenhouseIds { get; init; }
-    public List<CycleDictModel> Cycles { get; init; }
+    public List<string> Cycles { get; init; }
+
+    public List<CycleDictModel> CyclesDict => Cycles?.Select(c => new CycleDictModel
+    {
+        Identifier = int.Parse(c.Split('-')[0]),
+        Year = int.Parse(c.Split('-')[1])
+    }).ToList();
+
     public DateOnly? DateSince { get; init; }
     public DateOnly? DateTo { get; init; }
 }

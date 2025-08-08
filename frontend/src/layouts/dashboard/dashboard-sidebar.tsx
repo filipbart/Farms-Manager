@@ -15,6 +15,7 @@ import { useNotifications } from "../../context/notification-context";
 import { IoCard, IoHome } from "react-icons/io5";
 import {
   FaAddressCard,
+  FaBuilding,
   FaBurn,
   FaClone,
   FaDatabase,
@@ -194,6 +195,11 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           to="/production-data/weighings"
           title="Masy ciała"
           icon={<FaWeight />}
+        />
+        <SidebarMenuItem
+          to="/production-data/irzplus"
+          title="IRZplus"
+          icon={<FaBuilding />}
         />
       </SidebarMenuItem>
 

@@ -7,13 +7,12 @@ public class FarmDictModel : DictModel
 
 public class DictModel
 {
-    public string Id { get; set; }
+    public Guid Id { get; set; }
     public string Name { get; set; }
 }
 
 public class CycleDictModel
 {
-    public string Id { get; set; }
     public int Identifier { get; set; }
     public int Year { get; set; }
 }

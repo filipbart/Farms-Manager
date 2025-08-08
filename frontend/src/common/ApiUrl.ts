@@ -188,6 +188,9 @@ export default class ApiUrl {
   public static GetHatcheryForWeighing =
     this.ProductionDataWeighings + "/get-hatchery";
 
+  public static FallenStocks = this.BaseUrl + "fallen-stocks";
+  public static FallenStocksDictionary = this.FallenStocks + "/dictionary";
+
   public static Gas = this.BaseUrl + "gas";
   public static GasDeliveriesDictionary = this.Gas + "/dictionary";
   public static GasContractors = this.Gas + "/contractors";

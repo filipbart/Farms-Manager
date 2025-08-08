@@ -41,7 +41,7 @@ public sealed class GetAllExpenseProductionsSpec : BaseSpecification<ExpenseProd
                 filters.ExpensesTypesIds.Contains(ep.ExpenseContractor.ExpenseTypeId.Value));
         }
 
-        if (filters.Cycles is not null && filters.Cycles.Count != 0)
+        if (filters.CyclesDict is not null && filters.CyclesDict.Count != 0)
         {
         }
 

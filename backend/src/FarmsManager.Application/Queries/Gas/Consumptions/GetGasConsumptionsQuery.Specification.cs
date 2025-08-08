@@ -33,16 +33,15 @@ public sealed class GetAllGasConsumptionsSpec : BaseSpecification<GasConsumption
             Query.Where(gc => filters.FarmIds.Contains(gc.FarmId));
         }
 
-        if (filters.Cycles is not null && filters.Cycles.Any())
+        if (filters.CyclesDict is not null && filters.CyclesDict.Count != 0)
         {
-            var validPairs = filters.Cycles
-                .Select(c => new { c.Identifier, c.Year })
-                .ToList();
+            var predicate = PredicateBuilder.New<GasConsumptionEntity>();
+            
+            predicate = filters.CyclesDict.Aggregate(predicate,
+                (current, cycleFilter) => current.Or(t =>
+                    t.Cycle.Identifier == cycleFilter.Identifier && t.Cycle.Year == cycleFilter.Year));
 
-            Query.Where(gc =>
-                validPairs.Any(fc =>
-                    fc.Identifier == gc.Cycle.Identifier &&
-                    fc.Year == gc.Cycle.Year));
+            Query.Where(predicate);
         }
     }
 

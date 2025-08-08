@@ -41,7 +41,7 @@ public sealed class GetAllProductionDataWeighingsSpec : BaseSpecification<Produc
             Query.Where(t => filters.HatcheryIds.Contains(t.HatcheryId));
         }
 
-        if (filters.Cycles is not null && filters.Cycles.Any())
+        if (filters.CyclesDict is not null && filters.CyclesDict.Count != 0)
         {
             var validPairs = filters.Cycles
                 .Select(c => new { c.Identifier, c.Year })

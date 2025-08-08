@@ -33,7 +33,7 @@ public sealed class GetAllProductionDataTransferFeedSpec : BaseSpecification<Pro
                 filters.HenhouseIds.Contains(t.FromHenhouseId) || filters.HenhouseIds.Contains(t.ToHenhouseId));
         }
 
-        if (filters.Cycles is not null && filters.Cycles.Any())
+        if (filters.CyclesDict is not null && filters.CyclesDict.Count != 0)
         {
             var validPairs = filters.Cycles
                 .Select(c => new { c.Identifier, c.Year })
