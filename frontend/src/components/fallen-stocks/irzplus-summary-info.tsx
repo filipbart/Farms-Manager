@@ -12,11 +12,13 @@ const formatNumber = (value: number | null | undefined): string => {
 interface IrzplusSummaryInfoProps {
   farmId: string | undefined;
   cycle: string | undefined;
+  reloadTrigger: number;
 }
 
 const IrzplusSummaryInfo: React.FC<IrzplusSummaryInfoProps> = ({
   farmId,
   cycle,
+  reloadTrigger,
 }) => {
   const [data, setData] = useState<IrzSummaryData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -50,7 +52,7 @@ const IrzplusSummaryInfo: React.FC<IrzplusSummaryInfoProps> = ({
     };
 
     fetchIrzData();
-  }, [farmId, cycle]);
+  }, [farmId, cycle, reloadTrigger]);
 
   const renderRow = (label: string, value: number | null | undefined) => (
     <Grid

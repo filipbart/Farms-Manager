@@ -1,27 +1,14 @@
-import {
-  Box,
-  Button,
-  Grid,
-  MenuItem,
-  tablePaginationClasses,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
 import {
   DataGridPro,
   type GridCellParams,
   type GridColDef,
 } from "@mui/x-data-grid-pro";
-import { useEffect, useMemo, useReducer, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
-import type { CycleDictModel } from "../../../../models/common/dictionaries";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import { FallenStockService } from "../../../../services/production-data/fallen-stocks-service";
-import {
-  filterReducer,
-  initialFilters,
-  type FallenStocksDictionary,
-} from "../../../../models/fallen-stocks/fallen-stocks-filters";
+import { type FallenStockFilterModel } from "../../../../models/fallen-stocks/fallen-stocks-filters";
 import { useFallenStocks } from "../../../../hooks/useFallenStocks";
 import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
 import ActionsCell from "../../../../components/datagrid/actions-cell";
@@ -29,9 +16,15 @@ import AddFallenStocksModal from "../../../../components/modals/production-data/
 import EditFallenStocksModal from "../../../../components/modals/production-data/fallen-stocks/edit-fallen-stocks-modal";
 import IrzplusSummaryInfo from "../../../../components/fallen-stocks/irzplus-summary-info";
 
-const MainFallenStockPage: React.FC = () => {
-  const [filters, dispatch] = useReducer(filterReducer, initialFilters);
-  const [dictionary, setDictionary] = useState<FallenStocksDictionary>();
+interface MainFallenStockPagePropse {
+  filters: FallenStockFilterModel;
+  reloadTrigger: number;
+}
+
+const MainFallenStockPage: React.FC<MainFallenStockPagePropse> = ({
+  filters,
+  reloadTrigger,
+}) => {
   const [openAddModal, setOpenAddModal] = useState(false);
   const [selectedFallenStock, setSelectedFallenStock] = useState<any | null>(
     null
@@ -44,34 +37,6 @@ const MainFallenStockPage: React.FC = () => {
     const saved = localStorage.getItem("columnVisibilityModelFallenStock");
     return saved ? JSON.parse(saved) : {};
   });
-
-  const uniqueCycles = useMemo(() => {
-    if (!dictionary) return [];
-    const map = new Map<string, CycleDictModel>();
-    for (const cycle of dictionary.cycles) {
-      const key = `${cycle.identifier}-${cycle.year}`;
-      if (!map.has(key)) {
-        map.set(key, cycle);
-      }
-    }
-    return Array.from(map.values());
-  }, [dictionary]);
-
-  useEffect(() => {
-    const fetchDictionaries = async () => {
-      try {
-        await handleApiResponse(
-          () => FallenStockService.getDictionaries(),
-          (data) => setDictionary(data.responseData),
-          undefined,
-          "Błąd podczas pobierania słowników filtrów"
-        );
-      } catch {
-        toast.error("Błąd podczas pobierania słowników filtrów");
-      }
-    };
-    fetchDictionaries();
-  }, []);
 
   useEffect(() => {
     fetchFallenStocks();
@@ -110,7 +75,6 @@ const MainFallenStockPage: React.FC = () => {
       headerName: "Wstawiono / Data zgłoszenia",
       width: 200,
       pinnable: true,
-
       cellClassName: "sticky-column-style",
     };
     const henhouseColumns: GridColDef[] = viewModel.henhouseColumns.map(
@@ -119,6 +83,7 @@ const MainFallenStockPage: React.FC = () => {
         headerName: col.name,
         width: 120,
         align: "center",
+        type: "number",
         headerAlign: "center",
         cellClassName: (params: GridCellParams) => {
           if (params.row.id === "summary_flock_state") {
@@ -135,6 +100,7 @@ const MainFallenStockPage: React.FC = () => {
       headerName: "Pozostało",
       width: 120,
       align: "center",
+      type: "number",
       headerAlign: "center",
     };
 
@@ -174,73 +140,34 @@ const MainFallenStockPage: React.FC = () => {
   }, [viewModel]);
 
   return (
-    <Box p={4}>
+    <Box>
+      <Box mb={3}>
+        <Typography variant="h5">Ewidencja sztuk padłych</Typography>
+      </Box>
       <Box
         mb={2}
         display="flex"
-        flexDirection={{ xs: "column", sm: "row" }}
         justifyContent="space-between"
-        alignItems={{ xs: "flex-start", sm: "center" }}
-        gap={2}
+        alignItems="flex-start"
+        gap={3}
       >
-        <Typography variant="h4">Ewidencja sztuk padłych</Typography>
+        <Box sx={{ flexGrow: 1 }}>
+          <IrzplusSummaryInfo
+            farmId={filters.farmId}
+            cycle={filters.cycle}
+            reloadTrigger={reloadTrigger}
+          />
+        </Box>
+
         <Button
           variant="contained"
           color="primary"
           onClick={() => setOpenAddModal(true)}
+          disabled={!filters.farmId || !filters.cycle}
         >
           Dodaj nowy wpis
         </Button>
       </Box>
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid size={{ xs: 12, sm: 4 }}>
-          <TextField
-            select
-            label="Ferma"
-            value={filters.farmId || ""}
-            onChange={(e) =>
-              dispatch({ type: "set", key: "farmId", value: e.target.value })
-            }
-            fullWidth
-            disabled={loading}
-          >
-            <MenuItem value="">
-              <em>--Brak wyboru--</em>
-            </MenuItem>
-            {dictionary?.farms.map((farm) => (
-              <MenuItem key={farm.id} value={farm.id}>
-                {farm.name}
-              </MenuItem>
-            ))}
-          </TextField>
-        </Grid>
-        <Grid size={{ xs: 12, sm: 2 }}>
-          <TextField
-            select
-            label="Cykl"
-            value={filters.cycle || ""}
-            onChange={(e) =>
-              dispatch({ type: "set", key: "cycle", value: e.target.value })
-            }
-            fullWidth
-            disabled={loading}
-          >
-            <MenuItem value="">
-              <em>--Brak wyboru--</em>
-            </MenuItem>
-            {uniqueCycles.map((cycle) => (
-              <MenuItem
-                key={cycle.id}
-                value={`${cycle.identifier}-${cycle.year}`}
-              >
-                {`${cycle.identifier}/${cycle.year}`}
-              </MenuItem>
-            ))}
-          </TextField>
-        </Grid>
-      </Grid>
-
-      <IrzplusSummaryInfo farmId={filters.farmId} cycle={filters.cycle} />
 
       <Box mt={4} sx={{ width: "100%", overflowX: "auto" }}>
         <DataGridPro

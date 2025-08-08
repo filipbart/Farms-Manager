@@ -201,6 +201,13 @@ export default class ApiUrl {
     this.FallenStocks + "/update-data/" + internalGroupId;
   public static GetIrzSummaryData = this.FallenStocks + "/irz-summary";
 
+  public static FallenStockPickups = this.BaseUrl + "fallen-stock-pickups";
+  public static AddFallenStockPickups = this.FallenStockPickups + "/add";
+  public static DeleteFallenStockPickup = (id: string) =>
+    this.FallenStockPickups + "/delete/" + id;
+  public static UpdateFallenStockPickup = (id: string) =>
+    this.FallenStockPickups + "/update/" + id;
+
   public static Gas = this.BaseUrl + "gas";
   public static GasDeliveriesDictionary = this.Gas + "/dictionary";
   public static GasContractors = this.Gas + "/contractors";

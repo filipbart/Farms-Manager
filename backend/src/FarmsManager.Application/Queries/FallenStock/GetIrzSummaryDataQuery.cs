@@ -1,9 +1,8 @@
 ﻿using Ardalis.Specification;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
-using FarmsManager.Application.Services;
 using FarmsManager.Application.Specifications;
-using FarmsManager.Application.Specifications.Cycle;
+using FarmsManager.Application.Specifications.FallenStocks;
 using FarmsManager.Application.Specifications.Farms;
 using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.FallenStockAggregate.Entities;
@@ -11,7 +10,6 @@ using FarmsManager.Domain.Aggregates.FallenStockAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.UserAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
-using FarmsManager.Shared.Extensions;
 using MediatR;
 
 namespace FarmsManager.Application.Queries.FallenStock;
@@ -41,10 +39,11 @@ public class
     private readonly IFarmRepository _farmRepository;
     private readonly ICycleRepository _cycleRepository;
     private readonly IFallenStockRepository _fallenStockRepository;
+    private readonly IFallenStockPickupRepository _fallenStockPickupRepository;
 
     public GetIrzSummaryDataQueryHandler(IUserDataResolver userDataResolver, IUserRepository userRepository,
         IIrzplusService irzplusService, IFarmRepository farmRepository, ICycleRepository cycleRepository,
-        IFallenStockRepository fallenStockRepository)
+        IFallenStockRepository fallenStockRepository, IFallenStockPickupRepository fallenStockPickupRepository)
     {
         _userDataResolver = userDataResolver;
         _userRepository = userRepository;
@@ -52,6 +51,7 @@ public class
         _farmRepository = farmRepository;
         _cycleRepository = cycleRepository;
         _fallenStockRepository = fallenStockRepository;
+        _fallenStockPickupRepository = fallenStockPickupRepository;
     }
 
     public async Task<BaseResponse<GetIrzSummaryDataQueryResponse>> Handle(GetIrzSummaryDataQuery request,
@@ -70,16 +70,18 @@ public class
             new GetFallenStockByFarmAndCycleSentToIrzSpec(farm.Id, cycle.Id),
             cancellationToken);
 
-        //TODO odbiory sztuk przez zakłady
+        var fallenStockPickups =
+            await _fallenStockPickupRepository.ListAsync(new FallenStockPickupsByFarmAndCycleSpec(farm.Id, cycle.Id),
+                cancellationToken);
 
         // _irzplusService.PrepareOptions(user.IrzplusCredentials);
         // var irzplusFlock = await _irzplusService.GetFlockAsync(farm, cancellationToken);
 
         var queryResponse = new GetIrzSummaryDataQueryResponse
         {
-            CurrentStockSize = 0,//irzplusFlock.ListaDrob?.FirstOrDefault()?.OgolnaLiczbaDrobiu ?? 0,
+            CurrentStockSize = 0, //irzplusFlock.ListaDrob?.FirstOrDefault()?.OgolnaLiczbaDrobiu ?? 0,
             ReportedFallenStock = fallenStocks.Sum(t => t.Quantity),
-            CollectedFallenStock = 0
+            CollectedFallenStock = fallenStockPickups.Sum(t => t.Quantity)
         };
 
         var response = BaseResponse.CreateResponse(queryResponse);
