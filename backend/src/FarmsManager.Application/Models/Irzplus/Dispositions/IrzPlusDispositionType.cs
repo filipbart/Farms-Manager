@@ -3,5 +3,6 @@
 public enum IrzPlusDispositionType
 {
     Insertion,
-    Sale
+    Sale,
+    FallenStocks
 }

@@ -27,6 +27,7 @@ import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
 import ActionsCell from "../../../../components/datagrid/actions-cell";
 import AddFallenStocksModal from "../../../../components/modals/production-data/fallen-stocks/add-fallen-stocks-modal";
 import EditFallenStocksModal from "../../../../components/modals/production-data/fallen-stocks/edit-fallen-stocks-modal";
+import IrzplusSummaryInfo from "../../../../components/fallen-stocks/irzplus-summary-info";
 
 const MainFallenStockPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -204,7 +205,7 @@ const MainFallenStockPage: React.FC = () => {
             disabled={loading}
           >
             <MenuItem value="">
-              <em>Wszystkie</em>
+              <em>--Brak wyboru--</em>
             </MenuItem>
             {dictionary?.farms.map((farm) => (
               <MenuItem key={farm.id} value={farm.id}>
@@ -213,7 +214,7 @@ const MainFallenStockPage: React.FC = () => {
             ))}
           </TextField>
         </Grid>
-        <Grid size={{ xs: 12, sm: 4 }}>
+        <Grid size={{ xs: 12, sm: 2 }}>
           <TextField
             select
             label="Cykl"
@@ -225,7 +226,7 @@ const MainFallenStockPage: React.FC = () => {
             disabled={loading}
           >
             <MenuItem value="">
-              <em>Wszystkie</em>
+              <em>--Brak wyboru--</em>
             </MenuItem>
             {uniqueCycles.map((cycle) => (
               <MenuItem
@@ -238,6 +239,9 @@ const MainFallenStockPage: React.FC = () => {
           </TextField>
         </Grid>
       </Grid>
+
+      <IrzplusSummaryInfo farmId={filters.farmId} cycle={filters.cycle} />
+
       <Box mt={4} sx={{ width: "100%", overflowX: "auto" }}>
         <DataGridPro
           loading={loading}

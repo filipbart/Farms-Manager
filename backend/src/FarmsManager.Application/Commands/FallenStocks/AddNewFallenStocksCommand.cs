@@ -6,9 +6,11 @@ using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Application.Specifications.Cycle;
 using FarmsManager.Application.Specifications.Farms;
+using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.FallenStockAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FallenStockAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.UserAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
 using FluentValidation;
 using MediatR;
@@ -34,6 +36,7 @@ public record FallenStockEntryDto
 public class AddNewFallenStocksCommandHandler : IRequestHandler<AddNewFallenStocksCommand, EmptyBaseResponse>
 {
     private readonly IUserDataResolver _userDataResolver;
+    private readonly IUserRepository _userRepository;
     private readonly IFarmRepository _farmRepository;
     private readonly ICycleRepository _cycleRepository;
     private readonly IFallenStockRepository _fallenStockRepository;
@@ -41,19 +44,18 @@ public class AddNewFallenStocksCommandHandler : IRequestHandler<AddNewFallenStoc
     private readonly IUtilizationPlantRepository _utilizationPlantRepository;
     private readonly IIrzplusService _irzplusService;
 
-    public AddNewFallenStocksCommandHandler(
-        IUserDataResolver userDataResolver,
-        IFallenStockRepository fallenStockRepository,
-        IHenhouseRepository henhouseRepository,
-        IFarmRepository farmRepository,
-        ICycleRepository cycleRepository,
-        IUtilizationPlantRepository utilizationPlantRepository, IIrzplusService irzplusService)
+
+    public AddNewFallenStocksCommandHandler(IUserDataResolver userDataResolver, IUserRepository userRepository,
+        IFarmRepository farmRepository, ICycleRepository cycleRepository, IFallenStockRepository fallenStockRepository,
+        IHenhouseRepository henhouseRepository, IUtilizationPlantRepository utilizationPlantRepository,
+        IIrzplusService irzplusService)
     {
         _userDataResolver = userDataResolver;
-        _fallenStockRepository = fallenStockRepository;
-        _henhouseRepository = henhouseRepository;
+        _userRepository = userRepository;
         _farmRepository = farmRepository;
         _cycleRepository = cycleRepository;
+        _fallenStockRepository = fallenStockRepository;
+        _henhouseRepository = henhouseRepository;
         _utilizationPlantRepository = utilizationPlantRepository;
         _irzplusService = irzplusService;
     }
@@ -61,6 +63,8 @@ public class AddNewFallenStocksCommandHandler : IRequestHandler<AddNewFallenStoc
     public async Task<EmptyBaseResponse> Handle(AddNewFallenStocksCommand request, CancellationToken ct)
     {
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
+        var user = await _userRepository.SingleOrDefaultAsync(new UserByIdSpec(userId), ct) ??
+                   throw DomainException.UserNotFound();
         var response = new EmptyBaseResponse();
 
         var farm = await _farmRepository.GetAsync(new FarmByIdSpec(request.FarmId), ct);
@@ -128,7 +132,7 @@ public class AddNewFallenStocksCommandHandler : IRequestHandler<AddNewFallenStoc
             await _fallenStockRepository.AddRangeAsync(newFallenStocks, ct);
             if (request.SendToIrz)
             {
-                //TODO _irzplusService.
+                //TODO _irzplusService.PrepareOptions(user.IrzplusCredentials);
             }
         }
 

@@ -101,4 +101,17 @@ public class FallenStocksController(IMediator mediator) : BaseController
     {
         return Ok(await mediator.Send(new UpdateFallenStocksCommand(internalGroupId, data)));
     }
+
+    /// <summary>
+    /// Zwraca informacje o stanie stada i sztuk padłych
+    /// </summary>
+    /// <param name="query"></param>
+    /// <returns></returns>
+    [HttpGet("irz-summary")]
+    [ProducesResponseType(typeof(BaseResponse<GetIrzSummaryDataQueryResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetIrzSummaryData([FromQuery] GetIrzSummaryDataQuery query)
+    {
+        return Ok(await mediator.Send(query));
+    }
 }

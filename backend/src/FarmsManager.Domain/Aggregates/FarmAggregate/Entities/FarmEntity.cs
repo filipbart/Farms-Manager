@@ -39,7 +39,7 @@ public class FarmEntity : Entity
         return new FarmEntity
         {
             Name = name,
-            ProducerNumber = producerNumber,
+            ProducerNumber = producerNumber.Replace(" ", "").Trim(),
             Nip = nip.Replace("PL", "").Replace("-", "").Replace(" ", "").Trim(),
             Address = address,
             CreatedBy = createdBy

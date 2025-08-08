@@ -1,5 +1,6 @@
 import ApiUrl from "../../common/ApiUrl";
 import type {
+  IrzSummaryData,
   AddFallenStocksData,
   FallenStockEditableEntry,
   GetAvailableHenhousesFallenStocks,
@@ -60,5 +61,12 @@ export class FallenStockService {
       ApiUrl.UpdateFallenStocks(internalGroupId),
       { entries: data }
     );
+  }
+
+  public static async getIrzSummaryData(farmId: string, cycle: string) {
+    return await AxiosWrapper.get<IrzSummaryData>(ApiUrl.GetIrzSummaryData, {
+      farmId,
+      cycle,
+    });
   }
 }

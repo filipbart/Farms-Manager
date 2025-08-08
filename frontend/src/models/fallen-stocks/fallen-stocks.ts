@@ -41,3 +41,9 @@ export type FallenStockEditableEntry = {
   henhouseName: string;
   quantity: string;
 };
+
+export interface IrzSummaryData {
+  currentStockSize: number;
+  reportedFallenStock: number;
+  collectedFallenStock: number;
+}

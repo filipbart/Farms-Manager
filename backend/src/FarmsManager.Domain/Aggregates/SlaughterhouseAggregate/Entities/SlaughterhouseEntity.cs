@@ -20,7 +20,7 @@ public class SlaughterhouseEntity : Entity
         return new SlaughterhouseEntity
         {
             Name = name,
-            ProducerNumber = producerNumber,
+            ProducerNumber = producerNumber.Replace(" ", "").Trim(),
             Nip = nip.Replace("PL", "").Replace("-", "").Replace(" ", "").Trim(),
             Address = address,
             CreatedBy = userId

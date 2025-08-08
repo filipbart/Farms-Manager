@@ -20,7 +20,7 @@ public class HatcheryEntity : Entity
         return new HatcheryEntity
         {
             Name = name,
-            ProducerNumber = producerNumber,
+            ProducerNumber = producerNumber.Replace(" ", "").Trim(),
             FullName = fullName,
             Nip = nip.Replace("PL", "").Replace("-", "").Replace(" ", "").Trim(),
             Address = address,
