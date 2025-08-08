@@ -87,6 +87,11 @@ function formReducer(
         ...state,
         entries: state.entries.filter((_, idx) => idx !== action.index),
       };
+    case "CLEAR_HENHOUSES_IN_ENTRIES":
+      return {
+        ...state,
+        entries: state.entries.map((entry) => ({ ...entry, henhouseId: "" })),
+      };
     case "RESET":
       return initialState;
     default:
@@ -109,10 +114,11 @@ const AddFallenStocksModal: React.FC<AddFallenStocksModalProps> = ({
     useLatestCycle();
 
   const [loading, setLoading] = useState(false);
+  const [loadingHenhouses, setLoadingHenhouses] = useState(false);
   const [form, dispatch] = useReducer(formReducer, initialState);
   const [errors, setErrors] = useState<FallenStockFormErrors>({});
   const [henhouses, setHenhouses] = useState<HouseRowModel[]>([]);
-  const [sendToIrz, setSendToIrz] = useState(false); // ZMIANA
+  const [sendToIrz, setSendToIrz] = useState(false);
 
   useEffect(() => {
     fetchFarms();
@@ -131,8 +137,8 @@ const AddFallenStocksModal: React.FC<AddFallenStocksModalProps> = ({
     dispatch({ type: "SET_FIELD", name: "cycleDisplay", value: "" });
     setErrors({});
 
-    const selectedFarm = farms.find((f) => f.id === farmId);
-    setHenhouses(selectedFarm?.henhouses ?? []);
+    setHenhouses([]);
+    dispatch({ type: "CLEAR_HENHOUSES_IN_ENTRIES" });
 
     const cycle = await loadLatestCycle(farmId);
     if (!cycle) {
@@ -147,6 +153,35 @@ const AddFallenStocksModal: React.FC<AddFallenStocksModalProps> = ({
       value: `${cycle.identifier}/${cycle.year}`,
     });
   };
+
+  useEffect(() => {
+    const fetchHenhouses = async () => {
+      if (!form.farmId || !form.cycleId || !form.date) {
+        setHenhouses([]);
+        dispatch({ type: "CLEAR_HENHOUSES_IN_ENTRIES" });
+        return;
+      }
+
+      setLoadingHenhouses(true);
+      await handleApiResponse(
+        () =>
+          FallenStockService.getAvailableHenhouses({
+            farmId: form.farmId,
+            cycleId: form.cycleId,
+            date: form.date!.format("YYYY-MM-DD"),
+          }),
+        (data) => setHenhouses(data.responseData?.henhouses ?? []),
+        () => {
+          setHenhouses([]);
+          dispatch({ type: "CLEAR_HENHOUSES_IN_ENTRIES" });
+        },
+        "Nie udało się pobrać listy kurników"
+      );
+      setLoadingHenhouses(false);
+    };
+
+    fetchHenhouses();
+  }, [form.farmId, form.cycleId, form.date]);
 
   const validateEntry = (entry: FallenStockEntry) => {
     const e: { henhouseId?: string; quantity?: string } = {};
@@ -188,7 +223,7 @@ const AddFallenStocksModal: React.FC<AddFallenStocksModalProps> = ({
 
     await handleApiResponse(
       () =>
-        FallenStockService.addNewFallenStock({
+        FallenStockService.addNewFallenStocks({
           farmId: form.farmId,
           cycleId: form.cycleId,
           utilizationPlantId: form.utilizationPlantId,
@@ -197,20 +232,9 @@ const AddFallenStocksModal: React.FC<AddFallenStocksModalProps> = ({
             henhouseId,
             quantity: Number(quantity),
           })),
+          sendToIrz: sendToIrz,
         }),
-      async (data) => {
-        if (sendToIrz) {
-          await handleApiResponse(
-            () =>
-              FallenStockService.sendToIrzPlus({
-                internalGroupId: data.responseData!.internalGroupId,
-              }),
-            () => toast.success("Zgłoszenie wysłane do IRZplus"),
-            undefined,
-            "Nie udało się wysłać zgłoszenia do IRZplus"
-          );
-        }
-
+      () => {
         toast.success("Dodano zgłoszenie sztuk padłych");
         dispatch({ type: "RESET" });
         setErrors({});
@@ -237,7 +261,6 @@ const AddFallenStocksModal: React.FC<AddFallenStocksModalProps> = ({
       <DialogTitle>Nowe zgłoszenie sztuk padłych</DialogTitle>
       <DialogContent>
         <Box display="flex" flexDirection="column" gap={2} mt={1}>
-          {/* Pola formularza (Ferma, Cykl, Zakład, Data) bez zmian */}
           <LoadingTextField
             loading={loadingFarms}
             select
@@ -315,6 +338,7 @@ const AddFallenStocksModal: React.FC<AddFallenStocksModalProps> = ({
             errors={errors.entries}
             dispatch={dispatch}
             farmId={form.farmId}
+            loadingHenhouses={loadingHenhouses}
           />
 
           <Button
@@ -345,7 +369,6 @@ const AddFallenStocksModal: React.FC<AddFallenStocksModalProps> = ({
         </Button>
         <LoadingButton
           loading={loading}
-          loadingSize={20}
           onClick={handleSave}
           variant="contained"
           color="primary"

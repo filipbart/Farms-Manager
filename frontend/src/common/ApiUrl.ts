@@ -190,6 +190,15 @@ export default class ApiUrl {
 
   public static FallenStocks = this.BaseUrl + "fallen-stocks";
   public static FallenStocksDictionary = this.FallenStocks + "/dictionary";
+  public static FallenStocksHenhouses =
+    this.FallenStocks + "/available-henhouses";
+  public static AddFallenStocks = this.FallenStocks + "/add";
+  public static DeleteFallenStocks = (internalGroupId: string) =>
+    this.FallenStocks + "/delete/" + internalGroupId;
+  public static GetFallenStocksDataForEdit = (internalGroupId: string) =>
+    this.FallenStocks + "/edit-data/" + internalGroupId;
+  public static UpdateFallenStocks = (internalGroupId: string) =>
+    this.FallenStocks + "/update-data/" + internalGroupId;
 
   public static Gas = this.BaseUrl + "gas";
   public static GasDeliveriesDictionary = this.Gas + "/dictionary";

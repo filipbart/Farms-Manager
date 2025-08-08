@@ -14,6 +14,7 @@ public class FallenStockEntity : Entity
     public DateTime? DateIrzSentUtc { get; protected internal set; }
     public Guid? SentToIrzBy { get; protected internal set; }
     public string DocumentNumber { get; protected internal set; }
+    public Guid InternalGroupId { get; init; }
 
     public virtual FarmEntity Farm { get; init; }
     public virtual CycleEntity Cycle { get; init; }
@@ -21,6 +22,7 @@ public class FallenStockEntity : Entity
     public virtual HenhouseEntity Henhouse { get; init; }
 
     public static FallenStockEntity CreateNew(
+        Guid internalGroupId,
         Guid farmId,
         Guid cycleId,
         Guid utilizationPlantId,
@@ -31,6 +33,7 @@ public class FallenStockEntity : Entity
     {
         return new FallenStockEntity
         {
+            InternalGroupId = internalGroupId,
             FarmId = farmId,
             CycleId = cycleId,
             UtilizationPlantId = utilizationPlantId,
@@ -41,9 +44,8 @@ public class FallenStockEntity : Entity
         };
     }
 
-    public void Update(DateOnly date, int quantity)
+    public void Update(int quantity)
     {
-        Date = date;
         Quantity = quantity;
     }
 

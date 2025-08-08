@@ -8,6 +8,7 @@ export interface TableRowModel {
   rowTitle: string;
   henhouseValues: Record<string, number | null>;
   remaining: number | null;
+  isSentToIrz: boolean;
 }
 
 export interface FallenStockTableViewModel {

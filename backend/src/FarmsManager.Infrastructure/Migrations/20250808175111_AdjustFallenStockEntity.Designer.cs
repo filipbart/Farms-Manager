@@ -4,6 +4,7 @@ using FarmsManager.Domain.Aggregates.UserAggregate.Models;
 using FarmsManager.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FarmsManager.Infrastructure.Migrations
 {
     [DbContext(typeof(FarmsManagerContext))]
-    partial class FarmsManagerContextModelSnapshot : ModelSnapshot
+    [Migration("20250808175111_AdjustFallenStockEntity")]
+    partial class AdjustFallenStockEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -677,9 +680,9 @@ namespace FarmsManager.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("henhouse_id");
 
-                    b.Property<Guid>("InternalGroupId")
+                    b.Property<Guid>("InternalIrzGroupId")
                         .HasColumnType("uuid")
-                        .HasColumnName("internal_group_id");
+                        .HasColumnName("internal_irz_group_id");
 
                     b.Property<Guid?>("ModifiedBy")
                         .HasColumnType("uuid")

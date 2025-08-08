@@ -3,7 +3,7 @@ import { Button, Stack } from "@mui/material";
 
 interface ActionsCellProps {
   params: any;
-  onDelete: (id: string) => void;
+  onDelete?: (id: string) => void;
   onEdit?: (row: any) => void;
   disabledEdit?: boolean;
   disabledDelete?: boolean;
@@ -23,7 +23,9 @@ const ActionsCell: React.FC<ActionsCellProps> = ({
   };
 
   const handleDelete = () => {
-    onDelete(params.row.id);
+    if (onDelete) {
+      onDelete(params.row.id);
+    }
   };
 
   return (
@@ -38,15 +40,17 @@ const ActionsCell: React.FC<ActionsCellProps> = ({
           Edytuj
         </Button>
       )}
-      <Button
-        variant="outlined"
-        size="small"
-        color="error"
-        onClick={handleDelete}
-        disabled={disabledDelete}
-      >
-        Usuń
-      </Button>
+      {onDelete && (
+        <Button
+          variant="outlined"
+          size="small"
+          color="error"
+          onClick={handleDelete}
+          disabled={disabledDelete}
+        >
+          Usuń
+        </Button>
+      )}
     </Stack>
   );
 };

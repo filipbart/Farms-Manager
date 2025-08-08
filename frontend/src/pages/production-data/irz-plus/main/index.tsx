@@ -22,19 +22,19 @@ import {
   initialFilters,
   type FallenStocksDictionary,
 } from "../../../../models/fallen-stocks/fallen-stocks-filters";
-import CustomToolbar from "../../../../components/datagrid/custom-toolbar";
-import NoRowsOverlay from "../../../../components/datagrid/custom-norows";
 import { useFallenStocks } from "../../../../hooks/useFallenStocks";
 import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
 import ActionsCell from "../../../../components/datagrid/actions-cell";
 import AddFallenStocksModal from "../../../../components/modals/production-data/fallen-stocks/add-fallen-stocks-modal";
+import EditFallenStocksModal from "../../../../components/modals/production-data/fallen-stocks/edit-fallen-stocks-modal";
 
 const MainFallenStockPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
   const [dictionary, setDictionary] = useState<FallenStocksDictionary>();
   const [openAddModal, setOpenAddModal] = useState(false);
-  const [selectedFallenStock, setSelectedFallenStock] =
-    useState<FallenStockListModel | null>(null);
+  const [selectedFallenStock, setSelectedFallenStock] = useState<any | null>(
+    null
+  );
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const { viewModel, loading, fetchFallenStocks } = useFallenStocks(filters);
@@ -76,9 +76,9 @@ const MainFallenStockPage: React.FC = () => {
     fetchFallenStocks();
   }, [fetchFallenStocks]);
 
-  const deleteFallenStockRecord = async (id: string) => {
+  const deleteFallenStockRecord = async (internalGroupId: string) => {
     await handleApiResponse(
-      () => FallenStockService.deleteRecord(id),
+      () => FallenStockService.deleteFallenStocks(internalGroupId),
       async () => {
         toast.success("Wpis został poprawnie usunięty");
         fetchFallenStocks();
@@ -141,7 +141,7 @@ const MainFallenStockPage: React.FC = () => {
       field: "actions",
       type: "actions",
       headerName: "Akcje",
-      width: 120,
+      width: 150,
       align: "center",
       headerAlign: "center",
       getActions: (params) => {
@@ -151,23 +151,26 @@ const MainFallenStockPage: React.FC = () => {
           return [];
         }
 
+        const isSentToIrz = params.row.IsSentToIrz as boolean;
+
+        const deleteHandler = isSentToIrz ? undefined : deleteFallenStockRecord;
+
         return [
           <ActionsCell
             key="actions"
             params={params}
             onEdit={(row) => {
-              console.log(row);
               setSelectedFallenStock(row);
               setIsEditModalOpen(true);
             }}
-            onDelete={deleteFallenStockRecord}
+            onDelete={deleteHandler}
           />,
         ];
       },
     };
 
     return [titleColumn, ...henhouseColumns, remainingColumn, actionsColumn];
-  }, [viewModel, deleteFallenStockRecord]);
+  }, [viewModel]);
 
   return (
     <Box p={4}>
@@ -273,7 +276,6 @@ const MainFallenStockPage: React.FC = () => {
             },
           }}
           rowSelection={false}
-          slots={{ toolbar: CustomToolbar, noRowsOverlay: NoRowsOverlay }}
           showToolbar
           sx={{
             [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },
@@ -303,6 +305,14 @@ const MainFallenStockPage: React.FC = () => {
         </Typography>
       )}
 
+      <EditFallenStocksModal
+        open={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onSave={() => {
+          fetchFallenStocks();
+        }}
+        internalGroupId={selectedFallenStock?.id ?? null}
+      />
       <AddFallenStocksModal
         open={openAddModal}
         onClose={() => setOpenAddModal(false)}

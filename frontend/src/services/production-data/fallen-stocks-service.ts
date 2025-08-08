@@ -1,5 +1,12 @@
 import ApiUrl from "../../common/ApiUrl";
 import type {
+  AddFallenStocksData,
+  FallenStockEditableEntry,
+  GetAvailableHenhousesFallenStocks,
+  GetAvailableHenhousesFallenStocksResponse,
+  GetFallenStockEditData,
+} from "../../models/fallen-stocks/fallen-stocks";
+import type {
   FallenStockFilterModel,
   FallenStocksDictionary,
 } from "../../models/fallen-stocks/fallen-stocks-filters";
@@ -17,6 +24,41 @@ export class FallenStockService {
     return await AxiosWrapper.get<FallenStockTableViewModel>(
       ApiUrl.FallenStocks,
       { ...filters }
+    );
+  }
+
+  public static async getAvailableHenhouses(
+    query: GetAvailableHenhousesFallenStocks
+  ) {
+    return await AxiosWrapper.get<GetAvailableHenhousesFallenStocksResponse>(
+      ApiUrl.FallenStocksHenhouses,
+      { ...query }
+    );
+  }
+
+  public static async addNewFallenStocks(data: AddFallenStocksData) {
+    return await AxiosWrapper.post(ApiUrl.AddFallenStocks, data);
+  }
+
+  public static async deleteFallenStocks(internalGroupId: string) {
+    return await AxiosWrapper.delete(
+      ApiUrl.DeleteFallenStocks(internalGroupId)
+    );
+  }
+
+  public static async getFallenStocksDataForEdit(internalGroupId: string) {
+    return await AxiosWrapper.get<GetFallenStockEditData>(
+      ApiUrl.GetFallenStocksDataForEdit(internalGroupId)
+    );
+  }
+
+  public static async updateFallenStocks(
+    internalGroupId: string,
+    data: FallenStockEditableEntry[]
+  ) {
+    return await AxiosWrapper.patch(
+      ApiUrl.UpdateFallenStocks(internalGroupId),
+      { entries: data }
     );
   }
 }

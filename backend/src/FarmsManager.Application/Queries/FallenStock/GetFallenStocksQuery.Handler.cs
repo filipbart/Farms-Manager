@@ -65,7 +65,8 @@ public class
         var totalInsertionRow = new TableRowModel
         {
             Id = "summary_insertions",
-            RowTitle = "Wstawiono/Data zgłoszenia"
+            RowTitle = "Wstawiono/Data zgłoszenia",
+            IsSentToIrz = false
         };
         foreach (var henhouse in henhouses)
         {
@@ -80,10 +81,12 @@ public class
         var groupedFallenStockByDate = fallenStockData.GroupBy(fs => fs.Date);
         foreach (var dateGroup in groupedFallenStockByDate)
         {
+            var firstEntryInGroup = dateGroup.First();
             var fallenStockRow = new TableRowModel
             {
-                Id = $"fallen_{dateGroup.Key:yyyy-MM-dd}",
-                RowTitle = dateGroup.Key.ToString("dd.MM.yyyy")
+                Id = firstEntryInGroup.InternalGroupId.ToString(),
+                RowTitle = dateGroup.Key.ToString("dd.MM.yyyy"),
+                IsSentToIrz = firstEntryInGroup.DateIrzSentUtc.HasValue
             };
             foreach (var henhouse in henhouses)
             {

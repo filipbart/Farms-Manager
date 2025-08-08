@@ -23,6 +23,7 @@ interface FallenStockEntriesTableProps {
     | undefined;
   dispatch: React.Dispatch<any>;
   farmId?: string;
+  loadingHenhouses: boolean;
 }
 
 const inputWidth = 150;
@@ -34,6 +35,7 @@ const FallenStockEntriesTable: React.FC<FallenStockEntriesTableProps> = ({
   errors,
   dispatch,
   farmId,
+  loadingHenhouses,
 }) => {
   const handleFieldChange = (
     index: number,
@@ -79,7 +81,7 @@ const FallenStockEntriesTable: React.FC<FallenStockEntriesTableProps> = ({
                       handleFieldChange(index, "henhouseId", target.value)
                     }
                     fullWidth
-                    disabled={!farmId}
+                    disabled={!farmId || loadingHenhouses}
                     error={!!errors?.[index]?.henhouseId}
                     sx={{ minWidth: inputWidth }}
                   >

@@ -1,5 +1,4 @@
 ﻿using FarmsManager.Application.Common.Responses;
-using FarmsManager.Application.Models;
 using MediatR;
 
 namespace FarmsManager.Application.Queries.FallenStock;

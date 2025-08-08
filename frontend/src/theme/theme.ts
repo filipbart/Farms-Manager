@@ -69,6 +69,9 @@ const theme = createTheme(
           },
           toolbar: {
             border: "none",
+            "& .MuiButtonBase-root": {
+              color: "#0D1B2A",
+            },
           },
           columnHeader: {
             border: "none !important",

@@ -73,6 +73,11 @@ public record TableRowModel
     /// Wartość dla kolumny "Pozostało", jeśli dotyczy danego wiersza.
     /// </summary>
     public int? Remaining { get; set; }
+    
+    /// <summary>
+    /// Czy wysłane do IRZplus - blokuje przycisk usuwania
+    /// </summary>
+    public bool IsSentToIrz { get; set; }
 }
 
 public record GetFallenStocksQueryResponse : FallenStockTableViewModel;
