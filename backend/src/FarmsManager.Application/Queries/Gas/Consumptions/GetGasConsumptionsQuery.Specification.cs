@@ -2,6 +2,7 @@
 using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.GasAggregate.Entities;
 using FarmsManager.Domain.Aggregates.GasAggregate.Enum;
+using LinqKit;
 
 namespace FarmsManager.Application.Queries.Gas.Consumptions;
 

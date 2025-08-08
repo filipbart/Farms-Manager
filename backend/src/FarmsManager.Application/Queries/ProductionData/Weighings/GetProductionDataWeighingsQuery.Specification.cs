@@ -1,6 +1,7 @@
 ﻿using Ardalis.Specification;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.ProductionDataAggregate.Entities;
+using LinqKit;
 
 namespace FarmsManager.Application.Queries.ProductionData.Weighings;
 
@@ -43,14 +44,13 @@ public sealed class GetAllProductionDataWeighingsSpec : BaseSpecification<Produc
 
         if (filters.CyclesDict is not null && filters.CyclesDict.Count != 0)
         {
-            var validPairs = filters.Cycles
-                .Select(c => new { c.Identifier, c.Year })
-                .ToList();
+            var predicate = PredicateBuilder.New<ProductionDataWeighingEntity>();
 
-            Query.Where(t =>
-                validPairs.Any(fc =>
-                    fc.Identifier == t.Cycle.Identifier &&
-                    fc.Year == t.Cycle.Year));
+            predicate = filters.CyclesDict.Aggregate(predicate,
+                (current, cycleFilter) => current.Or(t =>
+                    t.Cycle.Identifier == cycleFilter.Identifier && t.Cycle.Year == cycleFilter.Year));
+
+            Query.Where(predicate);
         }
 
         if (filters.DateSince is not null)

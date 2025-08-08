@@ -2,6 +2,7 @@
 using FarmsManager.Application.Models.ProductionData;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.ProductionDataAggregate.Entities;
+using LinqKit;
 
 namespace FarmsManager.Application.Queries.ProductionData.RemainingFeed;
 
@@ -34,14 +35,13 @@ public sealed class GetAllProductionDataRemainingFeedSpec : BaseSpecification<Pr
 
         if (filters.CyclesDict is not null && filters.CyclesDict.Count != 0)
         {
-            var validPairs = filters.Cycles
-                .Select(c => new { c.Identifier, c.Year })
-                .ToList();
+            var predicate = PredicateBuilder.New<ProductionDataRemainingFeedEntity>();
 
-            Query.Where(t =>
-                validPairs.Any(fc =>
-                    fc.Identifier == t.Cycle.Identifier &&
-                    fc.Year == t.Cycle.Year));
+            predicate = filters.CyclesDict.Aggregate(predicate,
+                (current, cycleFilter) => current.Or(t =>
+                    t.Cycle.Identifier == cycleFilter.Identifier && t.Cycle.Year == cycleFilter.Year));
+
+            Query.Where(predicate);
         }
 
         if (filters.DateSince is not null)
@@ -73,6 +73,7 @@ public sealed class GetAllProductionDataRemainingFeedSpec : BaseSpecification<Pr
                     Query.OrderBy(t => t.Cycle.Year)
                         .ThenBy(t => t.Cycle.Identifier);
                 }
+
                 break;
 
             case ProductionDataOrderBy.Farm:
@@ -84,6 +85,7 @@ public sealed class GetAllProductionDataRemainingFeedSpec : BaseSpecification<Pr
                 {
                     Query.OrderBy(t => t.Farm.Name);
                 }
+
                 break;
 
             case ProductionDataOrderBy.Henhouse:
@@ -95,6 +97,7 @@ public sealed class GetAllProductionDataRemainingFeedSpec : BaseSpecification<Pr
                 {
                     Query.OrderBy(t => t.Henhouse.Name);
                 }
+
                 break;
 
             case ProductionDataOrderBy.DateCreatedUtc:
@@ -107,6 +110,7 @@ public sealed class GetAllProductionDataRemainingFeedSpec : BaseSpecification<Pr
                 {
                     Query.OrderBy(t => t.DateCreatedUtc);
                 }
+
                 break;
         }
     }
