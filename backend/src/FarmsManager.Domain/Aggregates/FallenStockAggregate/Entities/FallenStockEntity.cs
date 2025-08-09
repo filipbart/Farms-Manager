@@ -23,10 +23,10 @@ public class FallenStockEntity : Entity
 
     public static FallenStockEntity CreateNew(
         Guid internalGroupId,
-        Guid farmId,
-        Guid cycleId,
-        Guid utilizationPlantId,
-        Guid henhouseId,
+        FarmEntity farm,
+        CycleEntity cycle,
+        UtilizationPlantEntity utilizationPlant,
+        HenhouseEntity henhouse,
         DateOnly date,
         int quantity,
         Guid? userId = null)
@@ -34,10 +34,14 @@ public class FallenStockEntity : Entity
         return new FallenStockEntity
         {
             InternalGroupId = internalGroupId,
-            FarmId = farmId,
-            CycleId = cycleId,
-            UtilizationPlantId = utilizationPlantId,
-            HenhouseId = henhouseId,
+            FarmId = farm.Id,
+            Farm = farm,
+            CycleId = cycle.Id,
+            Cycle = cycle,
+            UtilizationPlantId = utilizationPlant.Id,
+            UtilizationPlant = utilizationPlant,
+            HenhouseId = henhouse.Id,
+            Henhouse = henhouse,
             Date = date,
             Quantity = quantity,
             CreatedBy = userId
@@ -55,6 +59,4 @@ public class FallenStockEntity : Entity
         SentToIrzBy = userId;
         DocumentNumber = documentNumber;
     }
-
-    public bool IsAlreadySentToIrz() => DateIrzSentUtc.HasValue;
 }

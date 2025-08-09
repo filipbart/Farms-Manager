@@ -11,7 +11,6 @@ using FarmsManager.Application.Models.Irzplus.ZZSSD.Enums;
 using FarmsManager.Domain.Aggregates.FallenStockAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
-using FarmsManager.Domain.Aggregates.UserAggregate.Entities;
 using FarmsManager.Domain.Aggregates.UserAggregate.Models;
 using FarmsManager.Shared.Extensions;
 using Microsoft.AspNetCore.WebUtilities;
@@ -127,13 +126,12 @@ public class IrzplusService : IIrzplusService
         return responseString.ParseJsonString<ZlozenieDyspozycjiResponse>();
     }
 
-    public async Task<ZlozenieDyspozycjiResponse> SendFallenStocksAsync(IList<FallenStockEntity> fallenStocks,
-        UserEntity user, CancellationToken ct = default)
+    public async Task<ZlozenieDyspozycjiResponse> SendFallenStocksAsync(IList<FallenStockEntity> fallenStocks, CancellationToken ct = default)
     {
         var authData = await AuthorizeToIrzplusAsync();
 
-        var mappedSales = fallenStocks.Select(fs => new FallenStocksIrzPlusDisposition(fs)).ToList();
-        var dispositionZzssd = MapDispositionZzssd(mappedSales, IrzPlusDispositionType.FallenStocks); //TODO
+        var mappedFallenStocks = fallenStocks.Select(fs => new FallenStocksIrzPlusDisposition(fs)).ToList();
+        var dispositionZzssd = MapDispositionZzssd(mappedFallenStocks, IrzPlusDispositionType.FallenStocks);
 
         var dispositionJson = dispositionZzssd.ToJsonStringWithNulls();
 
@@ -199,16 +197,17 @@ public class IrzplusService : IIrzplusService
 
         var first = items.First();
 
-        var typZdarzenia = type == IrzPlusDispositionType.Sale
-            ? TypZdarzeniaDrobiu.Wybycie.ToKodOpisDto()
-            : TypZdarzeniaDrobiu.Przybycie.ToKodOpisDto();
+        var typZdarzenia = type switch
+        {
+            IrzPlusDispositionType.Sale => TypZdarzeniaDrobiu.Wybycie.ToKodOpisDto(),
+            IrzPlusDispositionType.FallenStocks => TypZdarzeniaDrobiu.Padniecie.ToKodOpisDto(),
+            _ => TypZdarzeniaDrobiu.Przybycie.ToKodOpisDto()
+        };
 
-        var doDzialalnosci = type == IrzPlusDispositionType.Sale
-            ? (items.First() as SaleIrzPlusDisposition)?.Sale.Slaughterhouse.ProducerNumber ?? first.ProducerNumber
-            : first.ProducerNumber;
+        var doDzialalnosci = first.DoDzialalnosci;
 
         var sumQuantity = items.Sum(i => i.Quantity);
-        var realproducerNumber = first.ProducerNumber.Split("-")[0];
+        var realproducerNumber = doDzialalnosci.Split("-")[0];
 
         var disposition = new DyspozycjaZZSSD
         {
@@ -229,11 +228,11 @@ public class IrzplusService : IIrzplusService
             {
                 Lp = i + 1,
                 StatusPozycji = StatusPozycjiZZSSD.Zatwierdzona.GetEnumMemberValue(),
-                NumerIdenPartiiDrobiu = item.ProducerNumber,
+                NumerIdenPartiiDrobiu = item.DoDzialalnosci,
                 LiczbaDrobiuUbylo = item.Quantity,
                 KategoriaJajWylegowych = null,
                 Budynek = new KodOpisWartosciDto { Kod = item.HenhouseCode, Opis = item.HenhouseName },
-                ZDzialalnosci = item.ZdDzialalnosci
+                ZDzialalnosci = item.ZDzialalnosci
             })
             .ToList();
 

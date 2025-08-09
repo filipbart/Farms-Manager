@@ -2,10 +2,10 @@
 
 public interface IIrzPlusDisposition
 {
-    string ProducerNumber { get; }
+    string DoDzialalnosci { get; }
     int Quantity { get; }
     string HenhouseCode { get; }
     string HenhouseName { get; }
-    string ZdDzialalnosci { get; }
+    string ZDzialalnosci { get; }
     DateOnly EventDate { get; }
 }

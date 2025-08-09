@@ -12,6 +12,7 @@ using FarmsManager.Domain.Aggregates.FallenStockAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.UserAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
+using FarmsManager.Shared.Extensions;
 using FluentValidation;
 using MediatR;
 
@@ -91,7 +92,7 @@ public class AddNewFallenStocksCommandHandler : IRequestHandler<AddNewFallenStoc
         if (existingFallenStockOnDate.Count != 0)
         {
             var existingHenhouseId = existingFallenStockOnDate.First().HenhouseId;
-            var henhouse = await _henhouseRepository.GetByIdAsync(existingHenhouseId, ct);
+            var henhouse = await _henhouseRepository.GetAsync(new HenhouseByIdSpec(existingHenhouseId), ct);
             response.AddError("Entries", $"Kurnik '{henhouse?.Name}' ma już zgłoszenie w tym dniu.");
             return response;
         }
@@ -116,10 +117,10 @@ public class AddNewFallenStocksCommandHandler : IRequestHandler<AddNewFallenStoc
 
             var newFallenStock = FallenStockEntity.CreateNew(
                 internalGroupId,
-                farm.Id,
-                cycle.Id,
-                utilizationPlant.Id,
-                henhouse.Id,
+                farm,
+                cycle,
+                utilizationPlant,
+                henhouse,
                 request.Date,
                 entry.Quantity,
                 userId
@@ -129,11 +130,39 @@ public class AddNewFallenStocksCommandHandler : IRequestHandler<AddNewFallenStoc
 
         if (newFallenStocks.Count != 0)
         {
-            await _fallenStockRepository.AddRangeAsync(newFallenStocks, ct);
             if (request.SendToIrz)
             {
-                //TODO _irzplusService.PrepareOptions(user.IrzplusCredentials);
+                if (user.IrzplusCredentials is null || user.IrzplusCredentials.EncryptedPassword.IsEmpty() ||
+                    user.IrzplusCredentials.Login.IsEmpty())
+                {
+                    response.AddError("IrzplusCredentials", "Brak danych logowania do systemu IRZplus");
+                    return response;
+                }
+
+                _irzplusService.PrepareOptions(user.IrzplusCredentials);
+                var dispositionResponse = await _irzplusService.SendFallenStocksAsync(newFallenStocks, ct);
+                if (dispositionResponse.Bledy.Count != 0)
+                {
+                    foreach (var bladWalidacjiDto in dispositionResponse.Bledy)
+                    {
+                        response.AddError(bladWalidacjiDto.KodBledu, bladWalidacjiDto.Komunikat);
+                    }
+
+                    return response;
+                }
+
+                if (dispositionResponse.NumerDokumentu.IsEmpty())
+                {
+                    throw new Exception("Numer dokumentu z systemu IRZplus jest pusty");
+                }
+
+                foreach (var fallenStockEntity in newFallenStocks)
+                {
+                    fallenStockEntity.MarkAsSentToIrz(dispositionResponse.NumerDokumentu, userId);
+                }
             }
+
+            await _fallenStockRepository.AddRangeAsync(newFallenStocks, ct);
         }
 
         return response;
