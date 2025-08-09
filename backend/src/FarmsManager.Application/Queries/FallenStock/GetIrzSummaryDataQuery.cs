@@ -66,8 +66,7 @@ public class
             new GetCycleByYearIdentifierAndFarmSpec(request.FarmId, request.CycleYear, request.CycleIdentifier),
             cancellationToken);
 
-        var fallenStocks = await _fallenStockRepository.ListAsync(
-            new GetFallenStockByFarmAndCycleSentToIrzSpec(farm.Id, cycle.Id),
+        var fallenStocks = await _fallenStockRepository.ListAsync(new FallenStockByFarmAndCycleSpec(farm.Id, cycle.Id),
             cancellationToken);
 
         var fallenStockPickups =
@@ -92,18 +91,5 @@ public class
         // }
 
         return response;
-    }
-}
-
-public sealed class GetFallenStockByFarmAndCycleSentToIrzSpec : BaseSpecification<FallenStockEntity>
-{
-    public GetFallenStockByFarmAndCycleSentToIrzSpec(Guid farmId, Guid cycleId)
-    {
-        EnsureExists();
-        DisableTracking();
-
-        Query.Where(t => t.FarmId == farmId);
-        Query.Where(t => t.CycleId == cycleId);
-        Query.Where(t => t.DateIrzSentUtc.HasValue);
     }
 }

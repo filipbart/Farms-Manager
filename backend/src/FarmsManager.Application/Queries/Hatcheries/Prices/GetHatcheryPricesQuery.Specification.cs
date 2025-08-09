@@ -24,7 +24,7 @@ public sealed class GetAllHatcheryPricesSpec : BaseSpecification<HatcheryPriceEn
 
     private void PopulateFilters(GetHatcheryPricesQueryFilters filters)
     {
-        if (filters.HatcheryIds is not null && filters.HatcheryIds.Any())
+        if (filters.HatcheryIds is not null && filters.HatcheryIds.Count != 0)
         {
             Query.Where(hp => filters.HatcheryIds.Contains(hp.HatcheryId));
         }

@@ -26,12 +26,12 @@ public sealed class GetAllSalesInvoicesSpec : BaseSpecification<SaleInvoiceEntit
 
     private void PopulateFilters(GetSalesInvoicesQueryFilters filters)
     {
-        if (filters.FarmIds is not null && filters.FarmIds.Any())
+        if (filters.FarmIds is not null && filters.FarmIds.Count != 0)
         {
             Query.Where(t => filters.FarmIds.Contains(t.FarmId));
         }
 
-        if (filters.SlaughterhouseIds is not null && filters.SlaughterhouseIds.Any())
+        if (filters.SlaughterhouseIds is not null && filters.SlaughterhouseIds.Count != 0)
         {
             Query.Where(t => filters.SlaughterhouseIds.Contains(t.SlaughterhouseId));
         }

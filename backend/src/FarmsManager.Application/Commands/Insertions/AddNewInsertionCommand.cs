@@ -82,7 +82,7 @@ public class
             .Select(group => group.Key)
             .ToList();
 
-        if (duplicateHenhouseIds.Any())
+        if (duplicateHenhouseIds.Count != 0)
         {
             response.AddError("Henhouses", "W podanych danych wejściowych powtarzają się dane dla tego samego kurnika");
             return response;
@@ -92,7 +92,7 @@ public class
         var existingInsertionsInHenhouses = await _insertionRepository.ListAsync(
             new GetInsertionsByFarmCycleAndHenhouseIdsSpec(request.FarmId, request.CycleId, henhouseIds), ct);
 
-        if (existingInsertionsInHenhouses.Any())
+        if (existingInsertionsInHenhouses.Count != 0)
         {
             var existingHenhouseId = existingInsertionsInHenhouses.First().HenhouseId;
             var henhouse = await _henhouseRepository.GetByIdAsync(existingHenhouseId, ct);
@@ -143,7 +143,7 @@ public class
             }
         }
 
-        if (newInsertions.Any())
+        if (newInsertions.Count != 0)
             await _insertionRepository.AddRangeAsync(newInsertions, ct);
 
         response.ResponseData.InternalGroupId = internalGroupId;
@@ -167,7 +167,7 @@ public class AddNewInsertionValidator : AbstractValidator<AddNewInsertionCommand
         // Walidacja, czy wszystkie wstawienia w jednym żądaniu mają tę samą wylęgarnię
         RuleFor(x => x.Entries.Select(e => e.HatcheryId).Distinct().Count())
             .Equal(1)
-            .When(x => x.Entries.Any())
+            .When(x => x.Entries.Count != 0)
             .WithMessage("Wszystkie pozycje wstawienia muszą pochodzić z tej samej wylęgarni.");
     }
 }

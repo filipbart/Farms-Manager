@@ -146,7 +146,7 @@ public class UploadGasDeliveriesInvoicesCommandProfile : Profile
             .ForMember(m => m.ContractorId, opt => opt.Ignore())
             .ForMember(m => m.Comment, opt => opt.Ignore())
             .ForMember(m => m.ContractorName, opt => opt.MapFrom(t => t.VendorName))
-            .ForMember(m => m.Quantity, opt => opt.MapFrom(t => t.Items.Any() ? t.Items.Sum(i => i.Quantity) : null))
+            .ForMember(m => m.Quantity, opt => opt.MapFrom(t => t.Items.Count != 0 ? t.Items.Sum(i => i.Quantity) : null))
             .ForMember(m => m.UnitPrice,
                 opt => opt.MapFrom(t => t.Items.Count != 0 ? t.Items.FirstOrDefault().UnitPrice : null));
     }

@@ -27,7 +27,7 @@ public sealed class GetAllEmployeePayslipsSpec : BaseSpecification<EmployeePaysl
 
     private void PopulateFilters(GetEmployeePayslipsQueryFilters filters)
     {
-        if (filters.FarmIds is not null && filters.FarmIds.Any())
+        if (filters.FarmIds is not null && filters.FarmIds.Count != 0)
         {
             Query.Where(p => filters.FarmIds.Contains(p.FarmId));
         }

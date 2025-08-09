@@ -25,12 +25,12 @@ public sealed class GetAllGasDeliveriesSpec : BaseSpecification<GasDeliveryEntit
 
     private void PopulateFilters(GetGasDeliveriesQueryFilters filters)
     {
-        if (filters.FarmIds is not null && filters.FarmIds.Any())
+        if (filters.FarmIds is not null && filters.FarmIds.Count != 0)
         {
             Query.Where(gd => filters.FarmIds.Contains(gd.FarmId));
         }
 
-        if (filters.ContractorIds is not null && filters.ContractorIds.Any())
+        if (filters.ContractorIds is not null && filters.ContractorIds.Count != 0)
         {
             Query.Where(gd => filters.ContractorIds.Contains(gd.GasContractorId));
         }

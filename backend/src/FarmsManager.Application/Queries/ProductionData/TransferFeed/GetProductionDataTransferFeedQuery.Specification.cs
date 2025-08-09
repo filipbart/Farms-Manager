@@ -23,12 +23,12 @@ public sealed class GetAllProductionDataTransferFeedSpec : BaseSpecification<Pro
 
     private void PopulateFilters(ProductionDataQueryFilters filters)
     {
-        if (filters.FarmIds is not null && filters.FarmIds.Any())
+        if (filters.FarmIds is not null && filters.FarmIds.Count != 0)
         {
             Query.Where(t => filters.FarmIds.Contains(t.FromFarmId) || filters.FarmIds.Contains(t.ToFarmId));
         }
 
-        if (filters.HenhouseIds is not null && filters.HenhouseIds.Any())
+        if (filters.HenhouseIds is not null && filters.HenhouseIds.Count != 0)
         {
             Query.Where(t =>
                 filters.HenhouseIds.Contains(t.FromHenhouseId) || filters.HenhouseIds.Contains(t.ToHenhouseId));

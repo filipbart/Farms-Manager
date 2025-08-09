@@ -131,7 +131,7 @@ public class UploadDeliveriesFilesCommandProfile : Profile
             .ForMember(m => m.HenhouseId, opt => opt.Ignore())
             .ForMember(m => m.ItemName,
                 opt => opt.MapFrom(t => t.Items.Count != 0 ? t.Items.FirstOrDefault().Name : null))
-            .ForMember(m => m.Quantity, opt => opt.MapFrom(t => t.Items.Any() ? t.Items.Sum(i => i.Quantity) : null))
+            .ForMember(m => m.Quantity, opt => opt.MapFrom(t => t.Items.Count != 0 ? t.Items.Sum(i => i.Quantity) : null))
             .ForMember(m => m.UnitPrice,
                 opt => opt.MapFrom(t => t.Items.Count != 0 ? t.Items.FirstOrDefault().UnitPrice : null));
     }

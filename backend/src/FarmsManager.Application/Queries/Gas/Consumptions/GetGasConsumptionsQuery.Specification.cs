@@ -29,7 +29,7 @@ public sealed class GetAllGasConsumptionsSpec : BaseSpecification<GasConsumption
     {
         Query.Where(gc => gc.Status == GasConsumptionStatus.Active && gc.CorrectionForId == null);
 
-        if (filters.FarmIds is not null && filters.FarmIds.Any())
+        if (filters.FarmIds is not null && filters.FarmIds.Count != 0)
         {
             Query.Where(gc => filters.FarmIds.Contains(gc.FarmId));
         }

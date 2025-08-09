@@ -27,17 +27,17 @@ public sealed class GetAllProductionDataWeighingsSpec : BaseSpecification<Produc
 
     private void PopulateFilters(GetProductionDataWeighingsQueryFilters filters)
     {
-        if (filters.FarmIds is not null && filters.FarmIds.Any())
+        if (filters.FarmIds is not null && filters.FarmIds.Count != 0)
         {
             Query.Where(t => filters.FarmIds.Contains(t.FarmId));
         }
 
-        if (filters.HenhouseIds is not null && filters.HenhouseIds.Any())
+        if (filters.HenhouseIds is not null && filters.HenhouseIds.Count != 0)
         {
             Query.Where(t => filters.HenhouseIds.Contains(t.HenhouseId));
         }
 
-        if (filters.HatcheryIds is not null && filters.HatcheryIds.Any())
+        if (filters.HatcheryIds is not null && filters.HatcheryIds.Count != 0)
         {
             Query.Where(t => filters.HatcheryIds.Contains(t.HatcheryId));
         }

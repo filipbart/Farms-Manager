@@ -27,7 +27,7 @@ public sealed class GetAllEmployeesSpec : BaseSpecification<EmployeeEntity>
 
     private void PopulateFilters(GetEmployeesQueryFilters filters)
     {
-        if (filters.FarmIds is not null && filters.FarmIds.Any())
+        if (filters.FarmIds is not null && filters.FarmIds.Count != 0)
         {
             Query.Where(e => filters.FarmIds.Contains(e.FarmId));
         }
