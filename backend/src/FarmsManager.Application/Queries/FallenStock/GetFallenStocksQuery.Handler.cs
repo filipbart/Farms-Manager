@@ -1,4 +1,5 @@
 ﻿using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Extensions;
 using FarmsManager.Application.Specifications.Henhouses;
 using FarmsManager.Domain.Aggregates.FallenStockAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
@@ -86,7 +87,8 @@ public class
             {
                 Id = firstEntryInGroup.InternalGroupId.ToString(),
                 RowTitle = dateGroup.Key.ToString("dd.MM.yyyy"),
-                IsSentToIrz = firstEntryInGroup.DateIrzSentUtc.HasValue
+                IsSentToIrz = firstEntryInGroup.DateIrzSentUtc.HasValue,
+                TypeDesc = firstEntryInGroup.Type.GetDescription()
             };
             foreach (var henhouse in henhouses)
             {

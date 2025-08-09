@@ -24,8 +24,6 @@ const IrzplusSummaryInfo: React.FC<IrzplusSummaryInfoProps> = ({
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    console.log("farmID: ", farmId);
-    console.log("cycle: ", cycle);
     if (!farmId || !cycle) {
       setData(null);
       return;

@@ -1,4 +1,5 @@
-﻿using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
+﻿using FarmsManager.Domain.Aggregates.FallenStockAggregate.Enums;
+using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
 using FarmsManager.Domain.SeedWork;
 
 namespace FarmsManager.Domain.Aggregates.FallenStockAggregate.Entities;
@@ -7,8 +8,9 @@ public class FallenStockEntity : Entity
 {
     public Guid FarmId { get; init; }
     public Guid CycleId { get; init; }
-    public Guid UtilizationPlantId { get; init; }
+    public Guid? UtilizationPlantId { get; init; }
     public Guid HenhouseId { get; init; }
+    public FallenStockType Type { get; init; }
     public DateOnly Date { get; protected internal set; }
     public int Quantity { get; protected internal set; }
     public DateTime? DateIrzSentUtc { get; protected internal set; }
@@ -25,8 +27,9 @@ public class FallenStockEntity : Entity
         Guid internalGroupId,
         FarmEntity farm,
         CycleEntity cycle,
-        UtilizationPlantEntity utilizationPlant,
+        UtilizationPlantEntity? utilizationPlant,
         HenhouseEntity henhouse,
+        FallenStockType type,
         DateOnly date,
         int quantity,
         Guid? userId = null)
@@ -38,10 +41,11 @@ public class FallenStockEntity : Entity
             Farm = farm,
             CycleId = cycle.Id,
             Cycle = cycle,
-            UtilizationPlantId = utilizationPlant.Id,
+            UtilizationPlantId = utilizationPlant?.Id,
             UtilizationPlant = utilizationPlant,
             HenhouseId = henhouse.Id,
             Henhouse = henhouse,
+            Type = type,
             Date = date,
             Quantity = quantity,
             CreatedBy = userId

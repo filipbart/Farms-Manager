@@ -4,6 +4,7 @@ using FarmsManager.Domain.Aggregates.UserAggregate.Models;
 using FarmsManager.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FarmsManager.Infrastructure.Migrations
 {
     [DbContext(typeof(FarmsManagerContext))]
-    partial class FarmsManagerContextModelSnapshot : ModelSnapshot
+    [Migration("20250809141956_AdjustFallenStockIndex")]
+    partial class AdjustFallenStockIndex
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -693,15 +696,7 @@ namespace FarmsManager.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("sent_to_irz_by");
 
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasDefaultValue("FallCollision")
-                        .HasColumnName("type");
-
-                    b.Property<Guid?>("UtilizationPlantId")
+                    b.Property<Guid>("UtilizationPlantId")
                         .HasColumnType("uuid")
                         .HasColumnName("utilization_plant_id");
 
@@ -2846,6 +2841,8 @@ namespace FarmsManager.Infrastructure.Migrations
                     b.HasOne("FarmsManager.Domain.Aggregates.FallenStockAggregate.Entities.UtilizationPlantEntity", "UtilizationPlant")
                         .WithMany()
                         .HasForeignKey("UtilizationPlantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
                         .HasConstraintName("fk_fallen_stock_utilization_plant_entity_utilization_plant_id");
 
                     b.Navigation("Cycle");

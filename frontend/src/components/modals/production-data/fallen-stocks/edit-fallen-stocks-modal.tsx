@@ -61,6 +61,7 @@ const EditFallenStocksModal: React.FC<EditFallenStocksModalProps> = ({
             setFormData({
               farmName: responseData.farmName,
               cycleDisplay: responseData.cycleDisplay,
+              typeDesc: responseData.typeDesc,
               utilizationPlantName: responseData.utilizationPlantName,
               date: new Date(responseData.date).toLocaleDateString("pl-PL"),
             });
@@ -164,6 +165,14 @@ const EditFallenStocksModal: React.FC<EditFallenStocksModalProps> = ({
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
+                    label="Typ zgłoszenia"
+                    value={formData.typeDesc}
+                    slotProps={{ input: { readOnly: true } }}
+                    fullWidth
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
                     label="Zakład utylizacyjny"
                     value={formData.utilizationPlantName}
                     slotProps={{ input: { readOnly: true } }}
@@ -180,7 +189,6 @@ const EditFallenStocksModal: React.FC<EditFallenStocksModalProps> = ({
                 </Grid>
               </Grid>
 
-              {/* Tabela z pozycjami do edycji */}
               <Table size="small" sx={{ mt: 2 }}>
                 <TableHead>
                   <TableRow>

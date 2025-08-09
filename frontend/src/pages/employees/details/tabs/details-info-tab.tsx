@@ -72,7 +72,6 @@ const EmployeeInfoTab: React.FC = () => {
   const onSubmit = async (data: UpdateEmployeeData) => {
     if (!employee) return;
 
-    console.log(data);
     try {
       await handleApiResponse(
         () => EmployeesService.updateEmployee(employee.id, data),
@@ -83,7 +82,7 @@ const EmployeeInfoTab: React.FC = () => {
           reset(data);
         },
         (error) => {
-          console.log(error);
+          console.error(error);
         },
         "Nie udało się zaktualizować danych"
       );

@@ -59,6 +59,7 @@ const MainFallenStockPage: React.FC<MainFallenStockPagePropse> = ({
     const transformRow = (row: any) => ({
       id: row.id,
       rowTitle: row.rowTitle,
+      typeDesc: row.typeDesc,
       remaining: row.remaining,
       ...row.henhouseValues,
     });
@@ -76,6 +77,43 @@ const MainFallenStockPage: React.FC<MainFallenStockPagePropse> = ({
       width: 200,
       pinnable: true,
       cellClassName: "sticky-column-style",
+      renderCell: (params: GridCellParams) => {
+        const typeDesc = params.row.typeDesc as string;
+        if (typeDesc) {
+          return (
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "left",
+                justifyContent: "center",
+                height: "100%",
+              }}
+            >
+              <Typography variant="body2" sx={{ lineHeight: 1.2 }}>
+                {params.row.rowTitle}
+              </Typography>
+              <Typography
+                variant="caption"
+                sx={{ color: "text.secondary", lineHeight: 1.2 }}
+              >
+                {typeDesc}
+              </Typography>
+            </Box>
+          );
+        }
+
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-start",
+            height: "100%",
+          }}
+        >
+          <Typography variant="body2">{params.row.rowTitle}</Typography>
+        </Box>;
+      },
     };
     const henhouseColumns: GridColDef[] = viewModel.henhouseColumns.map(
       (col) => ({

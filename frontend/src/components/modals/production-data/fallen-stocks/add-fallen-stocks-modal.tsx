@@ -9,6 +9,7 @@ import {
   Typography,
   Checkbox,
   FormControlLabel,
+  TextField,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { toast } from "react-toastify";
@@ -17,7 +18,10 @@ import { MdSave } from "react-icons/md";
 import { useFarms } from "../../../../hooks/useFarms";
 import { useLatestCycle } from "../../../../hooks/useLatestCycle";
 import { useUtilizationPlants } from "../../../../hooks/useUtilizationPlants";
-import type { FallenStockEntry } from "../../../../models/fallen-stocks/fallen-stocks";
+import {
+  FallenStockType,
+  type FallenStockEntry,
+} from "../../../../models/fallen-stocks/fallen-stocks";
 import { FallenStockService } from "../../../../services/production-data/fallen-stocks-service";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import AppDialog from "../../../common/app-dialog";
@@ -25,6 +29,11 @@ import LoadingButton from "../../../common/loading-button";
 import LoadingTextField from "../../../common/loading-textfield";
 import FallenStockEntriesTable from "./fallen-stocks-entry-table";
 import type { HouseRowModel } from "../../../../models/farms/house-row-model";
+
+const fallenStockTypeLabels: { [key in FallenStockType]: string } = {
+  [FallenStockType.FallCollision]: "Padnięcie/stłuczki",
+  [FallenStockType.EndCycle]: "Zakończenie cyklu",
+};
 
 interface AddFallenStocksModalProps {
   open: boolean;
@@ -36,7 +45,8 @@ interface FallenStockFormState {
   farmId: string;
   cycleId: string;
   cycleDisplay: string;
-  utilizationPlantId: string;
+  type: FallenStockType;
+  utilizationPlantId: string | null;
   date: Dayjs | null;
   entries: (FallenStockEntry & { isEditing: boolean })[];
 }
@@ -54,7 +64,8 @@ const initialState: FallenStockFormState = {
   farmId: "",
   cycleId: "",
   cycleDisplay: "",
-  utilizationPlantId: "",
+  type: FallenStockType.FallCollision,
+  utilizationPlantId: null,
   date: null,
   entries: [],
 };
@@ -75,6 +86,12 @@ function formReducer(
       return { ...state, entries: updatedEntries };
     }
     case "ADD_ENTRY":
+      if (
+        action.maxHenhouses !== undefined &&
+        state.entries.length >= action.maxHenhouses
+      ) {
+        return state;
+      }
       return {
         ...state,
         entries: [
@@ -118,7 +135,7 @@ const AddFallenStocksModal: React.FC<AddFallenStocksModalProps> = ({
   const [form, dispatch] = useReducer(formReducer, initialState);
   const [errors, setErrors] = useState<FallenStockFormErrors>({});
   const [henhouses, setHenhouses] = useState<HouseRowModel[]>([]);
-  const [sendToIrz, setSendToIrz] = useState(false);
+  const [sendToIrz, setSendToIrz] = useState(true);
 
   useEffect(() => {
     fetchFarms();
@@ -152,6 +169,16 @@ const AddFallenStocksModal: React.FC<AddFallenStocksModalProps> = ({
       name: "cycleDisplay",
       value: `${cycle.identifier}/${cycle.year}`,
     });
+  };
+
+  const handleTypeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newType = e.target.value as FallenStockType;
+    dispatch({ type: "SET_FIELD", name: "type", value: newType });
+
+    if (newType === FallenStockType.EndCycle) {
+      dispatch({ type: "SET_FIELD", name: "utilizationPlantId", value: "" });
+      setErrors((prev) => ({ ...prev, utilizationPlantId: undefined }));
+    }
   };
 
   useEffect(() => {
@@ -198,8 +225,14 @@ const AddFallenStocksModal: React.FC<AddFallenStocksModalProps> = ({
 
     if (!form.farmId) newErrors.farmId = "Ferma jest wymagana";
     if (!form.cycleId) newErrors.cycleId = "Brak aktywnego cyklu";
-    if (!form.utilizationPlantId)
+
+    if (
+      form.type === FallenStockType.FallCollision &&
+      !form.utilizationPlantId
+    ) {
       newErrors.utilizationPlantId = "Zakład jest wymagany";
+    }
+
     if (!form.date) newErrors.date = "Data jest wymagana";
 
     if (form.entries.length === 0) {
@@ -226,7 +259,11 @@ const AddFallenStocksModal: React.FC<AddFallenStocksModalProps> = ({
         FallenStockService.addNewFallenStocks({
           farmId: form.farmId,
           cycleId: form.cycleId,
-          utilizationPlantId: form.utilizationPlantId,
+          type: form.type,
+          utilizationPlantId:
+            form.type === FallenStockType.FallCollision
+              ? form.utilizationPlantId
+              : null,
           date: form.date!.format("YYYY-MM-DD"),
           entries: form.entries.map(({ henhouseId, quantity }) => ({
             henhouseId,
@@ -238,7 +275,7 @@ const AddFallenStocksModal: React.FC<AddFallenStocksModalProps> = ({
         toast.success("Dodano zgłoszenie sztuk padłych");
         dispatch({ type: "RESET" });
         setErrors({});
-        setSendToIrz(false);
+        setSendToIrz(true);
         onSave();
         onClose();
       },
@@ -252,9 +289,11 @@ const AddFallenStocksModal: React.FC<AddFallenStocksModalProps> = ({
   const handleClose = () => {
     dispatch({ type: "RESET" });
     setErrors({});
-    setSendToIrz(false);
+    setSendToIrz(true);
     onClose();
   };
+
+  const canAddMoreEntries = form.entries.length < henhouses.length;
 
   return (
     <AppDialog open={open} onClose={handleClose} fullWidth maxWidth="lg">
@@ -286,28 +325,46 @@ const AddFallenStocksModal: React.FC<AddFallenStocksModalProps> = ({
             helperText={errors.cycleId}
             fullWidth
           />
-          <LoadingTextField
-            loading={loadingUtilizationPlants}
+
+          <TextField
             select
-            label="Zakład utylizacyjny"
-            value={form.utilizationPlantId}
-            onChange={(e) =>
-              dispatch({
-                type: "SET_FIELD",
-                name: "utilizationPlantId",
-                value: e.target.value,
-              })
-            }
-            error={!!errors.utilizationPlantId}
-            helperText={errors.utilizationPlantId}
+            label="Typ zgłoszenia"
+            value={form.type}
+            onChange={handleTypeChange}
             fullWidth
           >
-            {utilizationPlants.map((plant) => (
-              <MenuItem key={plant.id} value={plant.id}>
-                {plant.name}
+            {Object.entries(fallenStockTypeLabels).map(([key, label]) => (
+              <MenuItem key={key} value={key}>
+                {label}
               </MenuItem>
             ))}
-          </LoadingTextField>
+          </TextField>
+
+          {form.type === FallenStockType.FallCollision && (
+            <LoadingTextField
+              loading={loadingUtilizationPlants}
+              select
+              label="Zakład utylizacyjny"
+              value={form.utilizationPlantId || ""}
+              onChange={(e) =>
+                dispatch({
+                  type: "SET_FIELD",
+                  name: "utilizationPlantId",
+                  value: e.target.value,
+                })
+              }
+              error={!!errors.utilizationPlantId}
+              helperText={errors.utilizationPlantId}
+              fullWidth
+            >
+              {utilizationPlants.map((plant) => (
+                <MenuItem key={plant.id} value={plant.id}>
+                  {plant.name}
+                </MenuItem>
+              ))}
+            </LoadingTextField>
+          )}
+
           <DatePicker
             label="Data zgłoszenia"
             value={form.date}
@@ -344,6 +401,7 @@ const AddFallenStocksModal: React.FC<AddFallenStocksModalProps> = ({
           <Button
             variant="outlined"
             onClick={() => dispatch({ type: "ADD_ENTRY" })}
+            disabled={!canAddMoreEntries || !form.farmId || loadingHenhouses}
           >
             Dodaj pozycję
           </Button>

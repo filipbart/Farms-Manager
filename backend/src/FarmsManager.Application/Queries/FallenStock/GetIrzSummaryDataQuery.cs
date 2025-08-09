@@ -1,11 +1,8 @@
-﻿using Ardalis.Specification;
-using FarmsManager.Application.Common.Responses;
+﻿using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
-using FarmsManager.Application.Specifications;
 using FarmsManager.Application.Specifications.FallenStocks;
 using FarmsManager.Application.Specifications.Farms;
 using FarmsManager.Application.Specifications.Users;
-using FarmsManager.Domain.Aggregates.FallenStockAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FallenStockAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.UserAggregate.Interfaces;

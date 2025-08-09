@@ -1,5 +1,10 @@
 import type { HouseRowModel } from "../farms/house-row-model";
 
+export enum FallenStockType {
+  FallCollision = "FallCollision",
+  EndCycle = "EndCycle",
+}
+
 export interface FallenStockEntry {
   henhouseId: string;
   quantity: number;
@@ -8,7 +13,8 @@ export interface FallenStockEntry {
 export interface AddFallenStocksData {
   farmId: string;
   cycleId: string;
-  utilizationPlantId: string;
+  type: FallenStockType;
+  utilizationPlantId: string | null;
   date: string;
   entries: FallenStockEntry[];
   sendToIrz: boolean;
@@ -27,8 +33,9 @@ export interface GetAvailableHenhousesFallenStocksResponse {
 export interface GetFallenStockEditData {
   farmName: string;
   cycleDisplay: string;
-  utilizationPlantName: string;
+  utilizationPlantName?: string;
   date: string;
+  typeDesc: string;
   entries: {
     henhouseId: string;
     henhouseName: string;

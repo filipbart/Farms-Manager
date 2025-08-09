@@ -61,6 +61,12 @@ public record TableRowModel
     /// Tytuł wiersza wyświetlany w pierwszej kolumnie (np. "16.06.2025" lub "Sprzedaż").
     /// </summary>
     public string RowTitle { get; set; }
+    
+    /// <summary>
+    /// Opisowy typ zgłoszenia (np. "Zgłoszenie upadków"), wyświetlany pod datą.
+    /// Będzie `null` dla wierszy, które nie są zgłoszeniami (np. podsumowania).
+    /// </summary>
+    public string TypeDesc { get; set; }
 
     /// <summary>
     /// Słownik przechowujący wartości dla każdego kurnika.

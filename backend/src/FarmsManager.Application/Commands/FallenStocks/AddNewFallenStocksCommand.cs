@@ -1,13 +1,15 @@
 ﻿using Ardalis.Specification;
-using FarmsManager.Application.Commands.Farms;
+using FarmsManager.Application.Commands.Insertions;
 using FarmsManager.Application.Commands.UtilizationPlants;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Application.Specifications.Cycle;
 using FarmsManager.Application.Specifications.Farms;
+using FarmsManager.Application.Specifications.Henhouses;
 using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.FallenStockAggregate.Entities;
+using FarmsManager.Domain.Aggregates.FallenStockAggregate.Enums;
 using FarmsManager.Domain.Aggregates.FallenStockAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.UserAggregate.Interfaces;
@@ -22,7 +24,8 @@ public record AddNewFallenStocksCommand : IRequest<EmptyBaseResponse>
 {
     public Guid FarmId { get; set; }
     public Guid CycleId { get; set; }
-    public Guid UtilizationPlantId { get; set; }
+    public FallenStockType Type { get; set; }
+    public Guid? UtilizationPlantId { get; set; }
     public DateOnly Date { get; set; }
     public List<FallenStockEntryDto> Entries { get; set; } = [];
     public bool SendToIrz { get; set; }
@@ -44,12 +47,13 @@ public class AddNewFallenStocksCommandHandler : IRequestHandler<AddNewFallenStoc
     private readonly IHenhouseRepository _henhouseRepository;
     private readonly IUtilizationPlantRepository _utilizationPlantRepository;
     private readonly IIrzplusService _irzplusService;
+    private readonly IInsertionRepository _insertionRepository;
 
 
     public AddNewFallenStocksCommandHandler(IUserDataResolver userDataResolver, IUserRepository userRepository,
         IFarmRepository farmRepository, ICycleRepository cycleRepository, IFallenStockRepository fallenStockRepository,
         IHenhouseRepository henhouseRepository, IUtilizationPlantRepository utilizationPlantRepository,
-        IIrzplusService irzplusService)
+        IIrzplusService irzplusService, IInsertionRepository insertionRepository)
     {
         _userDataResolver = userDataResolver;
         _userRepository = userRepository;
@@ -59,6 +63,7 @@ public class AddNewFallenStocksCommandHandler : IRequestHandler<AddNewFallenStoc
         _henhouseRepository = henhouseRepository;
         _utilizationPlantRepository = utilizationPlantRepository;
         _irzplusService = irzplusService;
+        _insertionRepository = insertionRepository;
     }
 
     public async Task<EmptyBaseResponse> Handle(AddNewFallenStocksCommand request, CancellationToken ct)
@@ -70,8 +75,15 @@ public class AddNewFallenStocksCommandHandler : IRequestHandler<AddNewFallenStoc
 
         var farm = await _farmRepository.GetAsync(new FarmByIdSpec(request.FarmId), ct);
         var cycle = await _cycleRepository.GetAsync(new CycleByIdSpec(request.CycleId), ct);
-        var utilizationPlant =
-            await _utilizationPlantRepository.GetAsync(new UtilizationPlantByIdSpec(request.UtilizationPlantId), ct);
+
+        UtilizationPlantEntity utilizationPlant = null;
+        if (request.Type == FallenStockType.FallCollision && request.UtilizationPlantId.HasValue)
+        {
+            utilizationPlant =
+                await _utilizationPlantRepository.GetAsync(
+                    new UtilizationPlantByIdSpec(request.UtilizationPlantId.Value),
+                    ct);
+        }
 
         var duplicateHenhouseIds = request.Entries
             .GroupBy(entry => entry.HenhouseId)
@@ -86,34 +98,60 @@ public class AddNewFallenStocksCommandHandler : IRequestHandler<AddNewFallenStoc
         }
 
         var henhouseIds = request.Entries.Select(e => e.HenhouseId).ToArray();
-        var existingFallenStockOnDate = await _fallenStockRepository.ListAsync(
-            new GetFallenStockByDateAndHenhouseIdsSpec(request.Date, henhouseIds), ct);
 
-        if (existingFallenStockOnDate.Count != 0)
+        var allHenhouses = await _henhouseRepository.ListAsync(new HenhousesByIdsSpec(henhouseIds), ct);
+
+        var existingFallenStocks =
+            await _fallenStockRepository.ListAsync(
+                new GetFallenStockByDateAndHenhouseIdsSpec(request.Date, henhouseIds), ct);
+
+        var insertions =
+            await _insertionRepository.ListAsync(
+                new GetInsertionsByFarmCycleAndHenhouseIdsSpec(farm.Id, cycle.Id, henhouseIds), ct);
+
+        var henhousesDict = allHenhouses.ToDictionary(h => h.Id);
+        var existingFallenStockHenhouseIds = existingFallenStocks.Select(fs => fs.HenhouseId).ToHashSet();
+        var insertionHenhouseIds = insertions.Select(i => i.HenhouseId).ToHashSet();
+
+        foreach (var henhouseId in henhouseIds)
         {
-            var existingHenhouseId = existingFallenStockOnDate.First().HenhouseId;
-            var henhouse = await _henhouseRepository.GetAsync(new HenhouseByIdSpec(existingHenhouseId), ct);
-            response.AddError("Entries", $"Kurnik '{henhouse?.Name}' ma już zgłoszenie w tym dniu.");
+            if (!henhousesDict.TryGetValue(henhouseId, out var henhouse))
+            {
+                response.AddError("Entries", $"Kurnik o ID '{henhouseId}' nie został znaleziony.");
+                continue;
+            }
+
+            if (existingFallenStockHenhouseIds.Contains(henhouseId))
+            {
+                response.AddError("Entries", $"Kurnik '{henhouse.Name}' ma już zgłoszenie w tym dniu.");
+            }
+
+            if (!insertionHenhouseIds.Contains(henhouseId))
+            {
+                response.AddError("Insertions", $"Kurnik '{henhouse.Name}' nie ma wstawienia w danym cyklu.");
+            }
+        }
+
+        if (response.Errors.Count != 0)
+        {
             return response;
         }
 
-        Guid internalGroupId;
         var existingGroupForDate = await _fallenStockRepository.FirstOrDefaultAsync(
             new GetFallenStockByDateSpec(request.FarmId, request.CycleId, request.Date), ct);
+        if (existingGroupForDate is not null && existingGroupForDate.Type != request.Type)
+        {
+            response.AddError("Type",
+                $"Dla wybranej daty istnieje już zgłoszenie innego typu ({existingGroupForDate.Type}). Wszystkie zgłoszenia w danym dniu muszą być tego samego typu.");
+            return response;
+        }
 
-        if (existingGroupForDate != null)
-        {
-            internalGroupId = existingGroupForDate.InternalGroupId;
-        }
-        else
-        {
-            internalGroupId = Guid.NewGuid();
-        }
+        var internalGroupId = existingGroupForDate?.InternalGroupId ?? Guid.NewGuid();
 
         var newFallenStocks = new List<FallenStockEntity>();
         foreach (var entry in request.Entries)
         {
-            var henhouse = await _henhouseRepository.GetAsync(new HenhouseByIdSpec(entry.HenhouseId), ct);
+            var henhouse = henhousesDict[entry.HenhouseId];
 
             var newFallenStock = FallenStockEntity.CreateNew(
                 internalGroupId,
@@ -121,6 +159,7 @@ public class AddNewFallenStocksCommandHandler : IRequestHandler<AddNewFallenStoc
                 cycle,
                 utilizationPlant,
                 henhouse,
+                request.Type,
                 request.Date,
                 entry.Quantity,
                 userId
@@ -128,42 +167,44 @@ public class AddNewFallenStocksCommandHandler : IRequestHandler<AddNewFallenStoc
             newFallenStocks.Add(newFallenStock);
         }
 
-        if (newFallenStocks.Count != 0)
+        if (newFallenStocks.Count == 0)
         {
-            if (request.SendToIrz)
+            return response;
+        }
+
+        if (request.SendToIrz)
+        {
+            if (user.IrzplusCredentials is null || user.IrzplusCredentials.EncryptedPassword.IsEmpty() ||
+                user.IrzplusCredentials.Login.IsEmpty())
             {
-                if (user.IrzplusCredentials is null || user.IrzplusCredentials.EncryptedPassword.IsEmpty() ||
-                    user.IrzplusCredentials.Login.IsEmpty())
-                {
-                    response.AddError("IrzplusCredentials", "Brak danych logowania do systemu IRZplus");
-                    return response;
-                }
-
-                _irzplusService.PrepareOptions(user.IrzplusCredentials);
-                var dispositionResponse = await _irzplusService.SendFallenStocksAsync(newFallenStocks, ct);
-                if (dispositionResponse.Bledy.Count != 0)
-                {
-                    foreach (var bladWalidacjiDto in dispositionResponse.Bledy)
-                    {
-                        response.AddError(bladWalidacjiDto.KodBledu, bladWalidacjiDto.Komunikat);
-                    }
-
-                    return response;
-                }
-
-                if (dispositionResponse.NumerDokumentu.IsEmpty())
-                {
-                    throw new Exception("Numer dokumentu z systemu IRZplus jest pusty");
-                }
-
-                foreach (var fallenStockEntity in newFallenStocks)
-                {
-                    fallenStockEntity.MarkAsSentToIrz(dispositionResponse.NumerDokumentu, userId);
-                }
+                response.AddError("IrzplusCredentials", "Brak danych logowania do systemu IRZplus");
+                return response;
             }
 
-            await _fallenStockRepository.AddRangeAsync(newFallenStocks, ct);
+            _irzplusService.PrepareOptions(user.IrzplusCredentials);
+            var dispositionResponse = await _irzplusService.SendFallenStocksAsync(newFallenStocks, ct);
+            if (dispositionResponse.Bledy.Count != 0)
+            {
+                foreach (var bladWalidacjiDto in dispositionResponse.Bledy)
+                {
+                    response.AddError(bladWalidacjiDto.KodBledu, bladWalidacjiDto.Komunikat);
+                }
+
+                return response;
+            }
+
+            if (dispositionResponse.NumerDokumentu.IsEmpty())
+            {
+                throw new Exception("Numer dokumentu z systemu IRZplus jest pusty");
+            }
+
+            foreach (var fallenStockEntity in newFallenStocks)
+            {
+                fallenStockEntity.MarkAsSentToIrz(dispositionResponse.NumerDokumentu, userId);
+            }
         }
+
+        await _fallenStockRepository.AddRangeAsync(newFallenStocks, ct);
 
         return response;
     }
@@ -175,7 +216,8 @@ public class AddNewFallenStocksValidator : AbstractValidator<AddNewFallenStocksC
     {
         RuleFor(x => x.FarmId).NotEmpty();
         RuleFor(x => x.CycleId).NotEmpty();
-        RuleFor(x => x.UtilizationPlantId).NotEmpty();
+        RuleFor(x => x.UtilizationPlantId).NotEmpty().When(t => t.Type == FallenStockType.FallCollision);
+        RuleFor(x => x.UtilizationPlantId).Empty().When(t => t.Type == FallenStockType.EndCycle);
         RuleFor(x => x.Date).NotEmpty();
         RuleFor(x => x.Entries).NotEmpty().WithMessage("Należy dodać co najmniej jedną pozycję.");
 
@@ -191,6 +233,8 @@ public sealed class GetFallenStockByDateAndHenhouseIdsSpec : BaseSpecification<F
 {
     public GetFallenStockByDateAndHenhouseIdsSpec(DateOnly date, Guid[] henhouseIds)
     {
+        EnsureExists();
+        DisableTracking();
         Query.Where(fs => fs.Date == date && henhouseIds.Contains(fs.HenhouseId));
     }
 }

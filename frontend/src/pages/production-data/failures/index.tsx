@@ -57,7 +57,6 @@ const ProductionDataFailuresPage: React.FC = () => {
         await handleApiResponse(
           () => ProductionDataService.getDictionaries(),
           (data) => {
-            console.log(data);
             setDictionary(data.responseData);
           },
           undefined,

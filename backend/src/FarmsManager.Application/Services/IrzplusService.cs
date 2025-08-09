@@ -9,6 +9,7 @@ using FarmsManager.Application.Models.Irzplus.Queries;
 using FarmsManager.Application.Models.Irzplus.ZZSSD;
 using FarmsManager.Application.Models.Irzplus.ZZSSD.Enums;
 using FarmsManager.Domain.Aggregates.FallenStockAggregate.Entities;
+using FarmsManager.Domain.Aggregates.FallenStockAggregate.Enums;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
 using FarmsManager.Domain.Aggregates.UserAggregate.Models;
@@ -126,12 +127,17 @@ public class IrzplusService : IIrzplusService
         return responseString.ParseJsonString<ZlozenieDyspozycjiResponse>();
     }
 
-    public async Task<ZlozenieDyspozycjiResponse> SendFallenStocksAsync(IList<FallenStockEntity> fallenStocks, CancellationToken ct = default)
+    public async Task<ZlozenieDyspozycjiResponse> SendFallenStocksAsync(IList<FallenStockEntity> fallenStocks,
+        CancellationToken ct = default)
     {
         var authData = await AuthorizeToIrzplusAsync();
 
+        var firstItem = fallenStocks.First();
         var mappedFallenStocks = fallenStocks.Select(fs => new FallenStocksIrzPlusDisposition(fs)).ToList();
-        var dispositionZzssd = MapDispositionZzssd(mappedFallenStocks, IrzPlusDispositionType.FallenStocks);
+        var dispositionZzssd = MapDispositionZzssd(mappedFallenStocks,
+            firstItem.Type == FallenStockType.FallCollision
+                ? IrzPlusDispositionType.FallenStocks
+                : IrzPlusDispositionType.EndCycle);
 
         var dispositionJson = dispositionZzssd.ToJsonStringWithNulls();
 
@@ -201,6 +207,7 @@ public class IrzplusService : IIrzplusService
         {
             IrzPlusDispositionType.Sale => TypZdarzeniaDrobiu.Wybycie.ToKodOpisDto(),
             IrzPlusDispositionType.FallenStocks => TypZdarzeniaDrobiu.Padniecie.ToKodOpisDto(),
+            IrzPlusDispositionType.EndCycle => TypZdarzeniaDrobiu.ZamkniecieCyklu.ToKodOpisDto(),
             _ => TypZdarzeniaDrobiu.Przybycie.ToKodOpisDto()
         };
 
@@ -208,6 +215,11 @@ public class IrzplusService : IIrzplusService
 
         var sumQuantity = items.Sum(i => i.Quantity);
         var realproducerNumber = doDzialalnosci.Split("-")[0];
+
+        if (type == IrzPlusDispositionType.EndCycle)
+        {
+            doDzialalnosci = null;
+        }
 
         var disposition = new DyspozycjaZZSSD
         {
