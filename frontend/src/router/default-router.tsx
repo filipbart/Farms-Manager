@@ -36,6 +36,7 @@ import ExpenseAdvancesPage from "../pages/expenses/advances";
 import ExpenseAdvanceDetailsPage from "../pages/expenses/advances/details";
 import UtilizationPlantsPage from "../pages/data/utilization-plants";
 import ProductionDataIrzplusPage from "../pages/production-data/irz-plus";
+import SummaryProductionAnalysisPage from "../pages/summary/production-analysis";
 
 const DefaultRouter: React.FC = () => {
   const { getRoute } = useRouter();
@@ -158,6 +159,10 @@ const DefaultRouter: React.FC = () => {
         <Route
           path={getRoute(RouteName.EmployeesPayslips)}
           element={<EmployeePayslipsPage />}
+        />
+        <Route
+          path={getRoute(RouteName.SummaryProductionAnalysis)}
+          element={<SummaryProductionAnalysisPage />}
         />
         <Route
           path={getRoute(RouteName.SettingsCycles)}

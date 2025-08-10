@@ -17,6 +17,7 @@ import {
   FaAddressCard,
   FaBuilding,
   FaBurn,
+  FaCalculator,
   FaClone,
   FaDatabase,
   FaFileInvoiceDollar,
@@ -38,6 +39,8 @@ import {
   FaJarWheat,
 } from "react-icons/fa6";
 import {
+  MdBarChart,
+  MdDashboard,
   MdFactory,
   MdNotes,
   MdPayments,
@@ -80,6 +83,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
     else if (path.startsWith("/employees")) setOpenItem("Pracownicy");
     else if (path.startsWith("/data")) setOpenItem("Dane");
     else if (path.startsWith("/settings")) setOpenItem("Ustawienia");
+    else if (path.startsWith("/summary")) setOpenItem("Podsumowanie");
     else setOpenItem(null);
   }, [location.pathname]);
 
@@ -248,6 +252,24 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           to="/employees/payslips"
           title="Rozliczenie wypłat"
           icon={<FaFileInvoiceDollar />}
+        />
+      </SidebarMenuItem>
+      <SidebarMenuItem
+        to="/summary"
+        title="Podsumowanie"
+        icon={<MdDashboard />}
+        isOpen={openItem === "Podsumowanie"}
+        onClick={() => handleItemClick("Podsumowanie")}
+      >
+        <SidebarMenuItem
+          to="/summary/production-analysis"
+          title="Analiza produkcyjna"
+          icon={<MdBarChart />}
+        />
+        <SidebarMenuItem
+          to="/summary/financial-analysis"
+          title="Analiza finansowa"
+          icon={<FaCalculator />}
         />
       </SidebarMenuItem>
 

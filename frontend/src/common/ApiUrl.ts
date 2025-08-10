@@ -255,4 +255,11 @@ export default class ApiUrl {
     this.EmployeePayslips + "/update/" + id;
   public static DeleteEmployeePayslip = (id: string) =>
     this.EmployeePayslips + "/delete/" + id;
+
+  public static Summary = this.BaseUrl + "summary";
+  public static SummaryDictionary = this.Summary + "/dictionary";
+  public static SummaryProductionAnalysis =
+    this.Summary + "/production-analysis";
+  public static SummaryProductionAnalysisColumns =
+    this.SummaryProductionAnalysis + "/columns";
 }
