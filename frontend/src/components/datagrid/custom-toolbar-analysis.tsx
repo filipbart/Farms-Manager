@@ -21,7 +21,7 @@ import TextField from "@mui/material/TextField";
 import InputAdornment from "@mui/material/InputAdornment";
 import CancelIcon from "@mui/icons-material/Cancel";
 import SearchIcon from "@mui/icons-material/Search";
-import { ExportExcel, useGridApiContext } from "@mui/x-data-grid-premium";
+import { ExportExcel, type GridToolbarProps } from "@mui/x-data-grid-premium";
 import {
   Box,
   Button,
@@ -32,9 +32,10 @@ import {
   IconButton,
   styled,
 } from "@mui/material";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { MdDelete, MdSave } from "react-icons/md";
 import { toast } from "react-toastify";
+import type { ColumnViewRow } from "../../services/columns-views-service";
 
 interface OwnerState {
   expanded: boolean;
@@ -67,82 +68,39 @@ const StyledToolbarButton = styled(ToolbarButton)<{ ownerState: OwnerState }>(
   })
 );
 
-interface SavedView {
-  name: string;
-  state: any;
+interface CustomToolbarAnalysisProps extends GridToolbarProps {
+  savedViews: ColumnViewRow[];
+  selectedView: string;
+  onLoadView: (viewId: string) => void;
+  onSaveView: (viewName: string) => Promise<void>;
+  onDeleteView: (viewId: string) => void;
 }
 
-const CustomToolbarAnalysis: React.FC = () => {
-  const apiRef = useGridApiContext();
+const CustomToolbarAnalysis: React.FC<CustomToolbarAnalysisProps> = ({
+  savedViews,
+  selectedView,
+  onLoadView,
+  onSaveView,
+  onDeleteView,
+}) => {
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const exportMenuTriggerRef = useRef<HTMLButtonElement>(null);
-  const [savedViews, setSavedViews] = useState<SavedView[]>([]);
-  const [selectedView, setSelectedView] = useState<string>("");
 
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [newViewName, setNewViewName] = useState("");
 
-  useEffect(() => {
-    const viewsFromStorage = localStorage.getItem("dataGridSavedViews");
-    if (viewsFromStorage) {
-      setSavedViews(JSON.parse(viewsFromStorage));
-    }
-  }, []);
-
-  const handleSaveView = () => {
+  const handleSaveClick = () => {
     setNewViewName("");
     setSaveDialogOpen(true);
   };
 
-  const confirmSaveView = () => {
+  const confirmSaveView = async () => {
     if (!newViewName.trim()) {
       toast.error("Podaj nazwę widoku.");
       return;
     }
-
-    const currentState = apiRef.current.exportState();
-    const newView: SavedView = {
-      name: newViewName.trim(),
-      state: currentState,
-    };
-
-    const updatedViews = [
-      ...savedViews.filter((v) => v.name !== newViewName.trim()),
-      newView,
-    ];
-
-    setSavedViews(updatedViews);
-    localStorage.setItem("dataGridSavedViews", JSON.stringify(updatedViews));
-    toast.success(`Widok "${newViewName}" został zapisany.`);
-    setSelectedView(newViewName);
+    await onSaveView(newViewName.trim());
     setSaveDialogOpen(false);
-  };
-
-  const handleLoadView = (viewName: string) => {
-    setSelectedView(viewName);
-    const viewToLoad = savedViews.find((v) => v.name === viewName);
-    if (viewToLoad) {
-      apiRef.current.restoreState(viewToLoad.state);
-      toast.info(`Wczytano widok "${viewName}".`);
-    }
-  };
-
-  const handleDeleteView = async (viewName: string) => {
-    try {
-      //TODO zapytać czy zapisywać lokalnie czy na uzytkownika
-      // await api.delete(`/views/${viewName}`);
-
-      const updatedViews = savedViews.filter((v) => v.name !== viewName);
-      setSavedViews(updatedViews);
-      localStorage.setItem("dataGridSavedViews", JSON.stringify(updatedViews));
-      toast.success(`Widok "${viewName}" został usunięty.`);
-
-      if (selectedView === viewName) {
-        setSelectedView("");
-      }
-    } catch {
-      toast.error("Nie udało się usunąć widoku.");
-    }
   };
 
   return (
@@ -152,7 +110,7 @@ const CustomToolbarAnalysis: React.FC = () => {
           render={
             <Button
               startIcon={<MdSave />}
-              onClick={handleSaveView}
+              onClick={handleSaveClick}
               size="small"
               sx={{
                 mr: 1,
@@ -169,14 +127,14 @@ const CustomToolbarAnalysis: React.FC = () => {
           select
           label="Zapisane widoki"
           value={selectedView}
-          onChange={(e) => handleLoadView(e.target.value)}
+          onChange={(e) => onLoadView(e.target.value)}
           variant="standard"
           size="small"
           sx={{ minWidth: 220, ml: 1, alignSelf: "center" }}
           slotProps={{
             select: {
               renderValue: (value) => {
-                const view = savedViews.find((v) => v.name === value);
+                const view = savedViews.find((v) => v.id === value);
                 return view ? view.name : <em>Wybierz widok...</em>;
               },
             },
@@ -187,8 +145,8 @@ const CustomToolbarAnalysis: React.FC = () => {
           </MenuItem>
           {savedViews.map((view) => (
             <MenuItem
-              key={view.name}
-              value={view.name}
+              key={view.id}
+              value={view.id}
               sx={{
                 display: "flex",
                 justifyContent: "space-between",
@@ -206,7 +164,7 @@ const CustomToolbarAnalysis: React.FC = () => {
                 size="small"
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleDeleteView(view.name);
+                  onDeleteView(view.id);
                 }}
               >
                 <MdDelete fontSize="small" />
@@ -265,15 +223,15 @@ const CustomToolbarAnalysis: React.FC = () => {
             render={<MenuItem />}
             onClick={() => setExportMenuOpen(false)}
           >
-            Print
+            Wydrukuj
           </ExportPrint>
           <ExportCsv
             render={<MenuItem />}
             onClick={() => setExportMenuOpen(false)}
           >
-            Download as CSV
+            Pobierz jako CSV
           </ExportCsv>
-          <ExportExcel render={<MenuItem />}>Download as Excel</ExportExcel>
+          <ExportExcel render={<MenuItem />}>Pobierz jako Excel</ExportExcel>
         </Menu>
         <StyledQuickFilter>
           <QuickFilterTrigger
@@ -328,7 +286,6 @@ const CustomToolbarAnalysis: React.FC = () => {
         </StyledQuickFilter>
       </Toolbar>
 
-      {/* Dialog zapisu widoku */}
       <Dialog open={saveDialogOpen} onClose={() => setSaveDialogOpen(false)}>
         <DialogTitle>Zapisz widok</DialogTitle>
         <DialogContent>

@@ -260,6 +260,9 @@ export default class ApiUrl {
   public static SummaryDictionary = this.Summary + "/dictionary";
   public static SummaryProductionAnalysis =
     this.Summary + "/production-analysis";
-  public static SummaryProductionAnalysisColumns =
-    this.SummaryProductionAnalysis + "/columns";
+
+  public static ColumnsViews = this.BaseUrl + "columns-views";
+  public static AddColumnView = this.ColumnsViews + "/add";
+  public static DeleteColumnView = (id: string) =>
+    this.ColumnsViews + "/delete/" + id;
 }

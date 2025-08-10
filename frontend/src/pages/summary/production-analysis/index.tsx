@@ -10,12 +10,21 @@ import type { ProductionAnalysisRowModel } from "../../../models/summary/product
 import type { CycleDictModel } from "../../../models/common/dictionaries";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import { SummaryService } from "../../../services/summary-service";
-import { DataGridPremium } from "@mui/x-data-grid-premium";
+import {
+  DataGridPremium,
+  type GridToolbarProps,
+  useGridApiRef,
+} from "@mui/x-data-grid-premium";
 import { getProductionAnalysisColumns } from "./production-analysis-columns";
 import FiltersForm from "../../../components/filters/filters-form";
 import { getProductionAnalysisFiltersConfig } from "./filter-config.production-analysis";
 import NoRowsOverlay from "../../../components/datagrid/custom-norows";
 import CustomToolbarAnalysis from "../../../components/datagrid/custom-toolbar-analysis";
+import {
+  ColumnViewType,
+  ColumnsViewsService,
+  type ColumnViewRow,
+} from "../../../services/columns-views-service";
 
 const SummaryProductionAnalysisPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -25,6 +34,10 @@ const SummaryProductionAnalysisPage: React.FC = () => {
     ProductionAnalysisRowModel[]
   >([]);
   const [totalRows, setTotalRows] = useState(0);
+
+  const apiRef = useGridApiRef();
+  const [savedViews, setSavedViews] = useState<ColumnViewRow[]>([]);
+  const [selectedView, setSelectedView] = useState<string>("");
 
   const [visibilityModel, setVisibilityModel] = useState(() => {
     const saved = localStorage.getItem(
@@ -45,20 +58,37 @@ const SummaryProductionAnalysisPage: React.FC = () => {
     return Array.from(map.values());
   }, [dictionary]);
 
+  const loadViews = async () => {
+    await handleApiResponse(
+      () =>
+        ColumnsViewsService.getColumnsViews(
+          ColumnViewType.SummaryProductionAnalysis
+        ),
+      (data) => {
+        setSavedViews(data.responseData?.items ?? []);
+      },
+      undefined,
+      "Błąd podczas pobierania zapisanych widoków"
+    );
+  };
+
   useEffect(() => {
-    const fetchDictionaries = async () => {
+    const fetchInitialData = async () => {
       try {
-        await handleApiResponse(
-          () => SummaryService.getDictionaries(),
-          (data) => setDictionary(data.responseData),
-          undefined,
-          "Błąd podczas pobierania słowników filtrów"
-        );
+        await Promise.all([
+          handleApiResponse(
+            () => SummaryService.getDictionaries(),
+            (data) => setDictionary(data.responseData),
+            undefined,
+            "Błąd podczas pobierania słowników filtrów"
+          ),
+          loadViews(),
+        ]);
       } catch {
-        toast.error("Błąd podczas pobierania słowników filtrów");
+        toast.error("Błąd podczas pobierania danych inicjalizujących.");
       }
     };
-    fetchDictionaries();
+    fetchInitialData();
   }, []);
 
   useEffect(() => {
@@ -83,7 +113,66 @@ const SummaryProductionAnalysisPage: React.FC = () => {
     fetchAnalysisData();
   }, [filters]);
 
+  const handleSaveView = async (name: string) => {
+    const currentState = apiRef.current?.exportState();
+    await handleApiResponse(
+      () =>
+        ColumnsViewsService.addColumnView({
+          name: name.trim(),
+          state: JSON.stringify(currentState),
+          type: ColumnViewType.SummaryProductionAnalysis,
+        }),
+      async () => {
+        toast.success(`Widok "${name}" został zapisany.`);
+        await loadViews();
+      },
+      undefined,
+      "Nie udało się zapisać widoku."
+    );
+  };
+
+  const handleLoadView = (viewId: string) => {
+    const viewToLoad = savedViews.find((v) => v.id === viewId);
+    if (!viewToLoad) return;
+    try {
+      apiRef.current?.restoreState(JSON.parse(viewToLoad.state));
+      setSelectedView(viewId);
+      toast.info(`Wczytano widok "${viewToLoad.name}".`);
+    } catch {
+      toast.error("Błąd podczas wczytywania widoku.");
+    }
+  };
+
+  const handleDeleteView = async (id: string) => {
+    await handleApiResponse(
+      () => ColumnsViewsService.deleteColumnView(id), // Corrected method name
+      () => {
+        toast.success("Widok został usunięty.");
+        if (selectedView === id) {
+          setSelectedView("");
+        }
+        loadViews();
+      },
+      undefined,
+      "Nie udało się usunąć widoku."
+    );
+  };
+
   const columns = useMemo(() => getProductionAnalysisColumns(), []);
+
+  // Pass the state and handlers down to the toolbar component
+  const SummaryProductionToolbar = (props: GridToolbarProps) => {
+    return (
+      <CustomToolbarAnalysis
+        {...props}
+        savedViews={savedViews}
+        selectedView={selectedView}
+        onLoadView={handleLoadView}
+        onSaveView={handleSaveView}
+        onDeleteView={handleDeleteView}
+      />
+    );
+  };
 
   return (
     <Box p={4}>
@@ -103,6 +192,7 @@ const SummaryProductionAnalysisPage: React.FC = () => {
 
       <Box mt={4} sx={{ width: "100%", overflowX: "auto" }}>
         <DataGridPremium
+          apiRef={apiRef} // Attach the apiRef to the grid
           loading={loading}
           rows={analysisData}
           columns={columns}
@@ -136,7 +226,7 @@ const SummaryProductionAnalysisPage: React.FC = () => {
           rowSelection={false}
           pageSizeOptions={[5, 10, 25, { value: -1, label: "Wszystkie" }]}
           slots={{
-            toolbar: CustomToolbarAnalysis,
+            toolbar: SummaryProductionToolbar,
             noRowsOverlay: NoRowsOverlay,
           }}
           showToolbar

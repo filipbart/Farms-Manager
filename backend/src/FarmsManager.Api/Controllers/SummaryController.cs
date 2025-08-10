@@ -1,6 +1,7 @@
 using FarmsManager.Api.Controllers.Base;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Queries.Summary;
+using FarmsManager.Application.Queries.Summary.ProductionAnalysis;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,5 +19,19 @@ public class SummaryController(IMediator mediator) : BaseController
     public async Task<IActionResult> GetDictionaries()
     {
         return Ok(await mediator.Send(new GetSummaryDictionaryQuery()));
+    }
+
+    /// <summary>
+    /// Zwraca dane dla podsumowania - Analiza produkcyjna
+    /// </summary>
+    /// <param name="filters"></param>
+    /// <returns></returns>
+    [HttpGet("production-analysis")]
+    [ProducesResponseType(typeof(BaseResponse<>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetProductionAnalysisData(
+        [FromQuery] SummaryProductionAnalysisQueryFilters filters)
+    {
+        return Ok(await mediator.Send(new SummaryProductionAnalysisQuery(filters)));
     }
 }
