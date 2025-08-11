@@ -3,7 +3,6 @@ import { type GridRowSelectionModel } from "@mui/x-data-grid";
 import { useReducer, useState, useMemo, useEffect, useContext } from "react";
 import { toast } from "react-toastify";
 import NoRowsOverlay from "../../../components/datagrid/custom-norows";
-import CustomToolbar from "../../../components/datagrid/custom-toolbar";
 import FiltersForm from "../../../components/filters/filters-form";
 import type { CycleDictModel } from "../../../models/common/dictionaries";
 import type { FeedsDictionary } from "../../../models/feeds/feeds-dictionary";
@@ -30,7 +29,7 @@ import { downloadFile } from "../../../utils/download-file";
 import AddCorrectionModal from "../../../components/modals/feeds/deliveries/add-correction-modal";
 import EditCorrectionModal from "../../../components/modals/feeds/deliveries/edit-correction-modal";
 import { NotificationContext } from "../../../context/notification-context";
-import { DataGridPro } from "@mui/x-data-grid-pro";
+import { DataGridPremium } from "@mui/x-data-grid-premium";
 
 const FeedsDeliveriesPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -288,7 +287,7 @@ const FeedsDeliveriesPage: React.FC = () => {
       />
 
       <Box mt={4} sx={{ width: "100%", overflowX: "auto" }}>
-        <DataGridPro
+        <DataGridPremium
           loading={loading}
           rows={feedsDeliveries}
           columns={columns}
@@ -304,18 +303,6 @@ const FeedsDeliveriesPage: React.FC = () => {
               "columnVisibilityModelDeliveries",
               JSON.stringify(model)
             );
-          }}
-          localeText={{
-            footerRowSelected: (count) => {
-              if (count === 1) return "1 wiersz zaznaczony";
-              if (count >= 2 && count <= 4)
-                return `${count} wiersze zaznaczone`;
-              return `${count} wierszy zaznaczonych`;
-            },
-            checkboxSelectionHeaderName: "Zaznaczanie wierszy",
-            paginationRowsPerPage: "Wierszy na stronę:",
-            paginationDisplayedRows: ({ from, to, count }) =>
-              `${from} do ${to} z ${count}`,
           }}
           checkboxSelection
           disableRowSelectionOnClick
@@ -339,7 +326,7 @@ const FeedsDeliveriesPage: React.FC = () => {
           rowCount={totalRows}
           rowSelection
           pageSizeOptions={[5, 10, 25, { value: -1, label: "Wszystkie" }]}
-          slots={{ toolbar: CustomToolbar, noRowsOverlay: NoRowsOverlay }}
+          slots={{ noRowsOverlay: NoRowsOverlay }}
           showToolbar
           sx={{
             [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },

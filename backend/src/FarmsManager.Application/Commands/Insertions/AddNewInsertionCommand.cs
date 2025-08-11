@@ -99,21 +99,6 @@ public class
             throw new Exception($"Kurnik '{henhouse?.Name}' ma już wstawienie w tym cyklu na tej fermie.");
         }
 
-        var firstInsertionInCycle =
-            await _insertionRepository.FirstOrDefaultAsync(
-                new GetFirstInsertionInCycleSpec(request.FarmId, request.CycleId), ct);
-        if (firstInsertionInCycle is not null)
-        {
-            var requestHatcheryId = request.Entries.First().HatcheryId;
-            if (firstInsertionInCycle.HatcheryId != requestHatcheryId)
-            {
-                var existingHatchery = await _hatcheryRepository.GetByIdAsync(firstInsertionInCycle.HatcheryId, ct);
-                throw new Exception(
-                    $"Wstawienia w tym cyklu muszą pochodzić z tej samej wylęgarni ('{existingHatchery?.Name}').");
-            }
-        }
-
-
         var newInsertions = new List<InsertionEntity>();
         var internalGroupId = Guid.NewGuid();
         foreach (var entry in request.Entries)

@@ -56,8 +56,8 @@ export const getProductionAnalysisColumns =
         field: "insertionDate",
         headerName: "Data wstawienia",
         width: 130,
-        valueFormatter: (params: any) =>
-          params?.value ? dayjs(params.value).format("YYYY-MM-DD") : "",
+        valueFormatter: (value: any) =>
+          value ? dayjs(value).format("YYYY-MM-DD") : "",
       },
       {
         field: "insertionQuantity",
@@ -71,8 +71,8 @@ export const getProductionAnalysisColumns =
         field: "partSaleDate",
         headerName: "Data ubiórki",
         width: 130,
-        valueFormatter: (params: any) =>
-          params?.value ? dayjs(params.value).format("YYYY-MM-DD") : "",
+        valueFormatter: (value: any) =>
+          value ? dayjs(value).format("YYYY-MM-DD") : "",
       },
       {
         field: "partSaleSoldCount",
@@ -85,8 +85,6 @@ export const getProductionAnalysisColumns =
         headerName: "Ubiórka [kg]",
         type: "number",
         width: 120,
-        valueFormatter: (params: any) =>
-          typeof params?.value === "number" ? params.value.toFixed(3) : "",
       },
       {
         field: "partSaleAvgWeight",
@@ -107,8 +105,6 @@ export const getProductionAnalysisColumns =
         headerName: "Waga hodowcy ubiórka [kg]",
         type: "number",
         width: 150,
-        valueFormatter: (params: any) =>
-          typeof params?.value === "number" ? params.value.toFixed(3) : "",
       },
       {
         field: "partSaleAgeInDays",
@@ -121,10 +117,7 @@ export const getProductionAnalysisColumns =
         headerName: "Różnica wag ubiórka [%]",
         type: "number",
         width: 150,
-        valueFormatter: (params: any) =>
-          typeof params?.value === "number"
-            ? `${params.value.toFixed(2)}%`
-            : "",
+        valueGetter: (value: any) => (value ? `${value.toFixed(2)}%` : ""),
       },
       {
         field: "partSaleDeadCount",
@@ -137,8 +130,6 @@ export const getProductionAnalysisColumns =
         headerName: "Martwe ubiórka [kg]",
         type: "number",
         width: 140,
-        valueFormatter: (params: any) =>
-          typeof params?.value === "number" ? params.value.toFixed(3) : "",
       },
       {
         field: "partSaleConfiscatedCount",
@@ -151,8 +142,6 @@ export const getProductionAnalysisColumns =
         headerName: "Konfiskata ubiórka [kg]",
         type: "number",
         width: 150,
-        valueFormatter: (params: any) =>
-          typeof params?.value === "number" ? params.value.toFixed(3) : "",
       },
       {
         field: "partSaleSettlementCount",
@@ -165,8 +154,6 @@ export const getProductionAnalysisColumns =
         headerName: "Ubiórka do rozliczenia [kg]",
         type: "number",
         width: 160,
-        valueFormatter: (params: any) =>
-          typeof params?.value === "number" ? params.value.toFixed(3) : "",
       },
 
       // --- Sprzedaż Całkowita ---
@@ -174,8 +161,8 @@ export const getProductionAnalysisColumns =
         field: "totalSaleDate",
         headerName: "Data sprzedaży całk.",
         width: 130,
-        valueFormatter: (params: any) =>
-          params?.value ? dayjs(params.value).format("YYYY-MM-DD") : "",
+        valueFormatter: (value: any) =>
+          value ? dayjs(value).format("YYYY-MM-DD") : "",
       },
       {
         field: "totalSaleSoldCount",
@@ -188,8 +175,6 @@ export const getProductionAnalysisColumns =
         headerName: "Sprzedaż całk. [kg]",
         type: "number",
         width: 130,
-        valueFormatter: (params: any) =>
-          typeof params?.value === "number" ? params.value.toFixed(3) : "",
       },
       {
         field: "totalSaleAvgWeight",
@@ -210,8 +195,6 @@ export const getProductionAnalysisColumns =
         headerName: "Waga hodowcy całk. [kg]",
         type: "number",
         width: 150,
-        valueFormatter: (params: any) =>
-          typeof params?.value === "number" ? params.value.toFixed(3) : "",
       },
       {
         field: "totalSaleAgeInDays",
@@ -224,10 +207,7 @@ export const getProductionAnalysisColumns =
         headerName: "Różnica wag całk. [%]",
         type: "number",
         width: 150,
-        valueFormatter: (params: any) =>
-          typeof params?.value === "number"
-            ? `${params.value.toFixed(2)}%`
-            : "",
+        valueGetter: (value: any) => (value ? `${value.toFixed(2)}%` : ""),
       },
       {
         field: "totalSaleDeadCount",
@@ -240,8 +220,6 @@ export const getProductionAnalysisColumns =
         headerName: "Martwe całk. [kg]",
         type: "number",
         width: 140,
-        valueFormatter: (params: any) =>
-          typeof params?.value === "number" ? params.value.toFixed(3) : "",
       },
       {
         field: "totalSaleConfiscatedCount",
@@ -254,8 +232,6 @@ export const getProductionAnalysisColumns =
         headerName: "Konfiskata całk. [kg]",
         type: "number",
         width: 150,
-        valueFormatter: (params: any) =>
-          typeof params?.value === "number" ? params.value.toFixed(3) : "",
       },
       {
         field: "totalSaleSettlementCount",
@@ -268,8 +244,6 @@ export const getProductionAnalysisColumns =
         headerName: "Całk. do rozliczenia [kg]",
         type: "number",
         width: 160,
-        valueFormatter: (params: any) =>
-          typeof params?.value === "number" ? params.value.toFixed(3) : "",
       },
 
       // --- Podsumowanie Łączne ---
@@ -284,24 +258,18 @@ export const getProductionAnalysisColumns =
         headerName: "Sprzedane łącznie [kg]",
         type: "number",
         width: 160,
-        valueFormatter: (params: any) =>
-          typeof params?.value === "number" ? params.value.toFixed(3) : "",
       },
       {
         field: "combinedAvgWeight",
         headerName: "Śr. waga łączna [kg]",
         type: "number",
         width: 140,
-        valueFormatter: (params: any) =>
-          typeof params?.value === "number" ? params.value.toFixed(3) : "",
       },
       {
         field: "combinedFarmerWeight",
         headerName: "Waga hodowcy łączna [kg]",
         type: "number",
         width: 160,
-        valueFormatter: (params: any) =>
-          typeof params?.value === "number" ? params.value.toFixed(3) : "",
       },
       {
         field: "combinedSettlementCount",
@@ -314,16 +282,12 @@ export const getProductionAnalysisColumns =
         headerName: "Łącznie do rozliczenia [kg]",
         type: "number",
         width: 170,
-        valueFormatter: (params: any) =>
-          typeof params?.value === "number" ? params.value.toFixed(3) : "",
       },
       {
         field: "combinedAvgAgeInDays",
         headerName: "Śr. wiek łączny [dni]",
         type: "number",
         width: 140,
-        valueFormatter: (params: any) =>
-          typeof params?.value === "number" ? params.value.toFixed(2) : "",
       },
 
       // --- Statystyki Cyklu ---
@@ -344,40 +308,28 @@ export const getProductionAnalysisColumns =
         headerName: "Przeżywalność [%]",
         type: "number",
         width: 130,
-        valueFormatter: (params: any) =>
-          typeof params?.value === "number"
-            ? `${params.value.toFixed(2)}%`
-            : "",
+        valueGetter: (value: any) => (value ? `${value.toFixed(2)}%` : ""),
       },
       {
         field: "deadPctCycle",
         headerName: "Padłe w cyklu [%]",
         type: "number",
         width: 130,
-        valueFormatter: (params: any) =>
-          typeof params?.value === "number"
-            ? `${params.value.toFixed(2)}%`
-            : "",
+        valueGetter: (value: any) => (value ? `${value.toFixed(2)}%` : ""),
       },
       {
         field: "defectivePctCycle",
         headerName: "Wybrakowane w cyklu [%]",
         type: "number",
         width: 150,
-        valueFormatter: (params: any) =>
-          typeof params?.value === "number"
-            ? `${params.value.toFixed(2)}%`
-            : "",
+        valueGetter: (value: any) => (value ? `${value.toFixed(2)}%` : ""),
       },
       {
         field: "deadAndDefectivePctCycle",
         headerName: "Padłe i wybrakowane [%]",
         type: "number",
         width: 160,
-        valueFormatter: (params: any) =>
-          typeof params?.value === "number"
-            ? `${params.value.toFixed(2)}%`
-            : "",
+        valueGetter: (value: any) => (value ? `${value.toFixed(2)}%` : ""),
       },
 
       // --- Wskaźniki Produkcyjne ---
@@ -386,40 +338,30 @@ export const getProductionAnalysisColumns =
         headerName: "Pasza [t]",
         type: "number",
         width: 100,
-        valueFormatter: (params: any) =>
-          typeof params?.value === "number" ? params.value.toFixed(3) : "",
       },
       {
         field: "fcrWithLosses",
         headerName: "FCR (z padłymi)",
         type: "number",
         width: 130,
-        valueFormatter: (params: any) =>
-          typeof params?.value === "number" ? params.value.toFixed(3) : "",
       },
       {
         field: "fcrWithoutLosses",
         headerName: "FCR (do rozliczenia)",
         type: "number",
         width: 140,
-        valueFormatter: (params: any) =>
-          typeof params?.value === "number" ? params.value.toFixed(3) : "",
       },
       {
         field: "points",
         headerName: "Punkty",
         type: "number",
         width: 100,
-        valueFormatter: (params: any) =>
-          typeof params?.value === "number" ? params.value.toFixed(2) : "",
       },
       {
         field: "eww",
         headerName: "EWW",
         type: "number",
         width: 100,
-        valueFormatter: (params: any) =>
-          typeof params?.value === "number" ? params.value.toFixed(2) : "",
       },
 
       // --- Powierzchnia i Gaz ---
@@ -434,16 +376,12 @@ export const getProductionAnalysisColumns =
         headerName: "Kg/m² (przed konf.)",
         type: "number",
         width: 150,
-        valueFormatter: (params: any) =>
-          typeof params?.value === "number" ? params.value.toFixed(2) : "",
       },
       {
         field: "kgPerM2AfterConf",
         headerName: "Kg/m² (po konf.)",
         type: "number",
         width: 140,
-        valueFormatter: (params: any) =>
-          typeof params?.value === "number" ? params.value.toFixed(2) : "",
       },
       {
         field: "gasConsumptionLiters",
@@ -456,8 +394,6 @@ export const getProductionAnalysisColumns =
         headerName: "Gaz/m² [L]",
         type: "number",
         width: 110,
-        valueFormatter: (params: any) =>
-          typeof params?.value === "number" ? params.value.toFixed(2) : "",
       },
 
       // --- Bilans ---
