@@ -206,8 +206,8 @@ const SummaryProductionAnalysisPage: React.FC = () => {
           }}
           scrollbarSize={17}
           initialState={{
-            columns: {
-              columnVisibilityModel: { id: false },
+            pinnedColumns: {
+              left: ["cycleText", "farmName", "henhouseName", "hatcheryName"],
             },
           }}
           paginationMode="server"

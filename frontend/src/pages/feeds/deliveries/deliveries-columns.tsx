@@ -35,7 +35,7 @@ export const getFeedsDeliveriesColumns = ({
     { field: "invoiceNumber", headerName: "Numer faktury", flex: 1 },
     {
       field: "quantity",
-      headerName: "Ilość towaru",
+      headerName: "Ilość towaru [t]",
       flex: 1,
       type: "number",
       headerAlign: "left",

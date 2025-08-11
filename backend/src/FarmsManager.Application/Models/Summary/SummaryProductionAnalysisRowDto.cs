@@ -2,6 +2,8 @@ namespace FarmsManager.Application.Models.Summary;
 
 public class SummaryProductionAnalysisRowDto
 {
+    public int Id { get; set; }
+    
     /// <summary>Identyfikator (cykl)</summary>
     public string CycleText { get; set; }
 
@@ -30,7 +32,19 @@ public class SummaryProductionAnalysisRowDto
     public decimal? PartSaleSoldWeight { get; set; }
 
     /// <summary>Śr. Masa ciała sprzedanych ptaków ubiórka [kg]</summary>
-    public decimal? PartSaleAvgWeight { get; set; }
+    public decimal? PartSaleAvgWeight
+    {
+        get
+        {
+            if (PartSaleSoldCount is null or 0) return null;
+            return PartSaleSoldWeight / PartSaleSoldCount;
+        }
+    }
+
+    /// <summary>
+    /// Odchył normy masy ciała ubiórki dla średniej 
+    /// </summary>
+    public decimal? PartSaleAvgWeightDeviation { get; set; }
 
     /// <summary>Waga hodowcy ubiórka [kg]</summary>
     public decimal? PartSaleFarmerWeight { get; set; }
@@ -39,7 +53,14 @@ public class SummaryProductionAnalysisRowDto
     public int? PartSaleAgeInDays { get; set; }
 
     /// <summary>Różnice wagowe ubiórka [%]</summary>
-    public decimal? PartSaleWeightDiffPct { get; set; }
+    public decimal? PartSaleWeightDiffPct
+    {
+        get
+        {
+            if (PartSaleFarmerWeight is null or 0) return null;
+            return (PartSaleFarmerWeight - PartSaleSoldWeight) / PartSaleFarmerWeight * 100;
+        }
+    }
 
     /// <summary>Kurczęta martwe ubiórka [szt]</summary>
     public int? PartSaleDeadCount { get; set; }
@@ -54,49 +75,68 @@ public class SummaryProductionAnalysisRowDto
     public decimal? PartSaleConfiscatedWeight { get; set; }
 
     /// <summary>Liczba sztuk uwzględnionych do rozliczenia ubiórka</summary>
-    public int? PartSaleSettlementCount { get; set; }
+    public int? PartSaleSettlementCount => PartSaleSoldCount - PartSaleDeadCount - PartSaleConfiscatedCount;
 
     /// <summary>Masa ciała sprzedanych ptaków do rozliczenia ubióka [kg]</summary>
-    public decimal? PartSaleSettlementWeight { get; set; }
+    public decimal? PartSaleSettlementWeight => PartSaleSoldWeight - PartSaleDeadWeight - PartSaleConfiscatedWeight;
 
     /// <summary>Data sprzedaży całkowitej</summary>
     public DateOnly? TotalSaleDate { get; set; }
 
     /// <summary>Sztuki sprzedane sprzedaż całkowita</summary>
-    public int? TotalSoldCount { get; set; }
+    public int? TotalSaleSoldCount { get; set; }
 
     /// <summary>Masa sprzedanych ptaków Ubojnia sprzedaż całkowita</summary>
-    public decimal? TotalSoldWeight { get; set; }
+    public decimal? TotalSaleSoldWeight { get; set; }
 
     /// <summary>Śr. Masa ciała sprzedanych ptaków sprzedaż całkowita</summary>
-    public decimal? TotalAvgWeight { get; set; }
+    public decimal? TotalSaleAvgWeight
+    {
+        get
+        {
+            if (TotalSaleSoldCount is null or 0) return null;
+            return TotalSaleSoldWeight / TotalSaleSoldCount;
+        }
+    }
+
+    /// <summary>
+    /// Odchył normy masy ciała sprzedaży dla średniej
+    /// </summary>
+    public decimal? TotalSaleAvgWeightDeviation { get; set; }
 
     /// <summary>Waga hodowcy sprzedaż całkowita [kg]</summary>
-    public decimal? TotalFarmerWeight { get; set; }
+    public decimal? TotalSaleFarmerWeight { get; set; }
 
     /// <summary>Doba sprzedaż całkowita</summary>
-    public int? TotalAgeInDays { get; set; }
+    public int? TotalSaleAgeInDays { get; set; }
 
     /// <summary>Różnice wagowe sprzedaż całkowita [%]</summary>
-    public decimal? TotalWeightDiffPct { get; set; }
+    public decimal? TotalWeightDiffPct
+    {
+        get
+        {
+            if (TotalSaleFarmerWeight is null or 0) return null;
+            return (TotalSaleFarmerWeight - TotalSaleSoldWeight) / TotalSaleFarmerWeight * 100;
+        }
+    }
 
     /// <summary>Kurczęta martwe sprzedaż całkowita [szt]</summary>
-    public int? TotalDeadCount { get; set; }
+    public int? TotalSaleDeadCount { get; set; }
 
     /// <summary>Kurczęta martwe sprzedaż całkowita [kg]</summary>
-    public decimal? TotalDeadWeight { get; set; }
+    public decimal? TotalSaleDeadWeight { get; set; }
 
     /// <summary>Konfiskata sprzedaż całkowita [szt]</summary>
-    public int? TotalConfiscatedCount { get; set; }
+    public int? TotalSaleConfiscatedCount { get; set; }
 
     /// <summary>Konfiskata sprzedaż całkowita [kg]</summary>
-    public decimal? TotalConfiscatedWeight { get; set; }
+    public decimal? TotalSaleConfiscatedWeight { get; set; }
 
     /// <summary>Liczba sztuk uwzględnionych do rozliczenia sprzedaż całkowita</summary>
-    public int? TotalSettlementCount { get; set; }
+    public int? TotalSaleSettlementCount => TotalSaleSoldCount - TotalSaleDeadCount - TotalSaleConfiscatedCount;
 
     /// <summary>Masa ciała sprzedanych ptaków do rozliczenia sprzedaż całkowita</summary>
-    public decimal? TotalSettlementWeight { get; set; }
+    public decimal? TotalSaleSettlementWeight => TotalSaleSoldWeight - TotalSaleDeadWeight - TotalSaleConfiscatedWeight;
 
     /// <summary>Sztuki sprzedane razem</summary>
     public int? CombinedSoldCount { get; set; }
@@ -105,68 +145,181 @@ public class SummaryProductionAnalysisRowDto
     public decimal? CombinedSoldWeight { get; set; }
 
     /// <summary>Śr. Masa ciała sprzedanych ptaków razem [kg]</summary>
-    public decimal? CombinedAvgWeight { get; set; }
+    public decimal? CombinedAvgWeight
+    {
+        get
+        {
+            if (CombinedSoldCount is null or 0) return null;
+            return CombinedSoldWeight / CombinedSoldCount;
+        }
+    }
 
     /// <summary>Waga hodowcy razem [kg]</summary>
     public decimal? CombinedFarmerWeight { get; set; }
 
     /// <summary>Liczba sztuk uwzględnionych do rozliczenia ubiórka + sprzedaż całkowita</summary>
-    public int? CombinedSettlementCount { get; set; }
+    public int? CombinedSettlementCount => PartSaleSettlementCount + TotalSaleSettlementCount;
 
-    /// <summary>Masa ciała sprzedanych ptaków do rozliczenia ubióka + sprzedaż całkowita [kg]</summary>
-    public decimal? CombinedSettlementWeight { get; set; }
+    /// <summary>Masa ciała sprzedanych ptaków do rozliczenia ubiórka + sprzedaż całkowita [kg]</summary>
+    public decimal? CombinedSettlementWeight => PartSaleSettlementWeight + TotalSaleSettlementWeight;
 
     /// <summary>Średnia doba życia ubiórka + sprzedaż całkowita</summary>
-    public decimal? CombinedAvgAgeInDays { get; set; }
+    public decimal? CombinedAvgAgeInDays
+    {
+        get
+        {
+            if (CombinedSettlementCount is null or 0) return null;
 
-    /// <summary>Przeżywalność z konfiskatami i upadkami na ubojni [%]</summary>
-    public decimal? SurvivalRatePct { get; set; }
+            var weightedSum = (PartSaleSettlementCount.GetValueOrDefault() * PartSaleAgeInDays.GetValueOrDefault()) +
+                              (TotalSaleSettlementCount.GetValueOrDefault() * TotalSaleAgeInDays.GetValueOrDefault());
+                              
+            return (decimal)weightedSum / CombinedSettlementCount;
+        }
+    }
 
     /// <summary>Sztuki padłe z cyklu produkcyjnego</summary>
     public int? DeadCountCycle { get; set; }
 
     /// <summary>Sztuki wybrakowane z cyklu produkcyjnego</summary>
-    public int? RejectedCountCycle { get; set; }
+    public int? DefectiveCountCycle { get; set; }
+
+    /// <summary>Przeżywalność z konfiskatami i upadkami na ubojni [%]</summary>
+    public decimal? SurvivalRatePct
+    {
+        get
+        {
+            if (InsertionQuantity is null or 0) return null;
+            
+            var totalLosses = PartSaleDeadCount.GetValueOrDefault() +
+                              PartSaleConfiscatedCount.GetValueOrDefault() +
+                              TotalSaleDeadCount.GetValueOrDefault() +
+                              TotalSaleConfiscatedCount.GetValueOrDefault() +
+                              DeadCountCycle.GetValueOrDefault() +
+                              DefectiveCountCycle.GetValueOrDefault();
+            
+            return (InsertionQuantity - totalLosses) * 100m / InsertionQuantity;
+        }
+    }
 
     /// <summary>% sztuk padłych z cyklu produkcyjnego</summary>
-    public decimal? DeadPctCycle { get; set; }
+    public decimal? DeadPctCycle
+    {
+        get
+        {
+            if (InsertionQuantity is null or 0) return null;
+            return DeadCountCycle * 100m / InsertionQuantity;
+        }
+    }
 
     /// <summary>% sztuk wybrakowanych z cyklu produkcyjnego</summary>
-    public decimal? RejectedPctCycle { get; set; }
+    public decimal? DefectivePctCycle
+    {
+        get
+        {
+            if (InsertionQuantity is null or 0) return null;
+            return DefectiveCountCycle * 100m / InsertionQuantity;
+        }
+    }
 
     /// <summary>% sztuk padłych i wybrakowanych z cyklu produkcyjnego</summary>
-    public decimal? DeadAndRejectedPctCycle { get; set; }
+    public decimal? DeadAndDefectivePctCycle
+    {
+        get
+        {
+            if (InsertionQuantity is null or 0) return null;
+            return (DeadCountCycle.GetValueOrDefault() + DefectiveCountCycle.GetValueOrDefault()) * 100m / InsertionQuantity;
+        }
+    }
 
     /// <summary>Spożyta pasza [t]</summary>
     public decimal? FeedConsumedTons { get; set; }
 
     /// <summary>FCR (z padłymi i konfiskatami)</summary>
-    public decimal? FcrWithLosses { get; set; }
+    public decimal? FcrWithLosses
+    {
+        get
+        {
+            if (CombinedSoldWeight is null or 0) return null;
+            return FeedConsumedTons * 1000 / CombinedSoldWeight;
+        }
+    }
 
     /// <summary>FCR (bez padłych i konfiskat)</summary>
-    public decimal? FcrWithoutLosses { get; set; }
+    public decimal? FcrWithoutLosses
+    {
+        get
+        {
+            if (CombinedSettlementWeight is null or 0) return null;
+            return FeedConsumedTons * 1000 / CombinedSettlementWeight;
+        }
+    }
 
     /// <summary>Punkty</summary>
-    public decimal? Points { get; set; }
+    public decimal? Points => CombinedAvgWeight - FcrWithoutLosses;
 
     /// <summary>EWW</summary>
-    public decimal? Eww { get; set; }
+    public decimal? Eww
+    {
+        get
+        {
+            var denominator = CombinedAvgAgeInDays * FcrWithoutLosses;
+            if (denominator is null or 0) return null;
+            
+            return SurvivalRatePct * CombinedAvgWeight / denominator * 100;
+        }
+    }
 
     /// <summary>Powierzchnia kurnika [m2]</summary>
     public decimal? HouseAreaM2 { get; set; }
 
     /// <summary>Liczba kg uzyskanych z m2 (przed konfiskatami)</summary>
-    public decimal? KgPerM2BeforeConf { get; set; }
-
+    public decimal? KgPerM2BeforeConf
+    {
+        get
+        {
+            if (HouseAreaM2 is null or 0) return null;
+            return CombinedSoldWeight / HouseAreaM2;
+        }
+    }
+    
     /// <summary>Liczba kg uzyskanych z m2 (po konfiskatach)</summary>
-    public decimal? KgPerM2AfterConf { get; set; }
+    public decimal? KgPerM2AfterConf
+    {
+        get
+        {
+            if (HouseAreaM2 is null or 0) return null;
+            return CombinedSettlementWeight / HouseAreaM2;
+        }
+    }
 
     /// <summary>Zużycie gazu [L]</summary>
     public decimal? GasConsumptionLiters { get; set; }
 
     /// <summary>Zużycie gazu na 1m2 powierzchni</summary>
-    public decimal? GasConsumptionPerM2 { get; set; }
+    public decimal? GasConsumptionPerM2
+    {
+        get
+        {
+            if (HouseAreaM2 is null or 0) return null;
+            return GasConsumptionLiters / HouseAreaM2;
+        }
+    }
 
     /// <summary>Bilans sztuk na koniec cyklu</summary>
-    public decimal? EndCycleBirdBalance { get; set; }
+    public int? EndCycleBirdBalance
+    {
+        get
+        {
+            var birdsAccountedFor = PartSaleSoldCount.GetValueOrDefault() +
+                                    PartSaleDeadCount.GetValueOrDefault() +
+                                    PartSaleConfiscatedCount.GetValueOrDefault() +
+                                    TotalSaleSoldCount.GetValueOrDefault() +
+                                    TotalSaleDeadCount.GetValueOrDefault() +
+                                    TotalSaleConfiscatedCount.GetValueOrDefault() +
+                                    DeadCountCycle.GetValueOrDefault() +
+                                    DefectiveCountCycle.GetValueOrDefault();
+
+            return birdsAccountedFor - InsertionQuantity.GetValueOrDefault();
+        }
+    }
 }

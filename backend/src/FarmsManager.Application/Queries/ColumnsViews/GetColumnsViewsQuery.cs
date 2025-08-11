@@ -1,5 +1,4 @@
 ﻿using Ardalis.Specification;
-using AutoMapper;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.SeedWork.Entities;
