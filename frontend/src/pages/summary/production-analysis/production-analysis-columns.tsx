@@ -376,24 +376,28 @@ export const getProductionAnalysisColumns =
         headerName: "Kg/m² (przed konf.)",
         type: "number",
         width: 150,
+        valueGetter: (value: any) => (value ? `${value.toFixed(2)}` : ""),
       },
       {
         field: "kgPerM2AfterConf",
         headerName: "Kg/m² (po konf.)",
         type: "number",
         width: 140,
+        valueGetter: (value: any) => (value ? `${value.toFixed(2)}` : ""),
       },
       {
         field: "gasConsumptionLiters",
         headerName: "Zużycie gazu [L]",
         type: "number",
         width: 130,
+        valueGetter: (value: any) => (value ? `${value.toFixed(2)}` : ""),
       },
       {
         field: "gasConsumptionPerM2",
         headerName: "Gaz/m² [L]",
         type: "number",
         width: 110,
+        valueGetter: (value: any) => (value ? `${value.toFixed(2)}` : ""),
       },
 
       // --- Bilans ---
