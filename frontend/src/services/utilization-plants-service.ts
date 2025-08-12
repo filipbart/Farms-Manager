@@ -1,5 +1,6 @@
 import ApiUrl from "../common/ApiUrl";
 import type { PaginateModel } from "../common/interfaces/paginate";
+import type { UtilizationPlantFormValues } from "../components/modals/utilization-plants/edit-utilization-plant-modal";
 import type {
   AddUtilizationPlantFormData,
   UtilizationPlantRowModel,
@@ -19,7 +20,14 @@ export class UtilizationPlantsService {
     return await AxiosWrapper.post(ApiUrl.AddUtilizationPlant, data);
   }
 
+  public static async updateUtilizationPlantAsync(
+    id: string,
+    data: UtilizationPlantFormValues
+  ) {
+    return await AxiosWrapper.patch(ApiUrl.UpdateUtilizationPlant(id), data);
+  }
+
   public static async deleteUtilizationPlantAsync(id: string) {
-    return await AxiosWrapper.delete(ApiUrl.DeleteUtilizationPlant + "/" + id);
+    return await AxiosWrapper.delete(ApiUrl.DeleteUtilizationPlant(id));
   }
 }

@@ -1,4 +1,5 @@
 ﻿using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Common.Validators;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications.Farms;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
@@ -62,9 +63,10 @@ public class UpdateFarmCommandValidator : AbstractValidator<UpdateFarmCommand>
                 .NotEmpty().WithMessage("Nazwa jest wymagana.")
                 .MaximumLength(100);
 
-            RuleFor(x => x.Data.Nip)
-                .NotEmpty().WithMessage("NIP jest wymagany.")
-                .Length(10).WithMessage("NIP musi mieć dokładnie 10 cyfr.");
+            RuleFor(t => t.Data.Nip)
+                .NotEmpty()
+                .Must(ValidationHelpers.IsValidNip)
+                .WithMessage("Podany numer NIP jest nieprawidłowy.");
 
             RuleFor(x => x.Data.ProducerNumber)
                 .NotEmpty().WithMessage("Numer producenta jest wymagany.")

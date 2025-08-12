@@ -8,9 +8,13 @@ import { UtilizationPlantsService } from "../../../services/utilization-plants-s
 import type { UtilizationPlantRowModel } from "../../../models/utilization-plants/utilization-plants";
 import { useUtilizationPlants } from "../../../hooks/useUtilizationPlants";
 import AddUtilizationPlantModal from "../../../components/modals/utilization-plants/add-utilization-plant-modal";
+import EditUtilizationPlantModal from "../../../components/modals/utilization-plants/edit-utilization-plant-modal";
 
 const UtilizationPlantsPage: React.FC = () => {
   const [openAddModal, setOpenAddModal] = useState(false);
+  const [openEditModal, setOpenEditModal] = useState(false);
+  const [selectedPlant, setSelectedPlant] =
+    useState<UtilizationPlantRowModel | null>(null);
 
   const {
     utilizationPlants,
@@ -37,10 +41,25 @@ const UtilizationPlantsPage: React.FC = () => {
     [fetchUtilizationPlants]
   );
 
+  const handleEditOpen = (plant: UtilizationPlantRowModel) => {
+    setSelectedPlant(plant);
+    setOpenEditModal(true);
+  };
+
+  const handleEditClose = () => {
+    setOpenEditModal(false);
+    setSelectedPlant(null);
+  };
+
+  const handleEditSave = () => {
+    handleEditClose();
+    fetchUtilizationPlants();
+  };
+
   const columns: GridColDef<UtilizationPlantRowModel>[] = useMemo(
     () => [
       { field: "name", headerName: "Nazwa", flex: 1 },
-      { field: "irzNumber", headerName: "Numer IRZplus", flex: 1 },
+      { field: "irzNumber", headerName: "Numer IRZ", flex: 1 },
       { field: "nip", headerName: "NIP", flex: 1 },
       { field: "address", headerName: "Adres", flex: 1 },
       {
@@ -60,7 +79,12 @@ const UtilizationPlantsPage: React.FC = () => {
         filterable: false,
         renderCell: (params: GridRenderCellParams) => (
           <Box textAlign="center">
-            <Button variant="outlined">Edytuj</Button>
+            <Button
+              variant="outlined"
+              onClick={() => handleEditOpen(params.row)}
+            >
+              Edytuj
+            </Button>
             <Button
               variant="outlined"
               color="error"
@@ -76,11 +100,11 @@ const UtilizationPlantsPage: React.FC = () => {
     [handleDelete]
   );
 
-  const handleCloseModal = () => {
+  const handleAddClose = () => {
     setOpenAddModal(false);
   };
 
-  const handleSave = () => {
+  const handleAddSave = () => {
     setOpenAddModal(false);
     fetchUtilizationPlants();
   };
@@ -141,8 +165,15 @@ const UtilizationPlantsPage: React.FC = () => {
 
       <AddUtilizationPlantModal
         open={openAddModal}
-        onClose={handleCloseModal}
-        onSave={handleSave}
+        onClose={handleAddClose}
+        onSave={handleAddSave}
+      />
+
+      <EditUtilizationPlantModal
+        open={openEditModal}
+        onClose={handleEditClose}
+        onSave={handleEditSave}
+        utilizationPlantData={selectedPlant}
       />
     </Box>
   );

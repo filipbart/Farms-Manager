@@ -15,7 +15,6 @@ using FarmsManager.Domain.Aggregates.ProductionDataAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Enums;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Interfaces;
 using MediatR;
-using System.Linq;
 using FarmsManager.Application.Queries.Summary.ProductionAnalysis;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;

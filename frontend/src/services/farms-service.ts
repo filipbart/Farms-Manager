@@ -1,6 +1,7 @@
 import ApiUrl from "../common/ApiUrl";
 import type { PaginateModel } from "../common/interfaces/paginate";
-import type { FormValues } from "../components/modals/data/edit-farm-modal";
+import type { FarmFormValues } from "../components/modals/farms/edit-farm-modal";
+import type { HenhouseFormValues } from "../components/modals/farms/edit-henhouse-modal";
 import type FarmRowModel from "../models/farms/farm-row-model";
 import type { HouseRowModel } from "../models/farms/house-row-model";
 import type LatestCycle from "../models/farms/latest-cycle";
@@ -37,12 +38,12 @@ export class FarmsService {
     return await AxiosWrapper.post(ApiUrl.AddFarm, data);
   }
 
-  public static async updateFarmAsync(id: string, data: FormValues) {
+  public static async updateFarmAsync(id: string, data: FarmFormValues) {
     return await AxiosWrapper.patch(ApiUrl.UpdateFarm(id), data);
   }
 
   public static async deleteFarmAsync(id: string) {
-    return await AxiosWrapper.post(ApiUrl.DeleteFarm + "/" + id);
+    return await AxiosWrapper.post(ApiUrl.DeleteFarm(id));
   }
 
   public static async getFarmHousesAsync(farmId: string) {
@@ -56,6 +57,13 @@ export class FarmsService {
       ApiUrl.Farms + "/" + data.farmId + "/add-henhouse",
       data
     );
+  }
+
+  public static async updateHenhouseAsync(
+    id: string,
+    data: HenhouseFormValues
+  ) {
+    return await AxiosWrapper.patch(ApiUrl.UpdateHenhouse(id), data);
   }
 
   public static async deleteHenhouseAsync(id: string) {

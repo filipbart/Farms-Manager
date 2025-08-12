@@ -28,4 +28,12 @@ public class HenhouseEntity : Entity
             CreatedBy = userId
         };
     }
+
+    public void Update(string name, string code, int area, string description)
+    {
+        Name = name;
+        Code = code;
+        Area = area;
+        Description = description;
+    }
 }

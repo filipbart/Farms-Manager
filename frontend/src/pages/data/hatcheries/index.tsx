@@ -1,5 +1,5 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
-import { type GridColDef } from "@mui/x-data-grid";
+import { type GridColDef, type GridRenderCellParams } from "@mui/x-data-grid";
 import { useEffect, useMemo, useState } from "react";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import type { HatcheryRowModel } from "../../../models/hatcheries/hatchery-row-model";
@@ -7,10 +7,18 @@ import type { PaginateModel } from "../../../common/interfaces/paginate";
 import { HatcheriesService } from "../../../services/hatcheries-service";
 import AddHatcheryModal from "../../../components/modals/hatcheries/add-hatchery-modal";
 import { DataGridPro } from "@mui/x-data-grid-pro";
+import { toast } from "react-toastify";
+import EditHatcheryModal from "../../../components/modals/hatcheries/edit-hatchery-modal";
 
 const HatcheriesPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [hatcheries, setHatcheries] = useState<HatcheryRowModel[]>([]);
+
+  // Stany dla modali
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedHatchery, setSelectedHatchery] =
+    useState<HatcheryRowModel | null>(null);
 
   const fetchHatcheries = async () => {
     setLoading(true);
@@ -29,7 +37,28 @@ const HatcheriesPage: React.FC = () => {
     fetchHatcheries();
   }, []);
 
-  const columns: GridColDef[] = [
+  const handleAddOpen = () => setAddModalOpen(true);
+  const handleAddClose = () => setAddModalOpen(false);
+  const handleAddSave = async () => {
+    setAddModalOpen(false);
+    await fetchHatcheries();
+  };
+
+  const handleEditOpen = (hatchery: HatcheryRowModel) => {
+    setSelectedHatchery(hatchery);
+    setEditModalOpen(true);
+  };
+  const handleEditClose = () => {
+    setEditModalOpen(false);
+    setSelectedHatchery(null);
+  };
+  const handleEditSave = async () => {
+    setEditModalOpen(false);
+    setSelectedHatchery(null);
+    await fetchHatcheries();
+  };
+
+  const columns: GridColDef<HatcheryRowModel>[] = [
     { field: "name", headerName: "Nazwa", flex: 1 },
     { field: "fullName", headerName: "Pełna nazwa", flex: 1 },
     { field: "producerNumber", headerName: "Numer producenta", flex: 1 },
@@ -40,9 +69,7 @@ const HatcheriesPage: React.FC = () => {
       headerName: "Data utworzenia rekordu",
       type: "dateTime",
       flex: 1,
-      valueGetter: (params: any) => {
-        return params ? new Date(params) : null;
-      },
+      valueGetter: (value: any) => (value ? new Date(value) : null),
     },
     {
       field: "actions",
@@ -50,9 +77,11 @@ const HatcheriesPage: React.FC = () => {
       flex: 1,
       sortable: false,
       filterable: false,
-      renderCell: (params: any) => (
+      renderCell: (params: GridRenderCellParams<any, HatcheryRowModel>) => (
         <div className="text-center">
-          <Button variant="outlined">Edytuj</Button>
+          <Button variant="outlined" onClick={() => handleEditOpen(params.row)}>
+            Edytuj
+          </Button>
           <Button
             variant="outlined"
             color="error"
@@ -60,11 +89,13 @@ const HatcheriesPage: React.FC = () => {
             onClick={async () => {
               await handleApiResponse(
                 () => HatcheriesService.deleteHatcheryAsync(params.row.id),
-                undefined,
+                () => {
+                  toast.success("Wylęgarnia została usunięta");
+                  fetchHatcheries();
+                },
                 undefined,
                 "Nie udało się usunąć wylęgarni"
               );
-              await fetchHatcheries();
             }}
           >
             Usuń
@@ -73,18 +104,6 @@ const HatcheriesPage: React.FC = () => {
       ),
     },
   ];
-
-  const [openModal, setOpenModal] = useState(false);
-
-  const handleOpen = () => setOpenModal(true);
-  const handleClose = async () => {
-    setOpenModal(false);
-  };
-
-  const handleAddHatchery = async () => {
-    setOpenModal(false);
-    await fetchHatcheries();
-  };
 
   const data = useMemo(
     () => ({
@@ -106,7 +125,7 @@ const HatcheriesPage: React.FC = () => {
       >
         <Typography variant="h4">Wylęgarnie</Typography>
         <Box display="flex" gap={2}>
-          <Button variant="contained" color="primary" onClick={handleOpen}>
+          <Button variant="contained" color="primary" onClick={handleAddOpen}>
             Dodaj wylęgarnię
           </Button>
         </Box>
@@ -146,9 +165,16 @@ const HatcheriesPage: React.FC = () => {
       </Box>
 
       <AddHatcheryModal
-        open={openModal}
-        onClose={handleClose}
-        onSave={handleAddHatchery}
+        open={addModalOpen}
+        onClose={handleAddClose}
+        onSave={handleAddSave}
+      />
+
+      <EditHatcheryModal
+        open={editModalOpen}
+        onClose={handleEditClose}
+        onSave={handleEditSave}
+        hatcheryData={selectedHatchery}
       />
     </Box>
   );

@@ -27,4 +27,13 @@ public class HatcheryEntity : Entity
             CreatedBy = userId
         };
     }
+
+    public void Update(string name, string producerNumber, string fullName, string nip, string address)
+    {
+        Name = name;
+        ProducerNumber = producerNumber.Replace(" ", "").Trim();
+        FullName = fullName;
+        Nip = nip.Replace("PL", "").Replace("-", "").Replace(" ", "").Trim();
+        Address = address;
+    }
 }

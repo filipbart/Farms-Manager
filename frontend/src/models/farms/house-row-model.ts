@@ -3,7 +3,7 @@ export interface HouseRowModel {
   name: string;
   code: string;
   area: number;
-  desc: string;
+  description: string;
   farmId: string;
   dateCreatedUtc: Date;
 }

@@ -102,7 +102,7 @@ public class FarmsController(IMediator mediator) : BaseController
     }
 
     /// <summary>
-    /// Usuwa wybraną fermę
+    /// Usuwa wybrany kurnik
     /// </summary>
     /// <param name="henhouseId"></param>
     /// <returns></returns>
@@ -112,6 +112,20 @@ public class FarmsController(IMediator mediator) : BaseController
     public async Task<IActionResult> DeleteHenhouse([FromRoute] Guid henhouseId)
     {
         return Ok(await mediator.Send(new DeleteHenhouseCommand(henhouseId)));
+    }
+    
+    /// <summary>
+    /// Aktualizuje wybrany kurnik
+    /// </summary>
+    /// <param name="henhouseId"></param>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    [HttpPatch("henhouse/update/{henhouseId:guid}")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> UpdateHenhouse([FromRoute] Guid henhouseId, UpdateHenhouseDto data )
+    {
+        return Ok(await mediator.Send(new UpdateHenhouseCommand(henhouseId,data)));
     }
 
     /// <summary>

@@ -19,11 +19,18 @@ export default class ApiUrl {
   public static AddFarm = this.Farms + "/add";
   public static UpdateFarm = (id: string) => this.Farms + "/update/" + id;
   public static DeleteFarm = (id: string) => this.Farms + "/delete/" + id;
-  public static DeleteHenhouse = this.Farms + "/henhouse/delete";
+  public static UpdateHenhouse = (id: string) =>
+    this.Farms + "/henhouse/update/" + id;
+  public static DeleteHenhouse = (id: string) =>
+    this.Farms + "/henhouse/delete/" + id;
 
   public static Hatcheries = this.BaseUrl + "hatcheries";
   public static AddHatchery = this.Hatcheries + "/add";
-  public static DeleteHatchery = this.Hatcheries + "/delete";
+  public static UpdateHatchery = (id: string) =>
+    this.Hatcheries + "/update/" + id;
+  public static DeleteHatchery = (id: string) =>
+    this.Hatcheries + "/delete/" + id;
+
   public static HatcheriesPrices = this.Hatcheries + "/prices";
   public static HatcheriesPricesDictionary =
     this.HatcheriesPrices + "/dictionary";
@@ -41,11 +48,17 @@ export default class ApiUrl {
 
   public static Slaughterhouses = this.BaseUrl + "slaughterhouses";
   public static AddSlaughterhouse = this.Slaughterhouses + "/add";
-  public static DeleteSlaughterhouse = this.Slaughterhouses + "/delete";
+  public static UpdateSlaughterhouse = (id: string) =>
+    this.Slaughterhouses + "/update/" + id;
+  public static DeleteSlaughterhouse = (id: string) =>
+    this.Slaughterhouses + "/delete/" + id;
 
   public static UtilizationPlants = this.BaseUrl + "utilization-plants";
   public static AddUtilizationPlant = this.UtilizationPlants + "/add";
-  public static DeleteUtilizationPlant = this.UtilizationPlants + "/delete";
+  public static UpdateUtilizationPlant = (id: string) =>
+    this.UtilizationPlants + "/update/" + id;
+  public static DeleteUtilizationPlant = (id: string) =>
+    this.UtilizationPlants + "/delete/" + id;
 
   public static Insertions = this.BaseUrl + "insertions";
   public static UpdateInsertion = this.Insertions + "/update";

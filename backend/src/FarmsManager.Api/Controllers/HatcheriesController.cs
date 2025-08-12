@@ -36,6 +36,20 @@ public class HatcheriesController(IMediator mediator) : BaseController
     }
 
     /// <summary>
+    /// Aktualizuje wybraną wylęgarnię
+    /// </summary>
+    /// <param name="hatcheryId"></param>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    [HttpPatch("update/{hatcheryId:guid}")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> UpdateHatchery([FromRoute] Guid hatcheryId, UpdateHatcheryDto data)
+    {
+        return Ok(await mediator.Send(new UpdateHatcheryCommand(hatcheryId, data)));
+    }
+
+    /// <summary>
     /// Usuwa wybraną wylęgarnię
     /// </summary>
     /// <param name="hatcheryId"></param>

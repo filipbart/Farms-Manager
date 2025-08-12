@@ -35,6 +35,21 @@ public class SlaughterhousesController(IMediator mediator) : BaseController
     }
 
     /// <summary>
+    /// Aktualizuje ubojnię
+    /// </summary>
+    /// <param name="slaughterhouseId"></param>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    [HttpPatch("update/{slaughterhouseId:guid}")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> UpdateSlaughterhouse([FromRoute] Guid slaughterhouseId,
+        UpdateSlaughterhouseDto data)
+    {
+        return Ok(await mediator.Send(new UpdateSlaughterhouseCommand(slaughterhouseId, data)));
+    }
+
+    /// <summary>
     /// Usuwa wybraną ubojnię
     /// </summary>
     /// <param name="slaughterhouseId"></param>

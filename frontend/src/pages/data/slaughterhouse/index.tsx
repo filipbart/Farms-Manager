@@ -1,5 +1,5 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
-import { type GridColDef } from "@mui/x-data-grid";
+import { type GridColDef, type GridRenderCellParams } from "@mui/x-data-grid";
 import { useEffect, useMemo, useState } from "react";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import type { PaginateModel } from "../../../common/interfaces/paginate";
@@ -7,12 +7,19 @@ import type { SlaughterhouseRowModel } from "../../../models/slaughterhouses/sla
 import { SlaughterhousesService } from "../../../services/slaughterhouses-service";
 import AddSlaughterhouseModal from "../../../components/modals/slaughterhouses/add-slaugtherhouse-modal";
 import { DataGridPro } from "@mui/x-data-grid-pro";
+import { toast } from "react-toastify";
+import EditSlaughterhouseModal from "../../../components/modals/slaughterhouses/edit-slaughterhouse-modal";
 
 const SlaughterhousesPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
-  const [Slaughterhouses, setSlaughterhouses] = useState<
+  const [slaughterhouses, setSlaughterhouses] = useState<
     SlaughterhouseRowModel[]
   >([]);
+
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedSlaughterhouse, setSelectedSlaughterhouse] =
+    useState<SlaughterhouseRowModel | null>(null);
 
   const fetchSlaughterhouses = async () => {
     setLoading(true);
@@ -22,7 +29,7 @@ const SlaughterhousesPage: React.FC = () => {
         setSlaughterhouses(data.responseData?.items ?? []);
       },
       undefined,
-      "Nie udało się pobrać listy wylęgarń"
+      "Nie udało się pobrać listy ubojni"
     );
     setLoading(false);
   };
@@ -31,7 +38,28 @@ const SlaughterhousesPage: React.FC = () => {
     fetchSlaughterhouses();
   }, []);
 
-  const columns: GridColDef[] = [
+  const handleAddOpen = () => setAddModalOpen(true);
+  const handleAddClose = () => setAddModalOpen(false);
+  const handleAddSave = async () => {
+    setAddModalOpen(false);
+    await fetchSlaughterhouses();
+  };
+
+  const handleEditOpen = (slaughterhouse: SlaughterhouseRowModel) => {
+    setSelectedSlaughterhouse(slaughterhouse);
+    setEditModalOpen(true);
+  };
+  const handleEditClose = () => {
+    setEditModalOpen(false);
+    setSelectedSlaughterhouse(null);
+  };
+  const handleEditSave = async () => {
+    setEditModalOpen(false);
+    setSelectedSlaughterhouse(null);
+    await fetchSlaughterhouses();
+  };
+
+  const columns: GridColDef<SlaughterhouseRowModel>[] = [
     { field: "name", headerName: "Nazwa", flex: 1 },
     { field: "producerNumber", headerName: "Numer producenta", flex: 1 },
     { field: "nip", headerName: "NIP", flex: 1 },
@@ -41,9 +69,7 @@ const SlaughterhousesPage: React.FC = () => {
       headerName: "Data utworzenia rekordu",
       type: "dateTime",
       flex: 1,
-      valueGetter: (params: any) => {
-        return params ? new Date(params) : null;
-      },
+      valueGetter: (value: any) => (value ? new Date(value) : null),
     },
     {
       field: "actions",
@@ -51,9 +77,13 @@ const SlaughterhousesPage: React.FC = () => {
       flex: 1,
       sortable: false,
       filterable: false,
-      renderCell: (params: any) => (
+      renderCell: (
+        params: GridRenderCellParams<any, SlaughterhouseRowModel>
+      ) => (
         <div className="text-center">
-          <Button variant="outlined">Edytuj</Button>
+          <Button variant="outlined" onClick={() => handleEditOpen(params.row)}>
+            Edytuj
+          </Button>
           <Button
             variant="outlined"
             color="error"
@@ -64,11 +94,13 @@ const SlaughterhousesPage: React.FC = () => {
                   SlaughterhousesService.deleteSlaughterhouseAsync(
                     params.row.id
                   ),
+                () => {
+                  toast.success("Ubojnia została usunięta");
+                  fetchSlaughterhouses();
+                },
                 undefined,
-                undefined,
-                "Nie udało się usunąć wylęgarni"
+                "Nie udało się usunąć ubojni"
               );
-              await fetchSlaughterhouses();
             }}
           >
             Usuń
@@ -78,24 +110,12 @@ const SlaughterhousesPage: React.FC = () => {
     },
   ];
 
-  const [openModal, setOpenModal] = useState(false);
-
-  const handleOpen = () => setOpenModal(true);
-  const handleClose = async () => {
-    setOpenModal(false);
-  };
-
-  const handleAddSlaughterhouse = async () => {
-    setOpenModal(false);
-    await fetchSlaughterhouses();
-  };
-
   const data = useMemo(
     () => ({
-      rows: Slaughterhouses,
+      rows: slaughterhouses,
       columns: columns,
     }),
-    [Slaughterhouses]
+    [slaughterhouses]
   );
 
   return (
@@ -110,7 +130,7 @@ const SlaughterhousesPage: React.FC = () => {
       >
         <Typography variant="h4">Ubojnie</Typography>
         <Box display="flex" gap={2}>
-          <Button variant="contained" color="primary" onClick={handleOpen}>
+          <Button variant="contained" color="primary" onClick={handleAddOpen}>
             Dodaj ubojnię
           </Button>
         </Box>
@@ -135,7 +155,7 @@ const SlaughterhousesPage: React.FC = () => {
           rowSelection={false}
           showToolbar={false}
           sx={{
-            minHeight: Slaughterhouses.length === 0 ? 300 : "auto",
+            minHeight: slaughterhouses.length === 0 ? 300 : "auto",
             [`& .${tablePaginationClasses.selectLabel}`]: {
               display: "block",
             },
@@ -150,9 +170,16 @@ const SlaughterhousesPage: React.FC = () => {
       </Box>
 
       <AddSlaughterhouseModal
-        open={openModal}
-        onClose={handleClose}
-        onSave={handleAddSlaughterhouse}
+        open={addModalOpen}
+        onClose={handleAddClose}
+        onSave={handleAddSave}
+      />
+
+      <EditSlaughterhouseModal
+        open={editModalOpen}
+        onClose={handleEditClose}
+        onSave={handleEditSave}
+        slaughterhouseData={selectedSlaughterhouse}
       />
     </Box>
   );

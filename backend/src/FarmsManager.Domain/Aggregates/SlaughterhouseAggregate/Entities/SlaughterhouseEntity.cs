@@ -26,4 +26,12 @@ public class SlaughterhouseEntity : Entity
             CreatedBy = userId
         };
     }
+
+    public void Update(string name, string producerNumber, string nip, string address)
+    {
+        Name = name;
+        ProducerNumber = producerNumber.Replace(" ", "").Trim();
+        Nip = nip.Replace("PL", "").Replace("-", "").Replace(" ", "").Trim();
+        Address = address;
+    }
 }

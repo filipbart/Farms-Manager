@@ -6,7 +6,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { type GridColDef } from "@mui/x-data-grid";
+import { type GridColDef, type GridRenderCellParams } from "@mui/x-data-grid";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FarmsService } from "../../../services/farms-service";
 import type FarmRowModel from "../../../models/farms/farm-row-model";
@@ -18,6 +18,7 @@ import AddHenhouseModal from "../../../components/modals/farms/add-henhouse-moda
 import { toast } from "react-toastify";
 import { useFarms } from "../../../hooks/useFarms";
 import { DataGridPro } from "@mui/x-data-grid-pro";
+import EditHenhouseModal from "../../../components/modals/farms/edit-henhouse-modal";
 
 const HousesPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -26,12 +27,18 @@ const HousesPage: React.FC = () => {
   const [henhouses, setHenhouses] = useState<HouseRowModel[]>([]);
   const [chosenFarm, setChosenFarm] = useState<FarmRowModel>();
 
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedHenhouse, setSelectedHenhouse] =
+    useState<HouseRowModel | null>(null);
+
   const setChosenFarmCallback = useCallback((chosenFarm: FarmRowModel) => {
     setChosenFarm(chosenFarm);
     fetchHouses(chosenFarm.id);
   }, []);
 
   const fetchHouses = async (farmId: string) => {
+    if (!farmId) return;
     setLoading(true);
     await handleApiResponse<PaginateModel<HouseRowModel>>(
       () => FarmsService.getFarmHousesAsync(farmId),
@@ -48,19 +55,38 @@ const HousesPage: React.FC = () => {
     fetchFarms();
   }, []);
 
-  const columns: GridColDef[] = [
+  const handleAddOpen = () => setAddModalOpen(true);
+  const handleAddClose = () => setAddModalOpen(false);
+  const handleAddSave = async () => {
+    setAddModalOpen(false);
+    await fetchHouses(chosenFarm?.id ?? "");
+  };
+
+  const handleEditOpen = (henhouse: HouseRowModel) => {
+    setSelectedHenhouse(henhouse);
+    setEditModalOpen(true);
+  };
+  const handleEditClose = () => {
+    setEditModalOpen(false);
+    setSelectedHenhouse(null);
+  };
+  const handleEditSave = async () => {
+    setEditModalOpen(false);
+    setSelectedHenhouse(null);
+    await fetchHouses(chosenFarm?.id ?? "");
+  };
+
+  const columns: GridColDef<HouseRowModel>[] = [
     { field: "name", headerName: "Nazwa", flex: 1 },
     { field: "code", headerName: "ID Budynku", flex: 1 },
-    { field: "area", headerName: "Powierzchnia (m²)", flex: 1 },
-    { field: "desc", headerName: "Opis", flex: 1 },
+    { field: "area", headerName: "Powierzchnia (m²)", type: "number", flex: 1 },
+    { field: "description", headerName: "Opis", flex: 1 },
     {
       field: "dateCreatedUtc",
       headerName: "Data utworzenia rekordu",
       type: "dateTime",
       flex: 2,
-      valueGetter: (params: any) => {
-        return params ? new Date(params) : null;
-      },
+      valueGetter: (value: any) => (value ? new Date(value) : null),
     },
     {
       field: "actions",
@@ -68,9 +94,11 @@ const HousesPage: React.FC = () => {
       flex: 2,
       sortable: false,
       filterable: false,
-      renderCell: (params: any) => (
+      renderCell: (params: GridRenderCellParams<any, HouseRowModel>) => (
         <div className="text-center">
-          <Button variant="outlined">Edytuj</Button>
+          <Button variant="outlined" onClick={() => handleEditOpen(params.row)}>
+            Edytuj
+          </Button>
           <Button
             variant="outlined"
             color="error"
@@ -79,11 +107,13 @@ const HousesPage: React.FC = () => {
               setLoading(true);
               await handleApiResponse(
                 () => FarmsService.deleteHenhouseAsync(params.row.id),
-                () => toast.success("Kurnik został usunięty"),
+                async () => {
+                  toast.success("Kurnik został usunięty");
+                  await fetchHouses(chosenFarm?.id ?? "");
+                },
                 undefined,
                 "Nie udało się usunąć kurnika"
               );
-              await fetchHouses(chosenFarm?.id ?? "");
               setLoading(false);
             }}
           >
@@ -93,18 +123,6 @@ const HousesPage: React.FC = () => {
       ),
     },
   ];
-
-  const [openModal, setOpenModal] = useState(false);
-
-  const handleOpen = () => setOpenModal(true);
-  const handleClose = async () => {
-    setOpenModal(false);
-  };
-
-  const handleAddHenhouse = async () => {
-    setOpenModal(false);
-    await fetchHouses(chosenFarm?.id ?? "");
-  };
 
   const data = useMemo(
     () => ({
@@ -129,7 +147,7 @@ const HousesPage: React.FC = () => {
           <Button
             variant="contained"
             color="primary"
-            onClick={handleOpen}
+            onClick={handleAddOpen}
             disabled={chosenFarm === undefined}
           >
             Dodaj kurnik
@@ -166,17 +184,10 @@ const HousesPage: React.FC = () => {
         )}
       </Box>
 
-      <Box
-        mt={4}
-        sx={{
-          width: "100%",
-          overflowX: "auto",
-        }}
-      >
+      <Box mt={4} sx={{ width: "100%", overflowX: "auto" }}>
         <DataGridPro
           loading={loading}
           {...data}
-          columns={columns}
           localeText={{
             noRowsLabel:
               chosenFarm === undefined ? "Wybierz fermę" : "Brak wpisów",
@@ -184,27 +195,27 @@ const HousesPage: React.FC = () => {
           }}
           hideFooterPagination
           rowSelection={false}
-          showToolbar={false}
           sx={{
             minHeight: henhouses.length === 0 ? 300 : "auto",
-            [`& .${tablePaginationClasses.selectLabel}`]: {
-              display: "block",
-            },
-            [`& .${tablePaginationClasses.input}`]: {
-              display: "inline-flex",
-            },
-            "& .MuiDataGrid-columnHeaders": {
-              borderTop: "none",
-            },
+            [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },
+            [`& .${tablePaginationClasses.input}`]: { display: "inline-flex" },
+            "& .MuiDataGrid-columnHeaders": { borderTop: "none" },
           }}
         />
       </Box>
 
       <AddHenhouseModal
         farmId={chosenFarm?.id ?? ""}
-        open={openModal}
-        onClose={handleClose}
-        onSave={handleAddHenhouse}
+        open={addModalOpen}
+        onClose={handleAddClose}
+        onSave={handleAddSave}
+      />
+
+      <EditHenhouseModal
+        open={editModalOpen}
+        onClose={handleEditClose}
+        onSave={handleEditSave}
+        henhouseData={selectedHenhouse}
       />
     </Box>
   );

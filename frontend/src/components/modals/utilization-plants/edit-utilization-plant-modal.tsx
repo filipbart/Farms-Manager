@@ -1,31 +1,31 @@
 import { Box, Button, Modal, TextField, Typography } from "@mui/material";
 import { useEffect } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
-import { FarmsService } from "../../../services/farms-service";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import { MdSave } from "react-icons/md";
 import LoadingButton from "../../common/loading-button";
+import { UtilizationPlantsService } from "../../../services/utilization-plants-service";
 
-export interface FarmData {
+export interface UtilizationPlantData {
   id: string;
   name: string;
+  irzNumber: string;
   nip: string;
-  producerNumber: string;
   address: string;
 }
 
-export type FormValues = {
+export type UtilizationPlantFormValues = {
   name: string;
+  irzNumber: string;
   nip: string;
-  producerNumber: string;
   address: string;
 };
 
-interface EditFarmModalProps {
+interface EditUtilizationPlantModalProps {
   open: boolean;
   onClose: () => void;
   onSave: () => void;
-  farmData: FarmData | null;
+  utilizationPlantData: UtilizationPlantData | null;
 }
 
 const style = {
@@ -40,35 +40,39 @@ const style = {
   borderRadius: 2,
 };
 
-const EditFarmModal: React.FC<EditFarmModalProps> = ({
+const EditUtilizationPlantModal: React.FC<EditUtilizationPlantModalProps> = ({
   open,
   onClose,
   onSave,
-  farmData,
+  utilizationPlantData,
 }) => {
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<FormValues>();
+  } = useForm<UtilizationPlantFormValues>();
 
   useEffect(() => {
-    if (farmData) {
-      reset(farmData);
+    if (utilizationPlantData) {
+      reset(utilizationPlantData);
     }
-  }, [farmData, reset]);
+  }, [utilizationPlantData, reset]);
 
-  const onSubmit: SubmitHandler<FormValues> = async (data) => {
-    if (!farmData) return;
+  const onSubmit: SubmitHandler<UtilizationPlantFormValues> = async (data) => {
+    if (!utilizationPlantData) return;
 
     await handleApiResponse(
-      () => FarmsService.updateFarmAsync(farmData.id, data),
+      () =>
+        UtilizationPlantsService.updateUtilizationPlantAsync(
+          utilizationPlantData.id,
+          data
+        ),
       () => {
         onSave();
       },
       undefined,
-      "Nie udało się zaktualizować danych fermy"
+      "Nie udało się zaktualizować danych zakładu utylizacyjnego"
     );
   };
 
@@ -76,7 +80,7 @@ const EditFarmModal: React.FC<EditFarmModalProps> = ({
     <Modal open={open} onClose={onClose}>
       <Box sx={style}>
         <Typography variant="h6" component="h2">
-          Edytuj fermę
+          Edytuj zakład utylizacyjny
         </Typography>
         <Box
           mt={2}
@@ -97,25 +101,33 @@ const EditFarmModal: React.FC<EditFarmModalProps> = ({
             fullWidth
             margin="normal"
             label="NIP"
-            {...register("nip", { required: "To pole jest wymagane" })}
+            {...register("nip", {
+              required: "To pole jest wymagane",
+              pattern: {
+                value: /^[0-9]{10}$/,
+                message: "NIP musi składać się z 10 cyfr",
+              },
+            })}
             error={!!errors.nip}
             helperText={errors.nip?.message}
           />
           <TextField
             fullWidth
             margin="normal"
-            label="Numer producenta"
-            {...register("producerNumber", {
+            label="Numer IRZ"
+            {...register("irzNumber", {
               required: "To pole jest wymagane",
             })}
-            error={!!errors.producerNumber}
-            helperText={errors.producerNumber?.message}
+            error={!!errors.irzNumber}
+            helperText={errors.irzNumber?.message}
           />
           <TextField
             fullWidth
             margin="normal"
             label="Adres"
             {...register("address")}
+            error={!!errors.address}
+            helperText={errors.address?.message}
           />
 
           <Box
@@ -145,4 +157,4 @@ const EditFarmModal: React.FC<EditFarmModalProps> = ({
   );
 };
 
-export default EditFarmModal;
+export default EditUtilizationPlantModal;

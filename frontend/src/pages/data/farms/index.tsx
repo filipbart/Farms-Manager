@@ -7,7 +7,7 @@ import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import { useFarms } from "../../../hooks/useFarms";
 import { DataGridPro } from "@mui/x-data-grid-pro";
 import ActionsCell from "../../../components/datagrid/actions-cell";
-import EditFarmModal from "../../../components/modals/data/edit-farm-modal";
+import EditFarmModal from "../../../components/modals/farms/edit-farm-modal";
 
 type FarmRow = {
   id: string;

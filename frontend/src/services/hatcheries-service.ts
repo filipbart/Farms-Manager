@@ -1,5 +1,6 @@
 import ApiUrl from "../common/ApiUrl";
 import type { PaginateModel } from "../common/interfaces/paginate";
+import type { HatcheryFormValues } from "../components/modals/hatcheries/edit-hatchery-modal";
 import type {
   GetNotesResponse,
   HatcheryNoteData,
@@ -35,8 +36,15 @@ export class HatcheriesService {
     return await AxiosWrapper.post(ApiUrl.AddHatchery, data);
   }
 
+  public static async updateHatcheryAsync(
+    id: string,
+    data: HatcheryFormValues
+  ) {
+    return await AxiosWrapper.patch(ApiUrl.UpdateHatchery(id), data);
+  }
+
   public static async deleteHatcheryAsync(id: string) {
-    return await AxiosWrapper.post(ApiUrl.DeleteHatchery + "/" + id);
+    return await AxiosWrapper.post(ApiUrl.DeleteHatchery(id));
   }
 
   public static async getPricesDictionary() {

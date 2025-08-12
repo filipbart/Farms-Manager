@@ -1,5 +1,6 @@
 import ApiUrl from "../common/ApiUrl";
 import type { PaginateModel } from "../common/interfaces/paginate";
+import type { SlaughterhouseFormValues } from "../components/modals/slaughterhouses/edit-slaughterhouse-modal";
 import type { SlaughterhouseRowModel } from "../models/slaughterhouses/slaughterhouse-row-model";
 import AxiosWrapper from "../utils/axios/wrapper";
 
@@ -22,7 +23,14 @@ export class SlaughterhousesService {
     return await AxiosWrapper.post(ApiUrl.AddSlaughterhouse, data);
   }
 
+  public static async updateSlaughterhouseAsync(
+    id: string,
+    data: SlaughterhouseFormValues
+  ) {
+    return await AxiosWrapper.patch(ApiUrl.UpdateSlaughterhouse(id), data);
+  }
+
   public static async deleteSlaughterhouseAsync(id: string) {
-    return await AxiosWrapper.post(ApiUrl.DeleteSlaughterhouse + "/" + id);
+    return await AxiosWrapper.post(ApiUrl.DeleteSlaughterhouse(id));
   }
 }
