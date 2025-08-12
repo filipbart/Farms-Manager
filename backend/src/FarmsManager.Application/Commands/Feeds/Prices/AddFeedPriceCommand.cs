@@ -5,6 +5,7 @@ using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Application.Specifications.Cycle;
 using FarmsManager.Application.Specifications.Farms;
+using FarmsManager.Application.Specifications.Feeds;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
@@ -55,6 +56,7 @@ public class AddFeedPriceCommandHandler : IRequestHandler<AddFeedPriceCommand, E
 
         var newFeedPrice =
             FeedPriceEntity.CreateNew(farm.Id, cycle.Id, request.PriceDate, feedNameEntity.Name, request.Price, userId);
+        await _feedPriceRepository.AddAsync(newFeedPrice, ct);
 
         var feedsInvoices =
             await _feedInvoiceRepository.ListAsync(
@@ -64,12 +66,17 @@ public class AddFeedPriceCommandHandler : IRequestHandler<AddFeedPriceCommand, E
             foreach (var feedInvoiceEntity in feedsInvoices.Where(feedInvoiceEntity =>
                          feedInvoiceEntity.UnitPrice != newFeedPrice.Price))
             {
-                feedInvoiceEntity.SetCorrectUnitPrice(newFeedPrice.Price);
+                var feedPrices =
+                    await _feedPriceRepository.ListAsync(
+                        new GetFeedPriceForFeedInvoiceSpec(feedInvoiceEntity.FarmId, feedInvoiceEntity.ItemName,
+                            feedInvoiceEntity.InvoiceDate),
+                        ct);
+
+                feedInvoiceEntity.CheckUnitPrice(feedPrices);
                 await _feedInvoiceRepository.UpdateAsync(feedInvoiceEntity, ct);
             }
         }
 
-        await _feedPriceRepository.AddAsync(newFeedPrice, ct);
         return new EmptyBaseResponse();
     }
 }

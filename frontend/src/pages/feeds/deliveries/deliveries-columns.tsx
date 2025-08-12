@@ -70,7 +70,13 @@ export const getFeedsDeliveriesColumns = ({
           <Box display="flex" alignItems="center" gap={1}>
             <span>{formattedPrice}</span>
             {correctUnitPrice != null && (
-              <Tooltip title={`Prawidłowa cena: ${formattedCorrectPrice} zł`}>
+              <Tooltip
+                title={
+                  correctUnitPrice === -1
+                    ? "Sprawdź cenę"
+                    : `Prawidłowa cena: ${formattedCorrectPrice} zł`
+                }
+              >
                 <MdWarningAmber style={{ fontSize: 20, color: red[700] }} />
               </Tooltip>
             )}

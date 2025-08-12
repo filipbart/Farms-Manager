@@ -120,7 +120,10 @@ public class
 
         var total = combined.Count;
         var skip = request.Filters.Page * request.Filters.PageSize;
-        var pageItems = combined.Skip(skip).Take(request.Filters.PageSize).ToList();
+
+        var pageItems = request.Filters.PageSize == -1
+            ? combined
+            : combined.Skip(skip).Take(request.Filters.PageSize).ToList();
 
         return BaseResponse.CreateResponse(new GetFeedsDeliveriesQueryResponse
         {

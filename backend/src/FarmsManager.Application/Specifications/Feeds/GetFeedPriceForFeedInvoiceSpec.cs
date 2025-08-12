@@ -3,8 +3,7 @@ using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
 
 namespace FarmsManager.Application.Specifications.Feeds;
 
-public sealed class GetFeedPriceForFeedInvoiceSpec : BaseSpecification<FeedPriceEntity>,
-    ISingleResultSpecification<FeedPriceEntity>
+public sealed class GetFeedPriceForFeedInvoiceSpec : BaseSpecification<FeedPriceEntity>
 {
     public GetFeedPriceForFeedInvoiceSpec(Guid farmId, string feedName, DateOnly invoiceDate)
     {

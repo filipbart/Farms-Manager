@@ -122,7 +122,7 @@ public class
 
         foreach (var feedInvoiceEntity in feedInvoices)
         {
-            feedInvoiceEntity.SetCorrectUnitPrice(null);
+            feedInvoiceEntity.SetAsNullCorrectUnitPrice();
             feedInvoiceEntity.SetInvoiceCorrectionId(newCorrection.Id);
             feedInvoiceEntity.SetComment(comment);
         }

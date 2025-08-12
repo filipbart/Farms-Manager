@@ -39,7 +39,23 @@ public class FeedInvoiceEntity : Entity
     public Guid? InvoiceCorrectionId { get; private set; }
     public Guid? PaymentId { get; private set; }
 
-    public void SetCorrectUnitPrice(decimal? correctUnitPrice) => CorrectUnitPrice = correctUnitPrice;
+
+    public void SetAsNullCorrectUnitPrice() => CorrectUnitPrice = null;
+
+    public void CheckUnitPrice(List<FeedPriceEntity> feedPrices)
+    {
+        if (feedPrices.Count == 0) return;
+
+        var feedPrice = feedPrices.FirstOrDefault(f => f.Price == UnitPrice);
+
+        if (feedPrice is not null)
+            return;
+
+        if (feedPrices.Count == 1)
+            CorrectUnitPrice = feedPrices[0].Price;
+        else
+            CorrectUnitPrice = -1;
+    }
 
     public void MarkAsPaid(Guid paymentId)
     {
