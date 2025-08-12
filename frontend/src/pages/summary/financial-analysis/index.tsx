@@ -1,12 +1,6 @@
 import { Box, tablePaginationClasses, Typography } from "@mui/material";
 import { useEffect, useMemo, useReducer, useState } from "react";
 import { toast } from "react-toastify";
-import {
-  filterReducer,
-  initialFilters,
-  type AnalysisDictionary,
-} from "../../../models/summary/analysis-filters";
-import type { ProductionAnalysisRowModel } from "../../../models/summary/production-analysis";
 import type { CycleDictModel } from "../../../models/common/dictionaries";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import { SummaryService } from "../../../services/summary-service";
@@ -15,9 +9,6 @@ import {
   type GridToolbarProps,
   useGridApiRef,
 } from "@mui/x-data-grid-premium";
-import { getProductionAnalysisColumns } from "./production-analysis-columns";
-import FiltersForm from "../../../components/filters/filters-form";
-import { getSummaryAnalysisFiltersConfig } from "../filter-config.summary-analysis";
 import NoRowsOverlay from "../../../components/datagrid/custom-norows";
 import CustomToolbarAnalysis from "../../../components/datagrid/custom-toolbar-analysis";
 import {
@@ -25,14 +16,23 @@ import {
   ColumnsViewsService,
   type ColumnViewRow,
 } from "../../../services/columns-views-service";
+import {
+  filterReducer,
+  initialFilters,
+  type AnalysisDictionary,
+} from "../../../models/summary/analysis-filters";
+import type { FinancialAnalysisRowModel } from "../../../models/summary/financial-analysis";
+import { getSummaryAnalysisFiltersConfig } from "../filter-config.summary-analysis";
+import FiltersForm from "../../../components/filters/filters-form";
+import { getFinancialAnalysisColumns } from "./financial-analysis-columns";
 
-const SummaryProductionAnalysisPage: React.FC = () => {
+const SummaryFinancialAnalysisPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
   const [dictionary, setDictionary] = useState<AnalysisDictionary>();
   const [loading, setLoading] = useState(false);
-  const [analysisData, setAnalysisData] = useState<
-    ProductionAnalysisRowModel[]
-  >([]);
+  const [analysisData, setAnalysisData] = useState<FinancialAnalysisRowModel[]>(
+    []
+  );
   const [totalRows, setTotalRows] = useState(0);
 
   const apiRef = useGridApiRef();
@@ -41,7 +41,7 @@ const SummaryProductionAnalysisPage: React.FC = () => {
 
   const [visibilityModel, setVisibilityModel] = useState(() => {
     const saved = localStorage.getItem(
-      "columnVisibilityModelProductionAnalysis"
+      "columnVisibilityModelFinancialAnalysis"
     );
     return saved ? JSON.parse(saved) : {};
   });
@@ -62,7 +62,7 @@ const SummaryProductionAnalysisPage: React.FC = () => {
     await handleApiResponse(
       () =>
         ColumnsViewsService.getColumnsViews(
-          ColumnViewType.SummaryProductionAnalysis
+          ColumnViewType.SummaryProductionFinancial
         ),
       (data) => {
         setSavedViews(data.responseData?.items ?? []);
@@ -96,7 +96,8 @@ const SummaryProductionAnalysisPage: React.FC = () => {
       setLoading(true);
       try {
         await handleApiResponse(
-          () => SummaryService.getProductionAnalysis(filters),
+          // ZMIANA: Wywołanie serwisu dla analizy finansowej
+          () => SummaryService.getFinancialAnalysis(filters),
           (data) => {
             setAnalysisData(data.responseData?.items ?? []);
             setTotalRows(data.responseData?.totalRows ?? 0);
@@ -120,7 +121,7 @@ const SummaryProductionAnalysisPage: React.FC = () => {
         ColumnsViewsService.addColumnView({
           name: name.trim(),
           state: JSON.stringify(currentState),
-          type: ColumnViewType.SummaryProductionAnalysis,
+          type: ColumnViewType.SummaryProductionFinancial,
         }),
       async () => {
         toast.success(`Widok "${name}" został zapisany.`);
@@ -145,7 +146,7 @@ const SummaryProductionAnalysisPage: React.FC = () => {
 
   const handleDeleteView = async (id: string) => {
     await handleApiResponse(
-      () => ColumnsViewsService.deleteColumnView(id), // Corrected method name
+      () => ColumnsViewsService.deleteColumnView(id),
       () => {
         toast.success("Widok został usunięty.");
         if (selectedView === id) {
@@ -158,10 +159,9 @@ const SummaryProductionAnalysisPage: React.FC = () => {
     );
   };
 
-  const columns = useMemo(() => getProductionAnalysisColumns(), []);
+  const columns = useMemo(() => getFinancialAnalysisColumns(), []);
 
-  // Pass the state and handlers down to the toolbar component
-  const SummaryProductionToolbar = (props: GridToolbarProps) => {
+  const SummaryFinancialToolbar = (props: GridToolbarProps) => {
     return (
       <CustomToolbarAnalysis
         {...props}
@@ -177,7 +177,7 @@ const SummaryProductionAnalysisPage: React.FC = () => {
   return (
     <Box p={4}>
       <Box mb={2}>
-        <Typography variant="h4">Analiza produkcyjna</Typography>
+        <Typography variant="h4">Analiza finansowa</Typography>{" "}
       </Box>
 
       <FiltersForm
@@ -192,7 +192,7 @@ const SummaryProductionAnalysisPage: React.FC = () => {
 
       <Box mt={4} sx={{ width: "100%", overflowX: "auto" }}>
         <DataGridPremium
-          apiRef={apiRef} // Attach the apiRef to the grid
+          apiRef={apiRef}
           loading={loading}
           rows={analysisData}
           columns={columns}
@@ -200,14 +200,14 @@ const SummaryProductionAnalysisPage: React.FC = () => {
           onColumnVisibilityModelChange={(model) => {
             setVisibilityModel(model);
             localStorage.setItem(
-              "columnVisibilityModelProductionAnalysis",
+              "columnVisibilityModelFinancialAnalysis",
               JSON.stringify(model)
             );
           }}
           scrollbarSize={17}
           initialState={{
             pinnedColumns: {
-              left: ["cycleText", "farmName", "henhouseName", "hatcheryName"],
+              left: ["cycleText", "farmName"],
             },
           }}
           paginationMode="server"
@@ -226,7 +226,7 @@ const SummaryProductionAnalysisPage: React.FC = () => {
           rowSelection={false}
           pageSizeOptions={[5, 10, 25, { value: -1, label: "Wszystkie" }]}
           slots={{
-            toolbar: SummaryProductionToolbar,
+            toolbar: SummaryFinancialToolbar,
             noRowsOverlay: NoRowsOverlay,
           }}
           showToolbar
@@ -240,4 +240,4 @@ const SummaryProductionAnalysisPage: React.FC = () => {
   );
 };
 
-export default SummaryProductionAnalysisPage;
+export default SummaryFinancialAnalysisPage;

@@ -5,13 +5,13 @@ import type {
 } from "../common/dictionaries";
 import type { OrderedPaginationParams } from "../common/pagination-params";
 
-export interface ProductionAnalysisDictionary {
+export interface AnalysisDictionary {
   farms: FarmDictModel[];
   hatcheries: DictModel[];
   cycles: CycleDictModel[];
 }
 
-export const initialFilters: ProductionAnalysisFilterPaginationModel = {
+export const initialFilters: AnalysisFilterPaginationModel = {
   farmIds: [],
   cycles: [],
   henhouseIds: [],
@@ -23,18 +23,18 @@ export const initialFilters: ProductionAnalysisFilterPaginationModel = {
 };
 
 export function filterReducer(
-  state: ProductionAnalysisFilterPaginationModel,
+  state: AnalysisFilterPaginationModel,
   action:
     | {
         type: "set";
-        key: keyof ProductionAnalysisFilterPaginationModel;
+        key: keyof AnalysisFilterPaginationModel;
         value: any;
       }
     | {
         type: "setMultiple";
-        payload: Partial<ProductionAnalysisFilterPaginationModel>;
+        payload: Partial<AnalysisFilterPaginationModel>;
       }
-): ProductionAnalysisFilterPaginationModel {
+): AnalysisFilterPaginationModel {
   switch (action.type) {
     case "set":
       return { ...state, [action.key]: action.value };
@@ -45,7 +45,7 @@ export function filterReducer(
   }
 }
 
-export default interface ProductionAnalysisFilter {
+export default interface AnalysisFilter {
   farmIds: string[];
   cycles: CycleDictModel[];
   henhouseIds: string[];
@@ -54,6 +54,6 @@ export default interface ProductionAnalysisFilter {
   dateTo: string;
 }
 
-export interface ProductionAnalysisFilterPaginationModel
-  extends ProductionAnalysisFilter,
+export interface AnalysisFilterPaginationModel
+  extends AnalysisFilter,
     OrderedPaginationParams {}

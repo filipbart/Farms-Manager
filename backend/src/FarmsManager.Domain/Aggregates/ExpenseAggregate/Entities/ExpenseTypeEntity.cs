@@ -9,12 +9,14 @@ public class ExpenseTypeEntity : Entity
     }
 
     public string Name { get; init; }
+    public bool NonRemovable { get; init; }
 
     public static ExpenseTypeEntity CreateNew(string name, Guid? userId = null)
     {
         return new ExpenseTypeEntity
         {
             Name = name,
+            NonRemovable = false,
             CreatedBy = userId
         };
     }

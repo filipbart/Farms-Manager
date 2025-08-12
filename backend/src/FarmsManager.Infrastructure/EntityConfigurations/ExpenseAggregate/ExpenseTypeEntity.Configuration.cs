@@ -1,4 +1,5 @@
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace FarmsManager.Infrastructure.EntityConfigurations.ExpenseAggregate;
@@ -11,5 +12,6 @@ public class ExpenseTypeEntityConfiguration : BaseConfiguration<ExpenseTypeEntit
 
         builder.HasKey(t => t.Id);
         builder.Property(t => t.Name).HasMaxLength(200).IsRequired();
+        builder.Property(t => t.NonRemovable).IsRequired().HasDefaultValue(false);
     }
 }
