@@ -1,6 +1,9 @@
+import type { CycleDictModel } from "../../common/dictionaries";
 import type { OrderedPaginationParams } from "../../common/pagination-params";
 
 export const initialFilters: FeedsPaymentsFilterPaginationModel = {
+  farmIds: [],
+  cycles: [],
   page: 0,
   pageSize: 10,
 };
@@ -32,8 +35,10 @@ export enum FeedsPaymentsOrderType {
   DateCreatedUtc = "DateCreatedUtc",
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export default interface FeedsPaymentsFilter {}
+export default interface FeedsPaymentsFilter {
+  farmIds: string[];
+  cycles: CycleDictModel[];
+}
 
 export interface FeedsPaymentsFilterPaginationModel
   extends FeedsPaymentsFilter,

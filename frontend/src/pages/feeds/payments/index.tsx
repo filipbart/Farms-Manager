@@ -17,9 +17,14 @@ import {
   initialFilters,
 } from "../../../models/feeds/payments/payments-filters";
 import { mapFeedsPaymentsOrderTypeToField } from "../../../common/helpers/feeds-payment-order-type-helper";
+import type { FeedsDictionary } from "../../../models/feeds/feeds-dictionary";
+import type { CycleDictModel } from "../../../models/common/dictionaries";
+import FiltersForm from "../../../components/filters/filters-form";
+import { getFeedsPaymentsFiltersConfig } from "./filter-config.feeds-payments";
 
 const FeedsPaymentsPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
+  const [dictionary, setDictionary] = useState<FeedsDictionary>();
 
   const [loading, setLoading] = useState(false);
   const [feedsPayments, setFeedsPayments] = useState<FeedPaymentListModel[]>(
@@ -76,6 +81,18 @@ const FeedsPaymentsPage: React.FC = () => {
       errorMessage: "Błąd podczas pobierania przelewu",
     });
   };
+  const fetchDictionaries = async () => {
+    try {
+      await handleApiResponse(
+        () => FeedsService.getDictionaries(),
+        (data) => setDictionary(data.responseData),
+        undefined,
+        "Błąd podczas pobierania słowników filtrów"
+      );
+    } catch {
+      toast.error("Błąd podczas pobierania słowników filtrów");
+    }
+  };
 
   const columns = useMemo(
     () =>
@@ -88,8 +105,24 @@ const FeedsPaymentsPage: React.FC = () => {
   );
 
   useEffect(() => {
+    fetchDictionaries();
+  }, []);
+
+  useEffect(() => {
     fetchFeedsPayments();
   }, [filters]);
+
+  const uniqueCycles = useMemo(() => {
+    if (!dictionary) return [];
+    const map = new Map<string, CycleDictModel>();
+    for (const cycle of dictionary.cycles) {
+      const key = `${cycle.identifier}-${cycle.year}`;
+      if (!map.has(key)) {
+        map.set(key, cycle);
+      }
+    }
+    return Array.from(map.values());
+  }, [dictionary]);
 
   return (
     <Box p={4}>
@@ -103,6 +136,12 @@ const FeedsPaymentsPage: React.FC = () => {
       >
         <Typography variant="h4">Przelewy</Typography>
       </Box>
+
+      <FiltersForm
+        config={getFeedsPaymentsFiltersConfig(dictionary, uniqueCycles)}
+        filters={filters}
+        dispatch={dispatch}
+      />
 
       <Box mt={4} sx={{ width: "100%", overflowX: "auto" }}>
         <DataGridPro

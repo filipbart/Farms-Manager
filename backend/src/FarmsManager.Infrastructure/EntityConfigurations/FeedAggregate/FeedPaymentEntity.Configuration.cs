@@ -11,5 +11,6 @@ public class FeedPaymentEntityConfiguration : BaseConfiguration<FeedPaymentEntit
         builder.HasKey(t => t.Id);
 
         builder.HasOne(t => t.Farm).WithMany().HasForeignKey(t => t.FarmId);
+        builder.HasOne(t => t.Cycle).WithMany().HasForeignKey(t => t.CycleId);
     }
 }

@@ -94,7 +94,8 @@ public class GetFeedDeliveryPaymentFileQueryHandler : IRequestHandler<GetFeedDel
 
         var filePath = await _s3Service.UploadFileAsync(fileBytes, FileType.FeedDeliveryPayment, fileName);
 
-        var newFeedPayment = FeedPaymentEntity.CreateNew(invoices.First().FarmId, fileName, filePath, userId);
+        var invoice = invoices.First();
+        var newFeedPayment = FeedPaymentEntity.CreateNew(invoice.FarmId, invoice.CycleId, fileName, filePath, userId);
         await _feedPaymentRepository.AddAsync(newFeedPayment, cancellationToken);
 
         invoices.ForEach(t => t.MarkAsPaid(newFeedPayment.Id));
