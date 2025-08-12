@@ -24,24 +24,24 @@ export const getSalesColumns = ({
   filters: any;
 }): GridColDef[] => {
   return [
-    { field: "cycleText", headerName: "Identyfikator", flex: 1 },
-    { field: "farmName", headerName: "Ferma", flex: 1 },
-    { field: "henhouseName", headerName: "Kurnik", flex: 1 },
-    { field: "slaughterhouseName", headerName: "Ubojnia", flex: 1 },
+    { field: "cycleText", headerName: "Identyfikator", width: 120 },
+    { field: "farmName", headerName: "Ferma", width: 180 },
+    { field: "henhouseName", headerName: "Kurnik", width: 150 },
+    { field: "slaughterhouseName", headerName: "Ubojnia", width: 180 },
     {
       field: "saleDate",
       headerName: "Data sprzedaży",
-      flex: 1,
+      width: 150,
       type: "string",
       valueGetter: (date: any) => {
         return date ? dayjs(date).format("YYYY-MM-DD") : "";
       },
     },
-    { field: "typeDesc", headerName: "Typ sprzedaży", flex: 1 },
+    { field: "typeDesc", headerName: "Typ sprzedaży", width: 150 },
     {
       field: "weight",
       headerName: "Waga ubojni [kg]",
-      flex: 1,
+      width: 160,
       type: "number",
       headerAlign: "left",
       align: "left",
@@ -49,7 +49,7 @@ export const getSalesColumns = ({
     {
       field: "quantity",
       headerName: "Ilość sztuk ubojnia [szt]",
-      flex: 1,
+      width: 190,
       type: "number",
       headerAlign: "left",
       align: "left",
@@ -57,7 +57,7 @@ export const getSalesColumns = ({
     {
       field: "confiscatedWeight",
       headerName: "Konfiskaty [kg]",
-      flex: 1,
+      width: 150,
       type: "number",
       headerAlign: "left",
       align: "left",
@@ -65,7 +65,7 @@ export const getSalesColumns = ({
     {
       field: "confiscatedCount",
       headerName: "Konfiskaty [szt]",
-      flex: 1,
+      width: 150,
       type: "number",
       headerAlign: "left",
       align: "left",
@@ -73,7 +73,7 @@ export const getSalesColumns = ({
     {
       field: "deadWeight",
       headerName: "Kurczęta martwe [kg]",
-      flex: 1,
+      width: 180,
       type: "number",
       headerAlign: "left",
       align: "left",
@@ -81,7 +81,7 @@ export const getSalesColumns = ({
     {
       field: "deadCount",
       headerName: "Kurczęta martwe [szt]",
-      flex: 1,
+      width: 180,
       type: "number",
       headerAlign: "left",
       align: "left",
@@ -89,7 +89,7 @@ export const getSalesColumns = ({
     {
       field: "farmerWeight",
       headerName: "Waga producenta [kg]",
-      flex: 1,
+      width: 180,
       type: "number",
       headerAlign: "left",
       align: "left",
@@ -97,7 +97,7 @@ export const getSalesColumns = ({
     {
       field: "basePrice",
       headerName: "Cena bazowa [zł]",
-      flex: 1,
+      width: 150,
       type: "number",
       headerAlign: "left",
       align: "left",
@@ -105,7 +105,7 @@ export const getSalesColumns = ({
     {
       field: "priceWithExtras",
       headerName: "Cena z dodatkami [zł]",
-      flex: 1,
+      width: 130,
       type: "number",
       headerAlign: "left",
       align: "left",
@@ -113,20 +113,20 @@ export const getSalesColumns = ({
     {
       field: "otherExtras",
       headerName: "Inne dodatki",
-      flex: 1,
+      width: 150,
       renderCell: (params) => <OtherExtrasCell value={params.value} />,
     },
     {
       field: "comment",
       headerName: "Komentarz",
-      flex: 1,
+      width: 250,
       renderCell: (params) => <CommentCell value={params.value} />,
     },
     {
       field: "sendToIrz",
       headerName: "Wyślij do IRZplus",
-      flex: 1,
-      minWidth: 200,
+      width: 180,
+      sortable: false,
       type: "actions",
       renderCell: (params) => (
         <SaleSendToIrzCell
@@ -140,7 +140,8 @@ export const getSalesColumns = ({
       field: "actions",
       type: "actions",
       headerName: "Akcje",
-      width: 200,
+      sortable: false,
+      width: 180,
       getActions: (params) => [
         <ActionsCell
           key="actions"
@@ -159,7 +160,7 @@ export const getSalesColumns = ({
       align: "center",
       headerAlign: "center",
       sortable: false,
-      width: 100,
+      width: 180,
       renderCell: (params) => {
         const directoryPath = params.row.directoryPath;
 
@@ -172,11 +173,9 @@ export const getSalesColumns = ({
         );
       },
     },
-
     {
       field: "documentNumber",
       headerName: "Numer dokumentu IRZplus",
-      flex: 1,
       renderCell: (params) => (params.value ? params.value : "Brak numeru"),
     },
     {

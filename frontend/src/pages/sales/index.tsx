@@ -170,11 +170,6 @@ const SalesPage: React.FC = () => {
               columnVisibilityModel: { id: false, dateCreatedUtc: false },
             },
           }}
-          localeText={{
-            paginationRowsPerPage: "Wierszy na stronę:",
-            paginationDisplayedRows: ({ from, to, count }) =>
-              `${from} do ${to} z ${count}`,
-          }}
           pagination
           paginationMode="server"
           paginationModel={{
