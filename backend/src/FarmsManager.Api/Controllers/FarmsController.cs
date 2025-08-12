@@ -62,6 +62,20 @@ public class FarmsController(IMediator mediator) : BaseController
     }
 
     /// <summary>
+    /// Aktualizuje dane fermy
+    /// </summary>
+    /// <param name="farmId"></param>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    [HttpPatch("update/{farmId:guid}")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> UpdateFarm([FromRoute] Guid farmId, UpdateFarmDto data)
+    {
+        return Ok(await mediator.Send(new UpdateFarmCommand(farmId, data)));
+    }
+
+    /// <summary>
     /// Usuwa wybraną fermę
     /// </summary>
     /// <param name="farmId"></param>

@@ -1,5 +1,6 @@
 import ApiUrl from "../common/ApiUrl";
 import type { PaginateModel } from "../common/interfaces/paginate";
+import type { FormValues } from "../components/modals/data/edit-farm-modal";
 import type FarmRowModel from "../models/farms/farm-row-model";
 import type { HouseRowModel } from "../models/farms/house-row-model";
 import type LatestCycle from "../models/farms/latest-cycle";
@@ -34,6 +35,10 @@ export class FarmsService {
 
   public static async addFarmAsync(data: AddFarmFormData) {
     return await AxiosWrapper.post(ApiUrl.AddFarm, data);
+  }
+
+  public static async updateFarmAsync(id: string, data: FormValues) {
+    return await AxiosWrapper.patch(ApiUrl.UpdateFarm(id), data);
   }
 
   public static async deleteFarmAsync(id: string) {

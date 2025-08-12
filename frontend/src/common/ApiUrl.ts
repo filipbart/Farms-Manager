@@ -17,7 +17,8 @@ export default class ApiUrl {
   public static Farms = this.BaseUrl + "farms";
   public static UpdateFarmCycle = this.Farms + "/update-cycle";
   public static AddFarm = this.Farms + "/add";
-  public static DeleteFarm = this.Farms + "/delete";
+  public static UpdateFarm = (id: string) => this.Farms + "/update/" + id;
+  public static DeleteFarm = (id: string) => this.Farms + "/delete/" + id;
   public static DeleteHenhouse = this.Farms + "/henhouse/delete";
 
   public static Hatcheries = this.BaseUrl + "hatcheries";

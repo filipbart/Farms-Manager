@@ -1,87 +1,97 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
 import { type GridColDef } from "@mui/x-data-grid";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { FarmsService } from "../../../services/farms-service";
 import AddFarmModal from "../../../components/modals/farms/add-farm-modal";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import { useFarms } from "../../../hooks/useFarms";
 import { DataGridPro } from "@mui/x-data-grid-pro";
+import ActionsCell from "../../../components/datagrid/actions-cell";
+import EditFarmModal from "../../../components/modals/data/edit-farm-modal";
+
+type FarmRow = {
+  id: string;
+  name: string;
+  nip: string;
+  producerNumber: string;
+  address: string;
+};
 
 const FarmsPage: React.FC = () => {
   const { farms, loadingFarms, fetchFarms } = useFarms();
 
-  const columns: GridColDef[] = [
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedFarm, setSelectedFarm] = useState<FarmRow | null>(null);
+
+  const handleEditOpen = (farm: FarmRow) => {
+    setSelectedFarm(farm);
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditClose = () => {
+    setIsEditModalOpen(false);
+    setSelectedFarm(null);
+  };
+
+  const handleUpdateFarm = async () => {
+    handleEditClose();
+    await fetchFarms();
+  };
+
+  const handleDelete = async (id: string) => {
+    await handleApiResponse(
+      () => FarmsService.deleteFarmAsync(id),
+      async () => {
+        await fetchFarms();
+      },
+      undefined,
+      "Nie udało się usunąć farmy"
+    );
+  };
+
+  const columns: GridColDef<FarmRow>[] = [
     { field: "name", headerName: "Nazwa", flex: 1 },
     { field: "nip", headerName: "NIP", flex: 1 },
     { field: "producerNumber", headerName: "Numer producenta", flex: 1 },
     { field: "address", headerName: "Adres", flex: 1 },
-    {
-      field: "henHousesCount",
-      headerName: "Liczba kurników",
-      flex: 1,
-    },
+    { field: "henHousesCount", headerName: "Liczba kurników", flex: 1 },
     {
       field: "dateCreatedUtc",
       headerName: "Data utworzenia rekordu",
       type: "dateTime",
       flex: 1,
-      valueGetter: (params: any) => {
-        return params ? new Date(params) : null;
+      valueGetter: (params: { value: string | Date }) => {
+        return params.value ? new Date(params.value) : null;
       },
     },
     {
       field: "actions",
+      type: "actions",
       headerName: "Akcje",
-      flex: 1,
-      sortable: false,
-      filterable: false,
-      renderCell: (params: any) => (
-        <div className="text-center">
-          <Button variant="outlined">Edytuj</Button>
-          <Button
-            variant="outlined"
-            color="error"
-            sx={{ ml: 1 }}
-            onClick={async () => {
-              await handleApiResponse(
-                () => FarmsService.deleteFarmAsync(params.row.id),
-                undefined,
-                undefined,
-                "Nie udało się usunąć farmy"
-              );
-              await fetchFarms();
-            }}
-          >
-            Usuń
-          </Button>
-        </div>
-      ),
+      width: 150,
+      getActions: (params) => [
+        <ActionsCell
+          key="actions"
+          params={params}
+          onEdit={handleEditOpen}
+          onDelete={handleDelete}
+        />,
+      ],
     },
   ];
 
-  const [openModal, setOpenModal] = useState(false);
-
-  const handleOpen = () => setOpenModal(true);
-  const handleClose = async () => {
-    setOpenModal(false);
-  };
+  const handleAddOpen = () => setIsAddModalOpen(true);
+  const handleAddClose = () => setIsAddModalOpen(false);
 
   const handleAddFarm = async () => {
-    setOpenModal(false);
+    setIsAddModalOpen(false);
     await fetchFarms();
   };
 
   useEffect(() => {
     fetchFarms();
-  }, []);
-
-  const data = useMemo(
-    () => ({
-      rows: farms,
-      columns: columns,
-    }),
-    [farms]
-  );
+  }, [fetchFarms]);
 
   return (
     <Box p={4}>
@@ -95,7 +105,7 @@ const FarmsPage: React.FC = () => {
       >
         <Typography variant="h4">Fermy</Typography>
         <Box display="flex" gap={2}>
-          <Button variant="contained" color="primary" onClick={handleOpen}>
+          <Button variant="contained" color="primary" onClick={handleAddOpen}>
             Dodaj fermę
           </Button>
         </Box>
@@ -110,7 +120,7 @@ const FarmsPage: React.FC = () => {
       >
         <DataGridPro
           loading={loadingFarms}
-          {...data}
+          rows={farms}
           columns={columns}
           localeText={{
             noRowsLabel: "Brak wpisów",
@@ -118,26 +128,26 @@ const FarmsPage: React.FC = () => {
           }}
           hideFooterPagination
           rowSelection={false}
-          showToolbar={false}
           sx={{
             minHeight: farms.length === 0 ? 300 : "auto",
-            [`& .${tablePaginationClasses.selectLabel}`]: {
-              display: "block",
-            },
-            [`& .${tablePaginationClasses.input}`]: {
-              display: "inline-flex",
-            },
-            "& .MuiDataGrid-columnHeaders": {
-              borderTop: "none",
-            },
+            [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },
+            [`& .${tablePaginationClasses.input}`]: { display: "inline-flex" },
+            "& .MuiDataGrid-columnHeaders": { borderTop: "none" },
           }}
         />
       </Box>
 
       <AddFarmModal
-        open={openModal}
-        onClose={handleClose}
+        open={isAddModalOpen}
+        onClose={handleAddClose}
         onSave={handleAddFarm}
+      />
+
+      <EditFarmModal
+        open={isEditModalOpen}
+        onClose={handleEditClose}
+        onSave={handleUpdateFarm}
+        farmData={selectedFarm}
       />
     </Box>
   );
