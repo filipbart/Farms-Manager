@@ -3,13 +3,13 @@ import type { NotificationData } from "../models/common/notifications";
 
 interface NotificationContextValue {
   notifications: NotificationData | undefined;
-  refetch: () => void;
+  fetchNotifications: () => void;
   isRefreshing: boolean;
 }
 
 export const NotificationContext = createContext<NotificationContextValue>({
   notifications: undefined,
-  refetch: () => {},
+  fetchNotifications: () => {},
   isRefreshing: false,
 } as NotificationContextValue);
 

@@ -9,14 +9,13 @@ import { AuthContext } from "../auth/auth-context";
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  const authCtx = useContext(AuthContext);
   const [notifications, setNotifications] = useState<
     NotificationData | undefined
   >();
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const { userData } = useContext(AuthContext);
 
   const fetchNotifications = useCallback(async () => {
-    if (!userData) return;
     setIsRefreshing(true);
     try {
       await handleApiResponse(
@@ -37,13 +36,17 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   useEffect(() => {
-    fetchNotifications();
-  }, [fetchNotifications]);
+    if (authCtx.isAuthenticated()) {
+      fetchNotifications();
+    } else {
+      setNotifications(undefined);
+    }
+  }, [authCtx.isAuthenticated, fetchNotifications]);
 
   const value = {
     notifications,
     isRefreshing,
-    refetch: fetchNotifications,
+    fetchNotifications,
   };
 
   return (

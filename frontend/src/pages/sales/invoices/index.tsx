@@ -34,7 +34,7 @@ import { DataGridPro } from "@mui/x-data-grid-pro";
 const SalesInvoicesPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
   const [dictionary, setDictionary] = useState<SalesDictionary>();
-  const { refetch: refetchNotifications } = useContext(NotificationContext);
+  const { fetchNotifications } = useContext(NotificationContext);
   const [selectedSalesInvoice, setSelectedSalesInvoice] =
     useState<SalesInvoiceListModel | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -112,7 +112,7 @@ const SalesInvoicesPage: React.FC = () => {
           setIsPaymentModalOpen(false);
           setSelectedRows({ type: "include", ids: new Set() });
           await fetchSalesInvoices();
-          refetchNotifications();
+          fetchNotifications();
         },
         undefined,
         "Błąd podczas księgowania płatności"

@@ -27,7 +27,7 @@ import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 const EmployeeInfoTab: React.FC = () => {
   const { employee, refetch, loading } = useContext(EmployeeContext);
   const { farms, loadingFarms, fetchFarms } = useFarms();
-  const { refetch: refetchNotifications } = useContext(NotificationContext);
+  const { fetchNotifications } = useContext(NotificationContext);
 
   const {
     control,
@@ -78,7 +78,7 @@ const EmployeeInfoTab: React.FC = () => {
         () => {
           toast.success("Dane pracownika zostały zaktualizowane");
           refetch();
-          refetchNotifications();
+          fetchNotifications();
           reset(data);
         },
         (error) => {

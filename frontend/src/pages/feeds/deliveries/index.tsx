@@ -34,7 +34,7 @@ import { DataGridPremium } from "@mui/x-data-grid-premium";
 const FeedsDeliveriesPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
   const [dictionary, setDictionary] = useState<FeedsDictionary>();
-  const { refetch: refetchNotifications } = useContext(NotificationContext);
+  const { fetchNotifications } = useContext(NotificationContext);
 
   const [loading, setLoading] = useState(false);
   const [feedsDeliveries, setFeedsDeliveries] = useState<
@@ -149,7 +149,7 @@ const FeedsDeliveriesPage: React.FC = () => {
       errorMessage: "Błąd podczas pobierania pliku przelewu",
     });
     dispatch({ type: "setMultiple", payload: { page: filters.page } });
-    refetchNotifications();
+    fetchNotifications();
   };
 
   const columns = useMemo(

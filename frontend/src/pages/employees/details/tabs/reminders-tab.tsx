@@ -19,7 +19,7 @@ import { NotificationContext } from "../../../../context/notification-context";
 const EmployeeRemindersTab: React.FC = () => {
   const { employee, refetch } = useContext(EmployeeContext);
   const [modalOpen, setModalOpen] = useState(false);
-  const { refetch: refetchNotifications } = useContext(NotificationContext);
+  const { fetchNotifications } = useContext(NotificationContext);
 
   const handleDelete = async (reminderId: string) => {
     if (employee) {
@@ -31,7 +31,7 @@ const EmployeeRemindersTab: React.FC = () => {
         if (res.success) {
           toast.success("Przypomnienie usunięte");
           refetch();
-          refetchNotifications();
+          fetchNotifications();
         } else {
           toast.error("Nie udało się usunąć przypomnienia");
         }
