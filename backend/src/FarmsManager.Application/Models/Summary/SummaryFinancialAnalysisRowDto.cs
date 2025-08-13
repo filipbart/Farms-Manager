@@ -58,6 +58,12 @@ public class SummaryFinancialAnalysisRowDto
     public decimal? CombinedRevenue =>
         PartSaleRevenue.GetValueOrDefault() + TotalSaleRevenue.GetValueOrDefault();
 
+    /// <summary>
+    /// VAT z przychodów
+    /// </summary>
+    public decimal? CombinedRevenueVat =>
+        PartSaleRevenue.GetValueOrDefault() * 0.08m + TotalSaleRevenue.GetValueOrDefault() * 0.08m;
+
     /// <summary>Przychód na kg żywca</summary>
     public decimal? RevenuePerKgLiveWeight
     {
@@ -93,6 +99,11 @@ public class SummaryFinancialAnalysisRowDto
         VetCareCost.GetValueOrDefault() +
         GasCost.GetValueOrDefault() +
         OtherCosts.GetValueOrDefault();
+
+    /// <summary>
+    /// Vat z wydatków
+    /// </summary>
+    public decimal? VatCosts => TotalCosts * 0.08m;
 
     /// <summary>Dochód</summary>
     public decimal? Income => CombinedRevenue - TotalCosts;
@@ -156,7 +167,7 @@ public class SummaryFinancialAnalysisRowDto
             return TotalCosts / CombinedSettlementWeight;
         }
     }
-    
+
     /// <summary>Dochód na kg żywca</summary>
     public decimal? IncomePerKgLiveWeight => RevenuePerKgLiveWeight - TotalCostsPerKgLiveWeight;
 

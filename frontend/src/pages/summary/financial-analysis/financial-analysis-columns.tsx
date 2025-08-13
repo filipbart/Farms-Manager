@@ -128,6 +128,13 @@ export const getFinancialAnalysisColumns =
         valueGetter: polishFormatter,
       },
       {
+        field: "combinedRevenueVat",
+        headerName: "VAT z przychodu [zł]",
+        width: 150,
+        type: "number",
+        valueGetter: polishFormatter,
+      },
+      {
         field: "revenuePerKgLiveWeight",
         headerName: "Przychód na kg żywca [zł]",
         width: 160,
@@ -181,6 +188,13 @@ export const getFinancialAnalysisColumns =
       {
         field: "totalCosts",
         headerName: "Koszty razem [zł]",
+        width: 150,
+        type: "number",
+        valueGetter: polishFormatter,
+      },
+      {
+        field: "vatCosts",
+        headerName: "VAT z kosztów [zł]",
         width: 150,
         type: "number",
         valueGetter: polishFormatter,
