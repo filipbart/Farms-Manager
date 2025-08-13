@@ -29,6 +29,15 @@ export const getFeedsDeliveriesFiltersConfig = (
     disabled: !dictionary,
   },
   {
+    key: "incorrectPrices",
+    label: "Niepoprawna cena",
+    type: "select",
+    options: [
+      { value: "true", label: "Tak" },
+      { value: "false", label: "Nie" },
+    ],
+  },
+  {
     key: "dateSince",
     label: "Data od",
     type: "date",

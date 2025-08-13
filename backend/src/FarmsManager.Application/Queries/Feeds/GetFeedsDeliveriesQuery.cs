@@ -30,6 +30,7 @@ public record GetFeedsDeliveriesQueryFilters : OrderedPaginationParams<FeedsDeli
         Year = int.Parse(c.Split('-')[1])
     }).ToList();
 
+    public bool? IncorrectPrices { get; init; }
     public DateOnly? DateSince { get; init; }
     public DateOnly? DateTo { get; init; }
 }

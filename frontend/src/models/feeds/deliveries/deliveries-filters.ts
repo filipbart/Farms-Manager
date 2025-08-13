@@ -45,6 +45,7 @@ export enum FeedsDeliveriesOrderType {
 export default interface FeedsDeliveriesFilter {
   farmIds: string[];
   cycles: CycleDictModel[];
+  incorrectPrices?: boolean;
   dateSince: string;
   dateTo: string;
 }

@@ -77,7 +77,8 @@ public class UpdateFeedDeliveryCommandHandler : IRequestHandler<UpdateFeedDelive
     {
         var feedPrices =
             await _feedPriceRepository.ListAsync(
-                new GetFeedPriceForFeedInvoiceSpec(feedInvoice.FarmId, feedInvoice.ItemName, feedInvoice.InvoiceDate),
+                new GetFeedPriceForFeedInvoiceSpec(feedInvoice.FarmId, feedInvoice.CycleId, feedInvoice.ItemName,
+                    feedInvoice.InvoiceDate),
                 ct);
 
         feedInvoice.CheckUnitPrice(feedPrices);

@@ -10,6 +10,7 @@ export interface EmployeeListModel {
   status: EmployeeStatus;
   statusDesc: string;
   comment: string;
+  upcomingDeadline: boolean;
   files: EmployeeFileModel[];
 }
 

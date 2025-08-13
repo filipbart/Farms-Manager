@@ -19,6 +19,7 @@ public class EmployeeRowDto
     public string StatusDesc => Status.GetDescription();
     public string Comment { get; init; }
     public List<EmployeeFileDto> Files { get; init; } = [];
+    public bool UpcomingDeadline { get; init; }
 }
 
 public class GetEmployeesQueryResponse : PaginationModel<EmployeeRowDto>;

@@ -49,27 +49,26 @@ public class UpdateFeedPriceCommandHandler : IRequestHandler<UpdateFeedPriceComm
 
         await _feedPriceRepository.UpdateAsync(feedPrice, cancellationToken);
 
-        var feedPriceAfterDate = await _feedPriceRepository.FirstOrDefaultAsync(
-            new GetFirstFeedPriceByNameAfterDateSpec(feedName.Name, request.Data.PriceDate), cancellationToken);
+        var nextFeedPrice = await _feedPriceRepository.FirstOrDefaultAsync(
+            new GetNextFeedPriceWithoutCurrentSpec(feedName.Name, feedPrice.PriceDate, request.Id), cancellationToken);
 
-        if (feedPriceAfterDate != null)
+        var startDate = feedPrice.PriceDate;
+
+        var endDate = nextFeedPrice?.PriceDate ?? DateOnly.MaxValue;
+
+        var feedsInvoices = await _feedInvoiceRepository.ListAsync(
+            new GetFeedsInvoicesByDateRangeAndNameSpec(feedPrice.FarmId, feedPrice.CycleId, startDate, endDate,
+                feedName.Name), cancellationToken);
+
+        foreach (var feedInvoiceEntity in feedsInvoices)
         {
-            var feedsInvoices = await _feedInvoiceRepository.ListAsync(
-                new GetFeedsInvoicesByFeedNameAndDateSpec(feedName.Name, feedPrice.PriceDate,
-                    feedPriceAfterDate.PriceDate),
-                cancellationToken);
+            var feedPrices =
+                await _feedPriceRepository.ListAsync(
+                    new GetFeedPriceForFeedInvoiceSpec(feedInvoiceEntity.FarmId, feedInvoiceEntity.CycleId,
+                        feedInvoiceEntity.ItemName, feedInvoiceEntity.InvoiceDate), cancellationToken);
 
-            foreach (var feedInvoiceEntity in feedsInvoices.Where(feedInvoiceEntity =>
-                         feedInvoiceEntity.UnitPrice != feedPrice.Price))
-            {
-                var feedPrices =
-                    await _feedPriceRepository.ListAsync(
-                        new GetFeedPriceForFeedInvoiceSpec(feedInvoiceEntity.FarmId, feedInvoiceEntity.ItemName,
-                            feedInvoiceEntity.InvoiceDate), cancellationToken);
-
-                feedInvoiceEntity.CheckUnitPrice(feedPrices);
-                await _feedInvoiceRepository.UpdateAsync(feedInvoiceEntity, cancellationToken);
-            }
+            feedInvoiceEntity.CheckUnitPrice(feedPrices);
+            await _feedInvoiceRepository.UpdateAsync(feedInvoiceEntity, cancellationToken);
         }
 
         return new EmptyBaseResponse();
@@ -84,29 +83,15 @@ public class UpdateFeedPriceCommandValidator : AbstractValidator<UpdateFeedPrice
     }
 }
 
-public sealed class GetFeedsInvoicesByFeedNameAndDateSpec : BaseSpecification<FeedInvoiceEntity>
-{
-    public GetFeedsInvoicesByFeedNameAndDateSpec(string feedName, DateOnly priceDate, DateOnly dateTo)
-    {
-        EnsureExists();
-
-        Query.Where(t => t.ItemName == feedName);
-        Query.Where(t => t.InvoiceDate >= priceDate);
-        Query.Where(t => t.InvoiceDate < dateTo);
-    }
-}
-
-public sealed class GetFirstFeedPriceByNameAfterDateSpec : BaseSpecification<FeedPriceEntity>,
+public sealed class GetNextFeedPriceWithoutCurrentSpec : BaseSpecification<FeedPriceEntity>,
     ISingleResultSpecification<FeedPriceEntity>
 {
-    public GetFirstFeedPriceByNameAfterDateSpec(string feedName, DateOnly priceDate)
+    public GetNextFeedPriceWithoutCurrentSpec(string feedName, DateOnly priceDate, Guid currentPriceId)
     {
         EnsureExists();
-        DisableTracking();
-
-        Query.Where(t => t.Name == feedName);
-        Query.Where(t => t.PriceDate >= priceDate);
-        Query.OrderBy(t => t.PriceDate);
-        Query.Take(1);
+        Query.Where(t => t.Name == feedName)
+            .Where(t => t.PriceDate >= priceDate)
+            .Where(t => t.Id != currentPriceId)
+            .OrderBy(t => t.PriceDate);
     }
 }

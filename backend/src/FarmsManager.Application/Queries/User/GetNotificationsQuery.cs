@@ -85,7 +85,7 @@ public class
         });
     }
 
-    private void ProcessNotifications<T>(IEnumerable<T> items, Func<T, DateOnly> dateSelector,
+    private static void ProcessNotifications<T>(IEnumerable<T> items, Func<T, DateOnly> dateSelector,
         NotificationInfo notificationInfo, DateOnly now)
     {
         foreach (var item in items)
@@ -103,7 +103,7 @@ public class
         }
     }
 
-    private NotificationPriority GetPriority(DateOnly dueDate, DateOnly now)
+    private static NotificationPriority GetPriority(DateOnly dueDate, DateOnly now)
     {
         if (dueDate <= now)
         {

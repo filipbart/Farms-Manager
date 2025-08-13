@@ -1,6 +1,6 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
-import { DataGridPro } from "@mui/x-data-grid-pro";
-import { useReducer, useState, useMemo, useEffect } from "react";
+import { DataGridPro, type GridRowParams } from "@mui/x-data-grid-pro";
+import { useReducer, useState, useMemo, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
 import {
   EmployeesOrderType,
@@ -19,6 +19,7 @@ import CustomToolbar from "../../components/datagrid/custom-toolbar";
 import NoRowsOverlay from "../../components/datagrid/custom-norows";
 import { useNavigate } from "react-router-dom";
 import AddEmployeeModal from "../../components/modals/employees/add-employee-modal";
+import type { EmployeeListModel } from "../../models/employees/employees";
 
 const EmployeesPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -34,21 +35,27 @@ const EmployeesPage: React.FC = () => {
     return saved ? JSON.parse(saved) : {};
   });
 
-  const deleteEmployee = async (id: string) => {
-    try {
+  const deleteEmployee = useCallback(
+    async (id: string) => {
       await handleApiResponse(
         () => EmployeesService.deleteEmployee(id),
-        async () => {
+        () => {
           toast.success("Pracownik został poprawnie usunięty");
-          dispatch({ type: "setMultiple", payload: { page: filters.page } });
+          dispatch({ type: "setMultiple", payload: { page: 0 } });
         },
         undefined,
         "Błąd podczas usuwania pracownika"
       );
-    } catch {
-      toast.error("Błąd podczas usuwania pracownika");
-    }
-  };
+    },
+    [dispatch]
+  );
+
+  const getRowClassName = useCallback(
+    (params: GridRowParams<EmployeeListModel>): string => {
+      return params.row.upcomingDeadline ? "deadline-row" : "";
+    },
+    []
+  );
 
   useEffect(() => {
     const fetchDictionaries = async () => {
@@ -71,11 +78,8 @@ const EmployeesPage: React.FC = () => {
   }, [fetchEmployees]);
 
   const columns = useMemo(
-    () =>
-      getEmployeesColumns({
-        deleteEmployee,
-      }),
-    []
+    () => getEmployeesColumns({ deleteEmployee }),
+    [deleteEmployee]
   );
 
   return (
@@ -127,11 +131,6 @@ const EmployeesPage: React.FC = () => {
               columnVisibilityModel: { id: false },
             },
           }}
-          localeText={{
-            paginationRowsPerPage: "Wierszy na stronę:",
-            paginationDisplayedRows: ({ from, to, count }) =>
-              `${from} do ${to} z ${count}`,
-          }}
           paginationMode="server"
           pagination
           paginationModel={{
@@ -149,7 +148,17 @@ const EmployeesPage: React.FC = () => {
           pageSizeOptions={[5, 10, 25, { value: -1, label: "Wszystkie" }]}
           slots={{ toolbar: CustomToolbar, noRowsOverlay: NoRowsOverlay }}
           showToolbar
+          getRowClassName={getRowClassName}
           sx={{
+            "& .deadline-row .MuiDataGrid-cell": {
+              backgroundColor: "#ffebf4",
+            },
+            "& .deadline-row:hover .MuiDataGrid-cell": {
+              backgroundColor: "#ffcde2",
+            },
+            "& .MuiDataGrid-row:not(.deadline-row):hover .MuiDataGrid-cell": {
+              backgroundColor: "#f5f5f5",
+            },
             "& .MuiDataGrid-row:hover": {
               cursor: "pointer",
             },

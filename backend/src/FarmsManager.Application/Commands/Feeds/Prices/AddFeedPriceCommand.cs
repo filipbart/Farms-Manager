@@ -58,17 +58,26 @@ public class AddFeedPriceCommandHandler : IRequestHandler<AddFeedPriceCommand, E
             FeedPriceEntity.CreateNew(farm.Id, cycle.Id, request.PriceDate, feedNameEntity.Name, request.Price, userId);
         await _feedPriceRepository.AddAsync(newFeedPrice, ct);
 
+        var nextFeedPrice =
+            await _feedPriceRepository.FirstOrDefaultAsync(
+                new GetNextFeedPriceSpec(farm.Id, cycle.Id, feedNameEntity.Name, request.PriceDate), ct);
+
+        var startDate = request.PriceDate;
+        var endDate = nextFeedPrice?.PriceDate ?? DateOnly.MaxValue;
+
         var feedsInvoices =
             await _feedInvoiceRepository.ListAsync(
-                new GetFeedsInvoicesByDateAndNameSpec(request.PriceDate, feedNameEntity.Name), ct);
+                new GetFeedsInvoicesByDateRangeAndNameSpec(farm.Id, cycle.Id, startDate, endDate, feedNameEntity.Name),
+                ct);
+
         if (feedsInvoices.Count != 0)
         {
-            foreach (var feedInvoiceEntity in feedsInvoices.Where(feedInvoiceEntity =>
-                         feedInvoiceEntity.UnitPrice != newFeedPrice.Price))
+            foreach (var feedInvoiceEntity in feedsInvoices)
             {
                 var feedPrices =
                     await _feedPriceRepository.ListAsync(
-                        new GetFeedPriceForFeedInvoiceSpec(feedInvoiceEntity.FarmId, feedInvoiceEntity.ItemName,
+                        new GetFeedPriceForFeedInvoiceSpec(feedInvoiceEntity.FarmId, feedInvoiceEntity.CycleId,
+                            feedInvoiceEntity.ItemName,
                             feedInvoiceEntity.InvoiceDate),
                         ct);
 
@@ -78,17 +87,6 @@ public class AddFeedPriceCommandHandler : IRequestHandler<AddFeedPriceCommand, E
         }
 
         return new EmptyBaseResponse();
-    }
-}
-
-public sealed class GetFeedsInvoicesByDateAndNameSpec : BaseSpecification<FeedInvoiceEntity>
-{
-    public GetFeedsInvoicesByDateAndNameSpec(DateOnly date, string feedName)
-    {
-        EnsureExists();
-
-        Query.Where(t => t.InvoiceDate >= date);
-        Query.Where(t => t.ItemName == feedName);
     }
 }
 

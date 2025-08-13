@@ -9,6 +9,7 @@ using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
 using FluentValidation;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace FarmsManager.Application.Queries.ProductionData;
 
@@ -73,7 +74,8 @@ public class GetRemainingFeedValueQueryValidator : AbstractValidator<GetRemainin
     }
 }
 
-public sealed class GetFeedInvoiceByNameCycleAndHenhouseSpec : BaseSpecification<FeedInvoiceEntity>
+public sealed class GetFeedInvoiceByNameCycleAndHenhouseSpec : BaseSpecification<FeedInvoiceEntity>,
+    ISingleResultSpecification<FeedInvoiceEntity>
 {
     public GetFeedInvoiceByNameCycleAndHenhouseSpec(Guid cycleId, Guid henhouseId, string feedName)
     {
@@ -81,7 +83,7 @@ public sealed class GetFeedInvoiceByNameCycleAndHenhouseSpec : BaseSpecification
         DisableTracking();
         Query.Where(t => t.CycleId == cycleId);
         Query.Where(t => t.HenhouseId == henhouseId);
-        Query.Where(t => t.ItemName == feedName);
+        Query.Where(t => EF.Functions.ILike(t.ItemName, $"%{feedName}%"));
         Query.OrderByDescending(t => t.InvoiceDate);
     }
 }

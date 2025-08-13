@@ -33,11 +33,11 @@ public class FeedInvoiceEntity : Entity
     public virtual FeedPaymentEntity Payment { get; init; }
 
     public string FilePath { get; protected internal set; }
-    public decimal? CorrectUnitPrice { get; private set; }
-    public DateTime? PaymentDateUtc { get; private set; }
+    public decimal? CorrectUnitPrice { get; protected internal set; }
+    public DateTime? PaymentDateUtc { get; protected internal set; }
 
-    public Guid? InvoiceCorrectionId { get; private set; }
-    public Guid? PaymentId { get; private set; }
+    public Guid? InvoiceCorrectionId { get; protected internal set; }
+    public Guid? PaymentId { get; protected internal set; }
 
 
     public void SetAsNullCorrectUnitPrice() => CorrectUnitPrice = null;
@@ -49,7 +49,14 @@ public class FeedInvoiceEntity : Entity
         var feedPrice = feedPrices.FirstOrDefault(f => f.Price == UnitPrice);
 
         if (feedPrice is not null)
+        {
+            if (CorrectUnitPrice.HasValue)
+            {
+                CorrectUnitPrice = null;
+            }
+
             return;
+        }
 
         if (feedPrices.Count == 1)
             CorrectUnitPrice = feedPrices[0].Price;

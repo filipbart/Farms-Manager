@@ -61,8 +61,8 @@ public class AddExpenseProductionCommandHandler : IRequestHandler<AddExpenseProd
                 new GetExpenseContractorByIdSpec(request.Data.ExpenseContractorId), ct);
 
         var newExpenseProduction = ExpenseProductionEntity.CreateNew(farm.Id, cycle.Id, expenseContractor.Id,
-            request.Data.InvoiceNumber,
-            request.Data.SubTotal, request.Data.VatAmount, request.Data.InvoiceTotal, request.Data.InvoiceDate, userId);
+            request.Data.InvoiceNumber, request.Data.InvoiceTotal, request.Data.SubTotal, request.Data.VatAmount,
+            request.Data.InvoiceDate, userId);
 
         if (request.Data.File != null)
         {

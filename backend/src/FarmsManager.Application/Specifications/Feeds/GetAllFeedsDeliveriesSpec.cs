@@ -38,6 +38,11 @@ public sealed class GetAllFeedsDeliveriesSpec : BaseSpecification<FeedInvoiceEnt
             Query.Where(predicate);
         }
 
+        if (filters.IncorrectPrices.HasValue)
+        {
+            Query.Where(t => t.CorrectUnitPrice.HasValue == filters.IncorrectPrices.Value);
+        }
+
         if (filters.DateSince is not null)
         {
             Query.Where(t => t.InvoiceDate >= filters.DateSince);
