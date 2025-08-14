@@ -100,11 +100,6 @@ public class SummaryFinancialAnalysisRowDto
         GasCost.GetValueOrDefault() +
         OtherCosts.GetValueOrDefault();
 
-    /// <summary>
-    /// Vat z wydatków
-    /// </summary>
-    public decimal? VatCosts => TotalCosts * 0.08m;
-
     /// <summary>Dochód</summary>
     public decimal? Income => CombinedRevenue - TotalCosts;
 

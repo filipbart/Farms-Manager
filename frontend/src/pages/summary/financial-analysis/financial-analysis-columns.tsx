@@ -193,13 +193,6 @@ export const getFinancialAnalysisColumns =
         valueGetter: polishFormatter,
       },
       {
-        field: "vatCosts",
-        headerName: "VAT z kosztów [zł]",
-        width: 150,
-        type: "number",
-        valueGetter: polishFormatter,
-      },
-      {
         field: "income",
         headerName: "Dochód [zł]",
         width: 150,
