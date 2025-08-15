@@ -38,6 +38,7 @@ import UtilizationPlantsPage from "../pages/data/utilization-plants";
 import ProductionDataIrzplusPage from "../pages/production-data/irz-plus";
 import SummaryProductionAnalysisPage from "../pages/summary/production-analysis";
 import SummaryFinancialAnalysisPage from "../pages/summary/financial-analysis";
+import ProductionDataFlockLossPage from "../pages/production-data/flock-loss";
 
 const DefaultRouter: React.FC = () => {
   const { getRoute } = useRouter();
@@ -132,6 +133,10 @@ const DefaultRouter: React.FC = () => {
         <Route
           path={getRoute(RouteName.ProductionDataWeighings)}
           element={<ProductionDataWeighingsPage />}
+        />
+        <Route
+          path={getRoute(RouteName.ProductionDataFlockLoss)}
+          element={<ProductionDataFlockLossPage />}
         />
         <Route
           path={getRoute(RouteName.ProductionDataIrzplus)}

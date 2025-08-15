@@ -195,6 +195,17 @@ export default class ApiUrl {
   public static DeleteProductionDataWeighing = (id: string) =>
     this.ProductionDataWeighings + "/delete/" + id;
 
+  public static ProductionDataFlockLosses =
+    this.ProductionData + "/flock-losses";
+  public static ProductionDataFlockLossDictionary =
+    this.ProductionDataFlockLosses + "/dictionary";
+  public static AddProductionDataFlockLoss =
+    this.ProductionDataFlockLosses + "/add";
+  public static UpdateProductionDataFlockLoss = (id: string) =>
+    this.ProductionDataFlockLosses + "/update/" + id;
+  public static DeleteProductionDataFlockLoss = (id: string) =>
+    this.ProductionDataFlockLosses + "/delete/" + id;
+
   public static WeightStandards = this.ProductionDataWeighings + "/standards";
   public static AddWeightStandards = this.WeightStandards + "/add";
   public static DeleteWeightStandard = (id: string) =>

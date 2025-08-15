@@ -170,8 +170,8 @@ public class SummaryProductionAnalysisRowDto
         {
             if (CombinedSettlementCount is null or 0) return null;
 
-            var weightedSum = (PartSaleSettlementCount.GetValueOrDefault() * PartSaleAgeInDays.GetValueOrDefault()) +
-                              (TotalSaleSettlementCount.GetValueOrDefault() * TotalSaleAgeInDays.GetValueOrDefault());
+            var weightedSum = PartSaleSettlementCount.GetValueOrDefault() * PartSaleAgeInDays.GetValueOrDefault() +
+                              TotalSaleSettlementCount.GetValueOrDefault() * TotalSaleAgeInDays.GetValueOrDefault();
                               
             return (decimal)weightedSum / CombinedSettlementCount;
         }

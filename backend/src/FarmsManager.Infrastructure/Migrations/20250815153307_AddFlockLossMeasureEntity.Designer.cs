@@ -4,6 +4,7 @@ using FarmsManager.Domain.Aggregates.UserAggregate.Models;
 using FarmsManager.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FarmsManager.Infrastructure.Migrations
 {
     [DbContext(typeof(FarmsManagerContext))]
-    partial class FarmsManagerContextModelSnapshot : ModelSnapshot
+    [Migration("20250815153307_AddFlockLossMeasureEntity")]
+    partial class AddFlockLossMeasureEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2003,6 +2006,10 @@ namespace FarmsManager.Infrastructure.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("flock_loss1day");
 
+                    b.Property<decimal?>("FlockLoss1Percentage")
+                        .HasColumnType("numeric")
+                        .HasColumnName("flock_loss1percentage");
+
                     b.Property<int?>("FlockLoss1Quantity")
                         .HasColumnType("integer")
                         .HasColumnName("flock_loss1quantity");
@@ -2010,6 +2017,10 @@ namespace FarmsManager.Infrastructure.Migrations
                     b.Property<int?>("FlockLoss2Day")
                         .HasColumnType("integer")
                         .HasColumnName("flock_loss2day");
+
+                    b.Property<decimal?>("FlockLoss2Percentage")
+                        .HasColumnType("numeric")
+                        .HasColumnName("flock_loss2percentage");
 
                     b.Property<int?>("FlockLoss2Quantity")
                         .HasColumnType("integer")
@@ -2019,6 +2030,10 @@ namespace FarmsManager.Infrastructure.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("flock_loss3day");
 
+                    b.Property<decimal?>("FlockLoss3Percentage")
+                        .HasColumnType("numeric")
+                        .HasColumnName("flock_loss3percentage");
+
                     b.Property<int?>("FlockLoss3Quantity")
                         .HasColumnType("integer")
                         .HasColumnName("flock_loss3quantity");
@@ -2026,6 +2041,10 @@ namespace FarmsManager.Infrastructure.Migrations
                     b.Property<int?>("FlockLoss4Day")
                         .HasColumnType("integer")
                         .HasColumnName("flock_loss4day");
+
+                    b.Property<decimal?>("FlockLoss4Percentage")
+                        .HasColumnType("numeric")
+                        .HasColumnName("flock_loss4percentage");
 
                     b.Property<int?>("FlockLoss4Quantity")
                         .HasColumnType("integer")

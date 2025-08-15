@@ -18,6 +18,7 @@ import {
   FaBuilding,
   FaBurn,
   FaCalculator,
+  FaChartLine,
   FaClone,
   FaDatabase,
   FaFileInvoiceDollar,
@@ -40,6 +41,7 @@ import {
 } from "react-icons/fa6";
 import {
   MdBarChart,
+  MdCalendarViewWeek,
   MdDashboard,
   MdFactory,
   MdNotes,
@@ -66,25 +68,53 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   const auth = useAuth();
   const { notifications } = useNotifications();
 
-  const [openItem, setOpenItem] = useState<string | null>(null);
+  const [openItems, setOpenItems] = useState<string[]>([]);
 
-  const handleItemClick = (title: string) => {
-    setOpenItem((prev) => (prev === title ? null : title));
+  const handleItemClick = (title: string, isParent: boolean = false) => {
+    setOpenItems((prev) => {
+      const isOpen = prev.includes(title);
+
+      if (isParent) {
+        // Logika akordeonu dla elementów nadrzędnych
+        return isOpen ? [] : [title];
+      } else {
+        // Logika przełączania dla elementów podrzędnych
+        return isOpen
+          ? prev.filter((item) => item !== title)
+          : [...prev, title];
+      }
+    });
   };
 
   useEffect(() => {
     const path = location.pathname;
-    if (path.startsWith("/sales")) setOpenItem("Sprzedaże");
-    else if (path.startsWith("/feeds")) setOpenItem("Pasze");
-    else if (path.startsWith("/expenses")) setOpenItem("Koszty");
-    else if (path.startsWith("/production-data"))
-      setOpenItem("Dane produkcyjne");
-    else if (path.startsWith("/gas")) setOpenItem("Gaz");
-    else if (path.startsWith("/employees")) setOpenItem("Pracownicy");
-    else if (path.startsWith("/data")) setOpenItem("Dane");
-    else if (path.startsWith("/settings")) setOpenItem("Ustawienia");
-    else if (path.startsWith("/summary")) setOpenItem("Podsumowanie");
-    else setOpenItem(null);
+
+    if (
+      path.startsWith("/production-data/weighings") ||
+      path.startsWith("/production-data/flock-loss")
+    ) {
+      setOpenItems(["Dane produkcyjne", "Pomiary cotygodniowe"]);
+    } else if (path.startsWith("/sales")) {
+      setOpenItems(["Sprzedaże"]);
+    } else if (path.startsWith("/feeds")) {
+      setOpenItems(["Pasze"]);
+    } else if (path.startsWith("/expenses")) {
+      setOpenItems(["Koszty"]);
+    } else if (path.startsWith("/production-data")) {
+      setOpenItems(["Dane produkcyjne"]);
+    } else if (path.startsWith("/gas")) {
+      setOpenItems(["Gaz"]);
+    } else if (path.startsWith("/employees")) {
+      setOpenItems(["Pracownicy"]);
+    } else if (path.startsWith("/data")) {
+      setOpenItems(["Dane"]);
+    } else if (path.startsWith("/settings")) {
+      setOpenItems(["Ustawienia"]);
+    } else if (path.startsWith("/summary")) {
+      setOpenItems(["Podsumowanie"]);
+    } else {
+      setOpenItems([]);
+    }
   }, [location.pathname]);
 
   const contentList = (
@@ -96,8 +126,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         to="/sales"
         title="Sprzedaże"
         icon={<IoCard />}
-        isOpen={openItem === "Sprzedaże"}
-        onClick={() => handleItemClick("Sprzedaże")}
+        isOpen={openItems.includes("Sprzedaże")}
+        onClick={() => handleItemClick("Sprzedaże", true)}
         notificationCount={notifications?.salesInvoices.count}
         notificationPriority={notifications?.salesInvoices.priority}
       >
@@ -120,8 +150,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         to="/feeds"
         title="Pasze"
         icon={<FaJarWheat />}
-        isOpen={openItem === "Pasze"}
-        onClick={() => handleItemClick("Pasze")}
+        isOpen={openItems.includes("Pasze")}
+        onClick={() => handleItemClick("Pasze", true)}
         notificationCount={notifications?.feedDeliveries.count}
         notificationPriority={notifications?.feedDeliveries.priority}
       >
@@ -148,8 +178,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         to="/expenses"
         title="Koszty"
         icon={<FaMoneyBill />}
-        isOpen={openItem === "Koszty"}
-        onClick={() => handleItemClick("Koszty")}
+        isOpen={openItems.includes("Koszty")}
+        onClick={() => handleItemClick("Koszty", true)}
       >
         <SidebarMenuItem
           to="/expenses/production"
@@ -177,8 +207,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         to="/production-data"
         title="Dane produkcyjne"
         icon={<FaIndustry />}
-        isOpen={openItem === "Dane produkcyjne"}
-        onClick={() => handleItemClick("Dane produkcyjne")}
+        isOpen={openItems.includes("Dane produkcyjne")}
+        onClick={() => handleItemClick("Dane produkcyjne", true)}
       >
         <SidebarMenuItem
           to="/production-data/failures"
@@ -196,10 +226,24 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           icon={<FaBuildingWheat />}
         />
         <SidebarMenuItem
-          to="/production-data/weighings"
-          title="Masy ciała"
-          icon={<FaWeight />}
-        />
+          to="production-data/weekly-measurements"
+          title="Pomiary cotygodniowe"
+          icon={<MdCalendarViewWeek />}
+          isOpen={openItems.includes("Pomiary cotygodniowe")}
+          onClick={() => handleItemClick("Pomiary cotygodniowe")}
+        >
+          <SidebarMenuItem
+            to="/production-data/weighings"
+            title="Masy ciała"
+            icon={<FaWeight />}
+          />
+          <SidebarMenuItem
+            to="/production-data/flock-loss"
+            title="Pomiary upadków i wybrakowań"
+            icon={<FaChartLine />}
+          />
+        </SidebarMenuItem>
+
         <SidebarMenuItem
           to="/production-data/irzplus"
           title="IRZplus"
@@ -211,8 +255,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         to="/gas"
         title="Gaz"
         icon={<MdPropane />}
-        isOpen={openItem === "Gaz"}
-        onClick={() => handleItemClick("Gaz")}
+        isOpen={openItems.includes("Gaz")}
+        onClick={() => handleItemClick("Gaz", true)}
       >
         <SidebarMenuItem
           to="/gas/deliveries"
@@ -236,8 +280,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         to="/employees"
         title="Pracownicy"
         icon={<MdPeopleAlt />}
-        isOpen={openItem === "Pracownicy"}
-        onClick={() => handleItemClick("Pracownicy")}
+        isOpen={openItems.includes("Pracownicy")}
+        onClick={() => handleItemClick("Pracownicy", true)}
         notificationCount={notifications?.employees.count}
         notificationPriority={notifications?.employees.priority}
       >
@@ -258,8 +302,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         to="/summary"
         title="Podsumowanie"
         icon={<MdDashboard />}
-        isOpen={openItem === "Podsumowanie"}
-        onClick={() => handleItemClick("Podsumowanie")}
+        isOpen={openItems.includes("Podsumowanie")}
+        onClick={() => handleItemClick("Podsumowanie", true)}
       >
         <SidebarMenuItem
           to="/summary/production-analysis"
@@ -277,8 +321,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         to="/data"
         title="Dane"
         icon={<FaDatabase />}
-        isOpen={openItem === "Dane"}
-        onClick={() => handleItemClick("Dane")}
+        isOpen={openItems.includes("Dane")}
+        onClick={() => handleItemClick("Dane", true)}
       >
         <SidebarMenuItem to="/data/farms" title="Fermy" icon={<PiFarmFill />} />
         <SidebarMenuItem to="/data/houses" title="Kurniki" icon={<FaHouse />} />
@@ -301,8 +345,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
 
       <SidebarMenuItem
         to="/settings"
-        isOpen={openItem === "Ustawienia"}
-        onClick={() => handleItemClick("Ustawienia")}
+        isOpen={openItems.includes("Ustawienia")}
+        onClick={() => handleItemClick("Ustawienia", true)}
         title="Ustawienia"
         icon={<MdSettings />}
       >
