@@ -375,7 +375,9 @@ const AddProductionDataFlockLossModal: React.FC<
             <Button
               variant="text"
               onClick={() => dispatch({ type: "ADD_ENTRY" })}
-              disabled={!form.farmId}
+              disabled={
+                !form.farmId || form.entries.length >= availableHenhouses.length
+              }
             >
               + Dodaj pozycję
             </Button>
