@@ -15,11 +15,12 @@ public class UserEntity : Entity
     public string Name { get; protected internal set; }
     public IrzplusCredentials IrzplusCredentials { get; protected internal set; }
 
-    public static UserEntity CreateUser(string login, string name)
+    public static UserEntity CreateUser(string login, string name, Guid? userId = null)
     {
         var user = new UserEntity
         {
-            Login = login
+            Login = login,
+            CreatedBy = userId
         };
 
         user.ChangeName(name);

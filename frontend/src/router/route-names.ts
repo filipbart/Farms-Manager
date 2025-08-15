@@ -36,6 +36,7 @@ export enum RouteName {
   SummaryProductionAnalysis = "summary/production-analysis",
   SummaryFinancialAnalysis = "summary/financial-analysis",
   SettingsUsers = "settings/users",
+  UserDetails = "settings/users/:userId",
   SettingsCycles = "settings/cycles",
   Users = "users",
   UserProfile = "user-profile",

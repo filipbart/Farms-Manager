@@ -149,7 +149,7 @@ export const RenderFilterField = ({
         label={filter.label}
         type="text"
         fullWidth
-        sx={{ minWidth: 200 }}
+        sx={{ minWidth: 250 }}
         value={value || ""}
         onChange={(e) => onChange(e.target.value)}
         disabled={filter.disabled}

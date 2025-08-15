@@ -281,6 +281,13 @@ export default class ApiUrl {
   public static DeleteEmployeePayslip = (id: string) =>
     this.EmployeePayslips + "/delete/" + id;
 
+  public static Users = this.BaseUrl + "users";
+  public static UsersDictionary = this.Users + "/dictionary";
+  public static UsersDetails = (id: string) => this.Users + "/" + id;
+  public static AddUser = this.Users + "/add";
+  public static UpdateUser = (id: string) => this.UsersDetails(id) + "/update";
+  public static DeleteUser = (id: string) => this.UsersDetails(id) + "/delete";
+
   public static Summary = this.BaseUrl + "summary";
   public static SummaryDictionary = this.Summary + "/dictionary";
   public static SummaryProductionAnalysis =

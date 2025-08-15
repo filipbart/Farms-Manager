@@ -39,6 +39,8 @@ import ProductionDataIrzplusPage from "../pages/production-data/irz-plus";
 import SummaryProductionAnalysisPage from "../pages/summary/production-analysis";
 import SummaryFinancialAnalysisPage from "../pages/summary/financial-analysis";
 import ProductionDataFlockLossPage from "../pages/production-data/flock-loss";
+import UsersPage from "../pages/settings/users/users";
+import UserDetailsPage from "../pages/settings/users/details";
 
 const DefaultRouter: React.FC = () => {
   const { getRoute } = useRouter();
@@ -59,7 +61,6 @@ const DefaultRouter: React.FC = () => {
           element={<InsertionsPage />}
         />
         <Route path={getRoute(RouteName.SalesList)} element={<SalesPage />} />
-
         <Route path={getRoute(RouteName.Farms)} element={<FarmsPage />} />
         <Route path={getRoute(RouteName.Houses)} element={<HousesPage />} />
         <Route
@@ -173,6 +174,14 @@ const DefaultRouter: React.FC = () => {
         <Route
           path={getRoute(RouteName.SummaryFinancialAnalysis)}
           element={<SummaryFinancialAnalysisPage />}
+        />
+        <Route
+          path={getRoute(RouteName.SettingsUsers)}
+          element={<UsersPage />}
+        />
+        <Route
+          path={getRoute(RouteName.UserDetails)}
+          element={<UserDetailsPage />}
         />
         <Route
           path={getRoute(RouteName.SettingsCycles)}
