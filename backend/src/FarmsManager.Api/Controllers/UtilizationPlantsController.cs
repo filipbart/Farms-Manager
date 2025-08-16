@@ -1,6 +1,8 @@
+using FarmsManager.Api.Attributes;
 using FarmsManager.Api.Controllers.Base;
 using FarmsManager.Application.Commands.UtilizationPlants;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Permissions;
 using FarmsManager.Application.Queries.UtilizationPlants;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -8,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace FarmsManager.Api.Controllers;
 
 [Route("api/utilization-plants")]
+[HasPermission(AppPermissions.Data.UtilizationPlantsManage)]
 public class UtilizationPlantsController(IMediator mediator) : BaseController
 {
     /// <summary>

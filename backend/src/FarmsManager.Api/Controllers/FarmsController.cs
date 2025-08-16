@@ -1,6 +1,8 @@
-﻿using FarmsManager.Api.Controllers.Base;
+﻿using FarmsManager.Api.Attributes;
+using FarmsManager.Api.Controllers.Base;
 using FarmsManager.Application.Commands.Farms;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Permissions;
 using FarmsManager.Application.Queries.Farms;
 using FarmsManager.Domain.Models.FarmAggregate;
 using MediatR;
@@ -15,6 +17,7 @@ public class FarmsController(IMediator mediator) : BaseController
     /// </summary>
     /// <returns></returns>
     [HttpGet]
+    [HasPermission(AppPermissions.Data.FarmsManage)]
     [ProducesResponseType(typeof(BaseResponse<GetAllFarmsQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetAllFarms()
@@ -28,6 +31,7 @@ public class FarmsController(IMediator mediator) : BaseController
     /// <param name="farmId"></param>
     /// <returns></returns>
     [HttpGet("{farmId:guid}/latest-cycle")]
+    [HasPermission(AppPermissions.Data.FarmsManage)]
     [ProducesResponseType(typeof(BaseResponse<FarmLatestCycleDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetLatestCycle([FromRoute] Guid farmId)
@@ -41,6 +45,7 @@ public class FarmsController(IMediator mediator) : BaseController
     /// <param name="farmId"></param>
     /// <returns></returns>
     [HttpGet("{farmId:guid}/henhouses")]
+    [HasPermission(AppPermissions.Data.HousesManage)]
     [ProducesResponseType(typeof(BaseResponse<GetFarmHenhousesQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetFarmHenhouses([FromRoute] Guid farmId)
@@ -54,6 +59,7 @@ public class FarmsController(IMediator mediator) : BaseController
     /// <param name="command"></param>
     /// <returns></returns>
     [HttpPost("add")]
+    [HasPermission(AppPermissions.Data.FarmsManage)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> AddFarm(AddFarmCommand command)
@@ -68,6 +74,7 @@ public class FarmsController(IMediator mediator) : BaseController
     /// <param name="data"></param>
     /// <returns></returns>
     [HttpPatch("update/{farmId:guid}")]
+    [HasPermission(AppPermissions.Data.FarmsManage)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UpdateFarm([FromRoute] Guid farmId, UpdateFarmDto data)
@@ -81,6 +88,7 @@ public class FarmsController(IMediator mediator) : BaseController
     /// <param name="farmId"></param>
     /// <returns></returns>
     [HttpPost("delete/{farmId:guid}")]
+    [HasPermission(AppPermissions.Data.FarmsManage)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> DeleteFarm([FromRoute] Guid farmId)
@@ -94,6 +102,7 @@ public class FarmsController(IMediator mediator) : BaseController
     /// <param name="command"></param>
     /// <returns></returns>
     [HttpPost("{farmId:guid}/add-henhouse")]
+    [HasPermission(AppPermissions.Data.HousesManage)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> AddHenhouse(AddHenhouseCommand command)
@@ -107,13 +116,14 @@ public class FarmsController(IMediator mediator) : BaseController
     /// <param name="henhouseId"></param>
     /// <returns></returns>
     [HttpPost("henhouse/delete/{henhouseId:guid}")]
+    [HasPermission(AppPermissions.Data.HousesManage)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> DeleteHenhouse([FromRoute] Guid henhouseId)
     {
         return Ok(await mediator.Send(new DeleteHenhouseCommand(henhouseId)));
     }
-    
+
     /// <summary>
     /// Aktualizuje wybrany kurnik
     /// </summary>
@@ -121,11 +131,12 @@ public class FarmsController(IMediator mediator) : BaseController
     /// <param name="data"></param>
     /// <returns></returns>
     [HttpPatch("henhouse/update/{henhouseId:guid}")]
+    [HasPermission(AppPermissions.Data.HousesManage)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> UpdateHenhouse([FromRoute] Guid henhouseId, UpdateHenhouseDto data )
+    public async Task<IActionResult> UpdateHenhouse([FromRoute] Guid henhouseId, UpdateHenhouseDto data)
     {
-        return Ok(await mediator.Send(new UpdateHenhouseCommand(henhouseId,data)));
+        return Ok(await mediator.Send(new UpdateHenhouseCommand(henhouseId, data)));
     }
 
     /// <summary>
@@ -134,6 +145,7 @@ public class FarmsController(IMediator mediator) : BaseController
     /// <param name="command"></param>
     /// <returns></returns>
     [HttpPost("update-cycle")]
+    [HasPermission(AppPermissions.Data.FarmsManage)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UpdateFarmCycle(UpdateFarmCycleCommand command)

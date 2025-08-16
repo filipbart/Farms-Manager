@@ -1,12 +1,15 @@
+using FarmsManager.Api.Attributes;
 using FarmsManager.Api.Controllers.Base;
 using FarmsManager.Application.Commands.Employees;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Permissions;
 using FarmsManager.Application.Queries.Employees;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FarmsManager.Api.Controllers;
 
+[HasPermission(AppPermissions.Employees.ListView)]
 public class EmployeesController(IMediator mediator) : BaseController
 {
     /// <summary>

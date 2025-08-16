@@ -1,6 +1,8 @@
-﻿using FarmsManager.Api.Controllers.Base;
+﻿using FarmsManager.Api.Attributes;
+using FarmsManager.Api.Controllers.Base;
 using FarmsManager.Application.Commands.Hatcheries;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Permissions;
 using FarmsManager.Application.Queries.Hatcheries;
 using FarmsManager.Application.Queries.Hatcheries.Prices;
 using MediatR;
@@ -15,6 +17,7 @@ public class HatcheriesController(IMediator mediator) : BaseController
     /// </summary>
     /// <returns></returns>
     [HttpGet]
+    [HasPermission(AppPermissions.Data.HatcheriesManage)]
     [ProducesResponseType(typeof(BaseResponse<GetAllHatcheriesQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetAllHatcheries()
@@ -28,6 +31,7 @@ public class HatcheriesController(IMediator mediator) : BaseController
     /// <param name="command"></param>
     /// <returns></returns>
     [HttpPost("add")]
+    [HasPermission(AppPermissions.Data.HatcheriesManage)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> AddHatchery(AddHatcheryCommand command)
@@ -42,6 +46,7 @@ public class HatcheriesController(IMediator mediator) : BaseController
     /// <param name="data"></param>
     /// <returns></returns>
     [HttpPatch("update/{hatcheryId:guid}")]
+    [HasPermission(AppPermissions.Data.HatcheriesManage)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UpdateHatchery([FromRoute] Guid hatcheryId, UpdateHatcheryDto data)
@@ -55,6 +60,7 @@ public class HatcheriesController(IMediator mediator) : BaseController
     /// <param name="hatcheryId"></param>
     /// <returns></returns>
     [HttpPost("delete/{hatcheryId:guid}")]
+    [HasPermission(AppPermissions.Data.HatcheriesManage)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> DeleteHatchery([FromRoute] Guid hatcheryId)
@@ -67,6 +73,7 @@ public class HatcheriesController(IMediator mediator) : BaseController
     /// </summary>
     /// <returns></returns>
     [HttpGet("prices/dictionary")]
+    [HasPermission(AppPermissions.HatcheryNotes.View)]
     [ProducesResponseType(typeof(BaseResponse<GetHatcheryPricesDictionaryQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetPricesDictionary()
@@ -80,6 +87,7 @@ public class HatcheriesController(IMediator mediator) : BaseController
     /// <param name="filters"></param>
     /// <returns></returns>
     [HttpGet("prices")]
+    [HasPermission(AppPermissions.HatcheryNotes.View)]
     [ProducesResponseType(typeof(BaseResponse<GetHatcheryPricesQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetHatcheryPrices([FromQuery] GetHatcheryPricesQueryFilters filters)
@@ -93,6 +101,7 @@ public class HatcheriesController(IMediator mediator) : BaseController
     /// <param name="command"></param>
     /// <returns></returns>
     [HttpPost("prices/add")]
+    [HasPermission(AppPermissions.HatcheryNotes.View)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> AddHatcheryPrice(AddHatcheryPriceCommand command)
@@ -107,6 +116,7 @@ public class HatcheriesController(IMediator mediator) : BaseController
     /// <param name="data"></param>
     /// <returns></returns>
     [HttpPatch("prices/update/{hatcheryPriceId:guid}")]
+    [HasPermission(AppPermissions.HatcheryNotes.View)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UpdateHatcheryPrice([FromRoute] Guid hatcheryPriceId, UpdateHatcheryPriceData data)
@@ -120,6 +130,7 @@ public class HatcheriesController(IMediator mediator) : BaseController
     /// <param name="hatcheryPriceId"></param>
     /// <returns></returns>
     [HttpDelete("prices/delete/{hatcheryPriceId:guid}")]
+    [HasPermission(AppPermissions.HatcheryNotes.View)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> DeleteHatcheryPrice([FromRoute] Guid hatcheryPriceId)
@@ -132,6 +143,7 @@ public class HatcheriesController(IMediator mediator) : BaseController
     /// </summary>
     /// <returns></returns>
     [HttpGet("notes")]
+    [HasPermission(AppPermissions.HatcheryNotes.View)]
     [ProducesResponseType(typeof(BaseResponse<GetHatcheryNotesQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetHatcheryNotes()
@@ -145,6 +157,7 @@ public class HatcheriesController(IMediator mediator) : BaseController
     /// <param name="data"></param>
     /// <returns></returns>
     [HttpPost("notes/add")]
+    [HasPermission(AppPermissions.HatcheryNotes.View)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> AddHatcheryNote(HatcheryNoteData data)
@@ -159,6 +172,7 @@ public class HatcheriesController(IMediator mediator) : BaseController
     /// <param name="data"></param>
     /// <returns></returns>
     [HttpPatch("notes/update/{hatcheryNoteId:guid}")]
+    [HasPermission(AppPermissions.HatcheryNotes.View)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UpdateHatcheryNote([FromRoute] Guid hatcheryNoteId, HatcheryNoteData data)
@@ -172,6 +186,7 @@ public class HatcheriesController(IMediator mediator) : BaseController
     /// <param name="hatcheryNoteId"></param>
     /// <returns></returns>
     [HttpDelete("notes/delete/{hatcheryNoteId:guid}")]
+    [HasPermission(AppPermissions.HatcheryNotes.View)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> DeleteHatcheryNote([FromRoute] Guid hatcheryNoteId)

@@ -1,8 +1,10 @@
-﻿using FarmsManager.Api.Controllers.Base;
+﻿using FarmsManager.Api.Attributes;
+using FarmsManager.Api.Controllers.Base;
 using FarmsManager.Application.Commands.Sales;
 using FarmsManager.Application.Commands.Sales.Invoices;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
+using FarmsManager.Application.Permissions;
 using FarmsManager.Application.Queries.Sales;
 using FarmsManager.Application.Queries.Sales.Dictionary;
 using FarmsManager.Application.Queries.Sales.ExportFile;
@@ -13,6 +15,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FarmsManager.Api.Controllers;
 
+[HasPermission(AppPermissions.Sales.View)]
 public class SalesController(IMediator mediator, IS3Service s3Service) : BaseController
 {
     /// <summary>
@@ -142,6 +145,7 @@ public class SalesController(IMediator mediator, IS3Service s3Service) : BaseCon
     /// <param name="filters"></param>
     /// <returns></returns>
     [HttpGet("invoices")]
+    [HasPermission(AppPermissions.Sales.InvoicesView)]
     [ProducesResponseType(typeof(BaseResponse<GetSalesInvoicesQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetSalesInvoices([FromQuery] GetSalesInvoicesQueryFilters filters)
@@ -156,6 +160,7 @@ public class SalesController(IMediator mediator, IS3Service s3Service) : BaseCon
     /// <param name="data"></param>
     /// <returns></returns>
     [HttpPatch("invoices/update/{saleInvoiceId:guid}")]
+    [HasPermission(AppPermissions.Sales.InvoicesView)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UpdateSaleInvoice([FromRoute] Guid saleInvoiceId,
@@ -170,6 +175,7 @@ public class SalesController(IMediator mediator, IS3Service s3Service) : BaseCon
     /// <param name="saleInvoiceId"></param>
     /// <returns></returns>
     [HttpDelete("invoices/delete/{saleInvoiceId:guid}")]
+    [HasPermission(AppPermissions.Sales.InvoicesView)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> DeleteSaleInvoice([FromRoute] Guid saleInvoiceId)
@@ -184,6 +190,7 @@ public class SalesController(IMediator mediator, IS3Service s3Service) : BaseCon
     /// <returns></returns>
     [HttpPost("invoices/upload")]
     [Consumes("multipart/form-data")]
+    [HasPermission(AppPermissions.Sales.InvoicesView)]
     [ProducesResponseType(typeof(BaseResponse<UploadSalesInvoicesCommandResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UploadSalesInvoices([FromForm] UploadSalesInvoicesDto dto)
@@ -197,6 +204,7 @@ public class SalesController(IMediator mediator, IS3Service s3Service) : BaseCon
     /// <param name="command"></param>
     /// <returns></returns>
     [HttpPost("invoices/save-invoice")]
+    [HasPermission(AppPermissions.Sales.InvoicesView)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> SaveSaleInvoice(SaveSalesInvoiceCommand command)
@@ -210,6 +218,7 @@ public class SalesController(IMediator mediator, IS3Service s3Service) : BaseCon
     /// <param name="command"></param>
     /// <returns></returns>
     [HttpPost("invoices/book-payment")]
+    [HasPermission(AppPermissions.Sales.InvoicesView)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> SaleInvoicesBookPayment(SalesInvoicesBookPaymentCommand command)

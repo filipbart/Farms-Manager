@@ -36,4 +36,7 @@
     <data name="FileNotFound" xml:space="preserve">
         <value>Nie znaleziono pliku</value>
     </data>
+    <data name="Forbidden" xml:space="preserve">
+        <value>Dostęp zabroniony</value>
+    </data>
 </root>

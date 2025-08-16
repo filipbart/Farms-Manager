@@ -1,5 +1,7 @@
-﻿using FarmsManager.Api.Controllers.Base;
+﻿using FarmsManager.Api.Attributes;
+using FarmsManager.Api.Controllers.Base;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Permissions;
 using FarmsManager.Application.Queries.ProductionData;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -7,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace FarmsManager.Api.Controllers.ProductionData;
 
 [Route("api/production-data")]
+[HasPermission(AppPermissions.ProductionData.View)]
 public class ProductionDataController(IMediator mediator) : BaseController
 {
     /// <summary>

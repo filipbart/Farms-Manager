@@ -1,6 +1,8 @@
-﻿using FarmsManager.Api.Controllers.Base;
+﻿using FarmsManager.Api.Attributes;
+using FarmsManager.Api.Controllers.Base;
 using FarmsManager.Application.Commands.SalesSettings;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Permissions;
 using FarmsManager.Application.Queries.SalesSettings;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -8,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace FarmsManager.Api.Controllers;
 
 [Route("api/sales-settings")]
+[HasPermission(AppPermissions.Sales.SettingsManage)]
 public class SalesSettingsController(IMediator mediator) : BaseController
 {
     /// <summary>

@@ -14,6 +14,10 @@ public class UserEntity : Entity
     public string PasswordHash { get; protected internal set; }
     public string Name { get; protected internal set; }
     public IrzplusCredentials IrzplusCredentials { get; protected internal set; }
+    public bool IsAdmin { get; protected internal set; }
+
+    private readonly List<UserPermissionEntity> _permissions = new();
+    public virtual IReadOnlyCollection<UserPermissionEntity> Permissions => _permissions;
 
     public static UserEntity CreateUser(string login, string name, Guid? userId = null)
     {
@@ -43,5 +47,33 @@ public class UserEntity : Entity
     {
         Guard.Against.Null(irzplusCredentials);
         IrzplusCredentials = irzplusCredentials;
+    }
+
+    public IEnumerable<string> GetPermissions()
+    {
+        return Permissions.Select(t => t.PermissionName);
+    }
+
+    public void AddAdminPermission(string permission, Guid? creator)
+    {
+        Guard.Against.NullOrWhiteSpace(permission, nameof(permission));
+
+        _permissions.Add(new UserPermissionEntity
+        {
+            CreatedBy = creator,
+            UserId = Id,
+            PermissionName = permission
+        });
+    }
+
+    public void RemoveAdminPermission(string permission)
+    {
+        Guard.Against.NullOrWhiteSpace(permission, nameof(permission));
+
+        var permissionData = Permissions.FirstOrDefault(t => t.PermissionName == permission);
+        if (permissionData is not null)
+        {
+            _permissions.Remove(permissionData);
+        }
     }
 }

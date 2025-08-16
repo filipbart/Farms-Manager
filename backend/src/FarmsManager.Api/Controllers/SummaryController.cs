@@ -1,5 +1,7 @@
+using FarmsManager.Api.Attributes;
 using FarmsManager.Api.Controllers.Base;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Permissions;
 using FarmsManager.Application.Queries.Insertions;
 using FarmsManager.Application.Queries.Summary;
 using FarmsManager.Application.Queries.Summary.FinancialAnalysis;
@@ -16,6 +18,7 @@ public class SummaryController(IMediator mediator) : BaseController
     /// </summary>
     /// <returns></returns>
     [HttpGet("dictionary")]
+    [HasPermission(AppPermissions.Summary.View)]
     [ProducesResponseType(typeof(BaseResponse<GetSummaryDictionaryQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetDictionaries()
@@ -29,6 +32,7 @@ public class SummaryController(IMediator mediator) : BaseController
     /// <param name="filters"></param>
     /// <returns></returns>
     [HttpGet("production-analysis")]
+    [HasPermission(AppPermissions.Summary.ProductionAnalysisView)]
     [ProducesResponseType(typeof(BaseResponse<SummaryProductionAnalysisQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetProductionAnalysisData(
@@ -36,13 +40,14 @@ public class SummaryController(IMediator mediator) : BaseController
     {
         return Ok(await mediator.Send(new SummaryProductionAnalysisQuery(filters)));
     }
-    
+
     /// <summary>
     /// Zwraca dane dla podsumowania - Analiza finansowa
     /// </summary>
     /// <param name="filters"></param>
     /// <returns></returns>
     [HttpGet("financial-analysis")]
+    [HasPermission(AppPermissions.Summary.FinancialAnalysisView)]
     [ProducesResponseType(typeof(BaseResponse<SummaryFinancialAnalysisQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetFinancialAnalysisData(

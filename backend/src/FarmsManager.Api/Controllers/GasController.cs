@@ -1,7 +1,9 @@
-﻿using FarmsManager.Api.Controllers.Base;
+﻿using FarmsManager.Api.Attributes;
+using FarmsManager.Api.Controllers.Base;
 using FarmsManager.Application.Commands.Gas.Consumptions;
 using FarmsManager.Application.Commands.Gas.Deliveries;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Permissions;
 using FarmsManager.Application.Queries.Gas;
 using FarmsManager.Application.Queries.Gas.Consumptions;
 using FarmsManager.Application.Queries.Gas.Deliveries;
@@ -10,6 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FarmsManager.Api.Controllers;
 
+[HasPermission(AppPermissions.Gas.View)]
 public class GasController(IMediator mediator) : BaseController
 {
     /// <summary>
@@ -17,6 +20,7 @@ public class GasController(IMediator mediator) : BaseController
     /// </summary>
     /// <returns></returns>
     [HttpGet("dictionary")]
+    [HasPermission(AppPermissions.Gas.DeliveriesView)]
     [ProducesResponseType(typeof(BaseResponse<GetGasDeliveriesDictionaryQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetGasDeliveriesDictionary()
@@ -30,6 +34,7 @@ public class GasController(IMediator mediator) : BaseController
     /// <param name="filters"></param>
     /// <returns></returns>
     [HttpGet("deliveries")]
+    [HasPermission(AppPermissions.Gas.DeliveriesView)]
     [ProducesResponseType(typeof(BaseResponse<GetGasDeliveriesQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetGasDeliveries([FromQuery] GetGasDeliveriesQueryFilters filters)
@@ -42,6 +47,7 @@ public class GasController(IMediator mediator) : BaseController
     /// </summary>
     /// <returns></returns>
     [HttpGet("contractors")]
+    [HasPermission(AppPermissions.Gas.DeliveriesView)]
     [ProducesResponseType(typeof(BaseResponse<GetGasContractorsQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetGasContractors()
@@ -56,6 +62,7 @@ public class GasController(IMediator mediator) : BaseController
     /// <returns></returns>
     [HttpPost("deliveries/upload")]
     [Consumes("multipart/form-data")]
+    [HasPermission(AppPermissions.Gas.DeliveriesView)]
     [ProducesResponseType(typeof(BaseResponse<UploadGasDeliveriesInvoicesCommandResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UploadExpenseInvoices([FromForm] UploadGasDeliveriesInvoicesDto dto)
@@ -69,6 +76,7 @@ public class GasController(IMediator mediator) : BaseController
     /// <param name="command"></param>
     /// <returns></returns>
     [HttpPost("deliveries/save-invoice")]
+    [HasPermission(AppPermissions.Gas.DeliveriesView)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> SaveGasDeliveryInvoice(SaveGasDeliveryInvoiceCommand command)
@@ -82,6 +90,7 @@ public class GasController(IMediator mediator) : BaseController
     /// <param name="data"></param>
     /// <returns></returns>
     [HttpPost("deliveries/add")]
+    [HasPermission(AppPermissions.Gas.DeliveriesView)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> AddGasDelivery([FromForm] AddGasDeliveryData data)
@@ -96,6 +105,7 @@ public class GasController(IMediator mediator) : BaseController
     /// <param name="data"></param>
     /// <returns></returns>
     [HttpPatch("deliveries/update/{gasDeliveryId:guid}")]
+    [HasPermission(AppPermissions.Gas.DeliveriesView)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UpdateGasDelivery([FromRoute] Guid gasDeliveryId, UpdateGasDeliveryData data)
@@ -109,6 +119,7 @@ public class GasController(IMediator mediator) : BaseController
     /// <param name="gasDeliveryId"></param>
     /// <returns></returns>
     [HttpDelete("deliveries/delete/{gasDeliveryId:guid}")]
+    [HasPermission(AppPermissions.Gas.DeliveriesView)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> DeleteGasDelivery([FromRoute] Guid gasDeliveryId)
@@ -121,6 +132,7 @@ public class GasController(IMediator mediator) : BaseController
     /// </summary>
     /// <returns></returns>
     [HttpGet("consumptions/dictionary")]
+    [HasPermission(AppPermissions.Gas.ConsumptionsView)]
     [ProducesResponseType(typeof(BaseResponse<GetGasConsumptionsDictionaryQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetGasConsumptionsDictionary()
@@ -134,6 +146,7 @@ public class GasController(IMediator mediator) : BaseController
     /// <param name="filters"></param>
     /// <returns></returns>
     [HttpGet("consumptions")]
+    [HasPermission(AppPermissions.Gas.ConsumptionsView)]
     [ProducesResponseType(typeof(BaseResponse<GetGasConsumptionsQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetGasConsumptions([FromQuery] GetGasConsumptionsQueryFilters filters)
@@ -147,6 +160,7 @@ public class GasController(IMediator mediator) : BaseController
     /// <param name="query"></param>
     /// <returns></returns>
     [HttpGet("consumptions/calculate-cost")]
+    [HasPermission(AppPermissions.Gas.ConsumptionsView)]
     [ProducesResponseType(typeof(BaseResponse<CalculateCostForConsumptionQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> CalculateCostForConsumption([FromQuery] CalculateCostForConsumptionQuery query)
@@ -160,6 +174,7 @@ public class GasController(IMediator mediator) : BaseController
     /// <param name="command"></param>
     /// <returns></returns>
     [HttpPost("consumptions/add")]
+    [HasPermission(AppPermissions.Gas.ConsumptionsView)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> AddGasConsumption(AddGasConsumptionCommand command)
@@ -173,13 +188,14 @@ public class GasController(IMediator mediator) : BaseController
     /// <param name="gasConsumptionId"></param>
     /// <returns></returns>
     [HttpDelete("consumptions/delete/{gasConsumptionId:guid}")]
+    [HasPermission(AppPermissions.Gas.ConsumptionsView)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> DeleteGasConsumption([FromRoute] Guid gasConsumptionId)
     {
         return Ok(await mediator.Send(new DeleteGasConsumptionCommand(gasConsumptionId)));
     }
-    
+
     /// <summary>
     /// Aktualizuje zużycie gazu
     /// </summary>
@@ -187,10 +203,12 @@ public class GasController(IMediator mediator) : BaseController
     /// <param name="data"></param>
     /// <returns></returns>
     [HttpPatch("consumptions/update/{gasConsumptionId:guid}")]
+    [HasPermission(AppPermissions.Gas.ConsumptionsView)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> UpdateGasConsumption([FromRoute] Guid gasConsumptionId, UpdateGasConsumptionDto data)
+    public async Task<IActionResult> UpdateGasConsumption([FromRoute] Guid gasConsumptionId,
+        UpdateGasConsumptionDto data)
     {
-        return Ok(await mediator.Send(new UpdateGasConsumptionCommand(gasConsumptionId,data)));
+        return Ok(await mediator.Send(new UpdateGasConsumptionCommand(gasConsumptionId, data)));
     }
 }

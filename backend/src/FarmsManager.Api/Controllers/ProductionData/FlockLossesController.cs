@@ -1,6 +1,8 @@
+using FarmsManager.Api.Attributes;
 using FarmsManager.Api.Controllers.Base;
 using FarmsManager.Application.Commands.ProductionData.FlockLosses;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Permissions;
 using FarmsManager.Application.Queries.ProductionData.FlockLosses;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -8,7 +10,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace FarmsManager.Api.Controllers.ProductionData;
 
 [Route("api/production-data/flock-losses")]
-public class FlockLossesController(IMediator mediator) :  BaseController
+[HasPermission(AppPermissions.ProductionData.FlockLossView)]
+public class FlockLossesController(IMediator mediator) : BaseController
 {
     /// <summary>
     /// Zwraca listę pomiarów upadków i wybrakowań według podanych filtrów

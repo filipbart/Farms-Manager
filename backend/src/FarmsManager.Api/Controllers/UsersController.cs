@@ -1,6 +1,8 @@
+using FarmsManager.Api.Attributes;
 using FarmsManager.Api.Controllers.Base;
 using FarmsManager.Application.Commands.Users;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Permissions;
 using FarmsManager.Application.Queries.Users;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -15,6 +17,7 @@ public class UsersController(IMediator mediator) : BaseController
     /// <param name="filters"></param>
     /// <returns></returns>
     [HttpGet]
+    [HasPermission(AppPermissions.Settings.Users.View)]
     [ProducesResponseType(typeof(BaseResponse<GetUsersQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetUsers([FromQuery] GetUsersQueryFilters filters)
@@ -28,6 +31,7 @@ public class UsersController(IMediator mediator) : BaseController
     /// <param name="data"></param>
     /// <returns></returns>
     [HttpPost("add")]
+    [HasPermission(AppPermissions.Settings.Users.Manage)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> AddUser(AddUserData data)
@@ -41,6 +45,7 @@ public class UsersController(IMediator mediator) : BaseController
     /// <param name="userId"></param>
     /// <returns></returns>
     [HttpDelete("{userId:guid}/delete")]
+    [HasPermission(AppPermissions.Settings.Users.Manage)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> DeleteUser([FromRoute] Guid userId)
@@ -54,6 +59,7 @@ public class UsersController(IMediator mediator) : BaseController
     /// <param name="userId"></param>
     /// <returns></returns>
     [HttpGet("{userId:guid}")]
+    [HasPermission(AppPermissions.Settings.Users.Manage)]
     [ProducesResponseType(typeof(BaseResponse<UserDetailsQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetUserDetails([FromRoute] Guid userId)
@@ -68,6 +74,7 @@ public class UsersController(IMediator mediator) : BaseController
     /// <param name="data"></param>
     /// <returns></returns>
     [HttpPatch("{userId:guid}/update")]
+    [HasPermission(AppPermissions.Settings.Users.Manage)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UpdateUser([FromRoute] Guid userId, UpdateUserData data)

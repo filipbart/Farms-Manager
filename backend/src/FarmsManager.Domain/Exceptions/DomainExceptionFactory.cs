@@ -8,4 +8,5 @@ public abstract partial class DomainException
     public static DomainException UserNotFound() => new UserNotFoundDomainException(null);
     public static DomainException InsertionExists(string henhouseName) => new InsertionExistsDomainException(henhouseName, null);
     public static DomainException FileNotFound() => new FileNotFoundDomainException(null);
+    public static DomainException Forbidden() => new ForbiddenDomainException(null);
 }

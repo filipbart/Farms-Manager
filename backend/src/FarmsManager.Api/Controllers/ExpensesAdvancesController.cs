@@ -1,6 +1,8 @@
+using FarmsManager.Api.Attributes;
 using FarmsManager.Api.Controllers.Base;
 using FarmsManager.Application.Commands.Expenses.Advances;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Permissions;
 using FarmsManager.Application.Queries.Expenses.Advances;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -8,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace FarmsManager.Api.Controllers;
 
 [Route("api/expenses/advances")]
+[HasPermission(AppPermissions.Expenses.AdvancesView)]
 public class ExpensesAdvancesController(IMediator mediator) : BaseController
 {
     /// <summary>

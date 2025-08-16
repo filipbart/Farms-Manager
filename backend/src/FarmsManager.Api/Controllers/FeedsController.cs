@@ -1,14 +1,17 @@
-﻿using FarmsManager.Api.Controllers.Base;
+﻿using FarmsManager.Api.Attributes;
+using FarmsManager.Api.Controllers.Base;
 using FarmsManager.Application.Commands.Feeds.Deliveries;
 using FarmsManager.Application.Commands.Feeds.Names;
 using FarmsManager.Application.Commands.Feeds.Prices;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Permissions;
 using FarmsManager.Application.Queries.Feeds;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FarmsManager.Api.Controllers;
 
+[HasPermission(AppPermissions.Feeds.View)]
 public class FeedsController(IMediator mediator) : BaseController
 {
     /// <summary>
@@ -67,6 +70,7 @@ public class FeedsController(IMediator mediator) : BaseController
     /// <param name="filters"></param>
     /// <returns></returns>
     [HttpGet("prices")]
+    [HasPermission(AppPermissions.Feeds.PricesView)]
     [ProducesResponseType(typeof(BaseResponse<GetFeedsPricesQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetFeedsPrices([FromQuery] GetFeedsPricesQueryFilters filters)
@@ -80,6 +84,7 @@ public class FeedsController(IMediator mediator) : BaseController
     /// <param name="command"></param>
     /// <returns></returns>
     [HttpPost("add-price")]
+    [HasPermission(AppPermissions.Feeds.PricesView)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> AddFeedPrice(AddFeedPriceCommand command)
@@ -94,6 +99,7 @@ public class FeedsController(IMediator mediator) : BaseController
     /// <param name="data"></param>
     /// <returns></returns>
     [HttpPatch("update-price/{id:guid}")]
+    [HasPermission(AppPermissions.Feeds.PricesView)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UpdateFeedPrice([FromRoute] Guid id, [FromBody] UpdateFeedPriceCommandDto data)
@@ -107,6 +113,7 @@ public class FeedsController(IMediator mediator) : BaseController
     /// <param name="id"></param>
     /// <returns></returns>
     [HttpDelete("delete-price/{id:guid}")]
+    [HasPermission(AppPermissions.Feeds.PricesView)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> DeleteFeedPrice([FromRoute] Guid id)
@@ -121,6 +128,7 @@ public class FeedsController(IMediator mediator) : BaseController
     /// <returns></returns>
     [HttpPost("upload-deliveries")]
     [Consumes("multipart/form-data")]
+    [HasPermission(AppPermissions.Feeds.DeliveriesView)]
     [ProducesResponseType(typeof(BaseResponse<UploadDeliveriesFilesCommandResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UploadDeliveriesInvoices([FromForm] UploadDeliveriesFilesCommandDto dto)
@@ -134,6 +142,7 @@ public class FeedsController(IMediator mediator) : BaseController
     /// <param name="command"></param>
     /// <returns></returns>
     [HttpPost("save-invoice")]
+    [HasPermission(AppPermissions.Feeds.DeliveriesView)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> SaveInvoiceData(SaveFeedInvoiceDataCommand command)
@@ -147,6 +156,7 @@ public class FeedsController(IMediator mediator) : BaseController
     /// <param name="filters"></param>
     /// <returns></returns>
     [HttpGet("deliveries")]
+    [HasPermission(AppPermissions.Feeds.DeliveriesView)]
     [ProducesResponseType(typeof(BaseResponse<GetFeedsDeliveriesQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetFeedsDeliveries([FromQuery] GetFeedsDeliveriesQueryFilters filters)
@@ -160,6 +170,7 @@ public class FeedsController(IMediator mediator) : BaseController
     /// <param name="feedDeliveryId"></param>
     /// <returns></returns>
     [HttpGet("download-file/{feedDeliveryId:guid}")]
+    [HasPermission(AppPermissions.Feeds.DeliveriesView)]
     [ProducesResponseType(typeof(File), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetFeedInvoiceFile([FromRoute] Guid feedDeliveryId)
@@ -176,6 +187,7 @@ public class FeedsController(IMediator mediator) : BaseController
     /// <param name="data"></param>
     /// <returns></returns>
     [HttpPatch("update-delivery/{id:guid}")]
+    [HasPermission(AppPermissions.Feeds.DeliveriesView)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UpdateFeedDelivery([FromRoute] Guid id,
@@ -190,6 +202,7 @@ public class FeedsController(IMediator mediator) : BaseController
     /// <param name="id"></param>
     /// <returns></returns>
     [HttpDelete("delete-delivery/{id:guid}")]
+    [HasPermission(AppPermissions.Feeds.DeliveriesView)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> DeleteFeedDelivery([FromRoute] Guid id)
@@ -204,6 +217,7 @@ public class FeedsController(IMediator mediator) : BaseController
     /// <param name="comment"></param>
     /// <returns></returns>
     [HttpGet("payment-file")]
+    [HasPermission(AppPermissions.Feeds.PaymentsView)]
     [ProducesResponseType(typeof(File), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetFeedPaymentFile([FromQuery] List<Guid> ids, [FromQuery] string? comment)
@@ -219,6 +233,7 @@ public class FeedsController(IMediator mediator) : BaseController
     /// <param name="id"></param>
     /// <returns></returns>
     [HttpDelete("delete-payment/{id:guid}")]
+    [HasPermission(AppPermissions.Feeds.PaymentsView)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> DeleteFeedPayment([FromRoute] Guid id)
@@ -232,6 +247,7 @@ public class FeedsController(IMediator mediator) : BaseController
     /// <param name="filters"></param>
     /// <returns></returns>
     [HttpGet("payments")]
+    [HasPermission(AppPermissions.Feeds.PaymentsView)]
     [ProducesResponseType(typeof(BaseResponse<GetFeedsPaymentsQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetFeedsPrices([FromQuery] GetFeedsPaymentsQueryFilters filters)
@@ -245,6 +261,7 @@ public class FeedsController(IMediator mediator) : BaseController
     /// <param name="dto"></param>
     /// <returns></returns>
     [HttpPost("add-correction")]
+    [HasPermission(AppPermissions.Feeds.DeliveriesView)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> AddFeedInvoiceCorrection([FromForm] AddFeedInvoiceCorrectionCommandDto dto)
@@ -258,6 +275,7 @@ public class FeedsController(IMediator mediator) : BaseController
     /// <param name="id"></param>
     /// <returns></returns>
     [HttpDelete("delete-correction/{id:guid}")]
+    [HasPermission(AppPermissions.Feeds.DeliveriesView)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> DeleteFeedCorrection([FromRoute] Guid id)
@@ -271,6 +289,7 @@ public class FeedsController(IMediator mediator) : BaseController
     /// <param name="dto"></param>
     /// <returns></returns>
     [HttpPatch("update-correction")]
+    [HasPermission(AppPermissions.Feeds.DeliveriesView)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UpdateFeedCorrection([FromBody] UpdateFeedCorrectionDto dto)

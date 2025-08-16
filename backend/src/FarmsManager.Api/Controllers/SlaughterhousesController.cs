@@ -1,12 +1,15 @@
-﻿using FarmsManager.Api.Controllers.Base;
+﻿using FarmsManager.Api.Attributes;
+using FarmsManager.Api.Controllers.Base;
 using FarmsManager.Application.Commands.Slaughterhouses;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Permissions;
 using FarmsManager.Application.Queries.Slaughterhouses;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FarmsManager.Api.Controllers;
 
+[HasPermission(AppPermissions.Data.SlaughterhousesManage)]
 public class SlaughterhousesController(IMediator mediator) : BaseController
 {
     /// <summary>

@@ -1,7 +1,9 @@
-﻿using FarmsManager.Api.Controllers.Base;
+﻿using FarmsManager.Api.Attributes;
+using FarmsManager.Api.Controllers.Base;
 using FarmsManager.Application.Commands.ProductionData.Failures;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Models.ProductionData;
+using FarmsManager.Application.Permissions;
 using FarmsManager.Application.Queries.ProductionData.Failures;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -9,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace FarmsManager.Api.Controllers.ProductionData;
 
 [Route("api/production-data/failures")]
+[HasPermission(AppPermissions.ProductionData.FailuresView)]
 public class FailuresController(IMediator mediator) : BaseController
 {
     /// <summary>

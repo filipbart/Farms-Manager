@@ -1,6 +1,8 @@
-﻿using FarmsManager.Api.Controllers.Base;
+﻿using FarmsManager.Api.Attributes;
+using FarmsManager.Api.Controllers.Base;
 using FarmsManager.Application.Commands.Insertions;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Permissions;
 using FarmsManager.Application.Queries.Insertions;
 using FarmsManager.Application.Queries.Insertions.Dictionary;
 using FarmsManager.Application.Queries.Insertions.Henhouses;
@@ -9,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FarmsManager.Api.Controllers;
 
+[HasPermission(AppPermissions.Insertions.View)]
 public class InsertionsController(IMediator mediator) : BaseController
 {
     /// <summary>

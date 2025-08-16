@@ -1,6 +1,8 @@
-﻿using FarmsManager.Api.Controllers.Base;
+﻿using FarmsManager.Api.Attributes;
+using FarmsManager.Api.Controllers.Base;
 using FarmsManager.Application.Commands.ProductionData.Weighings;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Permissions;
 using FarmsManager.Application.Queries.ProductionData.Weighings;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -8,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace FarmsManager.Api.Controllers.ProductionData;
 
 [Route("api/production-data/weighings")]
+[HasPermission(AppPermissions.ProductionData.WeighingsView)]
 public class WeighingsController(IMediator mediator) : BaseController
 {
     /// <summary>
