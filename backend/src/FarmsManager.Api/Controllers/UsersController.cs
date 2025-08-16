@@ -96,13 +96,28 @@ public class UsersController(IMediator mediator) : BaseController
     }
 
     /// <summary>
-    /// Aktualizuje uprawnienia uzytkownika
+    /// Aktualizuje przypisane fermy do użytkownika
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    [HttpPost("{userId:guid}/farms")]
+    [HasPermission(AppPermissions.Settings.Users.Manage)]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> UpdateUserFarms([FromRoute] Guid userId, [FromBody] UpdateUserFarmsDto data)
+    {
+        return Ok(await mediator.Send(new UpdateUserFarmsCommand(userId, data.FarmIds)));
+    }
+
+    /// <summary>
+    /// Aktualizuje uprawnienia użytkownika
     /// </summary>
     /// <param name="userId"></param>
     /// <param name="data"></param>
     /// <returns></returns>
     [HttpPost("{userId:guid}/update-permissions")]
-    [HasPermission(AppPermissions.Settings.Users.Manage)]
+    [HasPermission(AppPermissions.Settings.Users.ManagePermissions)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UpdateUserPermissions([FromRoute] Guid userId,

@@ -17,7 +17,7 @@ public record MeQueryResponse
     public string Name { get; init; }
     public bool IsAdmin { get; init; }
     public List<string> Permissions { get; init; }
-    public List<string> AccessibleFarmIds { get; init; }
+    public List<Guid> AccessibleFarmIds { get; init; }
 }
 
 public class MeQueryHandler : IRequestHandler<MeQuery, BaseResponse<MeQueryResponse>>

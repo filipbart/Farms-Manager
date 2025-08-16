@@ -12,6 +12,7 @@ import { UsersService } from "../../../../services/users-service";
 import type { UserDetailsModel } from "../../../../models/users/users";
 import UserInfoTab from "./tabs/info-tab";
 import PermissionsTab from "./tabs/permissions-tab";
+import FarmsTab from "./tabs/farms-tab";
 
 const UserDetailsPage: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -88,13 +89,15 @@ const UserDetailsPage: React.FC = () => {
           scrollButtons="auto"
         >
           <Tab label="Informacje o użytkowniku" />
+          <Tab label="Dostęp do ferm" />
           <Tab label="Uprawnienia" />
         </Tabs>
       </Box>
 
       <Box mt={3}>
         {activeTab === 0 && <UserInfoTab user={user} refetch={fetchUser} />}
-        {activeTab === 1 && <PermissionsTab user={user} refetch={fetchUser} />}
+        {activeTab === 1 && <FarmsTab user={user} refetch={fetchUser} />}
+        {activeTab === 2 && <PermissionsTab user={user} refetch={fetchUser} />}
       </Box>
     </Box>
   );

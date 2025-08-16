@@ -16,8 +16,11 @@ public class UserEntity : Entity
     public IrzplusCredentials IrzplusCredentials { get; protected internal set; }
     public bool IsAdmin { get; protected internal set; }
 
+
     private readonly List<UserPermissionEntity> _permissions = new();
+    private readonly List<UserFarmEntity> _farms = new();
     public virtual IReadOnlyCollection<UserPermissionEntity> Permissions => _permissions;
+    public virtual IReadOnlyCollection<UserFarmEntity> Farms => _farms;
 
     public static UserEntity CreateUser(string login, string name, Guid? userId = null)
     {
@@ -75,5 +78,20 @@ public class UserEntity : Entity
         {
             _permissions.Remove(permissionData);
         }
+    }
+
+    public void AddFarm(Guid farmId)
+    {
+        _farms.Add(new UserFarmEntity
+        {
+            FarmId = farmId,
+            UserId = Id
+        });
+    }
+
+    public void RemoveFarm(Guid farmId)
+    {
+        var farm = _farms.FirstOrDefault(t => t.FarmId == farmId);
+        _farms.Remove(farm);
     }
 }

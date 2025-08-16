@@ -42,4 +42,10 @@ export class UsersService {
       permissions,
     });
   }
+
+  public static async updateUserFarms(id: string, farmIds: string[]) {
+    return await AxiosWrapper.post(ApiUrl.UpdateUserFarms(id), {
+      farmIds,
+    });
+  }
 }

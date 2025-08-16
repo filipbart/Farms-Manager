@@ -290,6 +290,8 @@ export default class ApiUrl {
   public static Permissions = this.Users + "/permissions";
   public static UpdateUserPermissions = (id: string) =>
     this.UsersDetails(id) + "/update-permissions";
+  public static UpdateUserFarms = (id: string) =>
+    this.UsersDetails(id) + "/farms";
 
   public static Summary = this.BaseUrl + "summary";
   public static SummaryDictionary = this.Summary + "/dictionary";

@@ -13,7 +13,7 @@ public record UserDetailsQueryResponse
     public string Login { get; init; }
     public string Name { get; init; }
     public List<string> Permissions { get; init; }
-    public List<string> AccessibleFarmIds { get; init; }
+    public List<Guid> AccessibleFarmIds { get; init; }
 }
 
 public record GetUserDetailsQuery(Guid UserId) : IRequest<BaseResponse<UserDetailsQueryResponse>>;
@@ -46,6 +46,6 @@ public class UserDetailsProfile : Profile
     {
         CreateMap<UserEntity, UserDetailsQueryResponse>()
             .ForMember(m => m.Permissions, opt => opt.MapFrom(m => m.Permissions.Select(p => p.PermissionName)))
-            .ForMember(m => m.AccessibleFarmIds, opt => opt.Ignore());
+            .ForMember(m => m.AccessibleFarmIds, opt => opt.MapFrom(m => m.Farms.Select(t => t.FarmId)));
     }
 }

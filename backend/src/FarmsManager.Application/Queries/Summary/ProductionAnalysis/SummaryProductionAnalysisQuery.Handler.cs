@@ -21,8 +21,6 @@ using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
 
 namespace FarmsManager.Application.Queries.Summary.ProductionAnalysis;
 
-// Mały, pomocniczy rekord do przechowywania zagregowanych danych o sprzedaży.
-// Upraszcza przekazywanie danych i logikę.
 internal record SaleAggregate(
     DateOnly? SaleDate,
     int? SoldCount,
@@ -70,7 +68,6 @@ public class SummaryProductionAnalysisQueryHandler : IRequestHandler<SummaryProd
     public async Task<BaseResponse<SummaryProductionAnalysisQueryResponse>> Handle(
         SummaryProductionAnalysisQuery request, CancellationToken ct)
     {
-        // Krok 1: Pobierz wszystkie niezbędne dane (tak jak wcześniej)
         var allInsertions = await _insertionRepository.ListAsync(new GetAllInsertionsSpec(request.Filters, true), ct);
         if (allInsertions.Count == 0)
         {
@@ -80,7 +77,7 @@ public class SummaryProductionAnalysisQueryHandler : IRequestHandler<SummaryProd
         var henhouseIds = allInsertions.Select(i => i.HenhouseId).Distinct().ToList();
         var farmIds = allInsertions.Select(i => i.FarmId).Distinct().ToList();
 
-        var farms = (await _farmRepository.ListAsync(new GetAllFarmsSpec(), ct)).ToDictionary(f => f.Id);
+        var farms = (await _farmRepository.ListAsync(new GetAllFarmsSpec(null), ct)).ToDictionary(f => f.Id);
         var allWeightStandards =
             (await _productionDataWeightStandardRepository.ListAsync(new GetAllWeightStandardsSpec(), ct))
             .ToDictionary(ws => ws.Day);
@@ -100,30 +97,27 @@ public class SummaryProductionAnalysisQueryHandler : IRequestHandler<SummaryProd
             await _productionDataTransferFeedRepository.ListAsync(
                 new ProductionDataTransferFeedByHenhousesSpec(henhouseIds), ct);
 
-        // Krok 2: Pogrupuj dane dla szybkiego dostępu. To jest kluczowa optymalizacja.
-        // Używamy Lookups, które są idealne dla relacji "jeden do wielu".
         var salesLookup = allSales.ToLookup(s => (s.FarmId, s.HenhouseId, s.CycleId));
         var failuresLookup = allFailures.ToLookup(f => (f.FarmId, f.HenhouseId, f.CycleId));
         var gasLookup = gasConsumptions.ToLookup(g => (g.FarmId, g.CycleId));
         var feedInvoiceLookup = feedInvoices.ToLookup(fi => (fi.FarmId, fi.HenhouseId, fi.CycleId));
         var feedRemainingLookup = feedRemainings.ToLookup(fr => (fr.FarmId, fr.HenhouseId, fr.CycleId));
-        // Grupujemy transfery osobno dla "z" i "do", żeby uprościć logikę
+
         var feedTransfersFromLookup = feedTransfers.ToLookup(ft => (ft.FromFarmId, ft.FromHenhouseId, ft.FromCycleId));
         var feedTransfersToLookup = feedTransfers.ToLookup(ft => (ft.ToFarmId, ft.ToHenhouseId, ft.ToCycleId));
-        // Potrzebujemy też stanów paszy z poprzedniego cyklu
+
         var feedRemainingByHenhouseCycleLookup =
             feedRemainings.ToLookup(fr => (fr.FarmId, fr.HenhouseId, fr.Cycle.Year, fr.Cycle.Identifier));
 
         var resultList = new List<SummaryProductionAnalysisRowDto>();
         var id = 1;
 
-        // Krok 3: Przetwarzaj wstawienia, korzystając z pogrupowanych danych
+
         foreach (var insertion in allInsertions)
         {
             var insertionKey = (insertion.FarmId, insertion.HenhouseId, insertion.CycleId);
             var cycleSales = salesLookup[insertionKey].ToList();
 
-            // Krok 4: Wywołaj pomocnicze metody, aby zachować czystość w pętli
             var partSalesAgg = AggregateSales(cycleSales, SaleType.PartSale, insertion.InsertionDate);
             var totalSalesAgg = AggregateSales(cycleSales, SaleType.TotalSale, insertion.InsertionDate);
 
@@ -138,7 +132,7 @@ public class SummaryProductionAnalysisQueryHandler : IRequestHandler<SummaryProd
 
             var gasConsumed = CalculateGasConsumption(insertion, farms, gasLookup);
 
-            // Pobranie wag standardowych
+
             _ = allWeightStandards.TryGetValue(partSalesAgg.AgeInDays ?? 0, out var partSaleWeightStandard);
             _ = allWeightStandards.TryGetValue(totalSalesAgg.AgeInDays ?? 0, out var totalSaleWeightStandard);
 
@@ -201,7 +195,7 @@ public class SummaryProductionAnalysisQueryHandler : IRequestHandler<SummaryProd
         });
     }
 
-    // Metoda pomocnicza do agregacji danych o sprzedaży
+
     private static SaleAggregate AggregateSales(List<SaleEntity> sales, SaleType type, DateOnly insertionDate)
     {
         var relevantSales = sales.Where(s => s.Type == type).ToList();
@@ -226,7 +220,7 @@ public class SummaryProductionAnalysisQueryHandler : IRequestHandler<SummaryProd
         );
     }
 
-    // Metoda pomocnicza do obliczania zużycia paszy
+
     private static decimal CalculateFeedConsumption(InsertionEntity insertion,
         IEnumerable<FeedInvoiceEntity> invoices,
         IEnumerable<ProductionDataRemainingFeedEntity> remainings,
@@ -248,7 +242,7 @@ public class SummaryProductionAnalysisQueryHandler : IRequestHandler<SummaryProd
                sumFeedTransfersTo;
     }
 
-    // Metoda pomocnicza do obliczania zużycia gazu
+
     private static decimal? CalculateGasConsumption(InsertionEntity insertion,
         Dictionary<Guid, FarmEntity> farms,
         ILookup<(Guid, Guid), GasConsumptionEntity> gasLookup)

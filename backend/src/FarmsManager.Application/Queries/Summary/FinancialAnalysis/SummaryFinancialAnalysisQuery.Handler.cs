@@ -71,7 +71,7 @@ public class SummaryFinancialAnalysisQueryHandler : IRequestHandler<SummaryFinan
         var henhouseIds = allInsertions.Select(i => i.HenhouseId).Distinct().ToList();
         var farmIds = allInsertions.Select(i => i.FarmId).Distinct().ToList();
 
-        var farms = (await _farmRepository.ListAsync(new GetAllFarmsSpec(), ct)).ToDictionary(f => f.Id);
+        var farms = (await _farmRepository.ListAsync(new GetAllFarmsSpec(null), ct)).ToDictionary(f => f.Id);
         var allSales =
             await _saleRepository.ListAsync(
                 new GetAllSalesSpec(new GetSalesQueryFilters { HenhouseIds = henhouseIds }, false), ct);

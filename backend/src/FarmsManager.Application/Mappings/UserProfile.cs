@@ -10,6 +10,6 @@ public class UserProfile : Profile
     {
         CreateMap<UserEntity, MeQueryResponse>()
             .ForMember(m => m.Permissions, opt => opt.MapFrom(t => t.Permissions.Select(p => p.PermissionName)))
-            .ForMember(m => m.AccessibleFarmIds, opt => opt.Ignore());
+            .ForMember(m => m.AccessibleFarmIds, opt => opt.MapFrom(m => m.Farms.Select(t => t.FarmId)));
     }
 }
