@@ -1,7 +1,11 @@
 ﻿using AutoMapper;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Interfaces;
+using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.ProductionDataAggregate.Entities;
 using FarmsManager.Domain.Aggregates.ProductionDataAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.UserAggregate.Interfaces;
+using FarmsManager.Domain.Exceptions;
 using MediatR;
 
 namespace FarmsManager.Application.Queries.ProductionData.TransferFeed;
@@ -10,20 +14,29 @@ public class GetProductionDataTransferFeedQueryHandler : IRequestHandler<GetProd
     BaseResponse<GetProductionDataTransferFeedQueryResponse>>
 {
     private readonly IProductionDataTransferFeedRepository _repository;
+    private readonly IUserDataResolver _userDataResolver;
+    private readonly IUserRepository _userRepository;
 
-    public GetProductionDataTransferFeedQueryHandler(IProductionDataTransferFeedRepository repository)
+    public GetProductionDataTransferFeedQueryHandler(IProductionDataTransferFeedRepository repository,
+        IUserDataResolver userDataResolver, IUserRepository userRepository)
     {
         _repository = repository;
+        _userDataResolver = userDataResolver;
+        _userRepository = userRepository;
     }
 
     public async Task<BaseResponse<GetProductionDataTransferFeedQueryResponse>> Handle(
         GetProductionDataTransferFeedQuery request,
         CancellationToken cancellationToken)
     {
+        var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
+        var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
+        var accessibleFarmIds = user.IsAdmin ? null : user.Farms?.Select(t => t.FarmId).ToList();
+
         var data = await _repository.ListAsync<ProductionDataTransferFeedRowDto>(
-            new GetAllProductionDataTransferFeedSpec(request.Filters, true), cancellationToken);
+            new GetAllProductionDataTransferFeedSpec(request.Filters, true, accessibleFarmIds), cancellationToken);
         var count = await _repository.CountAsync(
-            new GetAllProductionDataTransferFeedSpec(request.Filters, false),
+            new GetAllProductionDataTransferFeedSpec(request.Filters, false, accessibleFarmIds),
             cancellationToken);
 
         return BaseResponse.CreateResponse(new GetProductionDataTransferFeedQueryResponse

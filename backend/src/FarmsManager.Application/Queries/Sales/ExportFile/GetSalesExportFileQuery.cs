@@ -1,6 +1,10 @@
 ﻿using AutoMapper;
 using ClosedXML.Excel;
+using FarmsManager.Application.Interfaces;
+using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.UserAggregate.Interfaces;
+using FarmsManager.Domain.Exceptions;
 using FarmsManager.Shared.Attributes;
 using MediatR;
 
@@ -12,16 +16,26 @@ public class GetSalesExportFileQueryHandler : IRequestHandler<GetSalesExportFile
 {
     private readonly ISaleRepository _saleRepository;
     private readonly IMapper _mapper;
+    private readonly IUserDataResolver _userDataResolver;
+    private readonly IUserRepository _userRepository;
 
-    public GetSalesExportFileQueryHandler(ISaleRepository saleRepository, IMapper mapper)
+    public GetSalesExportFileQueryHandler(ISaleRepository saleRepository, IMapper mapper,
+        IUserDataResolver userDataResolver, IUserRepository userRepository)
     {
         _saleRepository = saleRepository;
         _mapper = mapper;
+        _userDataResolver = userDataResolver;
+        _userRepository = userRepository;
     }
 
     public async Task<Stream> Handle(GetSalesExportFileQuery request, CancellationToken cancellationToken)
     {
-        var saleEntites = await _saleRepository.ListAsync(new GetAllSalesSpec(request.Filters, false),
+        var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
+        var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
+        var accessibleFarmIds = user.IsAdmin ? null : user.Farms?.Select(t => t.FarmId).ToList();
+
+        var saleEntites = await _saleRepository.ListAsync(
+            new GetAllSalesSpec(request.Filters, false, accessibleFarmIds),
             cancellationToken);
 
         if (saleEntites.Count == 0)

@@ -1,4 +1,5 @@
 ﻿using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models.ProductionData;
 using FarmsManager.Application.Models.Summary;
 using FarmsManager.Application.Queries.Farms;
@@ -6,6 +7,7 @@ using FarmsManager.Application.Queries.Insertions;
 using FarmsManager.Application.Queries.ProductionData.Failures;
 using FarmsManager.Application.Queries.ProductionData.Weighings;
 using FarmsManager.Application.Queries.Sales;
+using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.GasAggregate.Interfaces;
@@ -18,6 +20,8 @@ using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
 using FarmsManager.Domain.Aggregates.GasAggregate.Entities;
 using FarmsManager.Domain.Aggregates.ProductionDataAggregate.Entities;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
+using FarmsManager.Domain.Aggregates.UserAggregate.Interfaces;
+using FarmsManager.Domain.Exceptions;
 
 namespace FarmsManager.Application.Queries.Summary.ProductionAnalysis;
 
@@ -46,13 +50,17 @@ public class SummaryProductionAnalysisQueryHandler : IRequestHandler<SummaryProd
     private readonly IProductionDataRemainingFeedRepository _productionDataRemainingFeedRepository;
     private readonly IProductionDataTransferFeedRepository _productionDataTransferFeedRepository;
 
+    private readonly IUserDataResolver _userDataResolver;
+    private readonly IUserRepository _userRepository;
+
     public SummaryProductionAnalysisQueryHandler(IFarmRepository farmRepository, ISaleRepository saleRepository,
         IInsertionRepository insertionRepository, IFeedInvoiceRepository feedInvoiceRepository,
         IGasConsumptionRepository gasConsumptionRepository,
         IProductionDataFailureRepository productionDataFailureRepository,
         IProductionDataWeightStandardRepository productionDataWeightStandardRepository,
         IProductionDataRemainingFeedRepository productionDataRemainingFeedRepository,
-        IProductionDataTransferFeedRepository productionDataTransferFeedRepository)
+        IProductionDataTransferFeedRepository productionDataTransferFeedRepository, IUserDataResolver userDataResolver,
+        IUserRepository userRepository)
     {
         _farmRepository = farmRepository;
         _saleRepository = saleRepository;
@@ -63,12 +71,20 @@ public class SummaryProductionAnalysisQueryHandler : IRequestHandler<SummaryProd
         _productionDataWeightStandardRepository = productionDataWeightStandardRepository;
         _productionDataRemainingFeedRepository = productionDataRemainingFeedRepository;
         _productionDataTransferFeedRepository = productionDataTransferFeedRepository;
+        _userDataResolver = userDataResolver;
+        _userRepository = userRepository;
     }
 
     public async Task<BaseResponse<SummaryProductionAnalysisQueryResponse>> Handle(
         SummaryProductionAnalysisQuery request, CancellationToken ct)
     {
-        var allInsertions = await _insertionRepository.ListAsync(new GetAllInsertionsSpec(request.Filters, true), ct);
+        var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
+        var user = await _userRepository.GetAsync(new UserByIdSpec(userId), ct);
+        var accessibleFarmIds = user.IsAdmin ? null : user.Farms?.Select(t => t.FarmId).ToList();
+
+        var allInsertions =
+            await _insertionRepository.ListAsync(new GetAllInsertionsSpec(request.Filters, true, accessibleFarmIds),
+                ct);
         if (allInsertions.Count == 0)
         {
             return BaseResponse.CreateResponse(new SummaryProductionAnalysisQueryResponse());
@@ -84,9 +100,11 @@ public class SummaryProductionAnalysisQueryHandler : IRequestHandler<SummaryProd
 
         var allSales =
             await _saleRepository.ListAsync(
-                new GetAllSalesSpec(new GetSalesQueryFilters { HenhouseIds = henhouseIds }, false), ct);
+                new GetAllSalesSpec(new GetSalesQueryFilters { HenhouseIds = henhouseIds }, false, accessibleFarmIds),
+                ct);
         var allFailures = await _productionDataFailureRepository.ListAsync(
-            new GetAllProductionDataFailuresSpec(new ProductionDataQueryFilters { HenhouseIds = henhouseIds }, false),
+            new GetAllProductionDataFailuresSpec(new ProductionDataQueryFilters { HenhouseIds = henhouseIds }, false,
+                accessibleFarmIds),
             ct);
         var gasConsumptions = await _gasConsumptionRepository.ListAsync(new GasConsumptionsByFarmsSpec(farmIds), ct);
         var feedInvoices = await _feedInvoiceRepository.ListAsync(new FeedsDeliveriesByHenhousesSpec(henhouseIds), ct);

@@ -7,7 +7,7 @@ namespace FarmsManager.Application.Queries.ProductionData.Weighings;
 
 public sealed class GetAllProductionDataWeighingsSpec : BaseSpecification<ProductionDataWeighingEntity>
 {
-    public GetAllProductionDataWeighingsSpec(GetProductionDataWeighingsQueryFilters filters, bool withPagination)
+    public GetAllProductionDataWeighingsSpec(GetProductionDataWeighingsQueryFilters filters, bool withPagination, List<Guid> accessibleFarmIds)
     {
         EnsureExists();
         DisableTracking();
@@ -16,6 +16,9 @@ public sealed class GetAllProductionDataWeighingsSpec : BaseSpecification<Produc
         Query.Include(t => t.Henhouse);
         Query.Include(t => t.Cycle);
         Query.Include(t => t.Hatchery);
+        
+        if (accessibleFarmIds is not null && accessibleFarmIds.Count != 0)
+            Query.Where(p => accessibleFarmIds.Contains(p.FarmId));
 
         PopulateFilters(filters);
         ApplyOrdering(filters);

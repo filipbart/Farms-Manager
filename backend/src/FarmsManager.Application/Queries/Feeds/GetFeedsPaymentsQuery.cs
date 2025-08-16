@@ -1,10 +1,14 @@
 ﻿using AutoMapper;
 using FarmsManager.Application.Common;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models;
 using FarmsManager.Application.Specifications.Feeds;
+using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.UserAggregate.Interfaces;
+using FarmsManager.Domain.Exceptions;
 using MediatR;
 
 namespace FarmsManager.Application.Queries.Feeds;
@@ -44,19 +48,28 @@ public class
     BaseResponse<GetFeedsPaymentsQueryResponse>>
 {
     private readonly IFeedPaymentRepository _feedPaymentRepository;
+    private readonly IUserDataResolver _userDataResolver;
+    private readonly IUserRepository _userRepository;
 
-    public GetFeedsPaymentsQueryHandler(IFeedPaymentRepository feedPaymentRepository)
+    public GetFeedsPaymentsQueryHandler(IFeedPaymentRepository feedPaymentRepository,
+        IUserDataResolver userDataResolver, IUserRepository userRepository)
     {
         _feedPaymentRepository = feedPaymentRepository;
+        _userDataResolver = userDataResolver;
+        _userRepository = userRepository;
     }
 
     public async Task<BaseResponse<GetFeedsPaymentsQueryResponse>> Handle(GetFeedsPaymentsQuery request,
         CancellationToken cancellationToken)
     {
+        var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
+        var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
+        var accessibleFarmIds = user.IsAdmin ? null : user.Farms?.Select(t => t.FarmId).ToList();
+
         var data = await _feedPaymentRepository.ListAsync<FeedPaymentRowDto>(
-            new GetAllFeedsPaymentsSpec(request.Filters, true), cancellationToken);
+            new GetAllFeedsPaymentsSpec(request.Filters, true, accessibleFarmIds), cancellationToken);
         var count = await _feedPaymentRepository.CountAsync(
-            new GetAllFeedsPaymentsSpec(request.Filters, false),
+            new GetAllFeedsPaymentsSpec(request.Filters, false, accessibleFarmIds),
             cancellationToken);
         return BaseResponse.CreateResponse(new GetFeedsPaymentsQueryResponse
         {

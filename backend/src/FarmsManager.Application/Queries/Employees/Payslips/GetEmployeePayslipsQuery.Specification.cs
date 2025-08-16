@@ -7,7 +7,8 @@ namespace FarmsManager.Application.Queries.Employees.Payslips;
 
 public sealed class GetAllEmployeePayslipsSpec : BaseSpecification<EmployeePayslipEntity>
 {
-    public GetAllEmployeePayslipsSpec(GetEmployeePayslipsQueryFilters filters, bool withPagination)
+    public GetAllEmployeePayslipsSpec(GetEmployeePayslipsQueryFilters filters, bool withPagination,
+        List<Guid> accessibleFarmIds)
     {
         EnsureExists();
         DisableTracking();
@@ -15,6 +16,9 @@ public sealed class GetAllEmployeePayslipsSpec : BaseSpecification<EmployeePaysl
         Query.Include(p => p.Farm);
         Query.Include(p => p.Cycle);
         Query.Include(p => p.Employee);
+
+        if (accessibleFarmIds is not null && accessibleFarmIds.Count != 0)
+            Query.Where(p => accessibleFarmIds.Contains(p.FarmId));
 
         PopulateFilters(filters);
         ApplyOrdering(filters);

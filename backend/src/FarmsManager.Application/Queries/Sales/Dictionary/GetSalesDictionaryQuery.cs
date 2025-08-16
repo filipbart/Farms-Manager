@@ -48,7 +48,7 @@ public class GetSalesDictionaryQueryHandler : IRequestHandler<GetSalesDictionary
     {
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var user = await _userRepository.GetAsync(new UserByIdSpec(userId), ct);
-        var accessibleFarmIds = user.Farms?.Select(t => t.FarmId).ToList();
+        var accessibleFarmIds = user.IsAdmin ? null : user.Farms?.Select(t => t.FarmId).ToList();
 
         var farms = await _farmRepository.ListAsync<FarmDictModel>(new GetAllFarmsSpec(accessibleFarmIds), ct);
         var slaughterhouses = await _slaughterhouseRepository.ListAsync<DictModel>(new GetAllSlaughterhousesSpec(), ct);

@@ -1,8 +1,12 @@
 ﻿using AutoMapper;
 using FarmsManager.Application.Common;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Interfaces;
+using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.EmployeeAggregate.Entities;
 using FarmsManager.Domain.Aggregates.EmployeeAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.UserAggregate.Interfaces;
+using FarmsManager.Domain.Exceptions;
 using MediatR;
 
 namespace FarmsManager.Application.Queries.Employees.Payslips;
@@ -13,18 +17,27 @@ public class
 {
     private readonly IMapper _mapper;
     private readonly IEmployeePayslipRepository _employeePayslipRepository;
+    private readonly IUserRepository _userRepository;
+    private readonly IUserDataResolver _userDataResolver;
 
-    public GetEmployeePayslipsQueryHandler(IMapper mapper, IEmployeePayslipRepository employeePayslipRepository)
+    public GetEmployeePayslipsQueryHandler(IMapper mapper, IEmployeePayslipRepository employeePayslipRepository,
+        IUserRepository userRepository, IUserDataResolver userDataResolver)
     {
         _mapper = mapper;
         _employeePayslipRepository = employeePayslipRepository;
+        _userRepository = userRepository;
+        _userDataResolver = userDataResolver;
     }
 
     public async Task<BaseResponse<GetEmployeePayslipsQueryResponse>> Handle(GetEmployeePayslipsQuery request,
         CancellationToken cancellationToken)
     {
-        var paginatedSpec = new GetAllEmployeePayslipsSpec(request.Filters, true);
-        var fullSpec = new GetAllEmployeePayslipsSpec(request.Filters, false);
+        var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
+        var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
+        var accessibleFarmIds = user.IsAdmin ? null : user.Farms?.Select(t => t.FarmId).ToList();
+
+        var paginatedSpec = new GetAllEmployeePayslipsSpec(request.Filters, true, accessibleFarmIds);
+        var fullSpec = new GetAllEmployeePayslipsSpec(request.Filters, false, accessibleFarmIds);
 
         // Pobieranie danych dla aktualnej strony i łącznej liczby
         var data = await _employeePayslipRepository.ListAsync(paginatedSpec, cancellationToken);

@@ -1,7 +1,11 @@
 ﻿using AutoMapper;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Interfaces;
+using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.GasAggregate.Entities;
 using FarmsManager.Domain.Aggregates.GasAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.UserAggregate.Interfaces;
+using FarmsManager.Domain.Exceptions;
 using MediatR;
 
 namespace FarmsManager.Application.Queries.Gas.Consumptions;
@@ -10,20 +14,29 @@ public class GetGasConsumptionsQueryHandler : IRequestHandler<GetGasConsumptions
     BaseResponse<GetGasConsumptionsQueryResponse>>
 {
     private readonly IGasConsumptionRepository _gasConsumptionRepository;
+    private readonly IUserDataResolver _userDataResolver;
+    private readonly IUserRepository _userRepository;
 
-    public GetGasConsumptionsQueryHandler(IGasConsumptionRepository gasConsumptionRepository)
+    public GetGasConsumptionsQueryHandler(IGasConsumptionRepository gasConsumptionRepository,
+        IUserDataResolver userDataResolver, IUserRepository userRepository)
     {
         _gasConsumptionRepository = gasConsumptionRepository;
+        _userDataResolver = userDataResolver;
+        _userRepository = userRepository;
     }
 
     public async Task<BaseResponse<GetGasConsumptionsQueryResponse>> Handle(GetGasConsumptionsQuery request,
         CancellationToken cancellationToken)
     {
+        var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
+        var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
+        var accessibleFarmIds = user.IsAdmin ? null : user.Farms?.Select(t => t.FarmId).ToList();
+
         var data = await _gasConsumptionRepository.ListAsync<GasConsumptionRowDto>(
-            new GetAllGasConsumptionsSpec(request.Filters, true), cancellationToken);
+            new GetAllGasConsumptionsSpec(request.Filters, true, accessibleFarmIds), cancellationToken);
 
         var count = await _gasConsumptionRepository.CountAsync(
-            new GetAllGasConsumptionsSpec(request.Filters, false), cancellationToken);
+            new GetAllGasConsumptionsSpec(request.Filters, false, accessibleFarmIds), cancellationToken);
 
         return BaseResponse.CreateResponse(new GetGasConsumptionsQueryResponse
         {

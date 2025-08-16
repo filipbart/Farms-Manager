@@ -8,13 +8,18 @@ namespace FarmsManager.Application.Queries.ProductionData.TransferFeed;
 
 public sealed class GetAllProductionDataTransferFeedSpec : BaseSpecification<ProductionDataTransferFeedEntity>
 {
-    public GetAllProductionDataTransferFeedSpec(ProductionDataQueryFilters filters, bool withPagination)
+    public GetAllProductionDataTransferFeedSpec(ProductionDataQueryFilters filters, bool withPagination,
+        List<Guid> accessibleFarmIds)
     {
         EnsureExists();
         DisableTracking();
 
         PopulateFilters(filters);
         ApplyOrdering(filters);
+
+        if (accessibleFarmIds is not null && accessibleFarmIds.Count != 0)
+            Query.Where(p => accessibleFarmIds.Contains(p.FromFarmId) || accessibleFarmIds.Contains(p.ToFarmId));
+
         if (withPagination)
         {
             Paginate(filters);

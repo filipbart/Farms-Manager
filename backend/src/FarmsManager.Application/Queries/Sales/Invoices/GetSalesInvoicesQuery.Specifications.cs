@@ -7,7 +7,8 @@ namespace FarmsManager.Application.Queries.Sales.Invoices;
 
 public sealed class GetAllSalesInvoicesSpec : BaseSpecification<SaleInvoiceEntity>
 {
-    public GetAllSalesInvoicesSpec(GetSalesInvoicesQueryFilters filters, bool withPagination)
+    public GetAllSalesInvoicesSpec(GetSalesInvoicesQueryFilters filters, bool withPagination,
+        List<Guid> accessibleFarmIds)
     {
         EnsureExists();
         DisableTracking();
@@ -15,6 +16,9 @@ public sealed class GetAllSalesInvoicesSpec : BaseSpecification<SaleInvoiceEntit
         Query.Include(t => t.Farm);
         Query.Include(t => t.Cycle);
         Query.Include(t => t.Slaughterhouse);
+
+        if (accessibleFarmIds is not null && accessibleFarmIds.Count != 0)
+            Query.Where(p => accessibleFarmIds.Contains(p.FarmId));
 
         PopulateFilters(filters);
         ApplyOrdering(filters);

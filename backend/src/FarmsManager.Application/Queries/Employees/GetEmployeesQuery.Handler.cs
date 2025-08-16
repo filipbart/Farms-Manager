@@ -1,8 +1,12 @@
 using AutoMapper;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models.Employees;
+using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.EmployeeAggregate.Entities;
 using FarmsManager.Domain.Aggregates.EmployeeAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.UserAggregate.Interfaces;
+using FarmsManager.Domain.Exceptions;
 using MediatR;
 
 namespace FarmsManager.Application.Queries.Employees;
@@ -11,22 +15,31 @@ public class GetEmployeesQueryHandler : IRequestHandler<GetEmployeesQuery, BaseR
 {
     private readonly IMapper _mapper;
     private readonly IEmployeeRepository _employeeRepository;
+    private readonly IUserDataResolver _userDataResolver;
+    private readonly IUserRepository _userRepository;
 
-    public GetEmployeesQueryHandler(IEmployeeRepository employeeRepository, IMapper mapper)
+    public GetEmployeesQueryHandler(IEmployeeRepository employeeRepository, IMapper mapper,
+        IUserDataResolver userDataResolver, IUserRepository userRepository)
     {
         _employeeRepository = employeeRepository;
         _mapper = mapper;
+        _userDataResolver = userDataResolver;
+        _userRepository = userRepository;
     }
 
     public async Task<BaseResponse<GetEmployeesQueryResponse>> Handle(GetEmployeesQuery request,
         CancellationToken cancellationToken)
     {
+        var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
+        var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
+        var accessibleFarmIds = user.IsAdmin ? null : user.Farms?.Select(t => t.FarmId).ToList();
+
         var data = await _employeeRepository.ListAsync(
-            new GetAllEmployeesSpec(request.Filters, true), cancellationToken);
+            new GetAllEmployeesSpec(request.Filters, true, accessibleFarmIds), cancellationToken);
 
         var count = await _employeeRepository.CountAsync(
-            new GetAllEmployeesSpec(request.Filters, false), cancellationToken);
-        
+            new GetAllEmployeesSpec(request.Filters, false, accessibleFarmIds), cancellationToken);
+
         var items = _mapper.Map<List<EmployeeRowDto>>(data);
 
         return BaseResponse.CreateResponse(new GetEmployeesQueryResponse

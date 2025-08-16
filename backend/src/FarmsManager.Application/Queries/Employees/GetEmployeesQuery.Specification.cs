@@ -8,13 +8,16 @@ namespace FarmsManager.Application.Queries.Employees;
 
 public sealed class GetAllEmployeesSpec : BaseSpecification<EmployeeEntity>
 {
-    public GetAllEmployeesSpec(GetEmployeesQueryFilters filters, bool withPagination)
+    public GetAllEmployeesSpec(GetEmployeesQueryFilters filters, bool withPagination, List<Guid> accessibleFarmIds)
     {
         EnsureExists();
         DisableTracking();
 
         Query.Include(e => e.Farm);
         Query.Include(e => e.Files);
+
+        if (accessibleFarmIds is not null && accessibleFarmIds.Count != 0)
+            Query.Where(e => accessibleFarmIds.Contains(e.FarmId));
 
         PopulateFilters(filters);
         ApplyOrdering(filters);

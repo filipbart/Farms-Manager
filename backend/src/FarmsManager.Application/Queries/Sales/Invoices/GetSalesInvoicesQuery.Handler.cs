@@ -1,7 +1,11 @@
 ﻿using AutoMapper;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Interfaces;
+using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.UserAggregate.Interfaces;
+using FarmsManager.Domain.Exceptions;
 using MediatR;
 
 namespace FarmsManager.Application.Queries.Sales.Invoices;
@@ -10,20 +14,29 @@ public class
     GetSalesInvoicesQueryHandler : IRequestHandler<GetSalesInvoicesQuery, BaseResponse<GetSalesInvoicesQueryResponse>>
 {
     private readonly ISaleInvoiceRepository _saleInvoiceRepository;
+    private readonly IUserDataResolver _userDataResolver;
+    private readonly IUserRepository _userRepository;
 
-    public GetSalesInvoicesQueryHandler(ISaleInvoiceRepository saleInvoiceRepository)
+    public GetSalesInvoicesQueryHandler(ISaleInvoiceRepository saleInvoiceRepository,
+        IUserDataResolver userDataResolver, IUserRepository userRepository)
     {
         _saleInvoiceRepository = saleInvoiceRepository;
+        _userDataResolver = userDataResolver;
+        _userRepository = userRepository;
     }
 
     public async Task<BaseResponse<GetSalesInvoicesQueryResponse>> Handle(GetSalesInvoicesQuery request,
         CancellationToken cancellationToken)
     {
+        var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
+        var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
+        var accessibleFarmIds = user.IsAdmin ? null : user.Farms?.Select(t => t.FarmId).ToList();
+
         var data = await _saleInvoiceRepository.ListAsync<SalesInvoiceRowDto>(
-            new GetAllSalesInvoicesSpec(request.Filters, true), cancellationToken);
+            new GetAllSalesInvoicesSpec(request.Filters, true, accessibleFarmIds), cancellationToken);
 
         var count = await _saleInvoiceRepository.CountAsync(
-            new GetAllSalesInvoicesSpec(request.Filters, false), cancellationToken);
+            new GetAllSalesInvoicesSpec(request.Filters, false, accessibleFarmIds), cancellationToken);
 
         return BaseResponse.CreateResponse(new GetSalesInvoicesQueryResponse
         {

@@ -7,7 +7,8 @@ namespace FarmsManager.Application.Queries.ProductionData.FlockLosses;
 
 public sealed class GetAllProductionDataFlockLossesSpec : BaseSpecification<ProductionDataFlockLossMeasureEntity>
 {
-    public GetAllProductionDataFlockLossesSpec(GetProductionDataFlockLossesQueryFilters filters, bool withPagination)
+    public GetAllProductionDataFlockLossesSpec(GetProductionDataFlockLossesQueryFilters filters, bool withPagination,
+        List<Guid> accessibleFarmIds)
     {
         EnsureExists();
         DisableTracking();
@@ -20,6 +21,10 @@ public sealed class GetAllProductionDataFlockLossesSpec : BaseSpecification<Prod
 
         PopulateFilters(filters);
         ApplyOrdering(filters);
+
+        if (accessibleFarmIds is not null && accessibleFarmIds.Count != 0)
+            Query.Where(p => accessibleFarmIds.Contains(p.FarmId));
+
         if (withPagination)
         {
             Paginate(filters);
@@ -81,6 +86,7 @@ public sealed class GetAllProductionDataFlockLossesSpec : BaseSpecification<Prod
                 {
                     Query.OrderBy(t => t.Cycle.Year).ThenBy(t => t.Cycle.Identifier);
                 }
+
                 break;
 
             case ProductionDataFlockLossesOrderBy.Farm:
@@ -92,6 +98,7 @@ public sealed class GetAllProductionDataFlockLossesSpec : BaseSpecification<Prod
                 {
                     Query.OrderBy(t => t.Farm.Name);
                 }
+
                 break;
 
             case ProductionDataFlockLossesOrderBy.Henhouse:
@@ -103,6 +110,7 @@ public sealed class GetAllProductionDataFlockLossesSpec : BaseSpecification<Prod
                 {
                     Query.OrderBy(t => t.Henhouse.Name);
                 }
+
                 break;
 
             case ProductionDataFlockLossesOrderBy.Hatchery:
@@ -114,6 +122,7 @@ public sealed class GetAllProductionDataFlockLossesSpec : BaseSpecification<Prod
                 {
                     Query.OrderBy(t => t.Hatchery.Name);
                 }
+
                 break;
 
             case ProductionDataFlockLossesOrderBy.FlockLoss1Percentage:
@@ -125,8 +134,9 @@ public sealed class GetAllProductionDataFlockLossesSpec : BaseSpecification<Prod
                 {
                     Query.OrderBy(t => (decimal?)t.FlockLoss1Quantity / t.Insertion.Quantity);
                 }
+
                 break;
-                
+
             case ProductionDataFlockLossesOrderBy.FlockLoss2Percentage:
                 if (isDescending)
                 {
@@ -136,8 +146,9 @@ public sealed class GetAllProductionDataFlockLossesSpec : BaseSpecification<Prod
                 {
                     Query.OrderBy(t => (decimal?)t.FlockLoss2Quantity / t.Insertion.Quantity);
                 }
+
                 break;
-                
+
             case ProductionDataFlockLossesOrderBy.FlockLoss3Percentage:
                 if (isDescending)
                 {
@@ -147,6 +158,7 @@ public sealed class GetAllProductionDataFlockLossesSpec : BaseSpecification<Prod
                 {
                     Query.OrderBy(t => (decimal?)t.FlockLoss3Quantity / t.Insertion.Quantity);
                 }
+
                 break;
 
             case ProductionDataFlockLossesOrderBy.FlockLoss4Percentage:
@@ -158,6 +170,7 @@ public sealed class GetAllProductionDataFlockLossesSpec : BaseSpecification<Prod
                 {
                     Query.OrderBy(t => (decimal?)t.FlockLoss4Quantity / t.Insertion.Quantity);
                 }
+
                 break;
 
             case ProductionDataFlockLossesOrderBy.DateCreatedUtc:
@@ -170,6 +183,7 @@ public sealed class GetAllProductionDataFlockLossesSpec : BaseSpecification<Prod
                 {
                     Query.OrderBy(t => t.DateCreatedUtc);
                 }
+
                 break;
         }
     }

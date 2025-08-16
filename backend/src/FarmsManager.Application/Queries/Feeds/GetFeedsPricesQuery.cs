@@ -1,10 +1,14 @@
 ﻿using AutoMapper;
 using FarmsManager.Application.Common;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models;
 using FarmsManager.Application.Specifications.Feeds;
+using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.UserAggregate.Interfaces;
+using FarmsManager.Domain.Exceptions;
 using MediatR;
 
 namespace FarmsManager.Application.Queries.Feeds;
@@ -54,18 +58,27 @@ public class
     GetFeedsPricesQueryHandler : IRequestHandler<GetFeedsPricesQuery, BaseResponse<GetFeedsPricesQueryResponse>>
 {
     private readonly IFeedPriceRepository _feedPriceRepository;
+    private readonly IUserDataResolver _userDataResolver;
+    private readonly IUserRepository _userRepository;
 
-    public GetFeedsPricesQueryHandler(IFeedPriceRepository feedPriceRepository)
+    public GetFeedsPricesQueryHandler(IFeedPriceRepository feedPriceRepository, IUserDataResolver userDataResolver,
+        IUserRepository userRepository)
     {
         _feedPriceRepository = feedPriceRepository;
+        _userDataResolver = userDataResolver;
+        _userRepository = userRepository;
     }
 
     public async Task<BaseResponse<GetFeedsPricesQueryResponse>> Handle(GetFeedsPricesQuery request,
         CancellationToken cancellationToken)
     {
+        var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
+        var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
+        var accessibleFarmIds = user.IsAdmin ? null : user.Farms?.Select(t => t.FarmId).ToList();
+
         var data = await _feedPriceRepository.ListAsync<FeedPriceRowDto>(
-            new GetAllFeedsPricesSpec(request.Filters, true), cancellationToken);
-        var count = await _feedPriceRepository.CountAsync(new GetAllFeedsPricesSpec(request.Filters, false),
+            new GetAllFeedsPricesSpec(request.Filters, true,accessibleFarmIds), cancellationToken);
+        var count = await _feedPriceRepository.CountAsync(new GetAllFeedsPricesSpec(request.Filters, false,accessibleFarmIds),
             cancellationToken);
         return BaseResponse.CreateResponse(new GetFeedsPricesQueryResponse
         {

@@ -8,13 +8,17 @@ namespace FarmsManager.Application.Queries.ProductionData.RemainingFeed;
 
 public sealed class GetAllProductionDataRemainingFeedSpec : BaseSpecification<ProductionDataRemainingFeedEntity>
 {
-    public GetAllProductionDataRemainingFeedSpec(ProductionDataQueryFilters filters, bool withPagination)
+    public GetAllProductionDataRemainingFeedSpec(ProductionDataQueryFilters filters, bool withPagination, List<Guid> accessibleFarmIds)
     {
         EnsureExists();
         DisableTracking();
 
         PopulateFilters(filters);
         ApplyOrdering(filters);
+        
+        if (accessibleFarmIds is not null && accessibleFarmIds.Count != 0)
+            Query.Where(p => accessibleFarmIds.Contains(p.FarmId));
+        
         if (withPagination)
         {
             Paginate(filters);

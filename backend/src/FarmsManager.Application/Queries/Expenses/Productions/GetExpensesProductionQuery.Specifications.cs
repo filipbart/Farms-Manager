@@ -6,7 +6,8 @@ namespace FarmsManager.Application.Queries.Expenses.Productions;
 
 public sealed class GetAllExpenseProductionsSpec : BaseSpecification<ExpenseProductionEntity>
 {
-    public GetAllExpenseProductionsSpec(GetExpensesProductionsFilters filters, bool withPagination)
+    public GetAllExpenseProductionsSpec(GetExpensesProductionsFilters filters, bool withPagination,
+        List<Guid> accessibleFarmIds)
     {
         EnsureExists();
         DisableTracking();
@@ -15,6 +16,9 @@ public sealed class GetAllExpenseProductionsSpec : BaseSpecification<ExpenseProd
         ApplyOrdering(filters);
 
         Query.Include(t => t.ExpenseContractor).ThenInclude(t => t.ExpenseType);
+
+        if (accessibleFarmIds is not null && accessibleFarmIds.Count != 0)
+            Query.Where(p => accessibleFarmIds.Contains(p.FarmId));
 
         if (withPagination)
         {

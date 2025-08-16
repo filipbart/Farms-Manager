@@ -1,7 +1,11 @@
 ﻿using AutoMapper;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Interfaces;
+using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.ProductionDataAggregate.Entities;
 using FarmsManager.Domain.Aggregates.ProductionDataAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.UserAggregate.Interfaces;
+using FarmsManager.Domain.Exceptions;
 using MediatR;
 
 namespace FarmsManager.Application.Queries.ProductionData.Weighings;
@@ -12,22 +16,31 @@ public class GetProductionDataWeighingsQueryHandler : IRequestHandler<GetProduct
     private readonly IProductionDataWeighingRepository _weighingRepository;
     private readonly IProductionDataWeightStandardRepository _productionDataWeightStandardRepository;
     private readonly IMapper _mapper;
+    private readonly IUserDataResolver _userDataResolver;
+    private readonly IUserRepository _userRepository;
 
     public GetProductionDataWeighingsQueryHandler(
         IProductionDataWeighingRepository weighingRepository,
-        IMapper mapper, IProductionDataWeightStandardRepository productionDataWeightStandardRepository)
+        IMapper mapper, IProductionDataWeightStandardRepository productionDataWeightStandardRepository,
+        IUserDataResolver userDataResolver, IUserRepository userRepository)
     {
         _weighingRepository = weighingRepository;
         _mapper = mapper;
         _productionDataWeightStandardRepository = productionDataWeightStandardRepository;
+        _userDataResolver = userDataResolver;
+        _userRepository = userRepository;
     }
 
     public async Task<BaseResponse<GetProductionDataWeighingsQueryResponse>> Handle(
         GetProductionDataWeighingsQuery request,
         CancellationToken cancellationToken)
     {
-        var spec = new GetAllProductionDataWeighingsSpec(request.Filters, true);
-        var countSpec = new GetAllProductionDataWeighingsSpec(request.Filters, false);
+        var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
+        var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
+        var accessibleFarmIds = user.IsAdmin ? null : user.Farms?.Select(t => t.FarmId).ToList();
+
+        var spec = new GetAllProductionDataWeighingsSpec(request.Filters, true, accessibleFarmIds);
+        var countSpec = new GetAllProductionDataWeighingsSpec(request.Filters, false, accessibleFarmIds);
 
         var weighings = await _weighingRepository.ListAsync(spec, cancellationToken);
         var totalRows = await _weighingRepository.CountAsync(countSpec, cancellationToken);

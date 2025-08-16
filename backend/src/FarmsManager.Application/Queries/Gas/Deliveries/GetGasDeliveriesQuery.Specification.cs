@@ -6,7 +6,8 @@ namespace FarmsManager.Application.Queries.Gas.Deliveries;
 
 public sealed class GetAllGasDeliveriesSpec : BaseSpecification<GasDeliveryEntity>
 {
-    public GetAllGasDeliveriesSpec(GetGasDeliveriesQueryFilters filters, bool withPagination)
+    public GetAllGasDeliveriesSpec(GetGasDeliveriesQueryFilters filters, bool withPagination,
+        List<Guid> accessibleFarmIds)
     {
         EnsureExists();
         DisableTracking();
@@ -16,6 +17,9 @@ public sealed class GetAllGasDeliveriesSpec : BaseSpecification<GasDeliveryEntit
 
         Query.Include(t => t.Farm);
         Query.Include(t => t.GasContractor);
+
+        if (accessibleFarmIds is not null && accessibleFarmIds.Count != 0)
+            Query.Where(p => accessibleFarmIds.Contains(p.FarmId));
 
         if (withPagination)
         {

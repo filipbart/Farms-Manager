@@ -1,7 +1,11 @@
 ﻿using AutoMapper;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Interfaces;
+using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.UserAggregate.Interfaces;
+using FarmsManager.Domain.Exceptions;
 using MediatR;
 
 namespace FarmsManager.Application.Queries.Insertions;
@@ -9,18 +13,28 @@ namespace FarmsManager.Application.Queries.Insertions;
 public class GetInsertionsQueryHandler : IRequestHandler<GetInsertionsQuery, BaseResponse<GetInsertionsQueryResponse>>
 {
     private readonly IInsertionRepository _insertionRepository;
+    private readonly IUserDataResolver _userDataResolver;
+    private readonly IUserRepository _userRepository;
 
-    public GetInsertionsQueryHandler(IInsertionRepository insertionRepository)
+    public GetInsertionsQueryHandler(IInsertionRepository insertionRepository, IUserDataResolver userDataResolver,
+        IUserRepository userRepository)
     {
         _insertionRepository = insertionRepository;
+        _userDataResolver = userDataResolver;
+        _userRepository = userRepository;
     }
 
     public async Task<BaseResponse<GetInsertionsQueryResponse>> Handle(GetInsertionsQuery request,
         CancellationToken cancellationToken)
     {
+        var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
+        var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
+        var accessibleFarmIds = user.IsAdmin ? null : user.Farms?.Select(t => t.FarmId).ToList();
+
         var data = await _insertionRepository.ListAsync<InsertionRowDto>(
-            new GetAllInsertionsSpec(request.Filters, true), cancellationToken);
-        var count = await _insertionRepository.CountAsync(new GetAllInsertionsSpec(request.Filters, false),
+            new GetAllInsertionsSpec(request.Filters, true, accessibleFarmIds), cancellationToken);
+        var count = await _insertionRepository.CountAsync(
+            new GetAllInsertionsSpec(request.Filters, false, accessibleFarmIds),
             cancellationToken);
         return BaseResponse.CreateResponse(new GetInsertionsQueryResponse
         {

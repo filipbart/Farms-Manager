@@ -8,13 +8,18 @@ namespace FarmsManager.Application.Queries.ProductionData.Failures;
 
 public sealed class GetAllProductionDataFailuresSpec : BaseSpecification<ProductionDataFailureEntity>
 {
-    public GetAllProductionDataFailuresSpec(ProductionDataQueryFilters filters, bool withPagination)
+    public GetAllProductionDataFailuresSpec(ProductionDataQueryFilters filters, bool withPagination,
+        List<Guid> accessibleFarmIds)
     {
         EnsureExists();
         DisableTracking();
 
         PopulateFilters(filters);
         ApplyOrdering(filters);
+
+        if (accessibleFarmIds is not null && accessibleFarmIds.Count != 0)
+            Query.Where(p => accessibleFarmIds.Contains(p.FarmId));
+
         if (withPagination)
         {
             Paginate(filters);
@@ -36,7 +41,7 @@ public sealed class GetAllProductionDataFailuresSpec : BaseSpecification<Product
         if (filters.CyclesDict is not null && filters.CyclesDict.Count != 0)
         {
             var predicate = PredicateBuilder.New<ProductionDataFailureEntity>();
-            
+
             predicate = filters.CyclesDict.Aggregate(predicate,
                 (current, cycleFilter) => current.Or(t =>
                     t.Cycle.Identifier == cycleFilter.Identifier && t.Cycle.Year == cycleFilter.Year));

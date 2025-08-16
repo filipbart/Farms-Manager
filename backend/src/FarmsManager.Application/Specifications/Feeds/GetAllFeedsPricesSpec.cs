@@ -7,13 +7,17 @@ namespace FarmsManager.Application.Specifications.Feeds;
 
 public sealed class GetAllFeedsPricesSpec : BaseSpecification<FeedPriceEntity>
 {
-    public GetAllFeedsPricesSpec(GetFeedsPricesQueryFilters filters, bool withPagination)
+    public GetAllFeedsPricesSpec(GetFeedsPricesQueryFilters filters, bool withPagination, List<Guid> accessibleFarmIds)
     {
         EnsureExists();
         DisableTracking();
 
         PopulateFilters(filters);
         ApplyOrdering(filters);
+
+        if (accessibleFarmIds is not null && accessibleFarmIds.Count != 0)
+            Query.Where(p => accessibleFarmIds.Contains(p.FarmId));
+
         if (withPagination)
         {
             Paginate(filters);

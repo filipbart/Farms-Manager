@@ -1,7 +1,11 @@
 using AutoMapper;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Interfaces;
+using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.ProductionDataAggregate.Entities;
 using FarmsManager.Domain.Aggregates.ProductionDataAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.UserAggregate.Interfaces;
+using FarmsManager.Domain.Exceptions;
 using MediatR;
 
 namespace FarmsManager.Application.Queries.ProductionData.FlockLosses;
@@ -11,21 +15,29 @@ public class GetProductionDataFlockLossesQueryHandler : IRequestHandler<GetProdu
 {
     private readonly IProductionDataFlockLossMeasureRepository _flockLossRepository;
     private readonly IMapper _mapper;
+    private readonly IUserDataResolver _userDataResolver;
+    private readonly IUserRepository _userRepository;
 
     public GetProductionDataFlockLossesQueryHandler(
         IProductionDataFlockLossMeasureRepository flockLossRepository,
-        IMapper mapper)
+        IMapper mapper, IUserDataResolver userDataResolver, IUserRepository userRepository)
     {
         _flockLossRepository = flockLossRepository;
         _mapper = mapper;
+        _userDataResolver = userDataResolver;
+        _userRepository = userRepository;
     }
 
     public async Task<BaseResponse<GetProductionDataFlockLossesQueryResponse>> Handle(
         GetProductionDataFlockLossesQuery request,
         CancellationToken cancellationToken)
     {
-        var spec = new GetAllProductionDataFlockLossesSpec(request.Filters, true);
-        var countSpec = new GetAllProductionDataFlockLossesSpec(request.Filters, false);
+        var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
+        var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
+        var accessibleFarmIds = user.IsAdmin ? null : user.Farms?.Select(t => t.FarmId).ToList();
+
+        var spec = new GetAllProductionDataFlockLossesSpec(request.Filters, true, accessibleFarmIds);
+        var countSpec = new GetAllProductionDataFlockLossesSpec(request.Filters, false, accessibleFarmIds);
 
         var flockLosses = await _flockLossRepository.ListAsync(spec, cancellationToken);
         var totalRows = await _flockLossRepository.CountAsync(countSpec, cancellationToken);

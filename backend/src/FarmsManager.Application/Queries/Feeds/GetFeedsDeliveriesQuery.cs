@@ -1,10 +1,14 @@
 ﻿using AutoMapper;
 using FarmsManager.Application.Common;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models;
 using FarmsManager.Application.Specifications.Feeds;
+using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.UserAggregate.Interfaces;
+using FarmsManager.Domain.Exceptions;
 using MediatR;
 
 namespace FarmsManager.Application.Queries.Feeds;
@@ -71,22 +75,31 @@ public class
 {
     private readonly IFeedInvoiceRepository _feedInvoiceRepository;
     private readonly IFeedInvoiceCorrectionRepository _feedInvoiceCorrectionRepository;
+    private readonly IUserDataResolver _userDataResolver;
+    private readonly IUserRepository _userRepository;
 
     public GetFeedsDeliveriesQueryHandler(IFeedInvoiceRepository feedInvoiceRepository,
-        IFeedInvoiceCorrectionRepository feedInvoiceCorrectionRepository)
+        IFeedInvoiceCorrectionRepository feedInvoiceCorrectionRepository, IUserDataResolver userDataResolver,
+        IUserRepository userRepository)
     {
         _feedInvoiceRepository = feedInvoiceRepository;
         _feedInvoiceCorrectionRepository = feedInvoiceCorrectionRepository;
+        _userDataResolver = userDataResolver;
+        _userRepository = userRepository;
     }
 
     public async Task<BaseResponse<GetFeedsDeliveriesQueryResponse>> Handle(GetFeedsDeliveriesQuery request,
         CancellationToken ct)
     {
+        var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
+        var user = await _userRepository.GetAsync(new UserByIdSpec(userId), ct);
+        var accessibleFarmIds = user.IsAdmin ? null : user.Farms?.Select(t => t.FarmId).ToList();
+
         var feedInvoices = await _feedInvoiceRepository.ListAsync<FeedDeliveryRowDto>(
-            new GetAllFeedsDeliveriesSpec(request.Filters, false), ct);
+            new GetAllFeedsDeliveriesSpec(request.Filters, false, accessibleFarmIds), ct);
 
         var feedCorrections = await _feedInvoiceCorrectionRepository.ListAsync<FeedDeliveryRowDto>(
-            new GetAllFeedsCorrectionsSpec(request.Filters, false), ct);
+            new GetAllFeedsCorrectionsSpec(request.Filters, false, accessibleFarmIds), ct);
 
         var combined = feedInvoices.Concat(feedCorrections).ToList();
 

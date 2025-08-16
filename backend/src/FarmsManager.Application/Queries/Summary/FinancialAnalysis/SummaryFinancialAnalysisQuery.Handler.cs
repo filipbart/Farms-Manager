@@ -1,4 +1,5 @@
 ﻿using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models.Summary;
 using FarmsManager.Application.Queries.Farms;
 using FarmsManager.Application.Queries.Insertions;
@@ -16,8 +17,11 @@ using FarmsManager.Domain.Aggregates.SaleAggregate.Enums;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Interfaces;
 using MediatR;
 using FarmsManager.Application.Queries.Summary.ProductionAnalysis;
+using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
+using FarmsManager.Domain.Aggregates.UserAggregate.Interfaces;
+using FarmsManager.Domain.Exceptions;
 
 namespace FarmsManager.Application.Queries.Summary.FinancialAnalysis;
 
@@ -42,12 +46,16 @@ public class SummaryFinancialAnalysisQueryHandler : IRequestHandler<SummaryFinan
     private readonly IProductionDataRemainingFeedRepository _productionDataRemainingFeedRepository;
     private readonly IProductionDataTransferFeedRepository _productionDataTransferFeedRepository;
 
+    private readonly IUserDataResolver _userDataResolver;
+    private readonly IUserRepository _userRepository;
+
     public SummaryFinancialAnalysisQueryHandler(IFarmRepository farmRepository, ISaleRepository saleRepository,
         IInsertionRepository insertionRepository, IFeedInvoiceRepository feedInvoiceRepository,
         IGasConsumptionRepository gasConsumptionRepository,
         IExpenseProductionRepository expenseProductionRepository,
         IProductionDataRemainingFeedRepository productionDataRemainingFeedRepository,
-        IProductionDataTransferFeedRepository productionDataTransferFeedRepository)
+        IProductionDataTransferFeedRepository productionDataTransferFeedRepository, IUserDataResolver userDataResolver,
+        IUserRepository userRepository)
     {
         _farmRepository = farmRepository;
         _saleRepository = saleRepository;
@@ -57,12 +65,20 @@ public class SummaryFinancialAnalysisQueryHandler : IRequestHandler<SummaryFinan
         _expenseProductionRepository = expenseProductionRepository;
         _productionDataRemainingFeedRepository = productionDataRemainingFeedRepository;
         _productionDataTransferFeedRepository = productionDataTransferFeedRepository;
+        _userDataResolver = userDataResolver;
+        _userRepository = userRepository;
     }
 
     public async Task<BaseResponse<SummaryFinancialAnalysisQueryResponse>> Handle(
         SummaryFinancialAnalysisQuery request, CancellationToken ct)
     {
-        var allInsertions = await _insertionRepository.ListAsync(new GetAllInsertionsSpec(request.Filters, true), ct);
+        var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
+        var user = await _userRepository.GetAsync(new UserByIdSpec(userId), ct);
+        var accessibleFarmIds = user.IsAdmin ? null : user.Farms?.Select(t => t.FarmId).ToList();
+
+        var allInsertions =
+            await _insertionRepository.ListAsync(new GetAllInsertionsSpec(request.Filters, true, accessibleFarmIds),
+                ct);
         if (allInsertions.Count == 0)
         {
             return BaseResponse.CreateResponse(new SummaryFinancialAnalysisQueryResponse());
@@ -74,7 +90,8 @@ public class SummaryFinancialAnalysisQueryHandler : IRequestHandler<SummaryFinan
         var farms = (await _farmRepository.ListAsync(new GetAllFarmsSpec(null), ct)).ToDictionary(f => f.Id);
         var allSales =
             await _saleRepository.ListAsync(
-                new GetAllSalesSpec(new GetSalesQueryFilters { HenhouseIds = henhouseIds }, false), ct);
+                new GetAllSalesSpec(new GetSalesQueryFilters { HenhouseIds = henhouseIds }, false, accessibleFarmIds),
+                ct);
         var allExpenses = await _expenseProductionRepository.ListAsync(new ExpensesProductionsByFarmsSpec(farmIds), ct);
         var gasConsumptions = await _gasConsumptionRepository.ListAsync(new GasConsumptionsByFarmsSpec(farmIds), ct);
         var feedInvoices = await _feedInvoiceRepository.ListAsync(new FeedsDeliveriesByHenhousesSpec(henhouseIds), ct);

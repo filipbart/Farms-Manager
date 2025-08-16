@@ -8,7 +8,8 @@ namespace FarmsManager.Application.Queries.Gas.Consumptions;
 
 public sealed class GetAllGasConsumptionsSpec : BaseSpecification<GasConsumptionEntity>
 {
-    public GetAllGasConsumptionsSpec(GetGasConsumptionsQueryFilters filters, bool withPagination)
+    public GetAllGasConsumptionsSpec(GetGasConsumptionsQueryFilters filters, bool withPagination,
+        List<Guid> accessibleFarmIds)
     {
         EnsureExists();
         DisableTracking();
@@ -18,6 +19,9 @@ public sealed class GetAllGasConsumptionsSpec : BaseSpecification<GasConsumption
 
         Query.Include(t => t.Farm);
         Query.Include(t => t.Cycle);
+
+        if (accessibleFarmIds is not null && accessibleFarmIds.Count != 0)
+            Query.Where(p => accessibleFarmIds.Contains(p.FarmId));
 
         if (withPagination)
         {
@@ -37,7 +41,7 @@ public sealed class GetAllGasConsumptionsSpec : BaseSpecification<GasConsumption
         if (filters.CyclesDict is not null && filters.CyclesDict.Count != 0)
         {
             var predicate = PredicateBuilder.New<GasConsumptionEntity>();
-            
+
             predicate = filters.CyclesDict.Aggregate(predicate,
                 (current, cycleFilter) => current.Or(t =>
                     t.Cycle.Identifier == cycleFilter.Identifier && t.Cycle.Year == cycleFilter.Year));
