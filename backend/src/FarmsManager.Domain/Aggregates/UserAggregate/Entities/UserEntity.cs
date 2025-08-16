@@ -54,7 +54,7 @@ public class UserEntity : Entity
         return Permissions.Select(t => t.PermissionName);
     }
 
-    public void AddAdminPermission(string permission, Guid? creator)
+    public void AddPermission(string permission, Guid? creator)
     {
         Guard.Against.NullOrWhiteSpace(permission, nameof(permission));
 
@@ -66,7 +66,7 @@ public class UserEntity : Entity
         });
     }
 
-    public void RemoveAdminPermission(string permission)
+    public void RemovePermission(string permission)
     {
         Guard.Against.NullOrWhiteSpace(permission, nameof(permission));
 

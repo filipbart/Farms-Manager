@@ -2,6 +2,7 @@ import ApiUrl from "../common/ApiUrl";
 import type { PaginateModel } from "../common/interfaces/paginate";
 import type {
   AddUserData,
+  GetPermissionsResponse,
   UpdateUserData,
   UserDetailsModel,
   UserListModel,
@@ -30,5 +31,15 @@ export class UsersService {
 
   public static async deleteUser(id: string) {
     return await AxiosWrapper.delete(ApiUrl.DeleteUser(id));
+  }
+
+  public static async getAllPermissions() {
+    return await AxiosWrapper.get<GetPermissionsResponse>(ApiUrl.Permissions);
+  }
+
+  public static async updateUserPermissions(id: string, permissions: string[]) {
+    return await AxiosWrapper.post(ApiUrl.UpdateUserPermissions(id), {
+      permissions,
+    });
   }
 }

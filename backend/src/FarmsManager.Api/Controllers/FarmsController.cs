@@ -145,7 +145,7 @@ public class FarmsController(IMediator mediator) : BaseController
     /// <param name="command"></param>
     /// <returns></returns>
     [HttpPost("update-cycle")]
-    [HasPermission(AppPermissions.Data.FarmsManage)]
+    [HasPermission(AppPermissions.Settings.Cycles.Manage)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UpdateFarmCycle(UpdateFarmCycleCommand command)

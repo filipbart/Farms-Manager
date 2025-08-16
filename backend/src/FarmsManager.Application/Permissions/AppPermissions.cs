@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using FarmsManager.Application.Attributes;
 
 namespace FarmsManager.Application.Permissions;
 
@@ -7,17 +8,20 @@ namespace FarmsManager.Application.Permissions;
 /// </summary>
 public static class AppPermissions
 {
+    [PermissionGroup("Pulpit Główny")]
     public static class Dashboard
     {
         [Description("Dostęp do pulpitu głównego")]
         public const string View = "dashboard:view";
     }
 
+    [PermissionGroup("Wstawienia")]
     public static class Insertions
     {
         [Description("Dostęp do wstawień")] public const string View = "insertions:view";
     }
 
+    [PermissionGroup("Sprzedaż")]
     public static class Sales
     {
         [Description("Dostęp do modułu Sprzedaże")]
@@ -30,6 +34,7 @@ public static class AppPermissions
         public const string SettingsManage = "sales:settings:manage";
     }
 
+    [PermissionGroup("Pasze")]
     public static class Feeds
     {
         [Description("Dostęp do modułu Pasze")]
@@ -44,6 +49,7 @@ public static class AppPermissions
         public const string PaymentsView = "feeds:payments:view";
     }
 
+    [PermissionGroup("Koszty")]
     public static class Expenses
     {
         [Description("Dostęp do modułu Koszty")]
@@ -62,6 +68,7 @@ public static class AppPermissions
         public const string TypesManage = "expenses:types:manage";
     }
 
+    [PermissionGroup("Dane Produkcyjne")]
     public static class ProductionData
     {
         [Description("Dostęp do danych produkcyjnych")]
@@ -88,6 +95,7 @@ public static class AppPermissions
         [Description("Dostęp do IRZplus")] public const string IrzPlusView = "productiondata:irzplus:view";
     }
 
+    [PermissionGroup("Gaz")]
     public static class Gas
     {
         [Description("Dostęp do modułu Gaz")] public const string View = "gas:view";
@@ -99,12 +107,14 @@ public static class AppPermissions
         public const string ConsumptionsView = "gas:consumptions:view";
     }
 
+    [PermissionGroup("Notatki z Wylęgarni")]
     public static class HatcheryNotes
     {
         [Description("Dostęp do notatek z wylęgarni")]
         public const string View = "hatcherynotes:view";
     }
 
+    [PermissionGroup("Pracownicy")]
     public static class Employees
     {
         [Description("Dostęp do modułu Pracownicy")]
@@ -117,6 +127,7 @@ public static class AppPermissions
         public const string PayslipsView = "employees:payslips:view";
     }
 
+    [PermissionGroup("Podsumowanie")]
     public static class Summary
     {
         [Description("Dostęp do modułu Podsumowanie")]
@@ -129,6 +140,7 @@ public static class AppPermissions
         public const string FinancialAnalysisView = "summary:financialanalysis:view";
     }
 
+    [PermissionGroup("Dane")]
     public static class Data
     {
         [Description("Dostęp do danych podstawowych (słowników)")]
@@ -147,10 +159,12 @@ public static class AppPermissions
         public const string UtilizationPlantsManage = "data:utilizationplants:manage";
     }
 
+    [PermissionGroup("Ustawienia")]
     public static class Settings
     {
         [Description("Dostęp do Ustawień")] public const string View = "settings:view";
 
+        [PermissionGroup("Zarządzanie Użytkownikami")]
         public static class Users
         {
             [Description("Przeglądanie listy użytkowników")]
@@ -163,6 +177,7 @@ public static class AppPermissions
             public const string ManagePermissions = "settings:users:permissions";
         }
 
+        [PermissionGroup("Zarządzanie Cyklami")]
         public static class Cycles
         {
             [Description("Zarządzanie cyklami")] public const string Manage = "settings:cycles:manage";

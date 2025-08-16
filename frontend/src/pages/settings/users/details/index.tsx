@@ -11,12 +11,19 @@ import { useNavigate, useParams } from "react-router-dom";
 import { UsersService } from "../../../../services/users-service";
 import type { UserDetailsModel } from "../../../../models/users/users";
 import UserInfoTab from "./tabs/info-tab";
+import PermissionsTab from "./tabs/permissions-tab";
 
 const UserDetailsPage: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
   const [user, setUser] = useState<UserDetailsModel>();
   const [loading, setLoading] = useState(true);
   const nav = useNavigate();
+
+  const [activeTab, setActiveTab] = useState(0);
+
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+    setActiveTab(newValue);
+  };
 
   const fetchUser = async () => {
     if (!userId) return;
@@ -74,13 +81,20 @@ const UserDetailsPage: React.FC = () => {
         </Button>
       </Box>
       <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-        <Tabs value={0}>
+        <Tabs
+          value={activeTab}
+          onChange={handleTabChange}
+          variant="scrollable"
+          scrollButtons="auto"
+        >
           <Tab label="Informacje o użytkowniku" />
+          <Tab label="Uprawnienia" />
         </Tabs>
       </Box>
 
       <Box mt={3}>
-        <UserInfoTab user={user} refetch={fetchUser} />
+        {activeTab === 0 && <UserInfoTab user={user} refetch={fetchUser} />}
+        {activeTab === 1 && <PermissionsTab user={user} refetch={fetchUser} />}
       </Box>
     </Box>
   );

@@ -141,6 +141,7 @@ app.MapControllers();
 
 app.UseMiddleware<DomainExceptionMiddleware>();
 app.UseMiddleware<BlockDevControllerMiddleware>();
+app.UseMiddleware<CheckPermissionMiddleware>();
 app.UseMiddleware<FluentValidationExceptionMiddleware>();
 
 app.Run();

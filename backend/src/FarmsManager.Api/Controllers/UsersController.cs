@@ -81,4 +81,33 @@ public class UsersController(IMediator mediator) : BaseController
     {
         return Ok(await mediator.Send(new UpdateUserCommand(userId, data)));
     }
+
+    /// <summary>
+    /// Zwraca listę wszystkich uprawnień 
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet("permissions")]
+    [HasPermission(AppPermissions.Settings.Users.Manage)]
+    [ProducesResponseType(typeof(BaseResponse<GetPermissionsQueryResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetAllPermissions()
+    {
+        return Ok(await mediator.Send(new GetPermissionsQuery()));
+    }
+
+    /// <summary>
+    /// Aktualizuje uprawnienia uzytkownika
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    [HttpPost("{userId:guid}/update-permissions")]
+    [HasPermission(AppPermissions.Settings.Users.Manage)]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> UpdateUserPermissions([FromRoute] Guid userId,
+        [FromBody] UpdateUserPermissionsDto data)
+    {
+        return Ok(await mediator.Send(new UpdateUserPermissionsCommand(userId, data.Permissions)));
+    }
 }

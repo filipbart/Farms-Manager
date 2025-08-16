@@ -53,6 +53,7 @@ import {
   MdTrendingDown,
 } from "react-icons/md";
 import { PiFarmFill } from "react-icons/pi";
+import { usePermissions } from "../../context/permission-context";
 
 interface DashboardSidebarProps {
   open: boolean;
@@ -67,6 +68,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   const lgUp = useMediaQuery((theme: any) => theme.breakpoints.up("lg"));
   const auth = useAuth();
   const { notifications } = useNotifications();
+  const { hasPermission } = usePermissions();
 
   const [openItems, setOpenItems] = useState<string[]>([]);
 
@@ -75,10 +77,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       const isOpen = prev.includes(title);
 
       if (isParent) {
-        // Logika akordeonu dla elementów nadrzędnych
         return isOpen ? [] : [title];
       } else {
-        // Logika przełączania dla elementów podrzędnych
         return isOpen
           ? prev.filter((item) => item !== title)
           : [...prev, title];
@@ -119,248 +119,342 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
 
   const contentList = (
     <List sx={{ width: "100%", backgroundColor: "primary.dark" }}>
-      <SidebarMenuItem to="/" title="Strona główna" icon={<IoHome />} />
-      <SidebarMenuItem to="/insertions" title="Wstawienia" icon={<FaClone />} />
-
-      <SidebarMenuItem
-        to="/sales"
-        title="Sprzedaże"
-        icon={<IoCard />}
-        isOpen={openItems.includes("Sprzedaże")}
-        onClick={() => handleItemClick("Sprzedaże", true)}
-        notificationCount={notifications?.salesInvoices.count}
-        notificationPriority={notifications?.salesInvoices.priority}
-      >
-        <SidebarMenuItem to="/sales" title="Lista" icon={<FaList />} />
+      {hasPermission("dashboard:view") && (
+        <SidebarMenuItem to="/" title="Strona główna" icon={<IoHome />} />
+      )}
+      {hasPermission("insertions:view") && (
         <SidebarMenuItem
-          to="/sales/invoices"
-          title="Faktury sprzedażowe"
-          icon={<FaFileInvoiceDollar />}
+          to="/insertions"
+          title="Wstawienia"
+          icon={<FaClone />}
+        />
+      )}
+
+      {hasPermission("sales:view") && (
+        <SidebarMenuItem
+          to="/sales"
+          title="Sprzedaże"
+          icon={<IoCard />}
+          isOpen={openItems.includes("Sprzedaże")}
+          onClick={() => handleItemClick("Sprzedaże", true)}
           notificationCount={notifications?.salesInvoices.count}
           notificationPriority={notifications?.salesInvoices.priority}
-        />
-        <SidebarMenuItem
-          to="/sales/settings"
-          title="Ustawienia pól"
-          icon={<FaGear />}
-        />
-      </SidebarMenuItem>
+        >
+          <SidebarMenuItem to="/sales" title="Lista" icon={<FaList />} />
+          {hasPermission("sales:invoices:view") && (
+            <SidebarMenuItem
+              to="/sales/invoices"
+              title="Faktury sprzedażowe"
+              icon={<FaFileInvoiceDollar />}
+              notificationCount={notifications?.salesInvoices.count}
+              notificationPriority={notifications?.salesInvoices.priority}
+            />
+          )}
+          {hasPermission("sales:settings:manage") && (
+            <SidebarMenuItem
+              to="/sales/settings"
+              title="Ustawienia pól"
+              icon={<FaGear />}
+            />
+          )}
+        </SidebarMenuItem>
+      )}
 
-      <SidebarMenuItem
-        to="/feeds"
-        title="Pasze"
-        icon={<FaJarWheat />}
-        isOpen={openItems.includes("Pasze")}
-        onClick={() => handleItemClick("Pasze", true)}
-        notificationCount={notifications?.feedDeliveries.count}
-        notificationPriority={notifications?.feedDeliveries.priority}
-      >
+      {hasPermission("feeds:view") && (
         <SidebarMenuItem
-          to="/feeds/deliveries"
-          title="Dostawy pasz"
-          icon={<FaTruck />}
+          to="/feeds"
+          title="Pasze"
+          icon={<FaJarWheat />}
+          isOpen={openItems.includes("Pasze")}
+          onClick={() => handleItemClick("Pasze", true)}
           notificationCount={notifications?.feedDeliveries.count}
           notificationPriority={notifications?.feedDeliveries.priority}
-        />
-        <SidebarMenuItem
-          to="/feeds/prices"
-          title="Ceny pasz"
-          icon={<FaArrowTrendUp />}
-        />
-        <SidebarMenuItem
-          to="/feeds/payments"
-          title="Przelewy"
-          icon={<FaFileInvoiceDollar />}
-        />
-      </SidebarMenuItem>
-
-      <SidebarMenuItem
-        to="/expenses"
-        title="Koszty"
-        icon={<FaMoneyBill />}
-        isOpen={openItems.includes("Koszty")}
-        onClick={() => handleItemClick("Koszty", true)}
-      >
-        <SidebarMenuItem
-          to="/expenses/production"
-          title="Koszty produkcyjne"
-          icon={<MdFactory />}
-        />
-        <SidebarMenuItem
-          to="/expenses/advances"
-          title="Ewidencja zaliczek"
-          icon={<FaHandHoldingUsd />}
-        />
-        <SidebarMenuItem
-          to="/expenses/contractors"
-          title="Kontrahenci"
-          icon={<FaHandshake />}
-        />
-        <SidebarMenuItem
-          to="/expenses/types"
-          title="Typy wydatków"
-          icon={<MdPayments />}
-        />
-      </SidebarMenuItem>
-
-      <SidebarMenuItem
-        to="/production-data"
-        title="Dane produkcyjne"
-        icon={<FaIndustry />}
-        isOpen={openItems.includes("Dane produkcyjne")}
-        onClick={() => handleItemClick("Dane produkcyjne", true)}
-      >
-        <SidebarMenuItem
-          to="/production-data/failures"
-          title="Upadki i wybrakowania"
-          icon={<MdTrendingDown />}
-        />
-        <SidebarMenuItem
-          to="/production-data/remaining-feed"
-          title="Pozostała pasza"
-          icon={<FaJarWheat />}
-        />
-        <SidebarMenuItem
-          to="/production-data/transfer-feed"
-          title="Pasza przeniesiona"
-          icon={<FaBuildingWheat />}
-        />
-        <SidebarMenuItem
-          to="production-data/weekly-measurements"
-          title="Pomiary cotygodniowe"
-          icon={<MdCalendarViewWeek />}
-          isOpen={openItems.includes("Pomiary cotygodniowe")}
-          onClick={() => handleItemClick("Pomiary cotygodniowe")}
         >
-          <SidebarMenuItem
-            to="/production-data/weighings"
-            title="Masy ciała"
-            icon={<FaWeight />}
-          />
-          <SidebarMenuItem
-            to="/production-data/flock-loss"
-            title="Pomiary upadków i wybrakowań"
-            icon={<FaChartLine />}
-          />
+          {hasPermission("feeds:deliveries:view") && (
+            <SidebarMenuItem
+              to="/feeds/deliveries"
+              title="Dostawy pasz"
+              icon={<FaTruck />}
+              notificationCount={notifications?.feedDeliveries.count}
+              notificationPriority={notifications?.feedDeliveries.priority}
+            />
+          )}
+          {hasPermission("feeds:prices:view") && (
+            <SidebarMenuItem
+              to="/feeds/prices"
+              title="Ceny pasz"
+              icon={<FaArrowTrendUp />}
+            />
+          )}
+          {hasPermission("feeds:payments:view") && (
+            <SidebarMenuItem
+              to="/feeds/payments"
+              title="Przelewy"
+              icon={<FaFileInvoiceDollar />}
+            />
+          )}
         </SidebarMenuItem>
+      )}
 
+      {hasPermission("expenses:view") && (
         <SidebarMenuItem
-          to="/production-data/irzplus"
-          title="IRZplus"
-          icon={<FaBuilding />}
-        />
-      </SidebarMenuItem>
+          to="/expenses"
+          title="Koszty"
+          icon={<FaMoneyBill />}
+          isOpen={openItems.includes("Koszty")}
+          onClick={() => handleItemClick("Koszty", true)}
+        >
+          {hasPermission("expenses:production:view") && (
+            <SidebarMenuItem
+              to="/expenses/production"
+              title="Koszty produkcyjne"
+              icon={<MdFactory />}
+            />
+          )}
+          {hasPermission("expenses:advances:view") && (
+            <SidebarMenuItem
+              to="/expenses/advances"
+              title="Ewidencja zaliczek"
+              icon={<FaHandHoldingUsd />}
+            />
+          )}
+          {hasPermission("expenses:contractors:view") && (
+            <SidebarMenuItem
+              to="/expenses/contractors"
+              title="Kontrahenci"
+              icon={<FaHandshake />}
+            />
+          )}
+          {hasPermission("expenses:types:manage") && (
+            <SidebarMenuItem
+              to="/expenses/types"
+              title="Typy wydatków"
+              icon={<MdPayments />}
+            />
+          )}
+        </SidebarMenuItem>
+      )}
 
-      <SidebarMenuItem
-        to="/gas"
-        title="Gaz"
-        icon={<MdPropane />}
-        isOpen={openItems.includes("Gaz")}
-        onClick={() => handleItemClick("Gaz", true)}
-      >
+      {hasPermission("productiondata:view") && (
         <SidebarMenuItem
-          to="/gas/deliveries"
-          title="Dostawy gazu"
-          icon={<FaTruck />}
-        />
+          to="/production-data"
+          title="Dane produkcyjne"
+          icon={<FaIndustry />}
+          isOpen={openItems.includes("Dane produkcyjne")}
+          onClick={() => handleItemClick("Dane produkcyjne", true)}
+        >
+          {hasPermission("productiondata:failures:view") && (
+            <SidebarMenuItem
+              to="/production-data/failures"
+              title="Upadki i wybrakowania"
+              icon={<MdTrendingDown />}
+            />
+          )}
+          {hasPermission("productiondata:remainingfeed:view") && (
+            <SidebarMenuItem
+              to="/production-data/remaining-feed"
+              title="Pozostała pasza"
+              icon={<FaJarWheat />}
+            />
+          )}
+          {hasPermission("productiondata:transferfeed:view") && (
+            <SidebarMenuItem
+              to="/production-data/transfer-feed"
+              title="Pasza przeniesiona"
+              icon={<FaBuildingWheat />}
+            />
+          )}
+          {hasPermission("productiondata:weeklymeasurements:view") && (
+            <SidebarMenuItem
+              to="production-data/weekly-measurements"
+              title="Pomiary cotygodniowe"
+              icon={<MdCalendarViewWeek />}
+              isOpen={openItems.includes("Pomiary cotygodniowe")}
+              onClick={() => handleItemClick("Pomiary cotygodniowe")}
+            >
+              {hasPermission("productiondata:weighings:view") && (
+                <SidebarMenuItem
+                  to="/production-data/weighings"
+                  title="Masy ciała"
+                  icon={<FaWeight />}
+                />
+              )}
+              {hasPermission("productiondata:flockloss:view") && (
+                <SidebarMenuItem
+                  to="/production-data/flock-loss"
+                  title="Pomiary upadków i wybrakowań"
+                  icon={<FaChartLine />}
+                />
+              )}
+            </SidebarMenuItem>
+          )}
+          {hasPermission("productiondata:irzplus:view") && (
+            <SidebarMenuItem
+              to="/production-data/irzplus"
+              title="IRZplus"
+              icon={<FaBuilding />}
+            />
+          )}
+        </SidebarMenuItem>
+      )}
+
+      {hasPermission("gas:view") && (
         <SidebarMenuItem
-          to="/gas/consumptions"
-          title="Zużycie gazu"
-          icon={<FaBurn />}
+          to="/gas"
+          title="Gaz"
+          icon={<MdPropane />}
+          isOpen={openItems.includes("Gaz")}
+          onClick={() => handleItemClick("Gaz", true)}
+        >
+          {hasPermission("gas:deliveries:view") && (
+            <SidebarMenuItem
+              to="/gas/deliveries"
+              title="Dostawy gazu"
+              icon={<FaTruck />}
+            />
+          )}
+          {hasPermission("gas:consumptions:view") && (
+            <SidebarMenuItem
+              to="/gas/consumptions"
+              title="Zużycie gazu"
+              icon={<FaBurn />}
+            />
+          )}
+        </SidebarMenuItem>
+      )}
+
+      {hasPermission("hatcherynotes:view") && (
+        <SidebarMenuItem
+          to="/hatcheries-notes"
+          title="Wylęgarnie - notatki"
+          icon={<MdNotes />}
         />
-      </SidebarMenuItem>
+      )}
 
-      <SidebarMenuItem
-        to="/hatcheries-notes"
-        title="Wylęgarnie - notatki"
-        icon={<MdNotes />}
-      />
-
-      <SidebarMenuItem
-        to="/employees"
-        title="Pracownicy"
-        icon={<MdPeopleAlt />}
-        isOpen={openItems.includes("Pracownicy")}
-        onClick={() => handleItemClick("Pracownicy", true)}
-        notificationCount={notifications?.employees.count}
-        notificationPriority={notifications?.employees.priority}
-      >
+      {hasPermission("employees:view") && (
         <SidebarMenuItem
           to="/employees"
-          title="Kadry"
-          icon={<FaAddressCard />}
+          title="Pracownicy"
+          icon={<MdPeopleAlt />}
+          isOpen={openItems.includes("Pracownicy")}
+          onClick={() => handleItemClick("Pracownicy", true)}
           notificationCount={notifications?.employees.count}
           notificationPriority={notifications?.employees.priority}
-        />
-        <SidebarMenuItem
-          to="/employees/payslips"
-          title="Rozliczenie wypłat"
-          icon={<FaFileInvoiceDollar />}
-        />
-      </SidebarMenuItem>
-      <SidebarMenuItem
-        to="/summary"
-        title="Podsumowanie"
-        icon={<MdDashboard />}
-        isOpen={openItems.includes("Podsumowanie")}
-        onClick={() => handleItemClick("Podsumowanie", true)}
-      >
-        <SidebarMenuItem
-          to="/summary/production-analysis"
-          title="Analiza produkcyjna"
-          icon={<MdBarChart />}
-        />
-        <SidebarMenuItem
-          to="/summary/financial-analysis"
-          title="Analiza finansowa"
-          icon={<FaCalculator />}
-        />
-      </SidebarMenuItem>
+        >
+          {hasPermission("employees:list:view") && (
+            <SidebarMenuItem
+              to="/employees"
+              title="Kadry"
+              icon={<FaAddressCard />}
+              notificationCount={notifications?.employees.count}
+              notificationPriority={notifications?.employees.priority}
+            />
+          )}
+          {hasPermission("employees:payslips:view") && (
+            <SidebarMenuItem
+              to="/employees/payslips"
+              title="Rozliczenie wypłat"
+              icon={<FaFileInvoiceDollar />}
+            />
+          )}
+        </SidebarMenuItem>
+      )}
 
-      <SidebarMenuItem
-        to="/data"
-        title="Dane"
-        icon={<FaDatabase />}
-        isOpen={openItems.includes("Dane")}
-        onClick={() => handleItemClick("Dane", true)}
-      >
-        <SidebarMenuItem to="/data/farms" title="Fermy" icon={<PiFarmFill />} />
-        <SidebarMenuItem to="/data/houses" title="Kurniki" icon={<FaHouse />} />
+      {hasPermission("summary:view") && (
         <SidebarMenuItem
-          to="/data/hatcheries"
-          title="Wylęgarnie"
-          icon={<FaWarehouse />}
-        />
-        <SidebarMenuItem
-          to="/data/slaughterhouses"
-          title="Ubojnie"
-          icon={<MdFactory />}
-        />
-        <SidebarMenuItem
-          to="/data/utilization-plants"
-          title="Zakłady utylizacyjne"
-          icon={<FaIndustry />}
-        />
-      </SidebarMenuItem>
+          to="/summary"
+          title="Podsumowanie"
+          icon={<MdDashboard />}
+          isOpen={openItems.includes("Podsumowanie")}
+          onClick={() => handleItemClick("Podsumowanie", true)}
+        >
+          {hasPermission("summary:productionanalysis:view") && (
+            <SidebarMenuItem
+              to="/summary/production-analysis"
+              title="Analiza produkcyjna"
+              icon={<MdBarChart />}
+            />
+          )}
+          {hasPermission("summary:financialanalysis:view") && (
+            <SidebarMenuItem
+              to="/summary/financial-analysis"
+              title="Analiza finansowa"
+              icon={<FaCalculator />}
+            />
+          )}
+        </SidebarMenuItem>
+      )}
 
-      <SidebarMenuItem
-        to="/settings"
-        isOpen={openItems.includes("Ustawienia")}
-        onClick={() => handleItemClick("Ustawienia", true)}
-        title="Ustawienia"
-        icon={<MdSettings />}
-      >
+      {hasPermission("data:view") && (
         <SidebarMenuItem
-          to="/settings/users"
-          title="Użytkownicy"
-          icon={<FaUserCog />}
-        />
+          to="/data"
+          title="Dane"
+          icon={<FaDatabase />}
+          isOpen={openItems.includes("Dane")}
+          onClick={() => handleItemClick("Dane", true)}
+        >
+          {hasPermission("data:farms:manage") && (
+            <SidebarMenuItem
+              to="/data/farms"
+              title="Fermy"
+              icon={<PiFarmFill />}
+            />
+          )}
+          {hasPermission("data:houses:manage") && (
+            <SidebarMenuItem
+              to="/data/houses"
+              title="Kurniki"
+              icon={<FaHouse />}
+            />
+          )}
+          {hasPermission("data:hatcheries:manage") && (
+            <SidebarMenuItem
+              to="/data/hatcheries"
+              title="Wylęgarnie"
+              icon={<FaWarehouse />}
+            />
+          )}
+          {hasPermission("data:slaughterhouses:manage") && (
+            <SidebarMenuItem
+              to="/data/slaughterhouses"
+              title="Ubojnie"
+              icon={<MdFactory />}
+            />
+          )}
+          {hasPermission("data:utilizationplants:manage") && (
+            <SidebarMenuItem
+              to="/data/utilization-plants"
+              title="Zakłady utylizacyjne"
+              icon={<FaIndustry />}
+            />
+          )}
+        </SidebarMenuItem>
+      )}
+
+      {hasPermission("settings:view") && (
         <SidebarMenuItem
-          to="/settings/cycles"
-          title="Cykle"
-          icon={<MdTimelapse />}
-        />
-      </SidebarMenuItem>
+          to="/settings"
+          isOpen={openItems.includes("Ustawienia")}
+          onClick={() => handleItemClick("Ustawienia", true)}
+          title="Ustawienia"
+          icon={<MdSettings />}
+        >
+          {hasPermission("settings:users:view") && (
+            <SidebarMenuItem
+              to="/settings/users"
+              title="Użytkownicy"
+              icon={<FaUserCog />}
+            />
+          )}
+          {hasPermission("settings:cycles:manage") && (
+            <SidebarMenuItem
+              to="/settings/cycles"
+              title="Cykle"
+              icon={<MdTimelapse />}
+            />
+          )}
+        </SidebarMenuItem>
+      )}
     </List>
   );
 

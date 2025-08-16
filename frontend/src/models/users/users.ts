@@ -23,4 +23,16 @@ export interface UserDetailsModel {
 
   name: string;
   login: string;
+  permissions: string[];
+  accessibleFarmIds: string[];
+}
+
+export interface PermissionModel {
+  name: string;
+  description: string;
+  group: string;
+}
+
+export interface GetPermissionsResponse {
+  items: PermissionModel[];
 }

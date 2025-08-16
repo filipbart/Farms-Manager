@@ -1,36 +1,49 @@
 using System.ComponentModel;
 using System.Reflection;
+using FarmsManager.Application.Attributes;
 using FarmsManager.Application.Permissions;
+using FarmsManager.Application.Queries.Users;
 
 namespace FarmsManager.Application.Extensions;
 
 public static class PermissionExtensions
 {
-    // Metoda zbierze wszystkie stałe stringi z klasy AppPermissions i ich opisy
-    public static Dictionary<string, string> GetAllPermissions()
+    public static List<PermissionModel> GetAllPermissions(this Type type)
     {
-        var permissions = new Dictionary<string, string>();
-        var nestedTypes = typeof(AppPermissions).GetNestedTypes(BindingFlags.Public | BindingFlags.Static);
+        var permissions = new List<PermissionModel>();
+        GetPermissionsRecursively(type, permissions);
+        return permissions;
+    }
 
-        foreach (var type in nestedTypes.Concat([typeof(AppPermissions)]))
+    private static void GetPermissionsRecursively(Type type, List<PermissionModel> permissions)
+    {
+        var groupName = type.GetCustomAttribute<PermissionGroupAttribute>()?.Name
+                        ?? (type.Name == nameof(AppPermissions) ? "Ogólne" : type.Name);
+
+
+        var fields = type.GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
+            .Where(f => f.IsLiteral && !f.IsInitOnly && f.FieldType == typeof(string));
+
+        foreach (var field in fields)
         {
-            var fields = type.GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy);
+            var permissionName = (string)field.GetValue(null);
+            var description = field.GetCustomAttribute<DescriptionAttribute>()?.Description ?? permissionName;
 
-            foreach (var field in fields)
+            if (!string.IsNullOrEmpty(permissionName))
             {
-                if (field.IsLiteral && !field.IsInitOnly && field.FieldType == typeof(string))
+                permissions.Add(new PermissionModel
                 {
-                    var value = field.GetValue(null) as string;
-                    var description = field.GetCustomAttribute<DescriptionAttribute>()?.Description ?? value;
-
-                    if (!string.IsNullOrEmpty(value))
-                    {
-                        permissions.TryAdd(value, description);
-                    }
-                }
+                    Name = permissionName,
+                    Description = description,
+                    Group = groupName
+                });
             }
         }
 
-        return permissions;
+        var nestedTypes = type.GetNestedTypes(BindingFlags.Public | BindingFlags.Static);
+        foreach (var nestedType in nestedTypes)
+        {
+            GetPermissionsRecursively(nestedType, permissions);
+        }
     }
 }

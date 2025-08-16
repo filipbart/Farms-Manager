@@ -39,7 +39,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const startSessionChecker = () => {
     if (authInterval) clearInterval(authInterval);
-    const interval = setInterval(() => savedCallback.current(), 1000);
+    const interval = setInterval(() => savedCallback.current(), 3000);
     setAuthInterval(interval);
   };
 
