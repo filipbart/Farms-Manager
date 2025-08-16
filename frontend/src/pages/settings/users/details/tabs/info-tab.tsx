@@ -10,8 +10,10 @@ import {
   DialogTitle,
   Divider,
   Typography,
+  Switch,
+  FormControlLabel,
 } from "@mui/material";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
 import { MdSave } from "react-icons/md";
 import { toast } from "react-toastify";
@@ -29,21 +31,27 @@ interface UserInfoTabProps {
 
 interface UserFormState {
   name: string;
+  isAdmin: boolean;
   newPassword?: string;
   confirmPassword?: string;
 }
 
 const UserInfoTab: React.FC<UserInfoTabProps> = ({ user, refetch }) => {
-  const [isConfirmOpen, setConfirmOpen] = useState(false);
+  const [isPasswordConfirmOpen, setPasswordConfirmOpen] = useState(false);
+  const [isAdminConfirmOpen, setAdminConfirmOpen] = useState(false);
+
   const {
     handleSubmit,
     register,
     reset,
     watch,
-    formState: { errors, dirtyFields },
+    control,
+    formState: { errors, isDirty },
+    getValues,
   } = useForm<UserFormState>({
     defaultValues: {
       name: "",
+      isAdmin: false,
       newPassword: "",
       confirmPassword: "",
     },
@@ -53,6 +61,7 @@ const UserInfoTab: React.FC<UserInfoTabProps> = ({ user, refetch }) => {
     if (user) {
       reset({
         name: user.name,
+        isAdmin: user.isAdmin,
         newPassword: "",
         confirmPassword: "",
       });
@@ -64,6 +73,7 @@ const UserInfoTab: React.FC<UserInfoTabProps> = ({ user, refetch }) => {
 
     const payload: UpdateUserData = {
       name: data.name,
+      isAdmin: data.isAdmin,
       password: data.newPassword || undefined,
     };
 
@@ -73,9 +83,9 @@ const UserInfoTab: React.FC<UserInfoTabProps> = ({ user, refetch }) => {
         () => {
           toast.success("Dane użytkownika zostały zaktualizowane");
           refetch();
-
           reset({
             name: data.name,
+            isAdmin: data.isAdmin,
             newPassword: "",
             confirmPassword: "",
           });
@@ -86,30 +96,39 @@ const UserInfoTab: React.FC<UserInfoTabProps> = ({ user, refetch }) => {
     } catch {
       toast.error("Wystąpił błąd podczas aktualizacji");
     } finally {
-      setConfirmOpen(false);
+      setPasswordConfirmOpen(false);
+      setAdminConfirmOpen(false);
+    }
+  };
+
+  const handleSaveChangesClick = () => {
+    const formValues = getValues();
+    const isBecomingAdmin = formValues.isAdmin && !user.isAdmin;
+
+    if (isBecomingAdmin) {
+      setAdminConfirmOpen(true);
+    } else {
+      handleSubmit(onSubmit)();
     }
   };
 
   const handlePasswordChangeClick = () => {
-    setConfirmOpen(true);
+    setPasswordConfirmOpen(true);
   };
 
   return (
     <>
       <Box component="form" onSubmit={handleSubmit(onSubmit)} mt={2}>
-        <Grid container spacing={2.5}>
+        <Grid container spacing={2.5} alignItems="center">
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               label="Login"
               fullWidth
               value={user.login || ""}
-              InputProps={{
-                readOnly: true,
-              }}
+              InputProps={{ readOnly: true }}
               variant="filled"
             />
           </Grid>
-
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               label="Imię i nazwisko"
@@ -119,17 +138,36 @@ const UserInfoTab: React.FC<UserInfoTabProps> = ({ user, refetch }) => {
               {...register("name", { required: "To pole jest wymagane" })}
             />
           </Grid>
+          <Grid size={{ xs: 12 }}>
+            <FormControlLabel
+              control={
+                <Controller
+                  name="isAdmin"
+                  control={control}
+                  render={({ field }) => (
+                    <Switch
+                      {...field}
+                      checked={field.value}
+                      onChange={(e) => field.onChange(e.target.checked)}
+                    />
+                  )}
+                />
+              }
+              label="Administrator"
+            />
+          </Grid>
         </Grid>
 
         <Box display="flex" justifyContent="flex-end" mt={3}>
           <Button
-            type="submit"
+            type="button"
             variant="contained"
             color="primary"
             startIcon={<MdSave />}
-            disabled={!dirtyFields.name}
+            disabled={!isDirty}
+            onClick={handleSaveChangesClick}
           >
-            Zapisz zmiany nazwy
+            Zapisz zmiany
           </Button>
         </Box>
 
@@ -184,7 +222,10 @@ const UserInfoTab: React.FC<UserInfoTabProps> = ({ user, refetch }) => {
       </Box>
 
       {/* Okno dialogowe do potwierdzenia zmiany hasła */}
-      <Dialog open={isConfirmOpen} onClose={() => setConfirmOpen(false)}>
+      <Dialog
+        open={isPasswordConfirmOpen}
+        onClose={() => setPasswordConfirmOpen(false)}
+      >
         <DialogTitle>Potwierdzenie zmiany hasła</DialogTitle>
         <DialogContent>
           <DialogContentText>
@@ -192,7 +233,30 @@ const UserInfoTab: React.FC<UserInfoTabProps> = ({ user, refetch }) => {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmOpen(false)} color="inherit">
+          <Button onClick={() => setPasswordConfirmOpen(false)} color="inherit">
+            Anuluj
+          </Button>
+          <Button onClick={handleSubmit(onSubmit)} color="primary" autoFocus>
+            Potwierdź
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* okno dialogowe do potwierdzenia nadania uprawnień admina */}
+      <Dialog
+        open={isAdminConfirmOpen}
+        onClose={() => setAdminConfirmOpen(false)}
+      >
+        <DialogTitle>Potwierdzenie nadania uprawnień</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Czy na pewno chcesz nadać pełne uprawnienia administratora
+            użytkownikowi "{user.name}"? Ta akcja da mu dostęp do wszystkich
+            sekcji systemu.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAdminConfirmOpen(false)} color="inherit">
             Anuluj
           </Button>
           <Button onClick={handleSubmit(onSubmit)} color="primary" autoFocus>

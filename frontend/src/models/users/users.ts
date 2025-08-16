@@ -15,6 +15,7 @@ export interface AddUserData {
 export interface UpdateUserData {
   name: string;
   password?: string;
+  isAdmin: boolean;
 }
 
 export interface UserDetailsModel {
@@ -23,6 +24,7 @@ export interface UserDetailsModel {
 
   name: string;
   login: string;
+  isAdmin: boolean;
   permissions: string[];
   accessibleFarmIds: string[];
 }

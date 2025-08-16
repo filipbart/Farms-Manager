@@ -1,8 +1,6 @@
-﻿using Ardalis.Specification;
-using FarmsManager.Application.Commands.Feeds.Names;
+﻿using FarmsManager.Application.Commands.Feeds.Names;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
-using FarmsManager.Application.Specifications;
 using FarmsManager.Application.Specifications.Cycle;
 using FarmsManager.Application.Specifications.Farms;
 using FarmsManager.Application.Specifications.Feeds;

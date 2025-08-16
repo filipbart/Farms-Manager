@@ -1,5 +1,4 @@
 using FarmsManager.Application.Common.Responses;
-using FarmsManager.Application.Queries.Auth;
 using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.UserAggregate.Interfaces;
 using FluentValidation;

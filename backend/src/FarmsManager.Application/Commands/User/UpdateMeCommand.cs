@@ -1,4 +1,4 @@
-using FarmsManager.Application.Common.Responses;
+﻿using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.UserAggregate.Interfaces;
@@ -6,24 +6,23 @@ using FarmsManager.Domain.Exceptions;
 using FluentValidation;
 using MediatR;
 
-namespace FarmsManager.Application.Commands.Users;
+namespace FarmsManager.Application.Commands.User;
 
-public class UpdateUserData
+public record UpdateMeData
 {
     public string Name { get; init; }
     public string Password { get; init; }
-    public bool IsAdmin { get; init; }
 }
 
-public record UpdateUserCommand(Guid Id, UpdateUserData Data) : IRequest<EmptyBaseResponse>;
+public record UpdateMeCommand(UpdateMeData Data) : IRequest<EmptyBaseResponse>;
 
-public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, EmptyBaseResponse>
+public class UpdateMeCommandHandler : IRequestHandler<UpdateMeCommand, EmptyBaseResponse>
 {
     private readonly IUserDataResolver _userDataResolver;
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasher _passwordHasher;
 
-    public UpdateUserCommandHandler(IUserDataResolver userDataResolver, IUserRepository userRepository,
+    public UpdateMeCommandHandler(IUserDataResolver userDataResolver, IUserRepository userRepository,
         IPasswordHasher passwordHasher)
     {
         _userDataResolver = userDataResolver;
@@ -31,11 +30,11 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, Empty
         _passwordHasher = passwordHasher;
     }
 
-    public async Task<EmptyBaseResponse> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
+    public async Task<EmptyBaseResponse> Handle(UpdateMeCommand request, CancellationToken cancellationToken)
     {
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
 
-        var user = await _userRepository.GetAsync(new UserByIdSpec(request.Id), cancellationToken);
+        var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
 
         user.ChangeName(request.Data.Name);
 
@@ -45,8 +44,6 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, Empty
             user.ChangePassword(passwordHash);
         }
 
-        user.ChangeIsAdmin(request.Data.IsAdmin);
-
         user.SetModified(userId);
 
         await _userRepository.UpdateAsync(user, cancellationToken);
@@ -54,11 +51,11 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, Empty
     }
 }
 
-public class UpdateUserCommandValidator : AbstractValidator<UpdateUserCommand>
+public class UpdateMeCommandValidator : AbstractValidator<UpdateMeCommand>
 {
-    public UpdateUserCommandValidator()
+    public UpdateMeCommandValidator()
     {
-        RuleFor(x => x.Id).NotEmpty();
+        RuleFor(x => x.Data).NotNull();
 
         RuleFor(x => x.Data.Name)
             .NotEmpty()

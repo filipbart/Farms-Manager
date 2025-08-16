@@ -8,3 +8,8 @@ export default interface UserDetails {
   name: string;
   irzplusCredentials?: IrzPlusCredentials;
 }
+
+export interface UpdateMyData {
+  name: string;
+  password?: string;
+}

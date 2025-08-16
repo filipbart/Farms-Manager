@@ -1,4 +1,5 @@
 ﻿using FarmsManager.Api.Controllers.Base;
+using FarmsManager.Application.Commands.User;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Queries.User;
 using MediatR;
@@ -42,5 +43,16 @@ public class UserController(IMediator mediator) : BaseController
     public async Task<IActionResult> GetNotifications()
     {
         return Ok(await mediator.Send(new GetNotificationsQuery()));
+    }
+
+    /// <summary>
+    /// Aktualizuje dane zalogowanego użytkownika
+    /// </summary>
+    [HttpPatch("me")] 
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> UpdateMe([FromBody] UpdateMeData data)
+    {
+        return Ok(await mediator.Send(new UpdateMeCommand(data)));
     }
 }

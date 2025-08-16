@@ -41,6 +41,7 @@ import SummaryFinancialAnalysisPage from "../pages/summary/financial-analysis";
 import ProductionDataFlockLossPage from "../pages/production-data/flock-loss";
 import UsersPage from "../pages/settings/users/users";
 import UserDetailsPage from "../pages/settings/users/details";
+import ForbiddenPage from "../pages/forbidden-page";
 
 const DefaultRouter: React.FC = () => {
   const { getRoute } = useRouter();
@@ -186,6 +187,10 @@ const DefaultRouter: React.FC = () => {
         <Route
           path={getRoute(RouteName.SettingsCycles)}
           element={<SettingsCyclesPage />}
+        />
+        <Route
+          path={getRoute(RouteName.Forbidden)}
+          element={<ForbiddenPage />}
         />
       </Route>
     </Routes>

@@ -46,6 +46,11 @@ public class UserEntity : Entity
         Name = name;
     }
 
+    public void ChangeIsAdmin(bool isAdmin)
+    {
+        IsAdmin = isAdmin;
+    }
+
     public void ChangeIrzplusCredentials(IrzplusCredentials irzplusCredentials)
     {
         Guard.Against.Null(irzplusCredentials);

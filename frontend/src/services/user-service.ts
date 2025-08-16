@@ -1,6 +1,7 @@
 import ApiUrl from "../common/ApiUrl";
 import type UserModel from "../common/interfaces/user-model";
 import type { NotificationDataQueryResponse } from "../models/common/notifications";
+import type { UpdateMyData } from "../models/user/user-details";
 import AxiosWrapper from "../utils/axios/wrapper";
 
 export class UserService {
@@ -16,5 +17,9 @@ export class UserService {
     return await AxiosWrapper.get<NotificationDataQueryResponse>(
       ApiUrl.GetNotifications
     );
+  }
+
+  public static async updateData(data: UpdateMyData) {
+    return await AxiosWrapper.patch(ApiUrl.Me, data);
   }
 }
