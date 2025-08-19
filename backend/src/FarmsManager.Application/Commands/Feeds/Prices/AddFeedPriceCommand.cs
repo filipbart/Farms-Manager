@@ -13,13 +13,18 @@ using MediatR;
 
 namespace FarmsManager.Application.Commands.Feeds.Prices;
 
+public record AddFeedPriceEntry
+{
+    public Guid NameId { get; init; }
+    public decimal Price { get; init; }
+}
+
 public record AddFeedPriceCommand : IRequest<EmptyBaseResponse>
 {
     public Guid FarmId { get; init; }
     public Guid IdentifierId { get; init; }
     public DateOnly PriceDate { get; init; }
-    public Guid NameId { get; init; }
-    public decimal Price { get; init; }
+    public List<AddFeedPriceEntry> Entries { get; init; }
 }
 
 public class AddFeedPriceCommandHandler : IRequestHandler<AddFeedPriceCommand, EmptyBaseResponse>
@@ -50,37 +55,53 @@ public class AddFeedPriceCommandHandler : IRequestHandler<AddFeedPriceCommand, E
 
         var farm = await _farmRepository.GetAsync(new FarmByIdSpec(request.FarmId), ct);
         var cycle = await _cycleRepository.GetAsync(new CycleByIdSpec(request.IdentifierId), ct);
-        var feedNameEntity = await _feedNameRepository.GetAsync(new GetFeedNameByIdSpec(request.NameId), ct);
 
-        var newFeedPrice =
-            FeedPriceEntity.CreateNew(farm.Id, cycle.Id, request.PriceDate, feedNameEntity.Name, request.Price, userId);
-        await _feedPriceRepository.AddAsync(newFeedPrice, ct);
+        var newFeedPrices = new List<FeedPriceEntity>();
+        var feedNamesToRecalculate = new HashSet<string>();
 
-        var nextFeedPrice =
-            await _feedPriceRepository.FirstOrDefaultAsync(
-                new GetNextFeedPriceSpec(farm.Id, cycle.Id, feedNameEntity.Name, request.PriceDate), ct);
+        foreach (var entry in request.Entries)
+        {
+            var feedNameEntity = await _feedNameRepository.GetAsync(new GetFeedNameByIdSpec(entry.NameId), ct);
 
-        var startDate = request.PriceDate;
-        var endDate = nextFeedPrice?.PriceDate ?? DateOnly.MaxValue;
+            var newFeedPrice = FeedPriceEntity.CreateNew(
+                farm.Id,
+                cycle.Id,
+                request.PriceDate,
+                feedNameEntity.Name,
+                entry.Price,
+                userId);
 
-        var feedsInvoices =
-            await _feedInvoiceRepository.ListAsync(
-                new GetFeedsInvoicesByDateRangeAndNameSpec(farm.Id, cycle.Id, startDate, endDate, feedNameEntity.Name),
+            newFeedPrices.Add(newFeedPrice);
+            feedNamesToRecalculate.Add(feedNameEntity.Name);
+        }
+
+        await _feedPriceRepository.AddRangeAsync(newFeedPrices, ct);
+
+        foreach (var feedName in feedNamesToRecalculate)
+        {
+            var nextFeedPrice = await _feedPriceRepository.FirstOrDefaultAsync(
+                new GetNextFeedPriceSpec(farm.Id, cycle.Id, feedName, request.PriceDate), ct);
+
+            var startDate = request.PriceDate;
+            var endDate = nextFeedPrice?.PriceDate ?? DateOnly.MaxValue;
+
+            var feedsInvoices = await _feedInvoiceRepository.ListAsync(
+                new GetFeedsInvoicesByDateRangeAndNameSpec(farm.Id, cycle.Id, startDate, endDate, feedName),
                 ct);
 
-        if (feedsInvoices.Count != 0)
-        {
-            foreach (var feedInvoiceEntity in feedsInvoices)
+            if (feedsInvoices.Count != 0)
             {
-                var feedPrices =
-                    await _feedPriceRepository.ListAsync(
+                foreach (var feedInvoiceEntity in feedsInvoices)
+                {
+                    var feedPrices = await _feedPriceRepository.ListAsync(
                         new GetFeedPriceForFeedInvoiceSpec(feedInvoiceEntity.FarmId, feedInvoiceEntity.CycleId,
                             feedInvoiceEntity.ItemName,
                             feedInvoiceEntity.InvoiceDate),
                         ct);
 
-                feedInvoiceEntity.CheckUnitPrice(feedPrices);
-                await _feedInvoiceRepository.UpdateAsync(feedInvoiceEntity, ct);
+                    feedInvoiceEntity.CheckUnitPrice(feedPrices);
+                    await _feedInvoiceRepository.UpdateAsync(feedInvoiceEntity, ct);
+                }
             }
         }
 
@@ -92,6 +113,15 @@ public class AddFeedPriceCommandValidator : AbstractValidator<AddFeedPriceComman
 {
     public AddFeedPriceCommandValidator()
     {
-        RuleFor(t => t.Price).GreaterThanOrEqualTo(0).WithMessage("Cena nie może być mniejsza niż 0");
+        RuleFor(t => t.FarmId).NotEmpty();
+        RuleFor(t => t.IdentifierId).NotEmpty();
+        RuleFor(t => t.PriceDate).NotEmpty();
+        RuleFor(t => t.Entries).NotEmpty().WithMessage("Należy dodać co najmniej jedną pozycję.");
+
+        RuleForEach(t => t.Entries).ChildRules(entry =>
+        {
+            entry.RuleFor(e => e.NameId).NotEmpty().WithMessage("Nazwa paszy jest wymagana.");
+            entry.RuleFor(e => e.Price).GreaterThanOrEqualTo(0).WithMessage("Cena nie może być mniejsza niż 0.");
+        });
     }
 }

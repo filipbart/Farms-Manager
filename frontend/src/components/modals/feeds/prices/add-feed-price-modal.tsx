@@ -6,10 +6,19 @@ import {
   TextField,
   Box,
   MenuItem,
+  Grid,
+  TableContainer,
+  Paper,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  IconButton,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
-import { MdSave } from "react-icons/md";
+import { Controller, useForm, useFieldArray } from "react-hook-form";
+import { MdDelete, MdSave } from "react-icons/md";
 import { useFarms } from "../../../../hooks/useFarms";
 import { FeedsService } from "../../../../services/feeds-service";
 import LoadingButton from "../../../common/loading-button";
@@ -22,19 +31,18 @@ import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import type { AddFeedPriceFormData } from "../../../../models/feeds/prices/feed-price";
 import AppDialog from "../../../common/app-dialog";
 
-interface AddHatcheryModalProps {
+interface AddFeedPriceModalProps {
   open: boolean;
   onClose: () => void;
   onSave: () => void;
 }
 
-const AddFeedPriceModal: React.FC<AddHatcheryModalProps> = ({
+const AddFeedPriceModal: React.FC<AddFeedPriceModalProps> = ({
   open,
   onClose,
   onSave,
 }) => {
   const {
-    register,
     handleSubmit,
     control,
     formState: { errors },
@@ -43,7 +51,19 @@ const AddFeedPriceModal: React.FC<AddHatcheryModalProps> = ({
     setError,
     clearErrors,
     watch,
-  } = useForm<AddFeedPriceFormData>();
+  } = useForm<AddFeedPriceFormData>({
+    defaultValues: {
+      farmId: "",
+      identifierId: "",
+      priceDate: "",
+      entries: [{ nameId: "", price: undefined }],
+    },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "entries",
+  });
 
   const [loading, setLoading] = useState(false);
   const { farms, loadingFarms, fetchFarms } = useFarms();
@@ -57,20 +77,20 @@ const AddFeedPriceModal: React.FC<AddHatcheryModalProps> = ({
       () => FeedsService.addFeedPrice(data),
       () => {
         onSave();
-        reset();
-        onClose();
+        close();
       },
       undefined,
       "Wystąpił błąd podczas zapisywania ceny paszy"
     );
-
     setLoading(false);
   };
 
   useEffect(() => {
-    fetchFarms();
-    fetchFeedsNames();
-  }, [fetchFarms, fetchFeedsNames]);
+    if (open) {
+      fetchFarms();
+      fetchFeedsNames();
+    }
+  }, [open, fetchFarms, fetchFeedsNames]);
 
   const handleFarmChange = async (farmId: string) => {
     const cycle = await loadLatestCycle(farmId);
@@ -79,21 +99,12 @@ const AddFeedPriceModal: React.FC<AddHatcheryModalProps> = ({
       clearErrors("identifierId");
       setValue("identifierDisplay", `${cycle.identifier}/${cycle.year}`);
     } else {
+      setValue("identifierId", "");
+      setValue("identifierDisplay", "");
       setError("identifierId", {
         type: "manual",
         message: "Brak aktywnego cyklu",
       });
-    }
-  };
-
-  const handleFeedsNameChange = (name: string) => {
-    if (feedsNames.some((feed) => feed.name === name)) {
-      setError("nameId", {
-        type: "manual",
-        message: "Pasza o tej nazwie już istnieje",
-      });
-    } else {
-      clearErrors("nameId");
     }
   };
 
@@ -102,101 +113,181 @@ const AddFeedPriceModal: React.FC<AddHatcheryModalProps> = ({
     onClose();
   };
 
+  const watchedEntries = watch("entries");
+
   return (
-    <AppDialog open={open} onClose={close} fullWidth maxWidth="sm">
-      <DialogTitle>Wprowadź nową cenę</DialogTitle>
+    <AppDialog open={open} onClose={close} fullWidth maxWidth="md">
+      <DialogTitle>Wprowadź nowe ceny pasz</DialogTitle>
       <form onSubmit={handleSubmit(handleSave)}>
         <DialogContent>
-          <Box display="flex" flexDirection="column" gap={2} mt={1}>
-            <LoadingTextField
-              loading={loadingFarms}
-              select
-              label="Ferma"
-              fullWidth
-              error={!!errors.farmId}
-              helperText={errors.farmId?.message}
-              {...register("farmId", {
-                required: "Farma jest wymagana",
-                onChange: async (e) => {
-                  const value = e.target.value;
-                  await handleFarmChange(value);
-                },
-              })}
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Controller
+                name="farmId"
+                control={control}
+                rules={{ required: "Ferma jest wymagana" }}
+                render={({ field }) => (
+                  <LoadingTextField
+                    {...field}
+                    loading={loadingFarms}
+                    select
+                    label="Ferma"
+                    fullWidth
+                    error={!!errors.farmId}
+                    helperText={errors.farmId?.message}
+                    onChange={async (e) => {
+                      field.onChange(e);
+                      await handleFarmChange(e.target.value);
+                    }}
+                  >
+                    {farms.map((farm) => (
+                      <MenuItem key={farm.id} value={farm.id}>
+                        {farm.name}
+                      </MenuItem>
+                    ))}
+                  </LoadingTextField>
+                )}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <LoadingTextField
+                loading={loadingCycle}
+                label="Cykl"
+                value={watch("identifierDisplay") || ""}
+                InputProps={{ readOnly: true }}
+                error={!!errors.identifierId}
+                helperText={errors.identifierId?.message}
+                fullWidth
+              />
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <Controller
+                name="priceDate"
+                control={control}
+                rules={{ required: "Data publikacji jest wymagana" }}
+                render={({ field }) => (
+                  <DatePicker
+                    label="Data publikacji"
+                    disableFuture
+                    format="DD.MM.YYYY"
+                    value={field.value ? dayjs(field.value) : null}
+                    onChange={(date) =>
+                      field.onChange(
+                        date ? dayjs(date).format("YYYY-MM-DD") : ""
+                      )
+                    }
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        error: !!errors.priceDate,
+                        helperText: errors.priceDate?.message,
+                      },
+                    }}
+                  />
+                )}
+              />
+            </Grid>
+          </Grid>
+          <TableContainer component={Paper} variant="outlined" sx={{ mt: 3 }}>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Typ (nazwa) paszy</TableCell>
+                  <TableCell align="right">Cena [zł]</TableCell>
+                  <TableCell align="center" sx={{ width: "60px" }}>
+                    Akcje
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {fields.map((item, index) => {
+                  const selectedNameIds =
+                    watchedEntries?.map((e) => e.nameId) ?? [];
+                  return (
+                    <TableRow key={item.id}>
+                      <TableCell>
+                        <Controller
+                          name={`entries.${index}.nameId`}
+                          control={control}
+                          rules={{ required: "Nazwa jest wymagana" }}
+                          render={({ field }) => (
+                            <LoadingTextField
+                              {...field}
+                              loading={loadingFeedsNames}
+                              select
+                              fullWidth
+                              size="small"
+                              error={!!errors.entries?.[index]?.nameId}
+                              helperText={
+                                errors.entries?.[index]?.nameId?.message
+                              }
+                            >
+                              {feedsNames
+                                .filter(
+                                  (feed) =>
+                                    !selectedNameIds.includes(feed.id) ||
+                                    feed.id === watchedEntries[index]?.nameId
+                                )
+                                .map((feedName) => (
+                                  <MenuItem
+                                    key={feedName.id}
+                                    value={feedName.id}
+                                  >
+                                    {feedName.name}
+                                  </MenuItem>
+                                ))}
+                            </LoadingTextField>
+                          )}
+                        />
+                      </TableCell>
+                      <TableCell align="right">
+                        <Controller
+                          name={`entries.${index}.price`}
+                          control={control}
+                          rules={{
+                            required: "Cena jest wymagana",
+                            min: { value: 0, message: "Błędna wartość" },
+                          }}
+                          render={({ field }) => (
+                            <TextField
+                              {...field}
+                              type="number"
+                              size="small"
+                              sx={{ width: 120 }}
+                              inputMode="decimal"
+                              InputProps={{
+                                inputProps: { min: 0, step: "0.01" },
+                              }}
+                              error={!!errors.entries?.[index]?.price}
+                              helperText={
+                                errors.entries?.[index]?.price?.message
+                              }
+                            />
+                          )}
+                        />
+                      </TableCell>
+                      <TableCell align="center">
+                        <IconButton
+                          color="error"
+                          onClick={() => remove(index)}
+                          disabled={fields.length <= 1}
+                        >
+                          <MdDelete />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
+          <Box mt={1}>
+            <Button
+              variant="text"
+              onClick={() => append({ nameId: "", price: undefined })}
             >
-              {farms.map((farm) => (
-                <MenuItem key={farm.id} value={farm.id}>
-                  {farm.name}
-                </MenuItem>
-              ))}
-            </LoadingTextField>
-
-            <LoadingTextField
-              loading={loadingCycle}
-              label="Cykl"
-              value={watch("identifierDisplay") || ""}
-              slotProps={{ input: { readOnly: true } }}
-              fullWidth
-            />
-
-            <Controller
-              name="priceDate"
-              control={control}
-              rules={{ required: "Data publikacji jest wymagana" }}
-              render={({ field }) => (
-                <DatePicker
-                  label="Data publikacji"
-                  disableFuture
-                  format="DD.MM.YYYY"
-                  value={field.value ? dayjs(field.value) : null}
-                  onChange={(date) =>
-                    field.onChange(date ? dayjs(date).format("YYYY-MM-DD") : "")
-                  }
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      error: !!errors.priceDate,
-                      helperText: errors.priceDate?.message,
-                    },
-                  }}
-                />
-              )}
-            />
-
-            <LoadingTextField
-              loading={loadingFeedsNames}
-              select
-              label="Typ (nazwa) paszy"
-              fullWidth
-              error={!!errors.nameId}
-              helperText={errors.nameId?.message}
-              {...register("nameId", {
-                required: "Typ (nazwa) paszy jest wymagany",
-                onChange: (e) => {
-                  const value = e.target.value;
-                  handleFeedsNameChange(value);
-                },
-              })}
-            >
-              {feedsNames.map((feedName) => (
-                <MenuItem key={feedName.id} value={feedName.id}>
-                  {feedName.name}
-                </MenuItem>
-              ))}
-            </LoadingTextField>
-
-            <TextField
-              label="Cena [zł]"
-              type="number"
-              inputMode="decimal"
-              slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
-              error={!!errors.price}
-              helperText={errors.price?.message}
-              {...register("price", {
-                required: "Cena [zł] jest wymagana",
-                valueAsNumber: true,
-              })}
-              fullWidth
-            />
+              + Dodaj pozycję
+            </Button>
           </Box>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>

@@ -13,8 +13,12 @@ export interface AddFeedPriceFormData {
   identifierId: string;
   identifierDisplay?: string;
   priceDate: string;
+  entries: AddFeedPriceEntry[];
+}
+
+export interface AddFeedPriceEntry {
   nameId: string;
-  price: number;
+  price?: number;
 }
 
 export interface UpdateFeedPriceFormData {
