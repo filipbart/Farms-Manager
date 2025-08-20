@@ -16,6 +16,16 @@ import Loading from "./components/loading/loading";
 import { AuthContextProvider } from "./auth/auth-context-provider";
 import { NotificationProvider } from "./context/notification-context-provider";
 import { PermissionsProvider } from "./context/permission-context-provider";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minut
+      retry: 1, // Spróbuj ponownie 1 raz w razie błędu
+    },
+  },
+});
 
 function App() {
   return (
@@ -25,21 +35,23 @@ function App() {
           <AuthContextProvider>
             <PermissionsProvider>
               <NotificationProvider>
-                <LocalizationProvider
-                  dateAdapter={AdapterDayjs}
-                  adapterLocale="pl"
-                >
-                  <GlobalContext.Consumer>
-                    {(ctx) => {
-                      if (!ctx.state.pageLoaded) {
-                        return <Loading />;
-                      }
+                <QueryClientProvider client={queryClient}>
+                  <LocalizationProvider
+                    dateAdapter={AdapterDayjs}
+                    adapterLocale="pl"
+                  >
+                    <GlobalContext.Consumer>
+                      {(ctx) => {
+                        if (!ctx.state.pageLoaded) {
+                          return <Loading />;
+                        }
 
-                      return <DefaultRouter />;
-                    }}
-                  </GlobalContext.Consumer>
-                  <CssBaseline />
-                </LocalizationProvider>
+                        return <DefaultRouter />;
+                      }}
+                    </GlobalContext.Consumer>
+                    <CssBaseline />
+                  </LocalizationProvider>
+                </QueryClientProvider>
               </NotificationProvider>
             </PermissionsProvider>
           </AuthContextProvider>

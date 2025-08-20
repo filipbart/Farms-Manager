@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useReducer, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   filterReducer,
   initialFilters,
-  type DashboardDictionary,
+  type DashboardFilters,
 } from "../../models/dashboard/dashboard-filters";
 import {
   Typography,
@@ -27,11 +28,13 @@ import {
 } from "react-icons/md";
 import StatCard from "../../components/dashboard/stat-card";
 import type { CycleDictModel } from "../../models/common/dictionaries";
-import { toast } from "react-toastify";
-import { handleApiResponse } from "../../utils/axios/handle-api-response";
 import { DashboardService } from "../../services/dashboard-service";
 import { DashboardNotifications } from "../../components/dashboard/dashboard-notifications";
 import type { GetDashboardDataQueryResponse } from "../../models/dashboard/dashboard";
+import { ExpensesPieChart } from "../../components/dashboard/expenses-pie-chart";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import type { Dayjs } from "dayjs";
+import { ProductionResultsChart } from "../../components/dashboard/production-results-charts";
 
 const emptyDashboardData: GetDashboardDataQueryResponse = {
   stats: {
@@ -58,51 +61,35 @@ const emptyDashboardData: GetDashboardDataQueryResponse = {
 
 const DashboardPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
-  const [dictionary, setDictionary] = useState<DashboardDictionary>();
-  const [dictionaryLoading, setDictionaryLoading] = useState(true);
-  const [data, setData] = useState<GetDashboardDataQueryResponse | null>(null);
-  const [initialLoading, setInitialLoading] = useState(true);
-  const [statsLoading, setStatsLoading] = useState(false);
 
   const [dateCategory, setDateCategory] = useState("month");
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedCycle, setSelectedCycle] = useState("");
-  const [dateRange, setDateRange] = useState({ from: "", to: "" });
+  const [dateRange, setDateRange] = useState<{
+    from: Dayjs | null;
+    to: Dayjs | null;
+  }>({ from: null, to: null });
 
-  useEffect(() => {
-    const fetchDictionary = async () => {
-      setDictionaryLoading(true);
-      try {
-        await handleApiResponse(
-          () => DashboardService.getDictionaries(),
-          (data) => setDictionary(data.responseData),
-          undefined,
-          "Błąd podczas pobierania słowników filtrów"
-        );
-      } catch (error) {
-        toast.error(`Wystąpił nieoczekiwany błąd: ${error}`);
-      } finally {
-        setDictionaryLoading(false);
-      }
-    };
-    fetchDictionary();
-  }, []);
+  const { data: dictionary, isLoading: dictionaryLoading } = useQuery({
+    queryKey: ["dashboardDictionaries"],
+    queryFn: async () =>
+      (await DashboardService.getDictionaries()).responseData,
+    staleTime: Infinity,
+  });
 
   const uniqueCycles = useMemo(() => {
     if (!dictionary) return [];
     const map = new Map<string, CycleDictModel>();
-    for (const cycle of dictionary.cycles) {
+    dictionary.cycles.forEach((cycle) => {
       const key = `${cycle.identifier}-${cycle.year}`;
-      if (!map.has(key)) {
-        map.set(key, cycle);
-      }
-    }
+      if (!map.has(key)) map.set(key, cycle);
+    });
     return Array.from(map.values());
   }, [dictionary]);
 
   useEffect(() => {
-    let payload = {};
+    let payload: Partial<DashboardFilters> = {};
     if (dateCategory === "cycle") {
       const foundCycle = selectedCycle
         ? uniqueCycles.find(
@@ -111,27 +98,28 @@ const DashboardPage: React.FC = () => {
         : undefined;
       payload = { cycle: foundCycle, dateFrom: null, dateTo: null };
     } else {
-      let from: Date | undefined, to: Date | undefined;
       payload = { cycle: undefined };
       if (dateCategory === "month") {
-        from = new Date(selectedYear, selectedMonth, 1);
-        to = new Date(selectedYear, selectedMonth + 1, 0);
-      } else if (dateCategory === "year") {
-        from = new Date(selectedYear, 0, 1);
-        to = new Date(selectedYear, 11, 31);
-      } else if (dateCategory === "range" && dateRange.from && dateRange.to) {
-        payload = {
-          ...payload,
-          dateFrom: dateRange.from,
-          dateTo: dateRange.to,
-        };
-      }
-
-      if (from && to) {
+        const from = new Date(selectedYear, selectedMonth, 1);
+        const to = new Date(selectedYear, selectedMonth + 1, 0);
         payload = {
           ...payload,
           dateFrom: from.toISOString().split("T")[0],
           dateTo: to.toISOString().split("T")[0],
+        };
+      } else if (dateCategory === "year") {
+        const from = new Date(selectedYear, 0, 1);
+        const to = new Date(selectedYear, 11, 31);
+        payload = {
+          ...payload,
+          dateFrom: from.toISOString().split("T")[0],
+          dateTo: to.toISOString().split("T")[0],
+        };
+      } else if (dateCategory === "range") {
+        payload = {
+          ...payload,
+          dateFrom: dateRange.from?.format("YYYY-MM-DD") ?? "",
+          dateTo: dateRange.to?.format("YYYY-MM-DD") ?? "",
         };
       }
     }
@@ -145,39 +133,15 @@ const DashboardPage: React.FC = () => {
     uniqueCycles,
   ]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!dictionary) return;
-      if (!filters || Object.keys(filters).length === 0) return;
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["dashboardData", filters],
+    queryFn: async () =>
+      (await DashboardService.getDashboardData(filters)).responseData,
+    enabled: !!dictionary && !!filters && Object.keys(filters).length > 0,
+    placeholderData: (previousData) => previousData,
+  });
 
-      const isInitial = data === null;
-      if (isInitial) setInitialLoading(true);
-      else setStatsLoading(true);
-
-      try {
-        await handleApiResponse(
-          () => DashboardService.getDashboardData(filters),
-          (apiData) => {
-            setData(apiData.responseData ?? null);
-          },
-          undefined,
-          "Błąd podczas pobierania danych dashboardu"
-        );
-      } catch (error) {
-        toast.error(`Wystąpił nieoczekiwany błąd: ${error}`);
-        setData(null);
-      } finally {
-        if (isInitial) setInitialLoading(false);
-        else setStatsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [filters, dictionary]);
-
-  const isLoading = initialLoading || statsLoading;
   const displayData = data ?? emptyDashboardData;
-
   const months = [
     "Styczeń",
     "Luty",
@@ -193,6 +157,22 @@ const DashboardPage: React.FC = () => {
     "Grudzień",
   ];
 
+  if (dictionaryLoading) {
+    return (
+      <Box display="flex" justifyContent="center" p={5}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Typography p={5} color="error">
+        Wystąpił błąd podczas ładowania danych.
+      </Typography>
+    );
+  }
+
   return (
     <Box p={3}>
       <Box
@@ -204,138 +184,113 @@ const DashboardPage: React.FC = () => {
       >
         <Typography variant="h4">Dashboard</Typography>
         <Box display="flex" gap={2} alignItems="center" flexWrap="wrap">
-          {dictionaryLoading ? (
-            <CircularProgress size={24} />
-          ) : (
+          <FormControl sx={{ minWidth: 200 }} size="small" disabled={isLoading}>
+            <InputLabel>Ferma</InputLabel>
+            <Select
+              label="Ferma"
+              defaultValue=""
+              onChange={(e) =>
+                dispatch({ type: "set", key: "farmId", value: e.target.value })
+              }
+            >
+              <MenuItem value="">Wszystkie fermy</MenuItem>
+              {dictionary?.farms.map((farm) => (
+                <MenuItem key={farm.id} value={farm.id}>
+                  {farm.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <FormControl sx={{ minWidth: 120 }} size="small" disabled={isLoading}>
+            <InputLabel>Okres</InputLabel>
+            <Select
+              label="Okres"
+              value={dateCategory}
+              onChange={(e) => setDateCategory(e.target.value)}
+            >
+              <MenuItem value="month">Miesiąc</MenuItem>
+              <MenuItem value="year">Rok</MenuItem>
+              <MenuItem value="range">Zakres dat</MenuItem>
+              <MenuItem value="cycle">Cykl</MenuItem>
+            </Select>
+          </FormControl>
+
+          {dateCategory === "cycle" && (
+            <FormControl
+              sx={{ minWidth: 150 }}
+              size="small"
+              disabled={isLoading}
+            >
+              <InputLabel>Wybierz Cykl</InputLabel>
+              <Select
+                label="Wybierz Cykl"
+                value={selectedCycle}
+                onChange={(e) => setSelectedCycle(e.target.value as string)}
+              >
+                {uniqueCycles.map((cycle) => (
+                  <MenuItem
+                    key={cycle.id}
+                    value={`${cycle.identifier}-${cycle.year}`}
+                  >{`${cycle.identifier}/${cycle.year}`}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
+
+          {dateCategory === "month" && (
+            <FormControl
+              sx={{ minWidth: 120 }}
+              size="small"
+              disabled={isLoading}
+            >
+              <InputLabel>Miesiąc</InputLabel>
+              <Select
+                label="Miesiąc"
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(Number(e.target.value))}
+              >
+                {months.map((name, index) => (
+                  <MenuItem key={name} value={index}>
+                    {name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
+
+          {dateCategory === "year" && (
+            <TextField
+              label="Rok"
+              type="number"
+              size="small"
+              sx={{ width: 100 }}
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(Number(e.target.value))}
+              disabled={isLoading}
+            />
+          )}
+
+          {dateCategory === "range" && (
             <>
-              <FormControl
-                sx={{ minWidth: 200 }}
-                size="small"
+              <DatePicker
+                label="Data od"
+                value={dateRange.from}
+                onChange={(newValue) =>
+                  setDateRange((prev) => ({ ...prev, from: newValue }))
+                }
                 disabled={isLoading}
-              >
-                <InputLabel>Ferma</InputLabel>
-                <Select
-                  label="Ferma"
-                  defaultValue=""
-                  onChange={(e) =>
-                    dispatch({
-                      type: "set",
-                      key: "farmId",
-                      value: e.target.value,
-                    })
-                  }
-                >
-                  <MenuItem value="">Wszystkie fermy</MenuItem>
-                  {dictionary?.farms.map((farm) => (
-                    <MenuItem key={farm.id} value={farm.id}>
-                      {farm.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              <FormControl
-                sx={{ minWidth: 120 }}
-                size="small"
+                slotProps={{ textField: { size: "small" } }}
+              />
+              <DatePicker
+                label="Data do"
+                value={dateRange.to}
+                onChange={(newValue) =>
+                  setDateRange((prev) => ({ ...prev, to: newValue }))
+                }
                 disabled={isLoading}
-              >
-                <InputLabel>Okres</InputLabel>
-                <Select
-                  label="Okres"
-                  value={dateCategory}
-                  onChange={(e) => setDateCategory(e.target.value)}
-                >
-                  <MenuItem value="month">Miesiąc</MenuItem>
-                  <MenuItem value="year">Rok</MenuItem>
-                  <MenuItem value="range">Zakres dat</MenuItem>
-                  <MenuItem value="cycle">Cykl</MenuItem>
-                </Select>
-              </FormControl>
-
-              {dateCategory === "cycle" && (
-                <FormControl
-                  sx={{ minWidth: 150 }}
-                  size="small"
-                  disabled={isLoading}
-                >
-                  <InputLabel>Wybierz Cykl</InputLabel>
-                  <Select
-                    label="Wybierz Cykl"
-                    value={selectedCycle}
-                    onChange={(e) => setSelectedCycle(e.target.value as string)}
-                  >
-                    {uniqueCycles.map((cycle) => (
-                      <MenuItem
-                        key={cycle.id}
-                        value={`${cycle.identifier}-${cycle.year}`}
-                      >
-                        {`${cycle.identifier}/${cycle.year}`}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              )}
-
-              {dateCategory === "month" && (
-                <FormControl
-                  sx={{ minWidth: 120 }}
-                  size="small"
-                  disabled={isLoading}
-                >
-                  <InputLabel>Miesiąc</InputLabel>
-                  <Select
-                    label="Miesiąc"
-                    value={selectedMonth}
-                    onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                  >
-                    {months.map((name, index) => (
-                      <MenuItem key={name} value={index}>
-                        {name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              )}
-
-              {dateCategory === "year" && (
-                <TextField
-                  label="Rok"
-                  type="number"
-                  size="small"
-                  sx={{ width: 100 }}
-                  value={selectedYear}
-                  onChange={(e) => setSelectedYear(Number(e.target.value))}
-                  disabled={isLoading}
-                />
-              )}
-
-              {dateCategory === "range" && (
-                <>
-                  <TextField
-                    label="Data od"
-                    type="date"
-                    size="small"
-                    InputLabelProps={{ shrink: true }}
-                    onChange={(e) =>
-                      setDateRange((prev) => ({
-                        ...prev,
-                        from: e.target.value,
-                      }))
-                    }
-                    disabled={isLoading}
-                  />
-                  <TextField
-                    label="Data do"
-                    type="date"
-                    size="small"
-                    InputLabelProps={{ shrink: true }}
-                    onChange={(e) =>
-                      setDateRange((prev) => ({ ...prev, to: e.target.value }))
-                    }
-                    disabled={isLoading}
-                  />
-                </>
-              )}
+                slotProps={{ textField: { size: "small" } }}
+              />
             </>
           )}
         </Box>
@@ -407,11 +362,12 @@ const DashboardPage: React.FC = () => {
           {isLoading ? (
             <Skeleton variant="rounded" height={400} />
           ) : (
-            <Paper sx={{ p: 2, height: 400 }}>
-              <Typography variant="h6">
-                Wyniki produkcyjne (miejsce na wykresy)
-              </Typography>
-            </Paper>
+            <ProductionResultsChart
+              fcrData={displayData.fcrChart}
+              ewwData={displayData.ewwChart}
+              gasData={displayData.gasConsumptionChart}
+              lossData={displayData.flockLossChart}
+            />
           )}
         </Grid>
 
@@ -464,39 +420,62 @@ const DashboardPage: React.FC = () => {
           </Grid>
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+        <Grid size={{ xs: 12, md: 8 }}>
           {isLoading ? (
             <Skeleton variant="rounded" height="100%" />
           ) : (
-            <Paper sx={{ p: 2, height: "100%" }}>
-              <Typography variant="h6" mb={2}>
+            <Paper
+              sx={{
+                p: 2,
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              <Typography variant="h6" mb={1}>
                 Kurniki w obsadzie
               </Typography>
-              {displayData.chickenHousesStatus.farms.map((farm) => (
-                <Typography key={farm.name} variant="body1">
-                  {farm.name} - <strong>{farm.henhousesCount}</strong> kurników
-                </Typography>
-              ))}
-              <Divider sx={{ my: 2 }} />
+              <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
+                {displayData.chickenHousesStatus.farms.map((farm) => (
+                  <Box key={farm.name} mb={2}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+                      {farm.name}
+                    </Typography>
+                    <Box sx={{ pl: 2 }}>
+                      {farm.henhouses.map((henhouse) => (
+                        <Typography
+                          key={henhouse.name}
+                          variant="body2"
+                          color="text.secondary"
+                        >
+                          {henhouse.name}:{" "}
+                          <strong>
+                            {henhouse.chickenCount.toLocaleString("pl-PL")} szt.
+                          </strong>
+                        </Typography>
+                      ))}
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+              <Divider sx={{ my: 1 }} />
               <Typography variant="h6">
-                Łącznie:{" "}
+                Łącznie sztuk w obsadzie:{" "}
                 <strong>
-                  {displayData.chickenHousesStatus.totalHenhousesCount}
+                  {displayData.chickenHousesStatus.totalChickenCount.toLocaleString(
+                    "pl-PL"
+                  )}
                 </strong>
               </Typography>
             </Paper>
           )}
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 6, md: 8 }}>
+        <Grid size={{ xs: 12, md: 4 }}>
           {isLoading ? (
             <Skeleton variant="rounded" height="100%" />
           ) : (
-            <Paper sx={{ p: 2, height: "100%" }}>
-              <Typography variant="h6">
-                Struktura wydatków (miejsce na wykres)
-              </Typography>
-            </Paper>
+            <ExpensesPieChart data={displayData.expensesPieChart.data} />
           )}
         </Grid>
 

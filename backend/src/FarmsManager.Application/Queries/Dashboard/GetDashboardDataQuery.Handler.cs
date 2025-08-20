@@ -76,9 +76,9 @@ public class
         var accessibleFarmIds = user.IsAdmin ? null : user.Farms?.Select(t => t.FarmId).ToList();
 
         var filteredFarmIds = request.Filters.FarmId.HasValue
-            ? (accessibleFarmIds != null && !accessibleFarmIds.Contains(request.Filters.FarmId.Value)
+            ? accessibleFarmIds != null && !accessibleFarmIds.Contains(request.Filters.FarmId.Value)
                 ? throw DomainException.Forbidden()
-                : new List<Guid> { request.Filters.FarmId.Value })
+                : new List<Guid> { request.Filters.FarmId.Value }
             : accessibleFarmIds;
 
         var farms = await _farmRepository.ListAsync(new GetAllFarmsSpec(filteredFarmIds), ct);
@@ -374,7 +374,6 @@ public class
         decimal totalGasCost)
     {
         var feedCost = allFeedInvoices.Sum(f => f.SubTotal);
-
         decimal chicksCost = 0;
         decimal vetCareCost = 0;
         decimal otherCosts = 0;
@@ -382,38 +381,44 @@ public class
         foreach (var expense in allExpenses)
         {
             var expenseType = expense.ExpenseContractor?.ExpenseType?.Name ?? string.Empty;
-
             if (string.Equals(expenseType, "Zakup piskląt", StringComparison.OrdinalIgnoreCase))
-            {
                 chicksCost += expense.SubTotal;
-            }
             else if (string.Equals(expenseType, "Usługa weterynaryjna", StringComparison.OrdinalIgnoreCase))
-            {
                 vetCareCost += expense.SubTotal;
-            }
             else
-            {
                 otherCosts += expense.SubTotal;
-            }
         }
+
+        var totalExpenses = feedCost + totalGasCost + chicksCost + vetCareCost + otherCosts;
 
         var data = new List<ExpensesPieChartDataPoint>();
 
+        if (totalExpenses == 0)
+        {
+            return new DashboardExpensesPieChart { Data = data };
+        }
+
         if (feedCost > 0)
-            data.Add(new ExpensesPieChartDataPoint { Id = "feed", Label = "Pasza", Value = Math.Round(feedCost, 2) });
+            data.Add(new ExpensesPieChartDataPoint
+                { Id = "feed", Label = "Pasza", Value = Math.Round(feedCost / totalExpenses * 100, 2) });
+
         if (totalGasCost > 0)
-            data.Add(new ExpensesPieChartDataPoint { Id = "gas", Label = "Gaz", Value = Math.Round(totalGasCost, 2) });
+            data.Add(new ExpensesPieChartDataPoint
+                { Id = "gas", Label = "Gaz", Value = Math.Round(totalGasCost / totalExpenses * 100, 2) });
+
         if (chicksCost > 0)
             data.Add(new ExpensesPieChartDataPoint
-                { Id = "chicks", Label = "Pisklęta", Value = Math.Round(chicksCost, 2) });
+                { Id = "chicks", Label = "Pisklęta", Value = Math.Round(chicksCost / totalExpenses * 100, 2) });
+
         if (vetCareCost > 0)
             data.Add(new ExpensesPieChartDataPoint
-                { Id = "vet", Label = "Obsługa weterynaryjna", Value = Math.Round(vetCareCost, 2) });
+                { Id = "vet", Label = "Obsługa wet.", Value = Math.Round(vetCareCost / totalExpenses * 100, 2) });
+
         if (otherCosts > 0)
             data.Add(new ExpensesPieChartDataPoint
-                { Id = "other", Label = "Pozostałe", Value = Math.Round(otherCosts, 2) });
+                { Id = "other", Label = "Pozostałe", Value = Math.Round(otherCosts / totalExpenses * 100, 2) });
 
-        return new DashboardExpensesPieChart { Data = data };
+        return new DashboardExpensesPieChart { Data = data.OrderByDescending(d => d.Value).ToList() };
     }
 
     private static DashboardChickenHousesStatus BuildChickenHousesStatus(
@@ -446,7 +451,7 @@ public class
                     var lossesCount = henhouseFailures.Sum(f => f.DeadCount + f.DefectiveCount);
                     var soldAndLostOnSaleCount = henhouseSales.Sum(s => s.Quantity + s.DeadCount + s.ConfiscatedCount);
 
-                    chickenCount = insertedCount - (soldAndLostOnSaleCount + lossesCount);
+                    chickenCount = soldAndLostOnSaleCount + lossesCount - insertedCount;
 
                     if (insertedCount > 0 && chickenCount <= insertedCount * 0.01m)
                     {
@@ -457,7 +462,7 @@ public class
                 farmStatus.Henhouses.Add(new DashboardHenhouseStatus
                 {
                     Name = henhouse.Name,
-                    ChickenCount = chickenCount < 0 ? 0 : chickenCount
+                    ChickenCount = chickenCount
                 });
             }
 

@@ -5,6 +5,7 @@ using FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
 using FarmsManager.Domain.Aggregates.GasAggregate.Entities;
+using FarmsManager.Domain.Aggregates.GasAggregate.Enum;
 using FarmsManager.Domain.Aggregates.ProductionDataAggregate.Entities;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
 
@@ -120,6 +121,7 @@ public sealed class GasConsumptionsForDashboardSpec : BaseSpecification<GasConsu
         Query.Include(t => t.Farm);
         Query.Include(t => t.Cycle);
 
+        Query.Where(gc => gc.Status == GasConsumptionStatus.Active && gc.CorrectionForId == null);
         Query.Where(t => t.CancelledAtUtc.HasValue == false);
         Query.Where(t => farmIds.Contains(t.FarmId));
         Query.Where(t => cycles.Contains(t.CycleId));
@@ -154,6 +156,7 @@ public sealed class GasConsumptionsForFarmsSpec : BaseSpecification<GasConsumpti
         Query.Include(t => t.Farm);
         Query.Include(t => t.Cycle);
 
+        Query.Where(gc => gc.Status == GasConsumptionStatus.Active && gc.CorrectionForId == null);
         Query.Where(t => t.CancelledAtUtc.HasValue == false);
         Query.Where(t => farmIds.Contains(t.FarmId));
     }

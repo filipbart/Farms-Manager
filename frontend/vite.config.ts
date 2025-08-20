@@ -11,7 +11,7 @@ export default ({ mode }: { mode: string }) => {
     server: {
       // host: true,
       port: Number(env.SERVER_PORT) || 3000,
-      allowedHosts: ["a02041060697.ngrok-free.app"],
+      allowedHosts: ["62e92af4a312.ngrok-free.app"],
       proxy: {
         "/api": {
           target: env.VITE_API_BASE_URL,
