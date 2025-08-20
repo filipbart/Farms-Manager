@@ -3,12 +3,14 @@ using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models.Notifications;
 using FarmsManager.Application.Specifications;
+using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.EmployeeAggregate.Entities;
 using FarmsManager.Domain.Aggregates.EmployeeAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.UserAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
 using MediatR;
 
@@ -24,6 +26,7 @@ public record GetNotificationsQuery : IRequest<BaseResponse<GetNotificationsQuer
 public class
     GetNotificationsQueryHandler : IRequestHandler<GetNotificationsQuery, BaseResponse<GetNotificationsQueryResponse>>
 {
+    private readonly IUserRepository _userRepository;
     private readonly IUserDataResolver _userDataResolver;
     private readonly IEmployeeRepository _employeeRepository;
     private readonly ISaleInvoiceRepository _saleInvoiceRepository;
@@ -34,20 +37,25 @@ public class
 
     public GetNotificationsQueryHandler(IUserDataResolver userDataResolver,
         IEmployeeRepository employeeRepository, ISaleInvoiceRepository saleInvoiceRepository,
-        IFeedInvoiceRepository feedInvoiceRepository, IEmployeeReminderRepository employeeReminderRepository)
+        IFeedInvoiceRepository feedInvoiceRepository, IEmployeeReminderRepository employeeReminderRepository,
+        IUserRepository userRepository)
     {
         _userDataResolver = userDataResolver;
         _employeeRepository = employeeRepository;
         _saleInvoiceRepository = saleInvoiceRepository;
         _feedInvoiceRepository = feedInvoiceRepository;
         _employeeReminderRepository = employeeReminderRepository;
+        _userRepository = userRepository;
     }
 
 
     public async Task<BaseResponse<GetNotificationsQueryResponse>> Handle(GetNotificationsQuery request,
         CancellationToken cancellationToken)
     {
-        _ = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
+        var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
+        var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
+        var accessibleFarmIds = user.IsAdmin ? null : user.Farms?.Select(t => t.FarmId).ToList();
+
         var now = DateOnly.FromDateTime(DateTime.Now);
         var sevenDaysFromNow = now.AddDays(7);
 
@@ -55,22 +63,26 @@ public class
 
         // 1. Faktury Sprzedażowe
         var salesInvoices =
-            await _saleInvoiceRepository.ListAsync(new GetOverdueAndUpcomingSaleInvoicesSpec(sevenDaysFromNow),
+            await _saleInvoiceRepository.ListAsync(
+                new GetOverdueAndUpcomingSaleInvoicesSpec(sevenDaysFromNow, accessibleFarmIds),
                 cancellationToken);
         ProcessNotifications(salesInvoices, d => d.DueDate, notificationData.SalesInvoices, now);
 
         // 2. Dostawy Pasz
         var feedInvoices =
-            await _feedInvoiceRepository.ListAsync(new GetOverdueAndUpcomingFeedInvoicesSpec(sevenDaysFromNow),
+            await _feedInvoiceRepository.ListAsync(
+                new GetOverdueAndUpcomingFeedInvoicesSpec(sevenDaysFromNow, accessibleFarmIds),
                 cancellationToken);
         ProcessNotifications(feedInvoices, d => d.DueDate, notificationData.FeedDeliveries, now);
 
         // 3. Przypomnienia i umowy pracowników
         var employeeReminders =
-            await _employeeReminderRepository.ListAsync(new GetOverdueAndUpcomingEmployeesRemindersSpec(now),
+            await _employeeReminderRepository.ListAsync(
+                new GetOverdueAndUpcomingEmployeesRemindersSpec(now, accessibleFarmIds),
                 cancellationToken);
         var expiringContracts =
-            await _employeeRepository.ListAsync(new GetOverdueAndUpcomingEmployeesContractSpec(sevenDaysFromNow),
+            await _employeeRepository.ListAsync(
+                new GetOverdueAndUpcomingEmployeesContractSpec(sevenDaysFromNow, accessibleFarmIds),
                 cancellationToken);
 
         // Łączymy logikę dla przypomnień i umów
@@ -121,9 +133,12 @@ public class
 
 public sealed class GetOverdueAndUpcomingSaleInvoicesSpec : BaseSpecification<SaleInvoiceEntity>
 {
-    public GetOverdueAndUpcomingSaleInvoicesSpec(DateOnly date)
+    public GetOverdueAndUpcomingSaleInvoicesSpec(DateOnly date, List<Guid> accessibleFarmIds)
     {
         EnsureExists();
+        if (accessibleFarmIds is not null && accessibleFarmIds.Count != 0)
+            Query.Where(p => accessibleFarmIds.Contains(p.FarmId));
+
         Query.Where(t => t.PaymentDate.HasValue == false);
         Query.Where(t => t.DueDate <= date);
     }
@@ -131,9 +146,13 @@ public sealed class GetOverdueAndUpcomingSaleInvoicesSpec : BaseSpecification<Sa
 
 public sealed class GetOverdueAndUpcomingFeedInvoicesSpec : BaseSpecification<FeedInvoiceEntity>
 {
-    public GetOverdueAndUpcomingFeedInvoicesSpec(DateOnly date)
+    public GetOverdueAndUpcomingFeedInvoicesSpec(DateOnly date, List<Guid> accessibleFarmIds)
     {
         EnsureExists();
+
+        if (accessibleFarmIds is not null && accessibleFarmIds.Count != 0)
+            Query.Where(p => accessibleFarmIds.Contains(p.FarmId));
+
         Query.Where(t => t.PaymentDateUtc.HasValue == false);
         Query.Where(t => t.DueDate <= date);
     }
@@ -141,18 +160,24 @@ public sealed class GetOverdueAndUpcomingFeedInvoicesSpec : BaseSpecification<Fe
 
 public sealed class GetOverdueAndUpcomingEmployeesRemindersSpec : BaseSpecification<EmployeeReminderEntity>
 {
-    public GetOverdueAndUpcomingEmployeesRemindersSpec(DateOnly today)
+    public GetOverdueAndUpcomingEmployeesRemindersSpec(DateOnly today, List<Guid> accessibleFarmIds)
     {
         EnsureExists();
+        if (accessibleFarmIds is not null && accessibleFarmIds.Count != 0)
+            Query.Where(p => accessibleFarmIds.Contains(p.Employee.FarmId));
+
         Query.Where(t => today >= t.DueDate.AddDays(-t.DaysToRemind));
     }
 }
 
 public sealed class GetOverdueAndUpcomingEmployeesContractSpec : BaseSpecification<EmployeeEntity>
 {
-    public GetOverdueAndUpcomingEmployeesContractSpec(DateOnly date)
+    public GetOverdueAndUpcomingEmployeesContractSpec(DateOnly date, List<Guid> accessibleFarmIds)
     {
         EnsureExists();
+        if (accessibleFarmIds is not null && accessibleFarmIds.Count != 0)
+            Query.Where(p => accessibleFarmIds.Contains(p.FarmId));
+
         Query.Where(t => t.EndDate.HasValue && t.EndDate.Value <= date);
     }
 }

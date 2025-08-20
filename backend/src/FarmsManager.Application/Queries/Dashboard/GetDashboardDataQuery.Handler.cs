@@ -13,6 +13,7 @@ using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.GasAggregate.Entities;
 using FarmsManager.Domain.Aggregates.GasAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.ProductionDataAggregate.Entities;
 using FarmsManager.Domain.Aggregates.ProductionDataAggregate.Interfaces;
@@ -29,7 +30,6 @@ public class
 {
     private readonly IUserRepository _userRepository;
     private readonly IUserDataResolver _userDataResolver;
-
     private readonly IFarmRepository _farmRepository;
     private readonly ISaleRepository _saleRepository;
     private readonly ICycleRepository _cycleRepository;
@@ -71,18 +71,16 @@ public class
     public async Task<BaseResponse<GetDashboardDataQueryResponse>> Handle(GetDashboardDataQuery request,
         CancellationToken ct)
     {
-        // 1. Ustalenie uprawnień i filtrów
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var user = await _userRepository.GetAsync(new UserByIdSpec(userId), ct);
         var accessibleFarmIds = user.IsAdmin ? null : user.Farms?.Select(t => t.FarmId).ToList();
 
         var filteredFarmIds = request.Filters.FarmId.HasValue
-            ? accessibleFarmIds is not null && !accessibleFarmIds.Contains(request.Filters.FarmId.Value)
+            ? (accessibleFarmIds != null && !accessibleFarmIds.Contains(request.Filters.FarmId.Value)
                 ? throw DomainException.Forbidden()
-                : new List<Guid> { request.Filters.FarmId.Value }
+                : new List<Guid> { request.Filters.FarmId.Value })
             : accessibleFarmIds;
 
-        // 2. JEDNORAZOWE pobranie wszystkich niezbędnych danych
         var farms = await _farmRepository.ListAsync(new GetAllFarmsSpec(filteredFarmIds), ct);
         if (farms.Count == 0)
         {
@@ -90,50 +88,59 @@ public class
         }
 
         var farmIds = farms.Select(f => f.Id).ToList();
+        var cycleIds = await GetFilteredCycleIds(request, farms, ct);
 
-        var cycles = await GetFilteredCycleIds(request, farms, ct);
-
-        // Pobieramy dane z repozytoriów
-        var allSales = await _saleRepository.ListAsync(
-            new GetSalesForDashboardSpec(farmIds, cycles, request.Filters.DateSince, request.Filters.DateTo), ct);
-        var allFeedInvoices = await _feedInvoiceRepository.ListAsync(
-            new GetFeedsInvoicesForDashboardSpec(farmIds, cycles, request.Filters.DateSince, request.Filters.DateTo),
+        // 1. DANE DLA STATYSTYK (filtrowane po datach/cyklach)
+        var filteredSales = await _saleRepository.ListAsync(
+            new GetSalesForDashboardSpec(farmIds, cycleIds, request.Filters.DateSince, request.Filters.DateTo), ct);
+        var filteredFeedInvoices = await _feedInvoiceRepository.ListAsync(
+            new GetFeedsInvoicesForDashboardSpec(farmIds, cycleIds, request.Filters.DateSince, request.Filters.DateTo),
             ct);
-        var allExpenses = await _expenseProductionRepository.ListAsync(
-            new GetProductionExpensesForDashboardSpec(farmIds, cycles, request.Filters.DateSince,
+        var filteredExpenses = await _expenseProductionRepository.ListAsync(
+            new GetProductionExpensesForDashboardSpec(farmIds, cycleIds, request.Filters.DateSince,
                 request.Filters.DateTo), ct);
+
+        decimal gasCostForStats;
+        if (cycleIds.Count != 0)
+        {
+            var gasConsumptions =
+                await _gasConsumptionRepository.ListAsync(new GasConsumptionsForDashboardSpec(farmIds, cycleIds), ct);
+            gasCostForStats = gasConsumptions.Sum(t => t.Cost);
+        }
+        else
+        {
+            var gasDeliveries = await _gasDeliveryRepository.ListAsync(
+                new GasDeliveriesForDashboardSpec(farmIds, request.Filters.DateSince, request.Filters.DateTo), ct);
+            gasCostForStats = gasDeliveries.Sum(d => d.UnitPrice * d.UsedQuantity);
+        }
+
+        // 2. DANE DLA WYKRESÓW I STATUSÓW (historyczne, filtrowane tylko po farmach)
+        var historicalSales = await _saleRepository.ListAsync(new GetSalesForDashboardSpec(farmIds), ct);
+        var historicalFeedInvoices =
+            await _feedInvoiceRepository.ListAsync(new GetFeedsInvoicesForDashboardSpec(farmIds), ct);
+        var historicalExpenses =
+            await _expenseProductionRepository.ListAsync(new GetProductionExpensesForDashboardSpec(farmIds), ct);
         var allInsertions =
             await _insertionRepository.ListAsync(new InsertionsForFarmsSpec(farmIds),
                 ct); // Potrzebne dla EWW i statusu kurników
         var allFailures =
             await _productionDataFailureRepository.ListAsync(new ProductionDataFailuresForFarmsSpec(farmIds),
                 ct); // Dla EWW, strat i statusu
+        var allGasConsumptions =
+            await _gasConsumptionRepository.ListAsync(new GasConsumptionsForFarmsSpec(farmIds), ct);
+        var gasCostForCharts = allGasConsumptions.Sum(g => g.Cost);
 
-        decimal gasCost = 0;
-        if (request.Filters.CycleDict is not null)
-        {
-            var gasConsumptions =
-                await _gasConsumptionRepository.ListAsync(new GasConsumptionsForDashboardSpec(farmIds, cycles), ct);
-            gasCost = gasConsumptions.Sum(t => t.Cost);
-        }
-        else
-        {
-            var gasDeliveries = await _gasDeliveryRepository.ListAsync(
-                new GasDeliveriesForDashboardSpec(farmIds, request.Filters.DateSince, request.Filters.DateTo), ct);
-            gasCost = gasDeliveries.Sum(d => d.UnitPrice * d.UsedQuantity);
-        }
-
-
-        var stats = await BuildDashboardStats(request, farmIds, cycles, allSales, allFeedInvoices, allExpenses, farms,
-            ct);
-        var chickenHousesStatus = BuildChickenHousesStatus(farms, allInsertions, allSales, allFailures);
-        var fcrChart = BuildFcrChart(farms, allSales, allFeedInvoices);
-        var gasConsumptionChart = await BuildGasConsumptionChart(farms, farmIds, ct);
-        var ewwChart = BuildEwwChart(farms, allInsertions, allSales, allFeedInvoices, allFailures);
+        // 3. Budowanie komponentów odpowiedzi (sekwencyjnie)
+        var stats = BuildDashboardStats(filteredSales, filteredFeedInvoices, filteredExpenses, gasCostForStats, farms);
+        var chickenHousesStatus = BuildChickenHousesStatus(farms, allInsertions, historicalSales, allFailures);
+        var fcrChart = BuildFcrChart(farms, historicalSales, historicalFeedInvoices);
+        var gasConsumptionChart = BuildGasConsumptionChart(farms, allGasConsumptions);
+        var ewwChart = BuildEwwChart(farms, allInsertions, historicalSales, historicalFeedInvoices, allFailures);
         var flockLossChart = BuildFlockLossChart(farms, allFailures);
-        var expensesPieChart = BuildExpensesPieChart(allFeedInvoices, allExpenses, gasCost);
-        var notifications = await BuildDashboardNotifications(ct);
+        var expensesPieChart = BuildExpensesPieChart(historicalFeedInvoices, historicalExpenses, gasCostForCharts);
+        var notifications = await BuildDashboardNotifications(farmIds, ct);
 
+        // 4. Składanie odpowiedzi
         var response = new GetDashboardDataQueryResponse
         {
             Stats = stats,
@@ -152,57 +159,31 @@ public class
     private async Task<List<Guid>> GetFilteredCycleIds(GetDashboardDataQuery request, List<FarmEntity> farms,
         CancellationToken ct)
     {
-        if (request.Filters.CycleDict == null)
-        {
-            return null;
-        }
-
         var cycleIds = new List<Guid>();
+        if (request.Filters.CycleDict == null) return cycleIds;
+
         foreach (var farm in farms)
         {
             var cycle = await _cycleRepository.FirstOrDefaultAsync(
                 new GetCycleByYearIdentifierAndFarmSpec(farm.Id, request.Filters.CycleDict.Year,
                     request.Filters.CycleDict.Identifier), ct);
-            if (cycle != null)
-            {
-                cycleIds.Add(cycle.Id);
-            }
+            if (cycle != null) cycleIds.Add(cycle.Id);
         }
 
         return cycleIds;
     }
 
-    private async Task<DashboardStats> BuildDashboardStats(GetDashboardDataQuery request, List<Guid> farmIds,
-        List<Guid> cycles,
-        IReadOnlyList<SaleEntity> sales, IReadOnlyList<FeedInvoiceEntity> feedInvoices,
-        IReadOnlyList<ExpenseProductionEntity> expenses, IReadOnlyList<FarmEntity> farms, CancellationToken ct)
+    private static DashboardStats BuildDashboardStats(IReadOnlyList<SaleEntity> sales,
+        IReadOnlyList<FeedInvoiceEntity> feedInvoices,
+        IReadOnlyList<ExpenseProductionEntity> expenses, decimal gasCost, IReadOnlyList<FarmEntity> farms)
     {
-        // Koszty paszy i wydatków
         var feedCosts = feedInvoices.Sum(t => t.SubTotal);
-        var feedVat = feedInvoices.Sum(t => t.VatAmount);
         var expensesCost = expenses.Sum(t => t.SubTotal);
-        var expensesVat = expenses.Sum(t => t.VatAmount);
-
-        // Koszty gazu (logika warunkowa)
-        decimal gasCost;
-        if (request.Filters.CycleDict is not null)
-        {
-            var gasConsumptions =
-                await _gasConsumptionRepository.ListAsync(new GasConsumptionsForDashboardSpec(farmIds, cycles), ct);
-            gasCost = gasConsumptions.Sum(t => t.Cost);
-            // Założenie stałej stawki VAT
-        }
-        else
-        {
-            var gasDeliveries = await _gasDeliveryRepository.ListAsync(
-                new GasDeliveriesForDashboardSpec(farmIds, request.Filters.DateSince, request.Filters.DateTo), ct);
-            gasCost = gasDeliveries.Sum(d => d.UnitPrice * d.UsedQuantity);
-        }
-
-        var gasVat = gasCost * 0.23m; // Założenie stałej stawki VAT
-
-        // Przychody
         var totalRevenue = sales.Sum(s => (s.Weight - s.DeadWeight - s.ConfiscatedWeight) * s.PriceWithExtras);
+
+        var feedVat = feedInvoices.Sum(t => t.VatAmount);
+        var expensesVat = expenses.Sum(e => e.VatAmount);
+        var gasVat = gasCost * 0.23m;
 
         var sumExpenses = feedCosts + gasCost + expensesCost;
         var sumVat = feedVat + gasVat + expensesVat;
@@ -221,7 +202,6 @@ public class
             AvgFeedPrice = totalFeedQuantity > 0 ? feedCosts / totalFeedQuantity : 0
         };
     }
-
 
     private static DashboardFcrChart BuildFcrChart(IReadOnlyList<FarmEntity> farms, IReadOnlyList<SaleEntity> allSales,
         IReadOnlyList<FeedInvoiceEntity> allFeeds)
@@ -261,11 +241,10 @@ public class
         return result;
     }
 
-    private async Task<DashboardGasConsumptionChart> BuildGasConsumptionChart(IReadOnlyList<FarmEntity> farms,
-        List<Guid> farmIds, CancellationToken ct)
+    private static DashboardGasConsumptionChart BuildGasConsumptionChart(IReadOnlyList<FarmEntity> farms,
+        IReadOnlyList<GasConsumptionEntity> gasConsumptions)
     {
         var result = new DashboardGasConsumptionChart();
-        var gasConsumptions = await _gasConsumptionRepository.ListAsync(new GasConsumptionsForFarmsSpec(farmIds), ct);
         var consumptionsLookup = gasConsumptions.ToLookup(c => c.FarmId);
 
         foreach (var farm in farms)
@@ -312,6 +291,7 @@ public class
             var totalLosses = cycleSales.Sum(s => s.DeadCount + s.ConfiscatedCount) +
                               failuresLookup[insertion.CycleId].Sum(f => f.DeadCount + f.DefectiveCount);
 
+            if (insertionQuantity == 0) continue;
             var survivalRatePct = (insertionQuantity.Value - totalLosses) * 100 / insertionQuantity.Value;
 
             var combinedSoldCount = (decimal)cycleSales.Sum(s => s.Quantity);
@@ -341,8 +321,7 @@ public class
                 chartSeries = new ChartSeries
                 {
                     FarmId = insertion.FarmId,
-                    FarmName = farmsDict.TryGetValue(insertion.FarmId, out var farm) ? farm.Name : "Nieznana ferma",
-                    Data = []
+                    FarmName = farmsDict.TryGetValue(insertion.FarmId, out var farm) ? farm.Name : "Nieznana ferma"
                 };
                 seriesByFarm[insertion.FarmId] = chartSeries;
             }
@@ -389,15 +368,13 @@ public class
         return result;
     }
 
-    private DashboardExpensesPieChart BuildExpensesPieChart(
+    private static DashboardExpensesPieChart BuildExpensesPieChart(
         IReadOnlyList<FeedInvoiceEntity> allFeedInvoices,
         IReadOnlyList<ExpenseProductionEntity> allExpenses,
         decimal totalGasCost)
     {
-        // 1. Koszt paszy - suma wartości netto z faktur
         var feedCost = allFeedInvoices.Sum(f => f.SubTotal);
 
-        // 2. Kategoryzacja pozostałych wydatków
         decimal chicksCost = 0;
         decimal vetCareCost = 0;
         decimal otherCosts = 0;
@@ -422,21 +399,16 @@ public class
 
         var data = new List<ExpensesPieChartDataPoint>();
 
-        // Dodajemy tylko te kategorie, których koszt jest większy od zera
         if (feedCost > 0)
             data.Add(new ExpensesPieChartDataPoint { Id = "feed", Label = "Pasza", Value = Math.Round(feedCost, 2) });
-
         if (totalGasCost > 0)
             data.Add(new ExpensesPieChartDataPoint { Id = "gas", Label = "Gaz", Value = Math.Round(totalGasCost, 2) });
-
         if (chicksCost > 0)
             data.Add(new ExpensesPieChartDataPoint
                 { Id = "chicks", Label = "Pisklęta", Value = Math.Round(chicksCost, 2) });
-
         if (vetCareCost > 0)
             data.Add(new ExpensesPieChartDataPoint
                 { Id = "vet", Label = "Obsługa weterynaryjna", Value = Math.Round(vetCareCost, 2) });
-
         if (otherCosts > 0)
             data.Add(new ExpensesPieChartDataPoint
                 { Id = "other", Label = "Pozostałe", Value = Math.Round(otherCosts, 2) });
@@ -452,7 +424,6 @@ public class
     {
         var farmStatuses = new List<DashboardFarmStatus>();
 
-        // Tworzymy Lookups dla wydajności
         var insertionsLookup = allInsertions.ToLookup(i => i.HenhouseId);
         var salesLookup = allSales.ToLookup(s => s.HenhouseId);
         var failuresLookup = allFailures.ToLookup(f => f.HenhouseId);
@@ -498,7 +469,8 @@ public class
 
     private record NotificationSource(DateOnly DueDate, NotificationType Type, object Entity);
 
-    private async Task<List<DashboardNotificationItem>> BuildDashboardNotifications(CancellationToken ct)
+    private async Task<List<DashboardNotificationItem>> BuildDashboardNotifications(List<Guid> farmIds,
+        CancellationToken ct)
     {
         var now = DateOnly.FromDateTime(DateTime.Now);
         var sevenDaysFromNow = now.AddDays(7);
@@ -506,44 +478,40 @@ public class
 
         var allSources = new List<NotificationSource>();
 
-        // 1. Faktury Sprzedażowe (należności)
         var salesInvoices =
-            await _saleInvoiceRepository.ListAsync(new GetOverdueAndUpcomingSaleInvoicesSpec(sevenDaysFromNow), ct);
+            await _saleInvoiceRepository.ListAsync(new GetOverdueAndUpcomingSaleInvoicesSpec(sevenDaysFromNow, farmIds),
+                ct);
         allSources.AddRange(salesInvoices.Select(inv =>
             new NotificationSource(inv.DueDate, NotificationType.SaleInvoice, inv)));
 
-        // 2. Faktury za paszę (zobowiązania)
         var feedInvoices =
-            await _feedInvoiceRepository.ListAsync(new GetOverdueAndUpcomingFeedInvoicesSpec(sevenDaysFromNow), ct);
+            await _feedInvoiceRepository.ListAsync(new GetOverdueAndUpcomingFeedInvoicesSpec(sevenDaysFromNow, farmIds),
+                ct);
         allSources.AddRange(feedInvoices.Select(inv =>
             new NotificationSource(inv.DueDate, NotificationType.FeedInvoice, inv)));
 
-        // 3. Kończące się umowy pracowników
         var expiringContracts =
-            await _employeeRepository.ListAsync(new GetOverdueAndUpcomingEmployeesContractSpec(sevenDaysFromNow), ct);
+            await _employeeRepository.ListAsync(
+                new GetOverdueAndUpcomingEmployeesContractSpec(sevenDaysFromNow, farmIds), ct);
         allSources.AddRange(expiringContracts.Select(emp =>
             new NotificationSource(emp.EndDate!.Value, NotificationType.EmployeeContract, emp)));
 
-        // 4. Przypomnienia dla pracowników
         var employeeReminders =
             await _employeeReminderRepository.ListAsync(
-                new GetOverdueAndUpcomingEmployeesRemindersSpec(now, sevenDaysFromNow), ct);
+                new GetOverdueAndUpcomingEmployeesRemindersSpec(now, sevenDaysFromNow, farmIds), ct);
         allSources.AddRange(employeeReminders.Select(rem =>
             new NotificationSource(rem.DueDate, NotificationType.EmployeeReminder, rem)));
 
-        // 5. Sortowanie, wybranie 5 najważniejszych i mapowanie do finalnego modelu
         var top5Notifications = allSources
-            .OrderBy(s => s.DueDate) // Sortuj wg daty - zaległe i najbliższe będą pierwsze
+            .OrderBy(s => s.DueDate)
             .Take(5)
             .Select(source =>
             {
-                // Logika priorytetu
                 NotificationPriority priority;
                 if (source.DueDate <= now) priority = NotificationPriority.High;
                 else if (source.DueDate <= now.AddDays(daysForMediumPriority)) priority = NotificationPriority.Medium;
                 else priority = NotificationPriority.Low;
 
-                // Logika generowania opisu
                 var description = GenerateDescription(source, now);
 
                 return new DashboardNotificationItem
@@ -565,7 +533,6 @@ public class
         var culture = new System.Globalization.CultureInfo("pl-PL");
         var dateString = source.DueDate.ToString("d MMMM yyyy", culture);
         string dayDifference;
-
         var days = source.DueDate.DayNumber - now.DayNumber;
         if (days < 0) dayDifference = $" (zaległe o {-days} dni)";
         else if (days == 0) dayDifference = " (dziś)";

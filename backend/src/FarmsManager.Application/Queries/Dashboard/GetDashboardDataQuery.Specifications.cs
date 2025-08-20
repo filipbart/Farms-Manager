@@ -189,9 +189,13 @@ public class ProductionDataFailuresForFarmsSpec : BaseSpecification<ProductionDa
 
 public sealed class GetOverdueAndUpcomingEmployeesRemindersSpec : BaseSpecification<EmployeeReminderEntity>
 {
-    public GetOverdueAndUpcomingEmployeesRemindersSpec(DateOnly today, DateOnly limitDate)
+    public GetOverdueAndUpcomingEmployeesRemindersSpec(DateOnly today, DateOnly limitDate, List<Guid> accessibleFarmIds)
     {
         EnsureExists();
+
+        if (accessibleFarmIds is not null && accessibleFarmIds.Count != 0)
+            Query.Where(p => accessibleFarmIds.Contains(p.Employee.FarmId));
+
         Query.Where(t => today >= t.DueDate.AddDays(-t.DaysToRemind))
             .Where(t => t.DueDate <= limitDate);
     }
