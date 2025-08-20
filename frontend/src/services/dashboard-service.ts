@@ -1,4 +1,5 @@
 import ApiUrl from "../common/ApiUrl";
+import type { GetDashboardDataQueryResponse } from "../models/dashboard/dashboard";
 import type {
   DashboardDictionary,
   DashboardFilters,
@@ -12,10 +13,12 @@ export class DashboardService {
     );
   }
 
-  public static async getFeedsPrices(filters: DashboardFilters) {
-    //TODO response
-    return await AxiosWrapper.get(ApiUrl.Dashboard, {
-      ...filters,
-    });
+  public static async getDashboardData(filters: DashboardFilters) {
+    return await AxiosWrapper.get<GetDashboardDataQueryResponse>(
+      ApiUrl.Dashboard,
+      {
+        ...filters,
+      }
+    );
   }
 }

@@ -61,7 +61,7 @@ public record ChartSeries
 {
     public Guid FarmId { get; set; }
     public string FarmName { get; set; }
-    public List<ChartDataPoint> Data { get; set; }
+    public List<ChartDataPoint> Data { get; set; } = [];
 }
 
 public record ChartDataPoint

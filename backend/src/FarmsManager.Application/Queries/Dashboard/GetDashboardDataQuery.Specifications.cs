@@ -17,6 +17,8 @@ public sealed class GetSalesForDashboardSpec : BaseSpecification<SaleEntity>
     {
         EnsureExists();
         DisableTracking();
+        Query.Include(t => t.Farm);
+        Query.Include(t => t.Cycle);
 
         if (farmIds is not null && farmIds.Count != 0)
         {
@@ -49,6 +51,9 @@ public sealed class GetFeedsInvoicesForDashboardSpec : BaseSpecification<FeedInv
         EnsureExists();
         DisableTracking();
 
+        Query.Include(t => t.Farm);
+        Query.Include(t => t.Cycle);
+
         if (farmIds is not null && farmIds.Count != 0)
         {
             Query.Where(t => farmIds.Contains(t.FarmId));
@@ -80,6 +85,9 @@ public sealed class GetProductionExpensesForDashboardSpec : BaseSpecification<Ex
         EnsureExists();
         DisableTracking();
 
+        Query.Include(t => t.Farm);
+        Query.Include(t => t.Cycle);
+
         if (farmIds is not null && farmIds.Count != 0)
         {
             Query.Where(t => farmIds.Contains(t.FarmId));
@@ -109,6 +117,9 @@ public sealed class GasConsumptionsForDashboardSpec : BaseSpecification<GasConsu
         EnsureExists();
         DisableTracking();
 
+        Query.Include(t => t.Farm);
+        Query.Include(t => t.Cycle);
+
         Query.Where(t => t.CancelledAtUtc.HasValue == false);
         Query.Where(t => farmIds.Contains(t.FarmId));
         Query.Where(t => cycles.Contains(t.CycleId));
@@ -121,6 +132,8 @@ public sealed class GasDeliveriesForDashboardSpec : BaseSpecification<GasDeliver
     {
         EnsureExists();
         DisableTracking();
+
+        Query.Include(t => t.Farm);
 
         Query.Where(t => farmIds.Contains(t.FarmId));
         if (dateSince.HasValue)
@@ -137,6 +150,10 @@ public sealed class GasConsumptionsForFarmsSpec : BaseSpecification<GasConsumpti
     {
         EnsureExists();
         DisableTracking();
+
+        Query.Include(t => t.Farm);
+        Query.Include(t => t.Cycle);
+
         Query.Where(t => t.CancelledAtUtc.HasValue == false);
         Query.Where(t => farmIds.Contains(t.FarmId));
     }
@@ -149,6 +166,9 @@ public sealed class InsertionsForFarmsSpec : BaseSpecification<InsertionEntity>
         EnsureExists();
         DisableTracking();
 
+        Query.Include(t => t.Farm);
+        Query.Include(t => t.Cycle);
+
         Query.Where(t => farmIds.Contains(t.FarmId));
     }
 }
@@ -159,6 +179,10 @@ public class ProductionDataFailuresForFarmsSpec : BaseSpecification<ProductionDa
     {
         EnsureExists();
         DisableTracking();
+
+        Query.Include(t => t.Farm);
+        Query.Include(t => t.Cycle);
+
         Query.Where(f => farmIds.Contains(f.FarmId));
     }
 }

@@ -43,6 +43,30 @@ public class
     private readonly IExpenseProductionRepository _expenseProductionRepository;
     private readonly IProductionDataFailureRepository _productionDataFailureRepository;
 
+    public GetDashboardDataQueryHandler(IUserRepository userRepository, IUserDataResolver userDataResolver,
+        IFarmRepository farmRepository, ISaleRepository saleRepository, ICycleRepository cycleRepository,
+        IEmployeeRepository employeeRepository, IInsertionRepository insertionRepository,
+        IFeedInvoiceRepository feedInvoiceRepository, IGasDeliveryRepository gasDeliveryRepository,
+        ISaleInvoiceRepository saleInvoiceRepository, IGasConsumptionRepository gasConsumptionRepository,
+        IEmployeeReminderRepository employeeReminderRepository,
+        IExpenseProductionRepository expenseProductionRepository,
+        IProductionDataFailureRepository productionDataFailureRepository)
+    {
+        _userRepository = userRepository;
+        _userDataResolver = userDataResolver;
+        _farmRepository = farmRepository;
+        _saleRepository = saleRepository;
+        _cycleRepository = cycleRepository;
+        _employeeRepository = employeeRepository;
+        _insertionRepository = insertionRepository;
+        _feedInvoiceRepository = feedInvoiceRepository;
+        _gasDeliveryRepository = gasDeliveryRepository;
+        _saleInvoiceRepository = saleInvoiceRepository;
+        _gasConsumptionRepository = gasConsumptionRepository;
+        _employeeReminderRepository = employeeReminderRepository;
+        _expenseProductionRepository = expenseProductionRepository;
+        _productionDataFailureRepository = productionDataFailureRepository;
+    }
 
     public async Task<BaseResponse<GetDashboardDataQueryResponse>> Handle(GetDashboardDataQuery request,
         CancellationToken ct)
@@ -99,33 +123,27 @@ public class
             gasCost = gasDeliveries.Sum(d => d.UnitPrice * d.UsedQuantity);
         }
 
-        // 3. RÓWNOLEGŁE budowanie komponentów dashboardu
-        var statsTask = Task.Run(() =>
-            BuildDashboardStats(request, farmIds, cycles, allSales, allFeedInvoices, allExpenses, farms, ct), ct);
-        var chickenHousesStatusTask =
-            Task.Run(() => BuildChickenHousesStatus(farms, allInsertions, allSales, allFailures), ct);
-        var fcrChartTask = Task.Run(() => BuildFcrChart(farms, allSales, allFeedInvoices), ct);
-        var gasConsumptionChartTask = Task.Run(() => BuildGasConsumptionChart(farms, farmIds, ct), ct);
-        var ewwChartTask = Task.Run(() => BuildEwwChart(farms, allInsertions, allSales, allFeedInvoices, allFailures),
+
+        var stats = await BuildDashboardStats(request, farmIds, cycles, allSales, allFeedInvoices, allExpenses, farms,
             ct);
-        var flockLossChartTask = Task.Run(() => BuildFlockLossChart(farms, allFailures), ct);
-        var expensesPieChartTask = Task.Run(() => BuildExpensesPieChart(allFeedInvoices, allExpenses, gasCost), ct);
+        var chickenHousesStatus = BuildChickenHousesStatus(farms, allInsertions, allSales, allFailures);
+        var fcrChart = BuildFcrChart(farms, allSales, allFeedInvoices);
+        var gasConsumptionChart = await BuildGasConsumptionChart(farms, farmIds, ct);
+        var ewwChart = BuildEwwChart(farms, allInsertions, allSales, allFeedInvoices, allFailures);
+        var flockLossChart = BuildFlockLossChart(farms, allFailures);
+        var expensesPieChart = BuildExpensesPieChart(allFeedInvoices, allExpenses, gasCost);
+        var notifications = await BuildDashboardNotifications(ct);
 
-        await Task.WhenAll(
-            statsTask, chickenHousesStatusTask, fcrChartTask,
-            gasConsumptionChartTask, ewwChartTask, flockLossChartTask, expensesPieChartTask
-        );
-
-        // 4. Złożenie finalnej odpowiedzi
         var response = new GetDashboardDataQueryResponse
         {
-            Stats = await statsTask,
-            ChickenHousesStatus = chickenHousesStatusTask.Result,
-            FcrChart = fcrChartTask.Result,
-            GasConsumptionChart = await gasConsumptionChartTask,
-            EwwChart = ewwChartTask.Result,
-            FlockLossChart = flockLossChartTask.Result,
-            ExpensesPieChart = expensesPieChartTask.Result
+            Stats = stats,
+            ChickenHousesStatus = chickenHousesStatus,
+            FcrChart = fcrChart,
+            GasConsumptionChart = gasConsumptionChart,
+            EwwChart = ewwChart,
+            FlockLossChart = flockLossChart,
+            ExpensesPieChart = expensesPieChart,
+            Notifications = notifications
         };
 
         return BaseResponse.CreateResponse(response);
@@ -477,12 +495,11 @@ public class
 
         return new DashboardChickenHousesStatus { Farms = farmStatuses };
     }
-    
+
     private record NotificationSource(DateOnly DueDate, NotificationType Type, object Entity);
 
     private async Task<List<DashboardNotificationItem>> BuildDashboardNotifications(CancellationToken ct)
     {
-
         var now = DateOnly.FromDateTime(DateTime.Now);
         var sevenDaysFromNow = now.AddDays(7);
         const int daysForMediumPriority = 3;
