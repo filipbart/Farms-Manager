@@ -59,5 +59,6 @@ public sealed class GetAllFarmsSpec : BaseSpecification<FarmEntity>
         }
 
         Query.Include(t => t.Henhouses);
+        Query.Include(t => t.ActiveCycle);
     }
 }

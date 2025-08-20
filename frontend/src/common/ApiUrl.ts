@@ -11,6 +11,9 @@ export default class ApiUrl {
   public static RefreshToken = this.BaseUrl + "auth/refresh-token";
   public static Logout = this.BaseUrl + "auth/logout";
 
+  public static Dashboard = this.BaseUrl + "dashboard";
+  public static DashboardDictionary = this.Dashboard + "/dictionary";
+
   public static Files = this.BaseUrl + "files";
   public static GetFile = `${this.Files}/file`;
 
