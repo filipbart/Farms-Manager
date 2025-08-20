@@ -5,6 +5,10 @@ import {
   Typography,
   IconButton,
   InputAdornment,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import LoadingButton from "../../../components/common/loading-button";
 import { useForm } from "react-hook-form";
@@ -13,6 +17,7 @@ import { SettingsService } from "../../../services/settings-service";
 import { toast } from "react-toastify";
 import type UserDetails from "../../../models/user/user-details";
 import { MdSave, MdVisibility, MdVisibilityOff } from "react-icons/md";
+import { useFarms } from "../../../hooks/useFarms";
 
 interface IrzPlusSettingsTabProps {
   userDetails?: UserDetails;
@@ -26,6 +31,9 @@ const IrzPlusSettingsTab: React.FC<IrzPlusSettingsTabProps> = ({
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  const { farms, loadingFarms, fetchFarms } = useFarms();
+  const [selectedFarmId, setSelectedFarmId] = useState<string>("");
+
   const {
     register,
     handleSubmit,
@@ -33,25 +41,41 @@ const IrzPlusSettingsTab: React.FC<IrzPlusSettingsTabProps> = ({
     reset,
   } = useForm();
 
-  const setCredentials = () => {
-    reset({
-      login: userDetails?.irzplusCredentials?.login || "",
-      password: userDetails?.irzplusCredentials?.password || "",
-    });
-  };
+  useEffect(() => {
+    fetchFarms();
+  }, [fetchFarms]);
 
   useEffect(() => {
-    setCredentials();
-  }, []);
+    if (farms.length > 0 && !selectedFarmId) {
+      setSelectedFarmId(farms[0].id);
+    }
+  }, [farms, selectedFarmId]);
+
+  useEffect(() => {
+    if (!userDetails || !selectedFarmId) {
+      reset({ login: "", password: "" });
+      return;
+    }
+
+    const credentialsForFarm = userDetails.irzplusCredentials?.find(
+      (cred: any) => cred.farmId === selectedFarmId
+    );
+
+    reset({
+      login: credentialsForFarm?.login || "",
+      password: credentialsForFarm?.password || "",
+    });
+  }, [userDetails, selectedFarmId, reset]);
 
   const handleSave = async (val: any) => {
-    if (loading) return;
+    if (loading || !selectedFarmId) return;
 
     setLoading(true);
     try {
       await handleApiResponse(
         () =>
           SettingsService.saveIrzPlusCredentials({
+            farmId: selectedFarmId,
             login: val.login,
             password: val.password,
           }),
@@ -62,8 +86,8 @@ const IrzPlusSettingsTab: React.FC<IrzPlusSettingsTabProps> = ({
         undefined,
         "Błąd podczas zapisywania danych logowania do IRZplus"
       );
-    } catch (error) {
-      toast.error("Błąd podczas pobierania danych logowania");
+    } catch {
+      toast.error("Błąd podczas zapisywania danych logowania");
     }
     setLoading(false);
   };
@@ -82,6 +106,23 @@ const IrzPlusSettingsTab: React.FC<IrzPlusSettingsTabProps> = ({
       >
         <Typography variant="h6">Dane logowania do systemu IRZplus:</Typography>
 
+        <FormControl fullWidth margin="normal" sx={{ maxWidth: "350px" }}>
+          <InputLabel>Wybrana ferma</InputLabel>
+          <Select
+            label="Wybrana ferma"
+            value={selectedFarmId}
+            onChange={(e) => setSelectedFarmId(e.target.value as string)}
+            disabled={loadingFarms}
+          >
+            {loadingFarms && <MenuItem disabled>Ładowanie ferm...</MenuItem>}
+            {farms.map((farm) => (
+              <MenuItem key={farm.id} value={farm.id}>
+                {farm.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
         <TextField
           sx={{ width: "250px" }}
           label="Login"
@@ -90,6 +131,11 @@ const IrzPlusSettingsTab: React.FC<IrzPlusSettingsTabProps> = ({
           helperText={errors.login ? (errors.login.message as string) : ""}
           {...register("login")}
           margin="normal"
+          slotProps={{
+            inputLabel: {
+              shrink: true,
+            },
+          }}
         />
         <TextField
           label="Hasło"
@@ -97,6 +143,9 @@ const IrzPlusSettingsTab: React.FC<IrzPlusSettingsTabProps> = ({
           variant="outlined"
           type={showPassword ? "text" : "password"}
           slotProps={{
+            inputLabel: {
+              shrink: true,
+            },
             input: {
               endAdornment: (
                 <InputAdornment position="end">
@@ -118,11 +167,13 @@ const IrzPlusSettingsTab: React.FC<IrzPlusSettingsTabProps> = ({
           margin="normal"
         />
         <LoadingButton
+          height="20"
           startIcon={<MdSave />}
           variant="contained"
           color="primary"
           type="submit"
           loading={loading}
+          disabled={!selectedFarmId}
         >
           Zapisz
         </LoadingButton>

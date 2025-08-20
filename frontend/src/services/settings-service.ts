@@ -3,6 +3,7 @@ import AxiosWrapper from "../utils/axios/wrapper";
 
 export class SettingsService {
   public static async saveIrzPlusCredentials(data: {
+    farmId: string;
     login: string;
     password: string;
   }) {

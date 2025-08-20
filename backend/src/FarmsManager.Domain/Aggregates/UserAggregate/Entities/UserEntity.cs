@@ -13,7 +13,7 @@ public class UserEntity : Entity
     public string Login { get; init; }
     public string PasswordHash { get; protected internal set; }
     public string Name { get; protected internal set; }
-    public IrzplusCredentials IrzplusCredentials { get; protected internal set; }
+    public List<IrzplusCredentials> IrzplusCredentials { get; protected internal set; }
     public bool IsAdmin { get; protected internal set; }
 
 
@@ -51,10 +51,29 @@ public class UserEntity : Entity
         IsAdmin = isAdmin;
     }
 
-    public void ChangeIrzplusCredentials(IrzplusCredentials irzplusCredentials)
+    public void AddIrzplusCredentials(IrzplusCredentials irzplusCredentials)
     {
         Guard.Against.Null(irzplusCredentials);
-        IrzplusCredentials = irzplusCredentials;
+        if (IrzplusCredentials is null)
+        {
+            IrzplusCredentials = [irzplusCredentials];
+        }
+        else
+        {
+            var existingCredentials = IrzplusCredentials.FirstOrDefault(c => c.FarmId == irzplusCredentials.FarmId);
+            if (existingCredentials != null)
+            {
+                IrzplusCredentials.Remove(existingCredentials);
+            }
+
+            IrzplusCredentials.Add(irzplusCredentials);
+        }
+    }
+
+    public void RemoveIrzplusCredentials(IrzplusCredentials irzplusCredentials)
+    {
+        Guard.Against.Null(irzplusCredentials);
+        IrzplusCredentials.Remove(irzplusCredentials);
     }
 
     public IEnumerable<string> GetPermissions()

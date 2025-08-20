@@ -40,15 +40,6 @@ public class SendSaleToIrzCommandHandler : IRequestHandler<SendSaleToIrzCommand,
         var user = await _userRepository.SingleOrDefaultAsync(new UserByIdSpec(userId), ct) ??
                    throw DomainException.UserNotFound();
 
-        if (user.IrzplusCredentials is null || user.IrzplusCredentials.EncryptedPassword.IsEmpty() ||
-            user.IrzplusCredentials.Login.IsEmpty())
-        {
-            response.AddError("IrzplusCredentials", "Brak danych logowania do systemu IRZplus");
-            return response;
-        }
-
-        _irzplusService.PrepareOptions(user.IrzplusCredentials);
-
         List<SaleEntity> salesToSend = [];
         if (request.SaleId.HasValue)
         {
@@ -91,6 +82,16 @@ public class SendSaleToIrzCommandHandler : IRequestHandler<SendSaleToIrzCommand,
             response.AddError("InvalidData", "Wstawienia muszą dotyczyć jednej farmy i jednego cyklu");
             return response;
         }
+
+        var farm = salesToSend.First().Farm;
+        var irzplusCredential = user.IrzplusCredentials?.FirstOrDefault(t => t.FarmId == farm.Id);
+        if (irzplusCredential is null)
+        {
+            response.AddError("IrzplusCredentials", "Brak danych logowania do systemu IRZplus");
+            return response;
+        }
+
+        _irzplusService.PrepareOptions(irzplusCredential);
 
 
         var dispositionResponse = await _irzplusService.SendSalesAsync(salesToSend, ct);

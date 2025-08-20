@@ -30,21 +30,26 @@ public class DetailsQueryHandler : IRequestHandler<DetailsQuery, BaseResponse<Us
         var user = await _userRepository.SingleOrDefaultAsync(new UserByIdSpec(userId), cancellationToken) ??
                    throw DomainException.UserNotFound();
 
-        string password = null;
+        var credentials = new List<IrzplusCredentialsDto>();
         if (user.IrzplusCredentials is not null)
         {
-            password = _encryptionService.Decrypt(user.IrzplusCredentials.EncryptedPassword);
+            foreach (var irzplusCredential in user.IrzplusCredentials)
+            {
+                var password = _encryptionService.Decrypt(irzplusCredential.EncryptedPassword);
+                credentials.Add(new IrzplusCredentialsDto
+                {
+                    FarmId = irzplusCredential.FarmId,
+                    Login = irzplusCredential.Login,
+                    Password = password
+                });
+            }
         }
 
         return BaseResponse.CreateResponse(new UserDetailsDto
         {
             Login = user.Login,
             Name = user.Name,
-            IrzplusCredentials = new IrzplusCredentialsDto
-            {
-                Login = user.IrzplusCredentials?.Login,
-                Password = password,
-            }
+            IrzplusCredentials = credentials
         });
     }
 }

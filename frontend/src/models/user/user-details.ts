@@ -6,7 +6,7 @@ export interface IrzPlusCredentials {
 export default interface UserDetails {
   login: string;
   name: string;
-  irzplusCredentials?: IrzPlusCredentials;
+  irzplusCredentials?: IrzPlusCredentials[];
 }
 
 export interface UpdateMyData {

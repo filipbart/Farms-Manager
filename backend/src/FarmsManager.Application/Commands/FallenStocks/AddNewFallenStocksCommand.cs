@@ -174,14 +174,14 @@ public class AddNewFallenStocksCommandHandler : IRequestHandler<AddNewFallenStoc
 
         if (request.SendToIrz)
         {
-            if (user.IrzplusCredentials is null || user.IrzplusCredentials.EncryptedPassword.IsEmpty() ||
-                user.IrzplusCredentials.Login.IsEmpty())
+            var irzplusCredential = user.IrzplusCredentials?.FirstOrDefault(t => t.FarmId == farm.Id);
+            if (irzplusCredential is null)
             {
                 response.AddError("IrzplusCredentials", "Brak danych logowania do systemu IRZplus");
                 return response;
             }
 
-            _irzplusService.PrepareOptions(user.IrzplusCredentials);
+            _irzplusService.PrepareOptions(irzplusCredential);
             var dispositionResponse = await _irzplusService.SendFallenStocksAsync(newFallenStocks, ct);
             if (dispositionResponse.Bledy.Count != 0)
             {

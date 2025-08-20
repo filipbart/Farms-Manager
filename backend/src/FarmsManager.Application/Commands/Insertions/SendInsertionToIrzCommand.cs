@@ -41,14 +41,6 @@ public class SendInsertionToIrzCommandHandler : IRequestHandler<SendInsertionToI
         var user = await _userRepository.SingleOrDefaultAsync(new UserByIdSpec(userId), ct) ??
                    throw DomainException.UserNotFound();
 
-        if (user.IrzplusCredentials is null || user.IrzplusCredentials.EncryptedPassword.IsEmpty() ||
-            user.IrzplusCredentials.Login.IsEmpty())
-        {
-            response.AddError("IrzplusCredentials", "Brak danych logowania do systemu IRZplus");
-            return response;
-        }
-
-        _irzplusService.PrepareOptions(user.IrzplusCredentials);
 
         List<InsertionEntity> insertionsToSend = [];
         if (request.InsertionId.HasValue)
@@ -92,6 +84,16 @@ public class SendInsertionToIrzCommandHandler : IRequestHandler<SendInsertionToI
             response.AddError("InvalidData", "Wstawienia muszą dotyczyć jednej farmy i jednego cyklu");
             return response;
         }
+
+        var farm = insertionsToSend.First().Farm;
+        var irzplusCredential = user.IrzplusCredentials?.FirstOrDefault(t => t.FarmId == farm.Id);
+        if (irzplusCredential is null)
+        {
+            response.AddError("IrzplusCredentials", "Brak danych logowania do systemu IRZplus");
+            return response;
+        }
+
+        _irzplusService.PrepareOptions(irzplusCredential);
 
 
         var dispositionResponse = await _irzplusService.SendInsertionsAsync(insertionsToSend, ct);
