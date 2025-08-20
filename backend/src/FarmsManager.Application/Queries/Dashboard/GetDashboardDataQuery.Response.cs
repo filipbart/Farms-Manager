@@ -1,12 +1,11 @@
-﻿namespace FarmsManager.Application.Queries.Dashboard;
+﻿using FarmsManager.Application.Models.Notifications;
+
+namespace FarmsManager.Application.Queries.Dashboard;
 
 public record GetDashboardDataQueryResponse
 {
     //Statystki
     public DashboardStats Stats { get; set; }
-
-    //Statusy ferm
-    public DashboardChickenHousesStatus ChickenHousesStatus { get; set; }
 
     //Wykresy liniowe
     public DashboardFcrChart FcrChart { get; set; }
@@ -14,8 +13,14 @@ public record GetDashboardDataQueryResponse
     public DashboardEwwChart EwwChart { get; set; }
     public DashboardFlockLossChart FlockLossChart { get; set; }
 
+    //Statusy ferm
+    public DashboardChickenHousesStatus ChickenHousesStatus { get; set; }
+
     //Wykres kołowy
     public DashboardExpensesPieChart ExpensesPieChart { get; set; }
+
+    //Powiadomienia
+    public List<DashboardNotificationItem> Notifications { get; set; }
 }
 
 public record DashboardStats
@@ -97,4 +102,35 @@ public record ExpensesPieChartDataPoint
     public string Id { get; set; }
     public string Label { get; set; }
     public decimal Value { get; set; }
+}
+
+public enum NotificationType
+{
+    SaleInvoice,
+    FeedInvoice,
+    EmployeeContract,
+    EmployeeReminder
+}
+
+public record DashboardNotificationItem
+{
+    /// <summary>
+    /// Wygenerowany opis powiadomienia, np. "Koniec umowy dla Jan Kowalski: 20.08.2025"
+    /// </summary>
+    public string Description { get; set; }
+
+    /// <summary>
+    /// Data końcowa zdarzenia
+    /// </summary>
+    public DateOnly DueDate { get; set; }
+
+    /// <summary>
+    /// Priorytet zdarzenia (Wysoki, Średni, Niski)
+    /// </summary>
+    public NotificationPriority Priority { get; set; }
+
+    /// <summary>
+    /// Typ powiadomienia, do ewentualnego użycia na froncie (np. do ikonki)
+    /// </summary>
+    public NotificationType Type { get; set; }
 }

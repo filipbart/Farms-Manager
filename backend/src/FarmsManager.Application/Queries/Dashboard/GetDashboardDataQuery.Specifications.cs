@@ -1,0 +1,174 @@
+﻿using Ardalis.Specification;
+using FarmsManager.Application.Specifications;
+using FarmsManager.Domain.Aggregates.EmployeeAggregate.Entities;
+using FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities;
+using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
+using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
+using FarmsManager.Domain.Aggregates.GasAggregate.Entities;
+using FarmsManager.Domain.Aggregates.ProductionDataAggregate.Entities;
+using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
+
+namespace FarmsManager.Application.Queries.Dashboard;
+
+public sealed class GetSalesForDashboardSpec : BaseSpecification<SaleEntity>
+{
+    public GetSalesForDashboardSpec(List<Guid> farmIds = null, List<Guid> cycles = null, DateOnly? dateSince = null,
+        DateOnly? dateTo = null)
+    {
+        EnsureExists();
+        DisableTracking();
+
+        if (farmIds is not null && farmIds.Count != 0)
+        {
+            Query.Where(t => farmIds.Contains(t.FarmId));
+        }
+
+        if (cycles is not null && cycles.Count != 0)
+        {
+            Query.Where(t => cycles.Contains(t.CycleId));
+        }
+
+        if (dateSince is not null)
+        {
+            Query.Where(t => t.SaleDate >= dateSince);
+        }
+
+        if (dateTo is not null)
+        {
+            Query.Where(t => t.SaleDate <= dateTo);
+        }
+    }
+}
+
+public sealed class GetFeedsInvoicesForDashboardSpec : BaseSpecification<FeedInvoiceEntity>
+{
+    public GetFeedsInvoicesForDashboardSpec(List<Guid> farmIds = null, List<Guid> cycles = null,
+        DateOnly? dateSince = null,
+        DateOnly? dateTo = null)
+    {
+        EnsureExists();
+        DisableTracking();
+
+        if (farmIds is not null && farmIds.Count != 0)
+        {
+            Query.Where(t => farmIds.Contains(t.FarmId));
+        }
+
+        if (cycles is not null && cycles.Count != 0)
+        {
+            Query.Where(t => cycles.Contains(t.CycleId));
+        }
+
+        if (dateSince is not null)
+        {
+            Query.Where(t => t.InvoiceDate >= dateSince);
+        }
+
+        if (dateTo is not null)
+        {
+            Query.Where(t => t.InvoiceDate <= dateTo);
+        }
+    }
+}
+
+public sealed class GetProductionExpensesForDashboardSpec : BaseSpecification<ExpenseProductionEntity>
+{
+    public GetProductionExpensesForDashboardSpec(List<Guid> farmIds = null, List<Guid> cycles = null,
+        DateOnly? dateSince = null,
+        DateOnly? dateTo = null)
+    {
+        EnsureExists();
+        DisableTracking();
+
+        if (farmIds is not null && farmIds.Count != 0)
+        {
+            Query.Where(t => farmIds.Contains(t.FarmId));
+        }
+
+        if (cycles is not null && cycles.Count != 0)
+        {
+            Query.Where(t => cycles.Contains(t.CycleId));
+        }
+
+        if (dateSince is not null)
+        {
+            Query.Where(t => t.InvoiceDate >= dateSince);
+        }
+
+        if (dateTo is not null)
+        {
+            Query.Where(t => t.InvoiceDate <= dateTo);
+        }
+    }
+}
+
+public sealed class GasConsumptionsForDashboardSpec : BaseSpecification<GasConsumptionEntity>
+{
+    public GasConsumptionsForDashboardSpec(List<Guid> farmIds, List<Guid> cycles)
+    {
+        EnsureExists();
+        DisableTracking();
+
+        Query.Where(t => t.CancelledAtUtc.HasValue == false);
+        Query.Where(t => farmIds.Contains(t.FarmId));
+        Query.Where(t => cycles.Contains(t.CycleId));
+    }
+}
+
+public sealed class GasDeliveriesForDashboardSpec : BaseSpecification<GasDeliveryEntity>
+{
+    public GasDeliveriesForDashboardSpec(List<Guid> farmIds, DateOnly? dateSince, DateOnly? dateTo)
+    {
+        EnsureExists();
+        DisableTracking();
+
+        Query.Where(t => farmIds.Contains(t.FarmId));
+        if (dateSince.HasValue)
+            Query.Where(t => t.InvoiceDate >= dateSince);
+
+        if (dateTo.HasValue)
+            Query.Where(t => t.InvoiceDate <= dateTo);
+    }
+}
+
+public sealed class GasConsumptionsForFarmsSpec : BaseSpecification<GasConsumptionEntity>
+{
+    public GasConsumptionsForFarmsSpec(List<Guid> farmIds)
+    {
+        EnsureExists();
+        DisableTracking();
+        Query.Where(t => t.CancelledAtUtc.HasValue == false);
+        Query.Where(t => farmIds.Contains(t.FarmId));
+    }
+}
+
+public sealed class InsertionsForFarmsSpec : BaseSpecification<InsertionEntity>
+{
+    public InsertionsForFarmsSpec(List<Guid> farmIds)
+    {
+        EnsureExists();
+        DisableTracking();
+
+        Query.Where(t => farmIds.Contains(t.FarmId));
+    }
+}
+
+public class ProductionDataFailuresForFarmsSpec : BaseSpecification<ProductionDataFailureEntity>
+{
+    public ProductionDataFailuresForFarmsSpec(List<Guid> farmIds)
+    {
+        EnsureExists();
+        DisableTracking();
+        Query.Where(f => farmIds.Contains(f.FarmId));
+    }
+}
+
+public sealed class GetOverdueAndUpcomingEmployeesRemindersSpec : BaseSpecification<EmployeeReminderEntity>
+{
+    public GetOverdueAndUpcomingEmployeesRemindersSpec(DateOnly today, DateOnly limitDate)
+    {
+        EnsureExists();
+        Query.Where(t => today >= t.DueDate.AddDays(-t.DaysToRemind))
+            .Where(t => t.DueDate <= limitDate);
+    }
+}
