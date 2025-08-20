@@ -76,6 +76,7 @@ export interface DashboardNotificationItem {
   dueDate: string;
   priority: NotificationPriority;
   type: NotificationType;
+  sourceId: string;
 }
 
 export interface GetDashboardDataQueryResponse {

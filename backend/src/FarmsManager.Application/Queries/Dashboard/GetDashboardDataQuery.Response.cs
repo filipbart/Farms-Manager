@@ -133,4 +133,9 @@ public record DashboardNotificationItem
     /// Typ powiadomienia, do ewentualnego użycia na froncie (np. do ikonki)
     /// </summary>
     public NotificationType Type { get; set; }
+    
+    /// <summary>
+    /// ID źródłowej encji (faktury, pracownika, przypomnienia) do nawigacji.
+    /// </summary>
+    public Guid? SourceId { get; set; }
 }

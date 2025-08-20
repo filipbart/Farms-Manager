@@ -37,6 +37,7 @@ public record FeedPaymentRowDto
 {
     public Guid Id { get; init; }
     public string FarmName { get; init; }
+    public string CycleText { get; init; }
     public string FilePath { get; init; }
     public DateTime DateCreatedUtc { get; init; }
 }
@@ -84,6 +85,7 @@ public class FeedsPaymentsProfile : Profile
     public FeedsPaymentsProfile()
     {
         CreateMap<FeedPaymentEntity, FeedPaymentRowDto>()
-            .ForMember(t => t.FarmName, opt => opt.MapFrom(t => t.Farm.Name));
+            .ForMember(t => t.FarmName, opt => opt.MapFrom(t => t.Farm.Name))
+            .ForMember(t => t.CycleText, opt => opt.MapFrom(t => t.Cycle.Identifier + "/" + t.Cycle.Year));
     }
 }

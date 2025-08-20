@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useReducer, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import {
   filterReducer,
   initialFilters,
+  type DashboardDictionary,
   type DashboardFilters,
 } from "../../models/dashboard/dashboard-filters";
 import {
@@ -28,6 +28,8 @@ import {
 } from "react-icons/md";
 import StatCard from "../../components/dashboard/stat-card";
 import type { CycleDictModel } from "../../models/common/dictionaries";
+import { toast } from "react-toastify";
+import { handleApiResponse } from "../../utils/axios/handle-api-response";
 import { DashboardService } from "../../services/dashboard-service";
 import { DashboardNotifications } from "../../components/dashboard/dashboard-notifications";
 import type { GetDashboardDataQueryResponse } from "../../models/dashboard/dashboard";
@@ -61,6 +63,9 @@ const emptyDashboardData: GetDashboardDataQueryResponse = {
 
 const DashboardPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
+  const [dictionary, setDictionary] = useState<DashboardDictionary>();
+  const [data, setData] = useState<GetDashboardDataQueryResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [dateCategory, setDateCategory] = useState("month");
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
@@ -71,12 +76,19 @@ const DashboardPage: React.FC = () => {
     to: Dayjs | null;
   }>({ from: null, to: null });
 
-  const { data: dictionary, isLoading: dictionaryLoading } = useQuery({
-    queryKey: ["dashboardDictionaries"],
-    queryFn: async () =>
-      (await DashboardService.getDictionaries()).responseData,
-    staleTime: Infinity,
-  });
+  useEffect(() => {
+    const fetchDictionary = async () => {
+      try {
+        await handleApiResponse(
+          () => DashboardService.getDictionaries(),
+          (data) => setDictionary(data.responseData)
+        );
+      } catch (error) {
+        toast.error(`Wystąpił błąd podczas pobierania słowników: ${error}`);
+      }
+    };
+    fetchDictionary();
+  }, []);
 
   const uniqueCycles = useMemo(() => {
     if (!dictionary) return [];
@@ -133,13 +145,28 @@ const DashboardPage: React.FC = () => {
     uniqueCycles,
   ]);
 
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ["dashboardData", filters],
-    queryFn: async () =>
-      (await DashboardService.getDashboardData(filters)).responseData,
-    enabled: !!dictionary && !!filters && Object.keys(filters).length > 0,
-    placeholderData: (previousData) => previousData,
-  });
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!dictionary) return;
+      if (!filters || Object.keys(filters).length === 0) return;
+
+      setIsLoading(true);
+      try {
+        await handleApiResponse(
+          () => DashboardService.getDashboardData(filters),
+          (apiData) => {
+            setData(apiData.responseData ?? null);
+          }
+        );
+      } catch (error) {
+        toast.error(`Wystąpił błąd podczas ładowania danych: ${error}`);
+        setData(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, [filters, dictionary]);
 
   const displayData = data ?? emptyDashboardData;
   const months = [
@@ -157,19 +184,11 @@ const DashboardPage: React.FC = () => {
     "Grudzień",
   ];
 
-  if (dictionaryLoading) {
+  if (!dictionary) {
     return (
       <Box display="flex" justifyContent="center" p={5}>
         <CircularProgress />
       </Box>
-    );
-  }
-
-  if (isError) {
-    return (
-      <Typography p={5} color="error">
-        Wystąpił błąd podczas ładowania danych.
-      </Typography>
     );
   }
 
@@ -201,7 +220,6 @@ const DashboardPage: React.FC = () => {
               ))}
             </Select>
           </FormControl>
-
           <FormControl sx={{ minWidth: 120 }} size="small" disabled={isLoading}>
             <InputLabel>Okres</InputLabel>
             <Select
@@ -215,7 +233,6 @@ const DashboardPage: React.FC = () => {
               <MenuItem value="cycle">Cykl</MenuItem>
             </Select>
           </FormControl>
-
           {dateCategory === "cycle" && (
             <FormControl
               sx={{ minWidth: 150 }}
@@ -237,7 +254,6 @@ const DashboardPage: React.FC = () => {
               </Select>
             </FormControl>
           )}
-
           {dateCategory === "month" && (
             <FormControl
               sx={{ minWidth: 120 }}
@@ -258,7 +274,6 @@ const DashboardPage: React.FC = () => {
               </Select>
             </FormControl>
           )}
-
           {dateCategory === "year" && (
             <TextField
               label="Rok"
@@ -270,7 +285,6 @@ const DashboardPage: React.FC = () => {
               disabled={isLoading}
             />
           )}
-
           {dateCategory === "range" && (
             <>
               <DatePicker
@@ -297,52 +311,56 @@ const DashboardPage: React.FC = () => {
       </Box>
 
       <Grid container spacing={3}>
-        <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-          {isLoading ? (
-            <Skeleton variant="rounded" height={120} />
-          ) : (
-            <StatCard
-              title="Przychody"
-              value={displayData.stats.revenue.toLocaleString("pl-PL", {
-                style: "currency",
-                currency: "PLN",
-              })}
-              icon={<MdTrendingUp />}
-              color="success"
-            />
-          )}
+        <Grid size={{ xs: 12, lg: 8 }}>
+          <Grid container spacing={3}>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+              {isLoading ? (
+                <Skeleton variant="rounded" height={120} />
+              ) : (
+                <StatCard
+                  title="Przychody"
+                  value={displayData.stats.revenue.toLocaleString("pl-PL", {
+                    style: "currency",
+                    currency: "PLN",
+                  })}
+                  icon={<MdTrendingUp />}
+                  color="success"
+                />
+              )}
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+              {isLoading ? (
+                <Skeleton variant="rounded" height={120} />
+              ) : (
+                <StatCard
+                  title="Wydatki"
+                  value={displayData.stats.expenses.toLocaleString("pl-PL", {
+                    style: "currency",
+                    currency: "PLN",
+                  })}
+                  icon={<MdTrendingDown />}
+                  color="error"
+                />
+              )}
+            </Grid>
+            <Grid size={{ xs: 12, sm: 12, md: 4 }}>
+              {isLoading ? (
+                <Skeleton variant="rounded" height={120} />
+              ) : (
+                <StatCard
+                  title="Dochód"
+                  value={displayData.stats.income.toLocaleString("pl-PL", {
+                    style: "currency",
+                    currency: "PLN",
+                  })}
+                  icon={<MdAccountBalanceWallet />}
+                  color="primary"
+                />
+              )}
+            </Grid>
+          </Grid>
         </Grid>
-        <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-          {isLoading ? (
-            <Skeleton variant="rounded" height={120} />
-          ) : (
-            <StatCard
-              title="Wydatki"
-              value={displayData.stats.expenses.toLocaleString("pl-PL", {
-                style: "currency",
-                currency: "PLN",
-              })}
-              icon={<MdTrendingDown />}
-              color="error"
-            />
-          )}
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-          {isLoading ? (
-            <Skeleton variant="rounded" height={120} />
-          ) : (
-            <StatCard
-              title="Dochód"
-              value={displayData.stats.income.toLocaleString("pl-PL", {
-                style: "currency",
-                currency: "PLN",
-              })}
-              icon={<MdAccountBalanceWallet />}
-              color="primary"
-            />
-          )}
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+        <Grid size={{ xs: 12, sm: 12, lg: 4 }}>
           {isLoading ? (
             <Skeleton variant="rounded" height={120} />
           ) : (
@@ -370,7 +388,6 @@ const DashboardPage: React.FC = () => {
             />
           )}
         </Grid>
-
         <Grid size={{ xs: 12, lg: 4 }}>
           <Grid container spacing={{ xs: 3, lg: 2 }}>
             <Grid size={{ xs: 12, sm: 4, lg: 12 }}>
@@ -420,7 +437,7 @@ const DashboardPage: React.FC = () => {
           </Grid>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 8 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 6, lg: 8 }}>
           {isLoading ? (
             <Skeleton variant="rounded" height="100%" />
           ) : (
@@ -436,27 +453,37 @@ const DashboardPage: React.FC = () => {
                 Kurniki w obsadzie
               </Typography>
               <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
-                {displayData.chickenHousesStatus.farms.map((farm) => (
-                  <Box key={farm.name} mb={2}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-                      {farm.name}
-                    </Typography>
-                    <Box sx={{ pl: 2 }}>
-                      {farm.henhouses.map((henhouse) => (
-                        <Typography
-                          key={henhouse.name}
-                          variant="body2"
-                          color="text.secondary"
-                        >
-                          {henhouse.name}:{" "}
-                          <strong>
-                            {henhouse.chickenCount.toLocaleString("pl-PL")} szt.
-                          </strong>
-                        </Typography>
-                      ))}
+                {displayData.chickenHousesStatus.farms.map((farm) => {
+                  const activeHenhouses = farm.henhouses.filter(
+                    (h) => h.chickenCount > 0
+                  );
+                  if (activeHenhouses.length === 0) return null;
+                  return (
+                    <Box key={farm.name} mb={2}>
+                      <Typography
+                        variant="subtitle1"
+                        sx={{ fontWeight: "bold" }}
+                      >
+                        {farm.name}
+                      </Typography>
+                      <Box sx={{ pl: 2 }}>
+                        {activeHenhouses.map((henhouse) => (
+                          <Typography
+                            key={henhouse.name}
+                            variant="body2"
+                            color="text.secondary"
+                          >
+                            {henhouse.name}:{" "}
+                            <strong>
+                              {henhouse.chickenCount.toLocaleString("pl-PL")}{" "}
+                              szt.
+                            </strong>
+                          </Typography>
+                        ))}
+                      </Box>
                     </Box>
-                  </Box>
-                ))}
+                  );
+                })}
               </Box>
               <Divider sx={{ my: 1 }} />
               <Typography variant="h6">
@@ -471,7 +498,7 @@ const DashboardPage: React.FC = () => {
           )}
         </Grid>
 
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
           {isLoading ? (
             <Skeleton variant="rounded" height="100%" />
           ) : (

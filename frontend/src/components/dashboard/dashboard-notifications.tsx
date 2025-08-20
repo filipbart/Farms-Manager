@@ -8,7 +8,9 @@ import {
   Paper,
   Chip,
   Typography,
+  ListItemButton,
 } from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
 import {
   FaFileInvoiceDollar,
   FaReceipt,
@@ -36,6 +38,20 @@ const priorityConfig: Record<
   High: { label: "Wysoki", color: "error" },
   Medium: { label: "Średni", color: "warning" },
   Low: { label: "Niski", color: "info" },
+};
+
+const getLinkPath = (notification: DashboardNotificationItem): string => {
+  switch (notification.type) {
+    case "SaleInvoice":
+      return `/sales/invoices`;
+    case "FeedInvoice":
+      return `/feed/invoices`;
+    case "EmployeeContract":
+    case "EmployeeReminder":
+      return `/employees/${notification.sourceId}`;
+    default:
+      return "#";
+  }
 };
 
 interface DashboardNotificationsProps {
@@ -69,7 +85,7 @@ export function DashboardNotifications({
           <Typography>Brak nadchodzących terminów</Typography>
         </Box>
       ) : (
-        <List sx={{ overflowY: "auto" }}>
+        <List sx={{ overflowY: "auto", p: 0 }}>
           {notifications.map((notification, index) => {
             const config = priorityConfig[notification.priority];
             return (
@@ -82,24 +98,30 @@ export function DashboardNotifications({
                     size="small"
                   />
                 }
-                sx={{ pr: "90px" }}
+                disablePadding
               >
-                <ListItemAvatar>
-                  <Avatar sx={{ bgcolor: `${config.color}.main` }}>
-                    {notificationIcons[notification.type]}
-                  </Avatar>
-                </ListItemAvatar>
-                <ListItemText
-                  primary={notification.description}
-                  slotProps={{
-                    primary: {
-                      fontSize: "0.9rem",
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    },
-                  }}
-                />
+                <ListItemButton
+                  component={RouterLink}
+                  to={getLinkPath(notification)}
+                  sx={{ pr: "90px" }}
+                >
+                  <ListItemAvatar>
+                    <Avatar sx={{ bgcolor: `${config.color}.main` }}>
+                      {notificationIcons[notification.type]}
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary={notification.description}
+                    slotProps={{
+                      primary: {
+                        fontSize: "0.9rem",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      },
+                    }}
+                  />
+                </ListItemButton>
               </ListItem>
             );
           })}

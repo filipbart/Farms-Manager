@@ -136,7 +136,7 @@ public class
         var fcrChart = BuildFcrChart(farms, historicalSales, historicalFeedInvoices);
         var gasConsumptionChart = BuildGasConsumptionChart(farms, allGasConsumptions);
         var ewwChart = BuildEwwChart(farms, allInsertions, historicalSales, historicalFeedInvoices, allFailures);
-        var flockLossChart = BuildFlockLossChart(farms, allFailures);
+        var flockLossChart = BuildFlockLossChart(farms, allFailures, allInsertions);
         var expensesPieChart = BuildExpensesPieChart(historicalFeedInvoices, historicalExpenses, gasCostForCharts);
         var notifications = await BuildDashboardNotifications(farmIds, ct);
 
@@ -199,7 +199,7 @@ public class
             VatFromExpenses = sumVat,
             IncomePerKg = totalWeight > 0 ? (totalRevenue - sumExpenses) / totalWeight : 0,
             IncomePerSqm = totalArea > 0 ? (totalRevenue - sumExpenses) / totalArea : 0,
-            AvgFeedPrice = totalFeedQuantity > 0 ? feedCosts / totalFeedQuantity : 0
+            AvgFeedPrice = totalFeedQuantity > 0 ? Math.Round(feedCosts / totalFeedQuantity, 2) : 0
         };
     }
 
@@ -249,6 +249,9 @@ public class
 
         foreach (var farm in farms)
         {
+            var totalArea = farm.Henhouses?.Where(h => !h.DateDeletedUtc.HasValue).Sum(h => h.Area) ?? 0;
+            if (totalArea == 0) continue;
+
             var farmConsumptionsByCycle = consumptionsLookup[farm.Id]
                 .GroupBy(c => c.CycleId)
                 .Select(g => new { g.First().Cycle, TotalQuantity = g.Sum(c => c.QuantityConsumed) });
@@ -259,7 +262,7 @@ public class
                 chartSeries.Data.Add(new ChartDataPoint
                 {
                     X = $"{consumption.Cycle.Identifier}/{consumption.Cycle.Year}",
-                    Y = consumption.TotalQuantity
+                    Y = Math.Round(consumption.TotalQuantity / totalArea, 2)
                 });
             }
 
@@ -341,25 +344,38 @@ public class
     }
 
     private static DashboardFlockLossChart BuildFlockLossChart(IReadOnlyList<FarmEntity> farms,
-        IReadOnlyList<ProductionDataFailureEntity> allFailures)
+        IReadOnlyList<ProductionDataFailureEntity> allFailures, IReadOnlyList<InsertionEntity> allInsertions)
     {
         var result = new DashboardFlockLossChart();
         var failuresLookup = allFailures.ToLookup(f => f.FarmId);
+        var insertionsByCycleLookup = allInsertions.ToLookup(i => i.CycleId);
 
         foreach (var farm in farms)
         {
+            var chartSeries = new ChartSeries { FarmId = farm.Id, FarmName = farm.Name };
+
             var farmFailuresByCycle = failuresLookup[farm.Id]
                 .GroupBy(f => f.CycleId)
-                .Select(g => new { g.First().Cycle, TotalCount = g.Sum(c => c.DeadCount + c.DefectiveCount) });
-
-            var chartSeries = new ChartSeries { FarmId = farm.Id, FarmName = farm.Name };
-            foreach (var failure in farmFailuresByCycle)
-            {
-                chartSeries.Data.Add(new ChartDataPoint
+                .Select(g => new
                 {
-                    X = $"{failure.Cycle.Identifier}/{failure.Cycle.Year}",
-                    Y = failure.TotalCount
+                    g.First().Cycle,
+                    TotalLossCount = g.Sum(c => c.DeadCount + c.DefectiveCount)
                 });
+
+            foreach (var cycleFailures in farmFailuresByCycle)
+            {
+                var cycleInsertions = insertionsByCycleLookup[cycleFailures.Cycle.Id].ToList();
+                var totalInserted = cycleInsertions.Sum(i => i.Quantity);
+
+                if (totalInserted > 0)
+                {
+                    var lossPercentage = (decimal)cycleFailures.TotalLossCount * 100 / totalInserted;
+                    chartSeries.Data.Add(new ChartDataPoint
+                    {
+                        X = $"{cycleFailures.Cycle.Identifier}/{cycleFailures.Cycle.Year}",
+                        Y = Math.Round(lossPercentage, 2)
+                    });
+                }
             }
 
             if (chartSeries.Data.Count != 0) result.Series.Add(chartSeries);
@@ -438,7 +454,7 @@ public class
             var farmStatus = new DashboardFarmStatus { Name = farm.Name };
             var activeCycleId = farm.ActiveCycleId;
 
-            foreach (var henhouse in farm.Henhouses.Where(h => !h.DateDeletedUtc.HasValue))
+            foreach (var henhouse in farm.Henhouses.Where(h => !h.DateDeletedUtc.HasValue).OrderBy(h => h.Name))
             {
                 var chickenCount = 0;
                 if (activeCycleId.HasValue)
@@ -451,7 +467,7 @@ public class
                     var lossesCount = henhouseFailures.Sum(f => f.DeadCount + f.DefectiveCount);
                     var soldAndLostOnSaleCount = henhouseSales.Sum(s => s.Quantity + s.DeadCount + s.ConfiscatedCount);
 
-                    chickenCount = soldAndLostOnSaleCount + lossesCount - insertedCount;
+                    chickenCount = insertedCount - (soldAndLostOnSaleCount + lossesCount);
 
                     if (insertedCount > 0 && chickenCount <= insertedCount * 0.01m)
                     {
@@ -462,7 +478,7 @@ public class
                 farmStatus.Henhouses.Add(new DashboardHenhouseStatus
                 {
                     Name = henhouse.Name,
-                    ChickenCount = chickenCount
+                    ChickenCount = chickenCount < 0 ? 0 : chickenCount
                 });
             }
 
@@ -472,7 +488,12 @@ public class
         return new DashboardChickenHousesStatus { Farms = farmStatuses };
     }
 
-    private record NotificationSource(DateOnly DueDate, NotificationType Type, object Entity);
+    private record NotificationSource(
+        DateOnly DueDate,
+        NotificationType Type,
+        object Entity,
+        Guid SourceId,
+        int SortPriority);
 
     private async Task<List<DashboardNotificationItem>> BuildDashboardNotifications(List<Guid> farmIds,
         CancellationToken ct)
@@ -487,28 +508,29 @@ public class
             await _saleInvoiceRepository.ListAsync(new GetOverdueAndUpcomingSaleInvoicesSpec(sevenDaysFromNow, farmIds),
                 ct);
         allSources.AddRange(salesInvoices.Select(inv =>
-            new NotificationSource(inv.DueDate, NotificationType.SaleInvoice, inv)));
+            new NotificationSource(inv.DueDate, NotificationType.SaleInvoice, inv, inv.Id, 2)));
 
         var feedInvoices =
             await _feedInvoiceRepository.ListAsync(new GetOverdueAndUpcomingFeedInvoicesSpec(sevenDaysFromNow, farmIds),
                 ct);
         allSources.AddRange(feedInvoices.Select(inv =>
-            new NotificationSource(inv.DueDate, NotificationType.FeedInvoice, inv)));
+            new NotificationSource(inv.DueDate, NotificationType.FeedInvoice, inv, inv.Id, 2)));
 
         var expiringContracts =
             await _employeeRepository.ListAsync(
                 new GetOverdueAndUpcomingEmployeesContractSpec(sevenDaysFromNow, farmIds), ct);
         allSources.AddRange(expiringContracts.Select(emp =>
-            new NotificationSource(emp.EndDate!.Value, NotificationType.EmployeeContract, emp)));
+            new NotificationSource(emp.EndDate!.Value, NotificationType.EmployeeContract, emp, emp.Id, 1)));
 
         var employeeReminders =
             await _employeeReminderRepository.ListAsync(
                 new GetOverdueAndUpcomingEmployeesRemindersSpec(now, sevenDaysFromNow, farmIds), ct);
         allSources.AddRange(employeeReminders.Select(rem =>
-            new NotificationSource(rem.DueDate, NotificationType.EmployeeReminder, rem)));
+            new NotificationSource(rem.DueDate, NotificationType.EmployeeReminder, rem, rem.EmployeeId, 1)));
 
         var top5Notifications = allSources
-            .OrderBy(s => s.DueDate)
+            .OrderBy(s => s.SortPriority)
+            .ThenBy(s => s.DueDate)
             .Take(5)
             .Select(source =>
             {
@@ -524,7 +546,8 @@ public class
                     Description = description,
                     DueDate = source.DueDate,
                     Priority = priority,
-                    Type = source.Type
+                    Type = source.Type,
+                    SourceId = source.SourceId
                 };
             })
             .ToList();
@@ -546,10 +569,8 @@ public class
 
         return source.Type switch
         {
-            NotificationType.SaleInvoice =>
-                $"Faktura sprzedaży: termin płatności {dateString}{dayDifference}",
-            NotificationType.FeedInvoice =>
-                $"Faktura za paszę: termin płatności {dateString}{dayDifference}",
+            NotificationType.SaleInvoice => $"Faktura sprzedaży: termin płatności {dateString}{dayDifference}",
+            NotificationType.FeedInvoice => $"Faktura za paszę: termin płatności {dateString}{dayDifference}",
             NotificationType.EmployeeContract =>
                 $"Koniec umowy dla {(source.Entity as EmployeeEntity)?.FullName}: {dateString}{dayDifference}",
             NotificationType.EmployeeReminder =>

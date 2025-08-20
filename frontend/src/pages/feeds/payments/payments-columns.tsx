@@ -13,6 +13,11 @@ export const getFeedsPaymentsColumns = ({
   downloadFilePath: string | null;
 }): GridColDef[] => {
   return [
+    {
+      field: "cycleText",
+      headerName: "Identyfikator",
+      flex: 1,
+    },
     { field: "farmName", headerName: "Nazwa farmy", flex: 1 },
     { field: "fileName", headerName: "Nazwa pliku", flex: 1 },
     {

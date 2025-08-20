@@ -28,8 +28,8 @@ interface ProductionResultsChartProps {
 const chartOptions = {
   fcr: { label: "FCR (Współczynnik konwersji paszy)" },
   eww: { label: "EWW (Europejski wskaźnik wydajności)" },
-  gas: { label: "Zużycie gazu (L)" },
-  loss: { label: "Upadki i braki (szt.)" },
+  gas: { label: "Zużycie gazu (m2)" },
+  loss: { label: "Upadki i braki (%)" },
 };
 
 export function ProductionResultsChart({
@@ -89,7 +89,7 @@ export function ProductionResultsChart({
   const hasData = xAxisData.length > 0 && seriesData.length > 0;
 
   return (
-    <Paper sx={{ p: 2, height: 400, display: "flex", flexDirection: "column" }}>
+    <Paper sx={{ p: 2, height: 375, display: "flex", flexDirection: "column" }}>
       <Box
         sx={{
           display: "flex",
