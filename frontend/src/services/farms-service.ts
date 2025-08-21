@@ -4,7 +4,7 @@ import type { FarmFormValues } from "../components/modals/farms/edit-farm-modal"
 import type { HenhouseFormValues } from "../components/modals/farms/edit-henhouse-modal";
 import type FarmRowModel from "../models/farms/farm-row-model";
 import type { HouseRowModel } from "../models/farms/house-row-model";
-import type LatestCycle from "../models/farms/latest-cycle";
+import type CycleDto from "../models/farms/latest-cycle";
 import type { CycleSettingsData } from "../pages/settings/cycle-settings";
 import AxiosWrapper from "../utils/axios/wrapper";
 
@@ -29,7 +29,7 @@ export class FarmsService {
   }
 
   public static async getLatestCycle(farmId: string) {
-    return await AxiosWrapper.get<LatestCycle>(
+    return await AxiosWrapper.get<CycleDto>(
       ApiUrl.Farms + "/" + farmId + ApiUrl.LatestCycle
     );
   }
@@ -44,6 +44,10 @@ export class FarmsService {
 
   public static async deleteFarmAsync(id: string) {
     return await AxiosWrapper.post(ApiUrl.DeleteFarm(id));
+  }
+
+  public static async getFarmCycles(farmId: string) {
+    return await AxiosWrapper.get<CycleDto[]>(ApiUrl.GetCycles(farmId));
   }
 
   public static async getFarmHousesAsync(farmId: string) {

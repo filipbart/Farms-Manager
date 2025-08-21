@@ -1,6 +1,6 @@
 ﻿namespace FarmsManager.Domain.Models.FarmAggregate;
 
-public record FarmLatestCycleDto
+public record CycleDto
 {
     public Guid Id { get; init; }
     public int Identifier { get; init; }

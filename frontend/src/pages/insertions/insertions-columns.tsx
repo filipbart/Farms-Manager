@@ -2,6 +2,8 @@ import type { GridColDef } from "@mui/x-data-grid";
 import dayjs from "dayjs";
 import ActionsCell from "../../components/datagrid/actions-cell";
 import InsertionSendToIrzCell from "../../components/datagrid/insertion-send-to-irz-cell";
+import { Box, Tooltip } from "@mui/material";
+import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 
 export const getInsertionsColumns = ({
   setSelectedInsertion,
@@ -45,6 +47,43 @@ export const getInsertionsColumns = ({
       type: "number",
       headerAlign: "left",
       align: "left",
+    },
+    {
+      field: "reportedToWios",
+      headerName: "Status WIOŚ",
+      width: 120,
+      align: "center",
+      headerAlign: "center",
+      renderCell: (params) => {
+        const isReported = params.value === true;
+        const comment = params.row.wiosComment;
+
+        const icon = isReported ? (
+          <FaCheckCircle color="green" size={20} />
+        ) : (
+          <FaTimesCircle color="red" size={20} />
+        );
+
+        const content = comment ? (
+          <Tooltip title={comment}>{icon}</Tooltip>
+        ) : (
+          icon
+        );
+
+        return (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "100%",
+              height: "100%",
+            }}
+          >
+            {content}
+          </Box>
+        );
+      },
     },
     {
       field: "sendToIrz",

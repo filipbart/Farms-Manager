@@ -114,6 +114,16 @@ export const getEmployeePayslipColumns = ({
       availableAggregationFunctions: ["sum"],
     },
     {
+      field: "totalAmount",
+      headerName: "Razem [zł]",
+      flex: 1,
+      type: "number",
+      headerAlign: "left",
+      align: "left",
+      aggregable: true,
+      availableAggregationFunctions: ["sum"],
+    },
+    {
       field: "netPay",
       headerName: "Do wypłaty [zł]",
       flex: 1,

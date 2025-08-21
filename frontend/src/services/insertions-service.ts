@@ -1,7 +1,8 @@
+import type { GridRowId } from "@mui/x-data-grid";
 import ApiUrl from "../common/ApiUrl";
 import type { PaginateModel } from "../common/interfaces/paginate";
 import type { HouseRowModel } from "../models/farms/house-row-model";
-import type LatestCycle from "../models/farms/latest-cycle";
+import type CycleDto from "../models/farms/latest-cycle";
 import type { InsertionDictionary } from "../models/insertions/insertion-dictionary";
 import type InsertionListModel from "../models/insertions/insertions";
 import type { InsertionsFilterPaginationModel } from "../models/insertions/insertions-filters";
@@ -33,12 +34,21 @@ export interface AvailableHenhousesResponse {
   items: HouseRowModel[];
 }
 
+interface MarkAsReportedToWios {
+  insertionIds: GridRowId[];
+  comment: string;
+}
+
 export class InsertionsService {
   public static async addNewInsertion(data: AddInsertionData) {
     return await AxiosWrapper.post<AddNewInsertionResponse>(
       ApiUrl.Insertions + "/add",
       data
     );
+  }
+
+  public static async markAsReportedToWios(data: MarkAsReportedToWios) {
+    return await AxiosWrapper.post(ApiUrl.InsertionMarkReportedToWios, data);
   }
 
   public static async updateInsertion(insertionId: string, payload: any) {
@@ -53,7 +63,7 @@ export class InsertionsService {
   }
 
   public static async addNewCycle(data: AddCycleData) {
-    return await AxiosWrapper.post<LatestCycle>(
+    return await AxiosWrapper.post<CycleDto>(
       ApiUrl.Insertions + "/add-cycle",
       data
     );

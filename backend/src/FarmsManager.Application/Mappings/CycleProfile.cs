@@ -9,7 +9,7 @@ public class CycleProfile : Profile
 {
     public CycleProfile()
     {
-        CreateMap<CycleEntity, FarmLatestCycleDto>();
+        CreateMap<CycleEntity, CycleDto>();
         CreateMap<CycleEntity, CycleDictModel>();
     }
 }

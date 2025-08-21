@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from "react";
 import {
   DialogTitle,
   DialogContent,
@@ -10,12 +11,10 @@ import {
   Divider,
   Grid,
 } from "@mui/material";
-import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { MdSave } from "react-icons/md";
 import { toast } from "react-toastify";
 import { useFarms } from "../../../../hooks/useFarms";
-import { useLatestCycle } from "../../../../hooks/useLatestCycle";
 import { useFeedsNames } from "../../../../hooks/feeds/useFeedsNames";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import LoadingButton from "../../../common/loading-button";
@@ -25,6 +24,8 @@ import type { HouseRowModel } from "../../../../models/farms/house-row-model";
 import { ProductionDataTransferFeedService } from "../../../../services/production-data/production-data-transfer-feed-service";
 import { ProductionDataService } from "../../../../services/production-data/production-data-service";
 import type { AddTransferFeedData } from "../../../../models/production-data/transfer-feed";
+import { FarmsService } from "../../../../services/farms-service";
+import type CycleDto from "../../../../models/farms/latest-cycle";
 
 interface AddProductionDataTransferFeedModalProps {
   open: boolean;
@@ -41,23 +42,18 @@ const AddProductionDataTransferFeedModal: React.FC<
     formState: { errors },
     reset,
     setValue,
-    setError,
-    clearErrors,
     watch,
-  } = useForm<
-    AddTransferFeedData & {
-      fromCycleDisplay: string;
-      toCycleDisplay: string;
-    }
-  >();
+  } = useForm<AddTransferFeedData>();
 
   const [loading, setLoading] = useState(false);
   const [isCalculatingValue, setIsCalculatingValue] = useState(false);
   const { farms, loadingFarms, fetchFarms } = useFarms();
   const { feedsNames, loadingFeedsNames, fetchFeedsNames } = useFeedsNames();
-  const { loadLatestCycle, loadingCycle: loadingFromCycle } = useLatestCycle();
-  const { loadLatestCycle: loadToCycle, loadingCycle: loadingToCycle } =
-    useLatestCycle();
+
+  const [fromCycles, setFromCycles] = useState<CycleDto[]>([]);
+  const [toCycles, setToCycles] = useState<CycleDto[]>([]);
+  const [loadingFromCycles, setLoadingFromCycles] = useState(false);
+  const [loadingToCycles, setLoadingToCycles] = useState(false);
 
   const [availableFromHenhouses, setAvailableFromHenhouses] = useState<
     HouseRowModel[]
@@ -100,63 +96,59 @@ const AddProductionDataTransferFeedModal: React.FC<
         }
       }
     };
-    const debounceTimeout = setTimeout(() => {
-      calculateValue();
-    }, 500);
-
+    const debounceTimeout = setTimeout(() => calculateValue(), 500);
     return () => clearTimeout(debounceTimeout);
   }, [fromCycleId, fromHenhouseId, feedName, tonnage, setValue]);
 
   const handleFromFarmChange = async (farmId: string) => {
     setValue("fromCycleId", "");
-    setValue("fromCycleDisplay", "");
     setValue("fromHenhouseId", "");
-    clearErrors("fromCycleId");
     setAvailableFromHenhouses([]);
+    setFromCycles([]);
 
     const selectedFarm = farms.find((f) => f.id === farmId);
     if (selectedFarm) {
       setAvailableFromHenhouses(selectedFarm.henhouses);
     }
-    const cycle = await loadLatestCycle(farmId);
-    if (cycle) {
-      setValue("fromCycleId", cycle.id);
-      setValue("fromCycleDisplay", `${cycle.identifier}/${cycle.year}`);
-      clearErrors("fromCycleId");
-    } else {
-      setError("fromCycleId", {
-        type: "manual",
-        message: "Brak aktywnego cyklu",
-      });
+
+    setLoadingFromCycles(true);
+    try {
+      await handleApiResponse(
+        () => FarmsService.getFarmCycles(farmId),
+        (data) => setFromCycles(data.responseData ?? [])
+      );
+    } catch {
+      toast.error("Nie udało się pobrać cykli dla wybranej fermy.");
+    } finally {
+      setLoadingFromCycles(false);
     }
   };
 
   const handleToFarmChange = async (farmId: string) => {
     setValue("toCycleId", "");
-    setValue("toCycleDisplay", "");
     setValue("toHenhouseId", "");
-    clearErrors("toCycleId");
     setAvailableToHenhouses([]);
+    setToCycles([]);
 
     const selectedFarm = farms.find((f) => f.id === farmId);
     if (selectedFarm) {
       setAvailableToHenhouses(selectedFarm.henhouses);
     }
-    const cycle = await loadToCycle(farmId);
-    if (cycle) {
-      setValue("toCycleId", cycle.id);
-      setValue("toCycleDisplay", `${cycle.identifier}/${cycle.year}`);
-      clearErrors("toCycleId");
-    } else {
-      setError("toCycleId", {
-        type: "manual",
-        message: "Brak aktywnego cyklu",
-      });
+
+    setLoadingToCycles(true);
+    try {
+      await handleApiResponse(
+        () => FarmsService.getFarmCycles(farmId),
+        (data) => setToCycles(data.responseData ?? [])
+      );
+    } catch {
+      toast.error("Nie udało się pobrać cykli dla wybranej fermy.");
+    } finally {
+      setLoadingToCycles(false);
     }
   };
 
   const handleSave = async (data: AddTransferFeedData) => {
-    if (loading) return;
     setLoading(true);
     await handleApiResponse(
       () => ProductionDataTransferFeedService.addFeedTransfer(data),
@@ -175,6 +167,8 @@ const AddProductionDataTransferFeedModal: React.FC<
     reset();
     setAvailableFromHenhouses([]);
     setAvailableToHenhouses([]);
+    setFromCycles([]);
+    setToCycles([]);
     onClose();
   };
 
@@ -205,15 +199,26 @@ const AddProductionDataTransferFeedModal: React.FC<
                     </MenuItem>
                   ))}
                 </LoadingTextField>
+
                 <LoadingTextField
-                  loading={loadingFromCycle}
+                  loading={loadingFromCycles}
+                  select
                   label="Cykl"
-                  value={watch("fromCycleDisplay") || ""}
-                  slotProps={{ input: { readOnly: true } }}
+                  fullWidth
+                  disabled={!watch("fromFarmId") || fromCycles.length === 0}
                   error={!!errors.fromCycleId}
                   helperText={errors.fromCycleId?.message}
-                  fullWidth
-                />
+                  {...register("fromCycleId", {
+                    required: "Cykl jest wymagany",
+                  })}
+                >
+                  {fromCycles.map((cycle) => (
+                    <MenuItem key={cycle.id} value={cycle.id}>
+                      {`${cycle.identifier}/${cycle.year}`}
+                    </MenuItem>
+                  ))}
+                </LoadingTextField>
+
                 <TextField
                   select
                   label="Kurnik"
@@ -256,15 +261,24 @@ const AddProductionDataTransferFeedModal: React.FC<
                     </MenuItem>
                   ))}
                 </LoadingTextField>
+
                 <LoadingTextField
-                  loading={loadingToCycle}
+                  loading={loadingToCycles}
+                  select
                   label="Cykl"
-                  value={watch("toCycleDisplay") || ""}
-                  slotProps={{ input: { readOnly: true } }}
+                  fullWidth
+                  disabled={!watch("toFarmId") || toCycles.length === 0}
                   error={!!errors.toCycleId}
                   helperText={errors.toCycleId?.message}
-                  fullWidth
-                />
+                  {...register("toCycleId", { required: "Cykl jest wymagany" })}
+                >
+                  {toCycles.map((cycle) => (
+                    <MenuItem key={cycle.id} value={cycle.id}>
+                      {`${cycle.identifier}/${cycle.year}`}
+                    </MenuItem>
+                  ))}
+                </LoadingTextField>
+
                 <TextField
                   select
                   label="Kurnik"

@@ -1,7 +1,15 @@
-import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
-import { DataGridPro } from "@mui/x-data-grid-pro";
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  tablePaginationClasses,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { useEffect, useMemo, useReducer, useState } from "react";
-import CustomToolbar from "../../components/datagrid/custom-toolbar";
 import NoRowsOverlay from "../../components/datagrid/custom-norows";
 import AddInsertionModal from "../../components/modals/insertions/add-insertion-modal";
 import SetCycleModal from "../../components/modals/insertions/add-cycle-modal";
@@ -22,6 +30,11 @@ import type { CycleDictModel } from "../../models/common/dictionaries";
 import { getInsertionFiltersConfig } from "./filter-config.insertion";
 import FiltersForm from "../../components/filters/filters-form";
 import { getInsertionsColumns } from "./insertions-columns";
+import {
+  DataGridPremium,
+  type GridRowSelectionModel,
+} from "@mui/x-data-grid-premium";
+import LoadingButton from "../../components/common/loading-button";
 
 const InsertionsPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -39,6 +52,13 @@ const InsertionsPage: React.FC = () => {
     return saved ? JSON.parse(saved) : {};
   });
 
+  const [selectedRowIds, setSelectedRowIds] = useState<GridRowSelectionModel>({
+    type: "include",
+    ids: new Set(),
+  });
+  const [isWiosModalOpen, setIsWiosModalOpen] = useState(false);
+  const [wiosComment, setWiosComment] = useState("");
+
   const uniqueCycles = useMemo(() => {
     if (!dictionary) return [];
     const map = new Map<string, CycleDictModel>();
@@ -50,6 +70,25 @@ const InsertionsPage: React.FC = () => {
     }
     return Array.from(map.values());
   }, [dictionary]);
+
+  const fetchInsertions = async () => {
+    setLoading(true);
+    try {
+      await handleApiResponse<PaginateModel<InsertionListModel>>(
+        () => InsertionsService.getInsertions(filters),
+        (data) => {
+          setInsertions(data.responseData?.items ?? []);
+          setTotalRows(data.responseData?.totalRows ?? 0);
+        },
+        undefined,
+        "Błąd podczas pobierania wstawień"
+      );
+    } catch {
+      toast.error("Błąd podczas pobierania wstawień");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchDictionaries = async () => {
@@ -87,26 +126,38 @@ const InsertionsPage: React.FC = () => {
   };
 
   useEffect(() => {
-    const fetchInsertions = async () => {
-      setLoading(true);
-      try {
-        await handleApiResponse<PaginateModel<InsertionListModel>>(
-          () => InsertionsService.getInsertions(filters),
-          (data) => {
-            setInsertions(data.responseData?.items ?? []);
-            setTotalRows(data.responseData?.totalRows ?? 0);
-          },
-          undefined,
-          "Błąd podczas pobierania wstawień"
-        );
-      } catch {
-        toast.error("Błąd podczas pobierania wstawień");
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchInsertions();
   }, [filters]);
+
+  const handleMarkAsReportedToWios = async () => {
+    setLoading(true);
+    console.log(selectedRowIds.ids);
+    try {
+      await handleApiResponse(
+        () =>
+          InsertionsService.markAsReportedToWios({
+            insertionIds: [...selectedRowIds.ids],
+            comment: wiosComment,
+          }),
+        () => {
+          toast.success("Pomyślnie oznaczono jako zgłoszone do WIOŚ.");
+          fetchInsertions();
+          setSelectedRowIds({
+            type: "include",
+            ids: new Set(),
+          });
+          setIsWiosModalOpen(false);
+          setWiosComment("");
+        },
+        undefined,
+        "Wystąpił błąd podczas zapisu."
+      );
+    } catch (error) {
+      toast.error(`Wystąpił błąd: ${error}`);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const columns = useMemo(
     () =>
@@ -132,6 +183,16 @@ const InsertionsPage: React.FC = () => {
       >
         <Typography variant="h4">Wstawienia</Typography>
         <Box display="flex" gap={2}>
+          {selectedRowIds.ids.size > 0 && (
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => setIsWiosModalOpen(true)}
+            >
+              Oznacz jako zgłoszone do WIOŚ ({selectedRowIds.ids.size})
+            </Button>
+          )}
+
           <Button
             variant="contained"
             color="primary"
@@ -156,7 +217,7 @@ const InsertionsPage: React.FC = () => {
       />
 
       <Box mt={4} sx={{ width: "100%", overflowX: "auto" }}>
-        <DataGridPro
+        <DataGridPremium
           loading={loading}
           rows={insertions}
           columns={columns}
@@ -174,11 +235,6 @@ const InsertionsPage: React.FC = () => {
               columnVisibilityModel: { id: false, dateCreatedUtc: false },
             },
           }}
-          localeText={{
-            paginationRowsPerPage: "Wierszy na stronę:",
-            paginationDisplayedRows: ({ from, to, count }) =>
-              `${from} do ${to} z ${count}`,
-          }}
           paginationMode="server"
           pagination
           paginationModel={{
@@ -192,9 +248,8 @@ const InsertionsPage: React.FC = () => {
             })
           }
           rowCount={totalRows}
-          rowSelection={false}
           pageSizeOptions={[5, 10, 25, { value: -1, label: "Wszystkie" }]}
-          slots={{ toolbar: CustomToolbar, noRowsOverlay: NoRowsOverlay }}
+          slots={{ noRowsOverlay: NoRowsOverlay }}
           showToolbar
           sx={{
             [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },
@@ -223,6 +278,13 @@ const InsertionsPage: React.FC = () => {
               });
             }
           }}
+          checkboxSelection
+          disableRowSelectionOnClick
+          isRowSelectable={(params) => !params.row.reportedToWios}
+          onRowSelectionModelChange={(newSelectionModel) => {
+            setSelectedRowIds(newSelectionModel);
+          }}
+          rowSelectionModel={selectedRowIds}
         />
       </Box>
       <EditInsertionModal
@@ -251,6 +313,35 @@ const InsertionsPage: React.FC = () => {
         open={openCycleModal}
         onClose={() => setOpenCycleModal(false)}
       />
+
+      <Dialog
+        open={isWiosModalOpen}
+        onClose={() => setIsWiosModalOpen(false)}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>Oznacz jako zgłoszone do WIOŚ</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Komentarz (opcjonalnie)"
+            type="text"
+            fullWidth
+            variant="outlined"
+            multiline
+            rows={3}
+            value={wiosComment}
+            onChange={(e) => setWiosComment(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsWiosModalOpen(false)}>Anuluj</Button>
+          <LoadingButton onClick={handleMarkAsReportedToWios} loading={loading}>
+            Zatwierdź
+          </LoadingButton>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

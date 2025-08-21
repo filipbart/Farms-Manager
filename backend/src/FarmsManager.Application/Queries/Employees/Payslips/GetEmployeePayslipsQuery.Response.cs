@@ -20,6 +20,7 @@ public class EmployeePayslipRowDto
     public decimal OvertimeHours { get; init; }
     public decimal Deductions { get; init; }
     public decimal OtherAllowances { get; init; }
+    public decimal TotalAmount { get; init; }
     public decimal NetPay { get; init; }
 
     public string Comment { get; init; }

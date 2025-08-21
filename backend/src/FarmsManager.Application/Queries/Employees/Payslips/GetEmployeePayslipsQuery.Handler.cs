@@ -78,6 +78,9 @@ public class EmployeePayslipProfile : Profile
         CreateMap<EmployeePayslipEntity, EmployeePayslipRowDto>()
             .ForMember(dest => dest.FarmName, opt => opt.MapFrom(src => src.Farm.Name))
             .ForMember(dest => dest.EmployeeFullName, opt => opt.MapFrom(src => src.Employee.FullName))
-            .ForMember(dest => dest.CycleText, opt => opt.MapFrom(src => $"{src.Cycle.Identifier}/{src.Cycle.Year}"));
+            .ForMember(dest => dest.CycleText, opt => opt.MapFrom(src => $"{src.Cycle.Identifier}/{src.Cycle.Year}"))
+            .ForMember(dest => dest.TotalAmount,
+                opt => opt.MapFrom(src =>
+                    src.BankTransferAmount + src.BonusAmount + src.OvertimePay - src.Deductions + src.OtherAllowances));
     }
 }

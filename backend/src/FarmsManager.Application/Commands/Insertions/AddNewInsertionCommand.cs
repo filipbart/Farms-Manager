@@ -148,12 +148,6 @@ public class AddNewInsertionValidator : AbstractValidator<AddNewInsertionCommand
             t.RuleFor(x => x.Quantity).GreaterThan(0);
             t.RuleFor(x => x.BodyWeight).GreaterThan(0);
         });
-
-        // Walidacja, czy wszystkie wstawienia w jednym żądaniu mają tę samą wylęgarnię
-        RuleFor(x => x.Entries.Select(e => e.HatcheryId).Distinct().Count())
-            .Equal(1)
-            .When(x => x.Entries.Count != 0)
-            .WithMessage("Wszystkie pozycje wstawienia muszą pochodzić z tej samej wylęgarni.");
     }
 }
 

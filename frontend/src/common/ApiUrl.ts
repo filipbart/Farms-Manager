@@ -22,6 +22,7 @@ export default class ApiUrl {
   public static AddFarm = this.Farms + "/add";
   public static UpdateFarm = (id: string) => this.Farms + "/update/" + id;
   public static DeleteFarm = (id: string) => this.Farms + "/delete/" + id;
+  public static GetCycles = (id: string) => this.Farms + "/" + id + "/cycles";
   public static UpdateHenhouse = (id: string) =>
     this.Farms + "/henhouse/update/" + id;
   public static DeleteHenhouse = (id: string) =>
@@ -68,6 +69,8 @@ export default class ApiUrl {
   public static DeleteInsertion = (id: string) =>
     this.Insertions + "/delete/" + id;
   public static InsertionsDict = this.Insertions + "/dictionary";
+  public static InsertionMarkReportedToWios =
+    this.Insertions + "/mark-reported-to-wios";
   public static LatestCycle = "/latest-cycle";
   public static InsertionAvailableHenhouses =
     this.Insertions + "/available-henhouses";

@@ -1,16 +1,14 @@
 import { useState } from "react";
-import type LatestCycle from "../models/farms/latest-cycle";
+import type CycleDto from "../models/farms/latest-cycle";
 import { FarmsService } from "../services/farms-service";
 import { handleApiResponse } from "../utils/axios/handle-api-response";
 
 export const useLatestCycle = () => {
   const [loadingCycle, setLoadingCycle] = useState(false);
 
-  const loadLatestCycle = async (
-    farmId: string
-  ): Promise<LatestCycle | null> => {
+  const loadLatestCycle = async (farmId: string): Promise<CycleDto | null> => {
     setLoadingCycle(true);
-    let result: LatestCycle | null = null;
+    let result: CycleDto | null = null;
 
     await handleApiResponse(
       () => FarmsService.getLatestCycle(farmId),
@@ -20,7 +18,7 @@ export const useLatestCycle = () => {
           return;
         }
 
-        const cycle = data.responseData as LatestCycle;
+        const cycle = data.responseData as CycleDto;
 
         result = cycle;
       },

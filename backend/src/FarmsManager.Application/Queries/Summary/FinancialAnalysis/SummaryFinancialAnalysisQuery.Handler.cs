@@ -18,6 +18,8 @@ using FarmsManager.Domain.Aggregates.SaleAggregate.Interfaces;
 using MediatR;
 using FarmsManager.Application.Queries.Summary.ProductionAnalysis;
 using FarmsManager.Application.Specifications.Users;
+using FarmsManager.Domain.Aggregates.EmployeeAggregate.Entities;
+using FarmsManager.Domain.Aggregates.EmployeeAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
 using FarmsManager.Domain.Aggregates.UserAggregate.Interfaces;
@@ -42,6 +44,7 @@ public class SummaryFinancialAnalysisQueryHandler : IRequestHandler<SummaryFinan
     private readonly IInsertionRepository _insertionRepository;
     private readonly IFeedInvoiceRepository _feedInvoiceRepository;
     private readonly IGasConsumptionRepository _gasConsumptionRepository;
+    private readonly IEmployeePayslipRepository _employeePayslipRepository;
     private readonly IExpenseProductionRepository _expenseProductionRepository;
     private readonly IProductionDataRemainingFeedRepository _productionDataRemainingFeedRepository;
     private readonly IProductionDataTransferFeedRepository _productionDataTransferFeedRepository;
@@ -52,6 +55,7 @@ public class SummaryFinancialAnalysisQueryHandler : IRequestHandler<SummaryFinan
     public SummaryFinancialAnalysisQueryHandler(IFarmRepository farmRepository, ISaleRepository saleRepository,
         IInsertionRepository insertionRepository, IFeedInvoiceRepository feedInvoiceRepository,
         IGasConsumptionRepository gasConsumptionRepository,
+        IEmployeePayslipRepository employeePayslipRepository,
         IExpenseProductionRepository expenseProductionRepository,
         IProductionDataRemainingFeedRepository productionDataRemainingFeedRepository,
         IProductionDataTransferFeedRepository productionDataTransferFeedRepository, IUserDataResolver userDataResolver,
@@ -62,6 +66,7 @@ public class SummaryFinancialAnalysisQueryHandler : IRequestHandler<SummaryFinan
         _insertionRepository = insertionRepository;
         _feedInvoiceRepository = feedInvoiceRepository;
         _gasConsumptionRepository = gasConsumptionRepository;
+        _employeePayslipRepository = employeePayslipRepository;
         _expenseProductionRepository = expenseProductionRepository;
         _productionDataRemainingFeedRepository = productionDataRemainingFeedRepository;
         _productionDataTransferFeedRepository = productionDataTransferFeedRepository;
@@ -94,6 +99,8 @@ public class SummaryFinancialAnalysisQueryHandler : IRequestHandler<SummaryFinan
                 ct);
         var allExpenses = await _expenseProductionRepository.ListAsync(new ExpensesProductionsByFarmsSpec(farmIds), ct);
         var gasConsumptions = await _gasConsumptionRepository.ListAsync(new GasConsumptionsByFarmsSpec(farmIds), ct);
+        var employeesPayslips =
+            await _employeePayslipRepository.ListAsync(new EmployeePayslipsByFarmsSpec(farmIds), ct);
         var feedInvoices = await _feedInvoiceRepository.ListAsync(new FeedsDeliveriesByHenhousesSpec(henhouseIds), ct);
         var feedRemainings =
             await _productionDataRemainingFeedRepository.ListAsync(
@@ -104,6 +111,7 @@ public class SummaryFinancialAnalysisQueryHandler : IRequestHandler<SummaryFinan
 
         var salesLookup = allSales.ToLookup(s => (s.FarmId, s.HenhouseId, s.CycleId));
         var gasLookup = gasConsumptions.ToLookup(g => (g.FarmId, g.CycleId));
+        var employeesPayslipsLookup = employeesPayslips.ToLookup(e => (e.FarmId, e.CycleId));
         var expensesLookup = allExpenses.ToLookup(e => (e.FarmId, e.CycleId));
         var feedInvoiceLookup = feedInvoices.ToLookup(fi => (fi.FarmId, fi.HenhouseId, fi.CycleId));
         var feedRemainingLookup = feedRemainings.ToLookup(fr => (fr.FarmId, fr.HenhouseId, fr.CycleId));
@@ -139,6 +147,9 @@ public class SummaryFinancialAnalysisQueryHandler : IRequestHandler<SummaryFinan
                 "Zakup piskląt", "Usługa weterynaryjna"
             ]);
             var gasCost = CalculateGasCost(insertion, farm, gasLookup[expenseKey]);
+            var employeePayslipsCost = CalculateEmployeePayslipsCost(insertion, farm,
+                employeesPayslipsLookup[expenseKey]);
+            otherCosts += employeePayslipsCost;
 
             var row = new SummaryFinancialAnalysisRowDto
             {
@@ -232,6 +243,14 @@ public class SummaryFinancialAnalysisQueryHandler : IRequestHandler<SummaryFinan
         IEnumerable<GasConsumptionEntity> gasConsumptions)
     {
         var totalCost = gasConsumptions.Sum(g => g.Cost);
+        return AllocateProportionalCost(insertion, farm, totalCost);
+    }
+
+    private static decimal? CalculateEmployeePayslipsCost(InsertionEntity insertion, FarmEntity farm,
+        IEnumerable<EmployeePayslipEntity> payslips)
+    {
+        var totalCost = payslips.Sum(p =>
+            p.BankTransferAmount + p.BonusAmount + p.OvertimePay - p.Deductions + p.OtherAllowances);
         return AllocateProportionalCost(insertion, farm, totalCost);
     }
 

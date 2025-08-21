@@ -24,6 +24,9 @@ public class InsertionEntity : Entity
     public Guid? SentToIrzBy { get; protected internal set; }
     public string DocumentNumber { get; protected internal set; }
 
+    public bool ReportedToWios { get; protected internal set; }
+    public string WiosComment { get; protected internal set; }
+
     public virtual CycleEntity Cycle { get; init; }
     public virtual HenhouseEntity Henhouse { get; init; }
     public virtual FarmEntity Farm { get; init; }
@@ -70,4 +73,10 @@ public class InsertionEntity : Entity
     }
 
     public bool IsAlreadySentToIrz() => DateIrzSentUtc.HasValue || IsSentToIrz;
+
+    public void MarkAsReportedToWios(string comment)
+    {
+        ReportedToWios = true;
+        WiosComment = comment;
+    }
 }

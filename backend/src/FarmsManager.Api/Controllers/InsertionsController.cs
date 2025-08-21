@@ -93,6 +93,19 @@ public class InsertionsController(IMediator mediator) : BaseController
     }
 
     /// <summary>
+    /// Oznacza wstawienia jako zgłoszone do WIOŚ
+    /// </summary>
+    /// <param name="command"></param>
+    /// <returns></returns>
+    [HttpPost("mark-reported-to-wios")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> MarkAsReportedToWios(MarkInsertionAsReportedToWiosCommand command)
+    {
+        return Ok(await mediator.Send(command));
+    }
+
+    /// <summary>
     /// Zwraca dostępne kurniki dla wstawienia
     /// </summary>
     /// <param name="farmId"></param>
