@@ -4,7 +4,6 @@ import { toast } from "react-toastify";
 import type { CycleDictModel } from "../../../models/common/dictionaries";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import FiltersForm from "../../../components/filters/filters-form";
-import CustomToolbar from "../../../components/datagrid/custom-toolbar";
 import NoRowsOverlay from "../../../components/datagrid/custom-norows";
 import {
   filterReducer,
@@ -17,10 +16,10 @@ import type { ProductionDataTransferFeedListModel } from "../../../models/produc
 import { ProductionDataService } from "../../../services/production-data/production-data-service";
 import { getFeedTransfersColumns } from "./transfer-feed-columns";
 import { getProductionDataFiltersConfig } from "../filter-config.production-data";
-import { DataGridPro } from "@mui/x-data-grid-pro";
 import { ProductionDataTransferFeedService } from "../../../services/production-data/production-data-transfer-feed-service";
 import AddProductionDataTransferFeedModal from "../../../components/modals/production-data/transfer-feed/add-production-data-transfer-feed-modal";
 import EditProductionDataTransferFeedModal from "../../../components/modals/production-data/transfer-feed/edit-production-data-transfer-feed-modal";
+import { DataGridPremium, type GridState } from "@mui/x-data-grid-premium";
 
 const ProductionDataTransferFeedPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -34,9 +33,18 @@ const ProductionDataTransferFeedPage: React.FC = () => {
   const [selectedFeedTransfer, setSelectedFeedTransfer] =
     useState<ProductionDataTransferFeedListModel | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [visibilityModel, setVisibilityModel] = useState(() => {
-    const saved = localStorage.getItem("columnVisibilityModelFeedTransfers");
-    return saved ? JSON.parse(saved) : {};
+
+  const [initialGridState] = useState(() => {
+    const savedState = localStorage.getItem(
+      "productionDataTransferFeedGridState"
+    );
+    return savedState
+      ? JSON.parse(savedState)
+      : {
+          columns: {
+            columnVisibilityModel: { dateCreatedUtc: false },
+          },
+        };
   });
 
   const uniqueCycles = useMemo(() => {
@@ -153,28 +161,24 @@ const ProductionDataTransferFeedPage: React.FC = () => {
       />
 
       <Box mt={4} sx={{ width: "100%", overflowX: "auto" }}>
-        <DataGridPro
+        <DataGridPremium
           loading={loading}
           rows={feedTransfers}
           columns={columns}
           columnGroupingModel={columnGroupingModel}
-          columnVisibilityModel={visibilityModel}
-          onColumnVisibilityModelChange={(model) => {
-            setVisibilityModel(model);
+          initialState={initialGridState}
+          onStateChange={(newState: GridState) => {
+            const stateToSave = {
+              columns: newState.columns,
+              sorting: newState.sorting,
+              filter: newState.filter,
+              aggregation: newState.aggregation,
+              pinnedColumns: newState.pinnedColumns,
+            };
             localStorage.setItem(
-              "columnVisibilityModelFeedTransfers",
-              JSON.stringify(model)
+              "productionDataTransferFeedGridState",
+              JSON.stringify(stateToSave)
             );
-          }}
-          initialState={{
-            columns: {
-              columnVisibilityModel: { id: false, dateCreatedUtc: false },
-            },
-          }}
-          localeText={{
-            paginationRowsPerPage: "Wierszy na stronę:",
-            paginationDisplayedRows: ({ from, to, count }) =>
-              `${from} do ${to} z ${count}`,
           }}
           paginationMode="server"
           pagination
@@ -191,7 +195,7 @@ const ProductionDataTransferFeedPage: React.FC = () => {
           rowCount={totalRows}
           rowSelection={false}
           pageSizeOptions={[5, 10, 25, { value: -1, label: "Wszystkie" }]}
-          slots={{ toolbar: CustomToolbar, noRowsOverlay: NoRowsOverlay }}
+          slots={{ noRowsOverlay: NoRowsOverlay }}
           showToolbar
           sx={{
             [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },

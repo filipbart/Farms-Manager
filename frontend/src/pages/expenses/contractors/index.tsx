@@ -95,11 +95,6 @@ const ExpensesContractorsPage: React.FC = () => {
             },
           }}
           slots={{ noRowsOverlay: NoRowsOverlay }}
-          localeText={{
-            paginationRowsPerPage: "Wierszy na stronę:",
-            paginationDisplayedRows: ({ from, to, count }) =>
-              `${from} do ${to} z ${count}`,
-          }}
           rowSelection={false}
           showToolbar={false}
           pagination

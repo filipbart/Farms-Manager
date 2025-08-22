@@ -6,7 +6,6 @@ import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import { downloadFile } from "../../../utils/download-file";
 import ApiUrl from "../../../common/ApiUrl";
 import FiltersForm from "../../../components/filters/filters-form";
-import CustomToolbar from "../../../components/datagrid/custom-toolbar";
 import NoRowsOverlay from "../../../components/datagrid/custom-norows";
 import type { CycleDictModel } from "../../../models/common/dictionaries";
 import {
@@ -29,7 +28,7 @@ import SaveSalesInvoicesModal from "../../../components/modals/sales/invoices/sa
 import EditSaleInvoiceModal from "../../../components/modals/sales/invoices/edit-sale-invoice-modal";
 import BookPaymentModal from "../../../components/modals/sales/invoices/book-payment-modal";
 import { NotificationContext } from "../../../context/notification-context";
-import { DataGridPro } from "@mui/x-data-grid-pro";
+import { DataGridPremium, type GridState } from "@mui/x-data-grid-premium";
 
 const SalesInvoicesPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -54,9 +53,15 @@ const SalesInvoicesPage: React.FC = () => {
   const { salesInvoices, totalRows, loading, fetchSalesInvoices } =
     useSalesInvoices(filters);
 
-  const [visibilityModel, setVisibilityModel] = useState(() => {
-    const saved = localStorage.getItem("columnVisibilityModelSalesInvoices");
-    return saved ? JSON.parse(saved) : {};
+  const [initialGridState] = useState(() => {
+    const savedState = localStorage.getItem("saleInvoicesGridState");
+    return savedState
+      ? JSON.parse(savedState)
+      : {
+          columns: {
+            columnVisibilityModel: { dateCreatedUtc: false },
+          },
+        };
   });
 
   const [downloadingFilePath, setDownloadFilePath] = useState<string | null>(
@@ -221,22 +226,23 @@ const SalesInvoicesPage: React.FC = () => {
       />
 
       <Box mt={4} sx={{ width: "100%", overflowX: "auto" }}>
-        <DataGridPro
+        <DataGridPremium
           loading={loading}
           rows={salesInvoices}
           columns={columns}
-          columnVisibilityModel={visibilityModel}
-          onColumnVisibilityModelChange={(model) => {
-            setVisibilityModel(model);
+          initialState={initialGridState}
+          onStateChange={(newState: GridState) => {
+            const stateToSave = {
+              columns: newState.columns,
+              sorting: newState.sorting,
+              filter: newState.filter,
+              aggregation: newState.aggregation,
+              pinnedColumns: newState.pinnedColumns,
+            };
             localStorage.setItem(
-              "columnVisibilityModelSalesInvoices",
-              JSON.stringify(model)
+              "saleInvoicesGridState",
+              JSON.stringify(stateToSave)
             );
-          }}
-          initialState={{
-            columns: {
-              columnVisibilityModel: { id: false, dateCreatedUtc: false },
-            },
           }}
           localeText={{
             footerRowSelected: (count) => {
@@ -270,7 +276,7 @@ const SalesInvoicesPage: React.FC = () => {
           }}
           rowSelectionModel={selectedRows}
           pageSizeOptions={[5, 10, 25, { value: -1, label: "Wszystkie" }]}
-          slots={{ toolbar: CustomToolbar, noRowsOverlay: NoRowsOverlay }}
+          slots={{ noRowsOverlay: NoRowsOverlay }}
           showToolbar
           sx={{
             [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },

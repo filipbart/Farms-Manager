@@ -1,11 +1,9 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
-import { DataGridPro } from "@mui/x-data-grid-pro";
 import { useEffect, useMemo, useReducer, useState } from "react";
 import { toast } from "react-toastify";
 import type { CycleDictModel } from "../../../models/common/dictionaries";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import FiltersForm from "../../../components/filters/filters-form";
-import CustomToolbar from "../../../components/datagrid/custom-toolbar";
 import NoRowsOverlay from "../../../components/datagrid/custom-norows";
 import type { ProductionDataRemainingFeedListModel } from "../../../models/production-data/remaining-feed";
 import {
@@ -21,6 +19,7 @@ import { getProductionDataFiltersConfig } from "../filter-config.production-data
 import AddProductionDataRemainingFeedModal from "../../../components/modals/production-data/remaining-feed/add-production-data-remaining-feed-modal";
 import EditProductionDataRemainingFeedModal from "../../../components/modals/production-data/remaining-feed/edit-production-data-failure-modal";
 import { ProductionDataService } from "../../../services/production-data/production-data-service";
+import { DataGridPremium, type GridState } from "@mui/x-data-grid-premium";
 
 const ProductionDataRemainingFeedPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -34,9 +33,18 @@ const ProductionDataRemainingFeedPage: React.FC = () => {
   const [selectedRemainingFeed, setSelectedRemainingFeed] =
     useState<ProductionDataRemainingFeedListModel | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [visibilityModel, setVisibilityModel] = useState(() => {
-    const saved = localStorage.getItem("columnVisibilityModelRemainingFeeds");
-    return saved ? JSON.parse(saved) : {};
+
+  const [initialGridState] = useState(() => {
+    const savedState = localStorage.getItem(
+      "productionDataRemainingFeedGridState"
+    );
+    return savedState
+      ? JSON.parse(savedState)
+      : {
+          columns: {
+            columnVisibilityModel: { dateCreatedUtc: false },
+          },
+        };
   });
 
   const uniqueCycles = useMemo(() => {
@@ -153,27 +161,23 @@ const ProductionDataRemainingFeedPage: React.FC = () => {
       />
 
       <Box mt={4} sx={{ width: "100%", overflowX: "auto" }}>
-        <DataGridPro
+        <DataGridPremium
           loading={loading}
           rows={remainingFeeds}
           columns={columns}
-          columnVisibilityModel={visibilityModel}
-          onColumnVisibilityModelChange={(model) => {
-            setVisibilityModel(model);
+          initialState={initialGridState}
+          onStateChange={(newState: GridState) => {
+            const stateToSave = {
+              columns: newState.columns,
+              sorting: newState.sorting,
+              filter: newState.filter,
+              aggregation: newState.aggregation,
+              pinnedColumns: newState.pinnedColumns,
+            };
             localStorage.setItem(
-              "columnVisibilityModelRemainingFeeds",
-              JSON.stringify(model)
+              "productionDataRemainingFeedGridState",
+              JSON.stringify(stateToSave)
             );
-          }}
-          initialState={{
-            columns: {
-              columnVisibilityModel: { id: false, dateCreatedUtc: false },
-            },
-          }}
-          localeText={{
-            paginationRowsPerPage: "Wierszy na stronę:",
-            paginationDisplayedRows: ({ from, to, count }) =>
-              `${from} do ${to} z ${count}`,
           }}
           paginationMode="server"
           pagination
@@ -190,7 +194,7 @@ const ProductionDataRemainingFeedPage: React.FC = () => {
           rowCount={totalRows}
           rowSelection={false}
           pageSizeOptions={[5, 10, 25, { value: -1, label: "Wszystkie" }]}
-          slots={{ toolbar: CustomToolbar, noRowsOverlay: NoRowsOverlay }}
+          slots={{ noRowsOverlay: NoRowsOverlay }}
           showToolbar
           sx={{
             [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },

@@ -1,10 +1,8 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
-import { DataGridPro } from "@mui/x-data-grid-pro";
 import { useReducer, useState, useMemo, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
-import CustomToolbar from "../../../components/datagrid/custom-toolbar";
 import NoRowsOverlay from "../../../components/datagrid/custom-norows";
 import { getUsersColumns } from "./users-columns";
 import FiltersForm from "../../../components/filters/filters-form";
@@ -18,6 +16,7 @@ import {
 import { getUsersFiltersConfig } from "./filter-config.users";
 import { UsersService } from "../../../services/users-service";
 import AddUserModal from "../../../components/modals/users/add-user-modal";
+import { DataGridPremium, type GridState } from "@mui/x-data-grid-premium";
 
 const UsersPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -26,9 +25,15 @@ const UsersPage: React.FC = () => {
   const { users, totalRows, loading, fetchUsers } = useUsers(filters);
   const nav = useNavigate();
 
-  const [visibilityModel, setVisibilityModel] = useState(() => {
-    const saved = localStorage.getItem("columnVisibilityModelUsers");
-    return saved ? JSON.parse(saved) : {};
+  const [initialGridState] = useState(() => {
+    const savedState = localStorage.getItem("settingsUsersGridState");
+    return savedState
+      ? JSON.parse(savedState)
+      : {
+          columns: {
+            columnVisibilityModel: { dateCreatedUtc: false },
+          },
+        };
   });
 
   const deleteUser = useCallback(
@@ -81,25 +86,26 @@ const UsersPage: React.FC = () => {
       />
 
       <Box mt={4} sx={{ width: "100%", overflowX: "auto" }}>
-        <DataGridPro
+        <DataGridPremium
           loading={loading}
           rows={users}
           columns={columns}
-          columnVisibilityModel={visibilityModel}
-          onRowClick={(params) => {
-            nav(`/settings/users/${params.id}`);
-          }}
-          onColumnVisibilityModelChange={(model) => {
-            setVisibilityModel(model);
+          initialState={initialGridState}
+          onStateChange={(newState: GridState) => {
+            const stateToSave = {
+              columns: newState.columns,
+              sorting: newState.sorting,
+              filter: newState.filter,
+              aggregation: newState.aggregation,
+              pinnedColumns: newState.pinnedColumns,
+            };
             localStorage.setItem(
-              "columnVisibilityModelUsers",
-              JSON.stringify(model)
+              "settingsUsersGridState",
+              JSON.stringify(stateToSave)
             );
           }}
-          initialState={{
-            columns: {
-              columnVisibilityModel: { id: false },
-            },
+          onRowClick={(params) => {
+            nav(`/settings/users/${params.id}`);
           }}
           paginationMode="server"
           pagination
@@ -116,7 +122,7 @@ const UsersPage: React.FC = () => {
           rowCount={totalRows}
           rowSelection={false}
           pageSizeOptions={[5, 10, 25, { value: -1, label: "Wszystkie" }]}
-          slots={{ toolbar: CustomToolbar, noRowsOverlay: NoRowsOverlay }}
+          slots={{ noRowsOverlay: NoRowsOverlay }}
           showToolbar
           sx={{
             "& .MuiDataGrid-row:not(.deadline-row):hover .MuiDataGrid-cell": {

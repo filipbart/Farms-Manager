@@ -8,10 +8,10 @@ import { FallenStockPickupService } from "../../../../services/production-data/f
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import { getFallenStockPickupColumns } from "./fallen-stock-pickup-columns";
 import NoRowsOverlay from "../../../../components/datagrid/custom-norows";
-import CustomToolbar from "../../../../components/datagrid/custom-toolbar";
 import {
   DataGridPremium,
   GRID_AGGREGATION_ROOT_FOOTER_ROW_ID,
+  type GridState,
 } from "@mui/x-data-grid-premium";
 import AddFallenStockPickupsModal from "../../../../components/modals/production-data/fallen-stocks/add-fallen-stock-pickups-modal";
 import EditFallenStockPickupModal from "../../../../components/modals/production-data/fallen-stocks/edit-fallen-stock-pickup-modal";
@@ -33,6 +33,19 @@ const FallenStocksPickupPage: React.FC<FallenStocksPickupPageProps> = ({
   const [selectedPickup, setSelectedPickup] = useState<
     FallenStockPickupRow | undefined
   >(undefined);
+
+  const [initialGridState] = useState(() => {
+    const savedState = localStorage.getItem(
+      "productionDataFallenStockPickupGridState"
+    );
+    return savedState
+      ? JSON.parse(savedState)
+      : {
+          columns: {
+            columnVisibilityModel: { dateCreatedUtc: false },
+          },
+        };
+  });
 
   useEffect(() => {
     fetchPickups();
@@ -98,16 +111,23 @@ const FallenStocksPickupPage: React.FC<FallenStocksPickupPageProps> = ({
           loading={loadingPickups}
           rows={pickups}
           columns={columns}
-          slots={{ toolbar: CustomToolbar, noRowsOverlay: NoRowsOverlay }}
+          slots={{ noRowsOverlay: NoRowsOverlay }}
           rowSelection={false}
           scrollbarSize={17}
           showToolbar
-          initialState={{
-            aggregation: {
-              model: {
-                quantity: "sum",
-              },
-            },
+          initialState={initialGridState}
+          onStateChange={(newState: GridState) => {
+            const stateToSave = {
+              columns: newState.columns,
+              sorting: newState.sorting,
+              filter: newState.filter,
+              aggregation: newState.aggregation,
+              pinnedColumns: newState.pinnedColumns,
+            };
+            localStorage.setItem(
+              "productionDataFallenStockPickupGridState",
+              JSON.stringify(stateToSave)
+            );
           }}
           getRowClassName={(params) => {
             if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {

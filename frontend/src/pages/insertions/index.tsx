@@ -33,6 +33,7 @@ import { getInsertionsColumns } from "./insertions-columns";
 import {
   DataGridPremium,
   type GridRowSelectionModel,
+  type GridState,
 } from "@mui/x-data-grid-premium";
 import LoadingButton from "../../components/common/loading-button";
 
@@ -47,10 +48,6 @@ const InsertionsPage: React.FC = () => {
   const [selectedInsertion, setSelectedInsertion] =
     useState<InsertionListModel | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [visibilityModel, setVisibilityModel] = useState(() => {
-    const saved = localStorage.getItem("columnVisibilityModelInsertions");
-    return saved ? JSON.parse(saved) : {};
-  });
 
   const [selectedRowIds, setSelectedRowIds] = useState<GridRowSelectionModel>({
     type: "include",
@@ -58,6 +55,17 @@ const InsertionsPage: React.FC = () => {
   });
   const [isWiosModalOpen, setIsWiosModalOpen] = useState(false);
   const [wiosComment, setWiosComment] = useState("");
+
+  const [initialGridState] = useState(() => {
+    const savedState = localStorage.getItem("insertionsGridState");
+    return savedState
+      ? JSON.parse(savedState)
+      : {
+          columns: {
+            columnVisibilityModel: { dateCreatedUtc: false },
+          },
+        };
+  });
 
   const uniqueCycles = useMemo(() => {
     if (!dictionary) return [];
@@ -221,20 +229,21 @@ const InsertionsPage: React.FC = () => {
           loading={loading}
           rows={insertions}
           columns={columns}
-          columnVisibilityModel={visibilityModel}
-          onColumnVisibilityModelChange={(model) => {
-            setVisibilityModel(model);
+          initialState={initialGridState}
+          onStateChange={(newState: GridState) => {
+            const stateToSave = {
+              columns: newState.columns,
+              sorting: newState.sorting,
+              filter: newState.filter,
+              aggregation: newState.aggregation,
+              pinnedColumns: newState.pinnedColumns,
+            };
             localStorage.setItem(
-              "columnVisibilityModelInsertions",
-              JSON.stringify(model)
+              "insertionsGridState",
+              JSON.stringify(stateToSave)
             );
           }}
           scrollbarSize={17}
-          initialState={{
-            columns: {
-              columnVisibilityModel: { id: false, dateCreatedUtc: false },
-            },
-          }}
           paginationMode="server"
           pagination
           paginationModel={{

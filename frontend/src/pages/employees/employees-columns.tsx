@@ -69,6 +69,7 @@ export const getEmployeesColumns = ({
       headerName: "Uwagi",
       flex: 1,
       sortable: false,
+      aggregable: false,
       renderCell: (params) => <CommentCell value={params.value} />,
     },
     {
@@ -76,6 +77,7 @@ export const getEmployeesColumns = ({
       headerName: "Pliki",
       flex: 1.5,
       sortable: false,
+      aggregable: false,
       renderCell: (params) => {
         const files = params.value as EmployeeFileModel[];
         if (!files || files.length === 0) {
@@ -88,7 +90,7 @@ export const getEmployeesColumns = ({
           );
         }
 
-        const fileNames = files.map((file) => file.fileName).join(", ");
+        const fileNames = files?.map((file) => file.fileName).join(", ");
 
         return (
           <Box display="flex" alignItems="center" height="100%">

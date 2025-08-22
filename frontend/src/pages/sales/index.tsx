@@ -1,10 +1,8 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
-import { DataGridPro } from "@mui/x-data-grid-pro";
 import { useReducer, useState, useMemo, useEffect } from "react";
 import { toast } from "react-toastify";
 import { mapSaleOrderTypeToField } from "../../common/helpers/sale-order-type-helper";
 import NoRowsOverlay from "../../components/datagrid/custom-norows";
-import CustomToolbar from "../../components/datagrid/custom-toolbar";
 import FiltersForm from "../../components/filters/filters-form";
 import type { CycleDictModel } from "../../models/common/dictionaries";
 
@@ -24,6 +22,7 @@ import { getSalesColumns } from "./sales-columns";
 import { useSales } from "../../hooks/sales/useSales";
 import ApiUrl from "../../common/ApiUrl";
 import { downloadFile } from "../../utils/download-file";
+import { DataGridPremium, type GridState } from "@mui/x-data-grid-premium";
 
 const SalesPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -31,11 +30,17 @@ const SalesPage: React.FC = () => {
   const [openModal, setOpenModal] = useState(false);
   const [selectedSale, setSelectedSale] = useState<SaleListModel | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [loadingExport, setLoadingExport] = useState(false);
   const { sales, totalRows, loading, refetch: fetchSales } = useSales(filters);
-  const [visibilityModel, setVisibilityModel] = useState(() => {
-    const saved = localStorage.getItem("columnVisibilityModelSales");
-    return saved ? JSON.parse(saved) : {};
+
+  const [initialGridState] = useState(() => {
+    const savedState = localStorage.getItem("salesGridState");
+    return savedState
+      ? JSON.parse(savedState)
+      : {
+          columns: {
+            columnVisibilityModel: { dateCreatedUtc: false },
+          },
+        };
   });
 
   const [downloadDirectoryPath, setDownloadDirectoryPath] = useState<
@@ -111,18 +116,6 @@ const SalesPage: React.FC = () => {
     fetchSales();
   }, [fetchSales]);
 
-  const onClickExport = async () => {
-    await downloadFile({
-      url: ApiUrl.SaleExportFile,
-      params: filters,
-      defaultFilename: "sprzedaze",
-      setLoading: setLoadingExport,
-      successMessage: "Eksport zakończony sukcesem",
-      errorMessage: "Błąd podczas eksportu sprzedaży",
-      fileExtension: "xlsx",
-    });
-  };
-
   const downloadSaleDirectory = async (path: string) => {
     await downloadFile({
       url: ApiUrl.SaleDownloadZip,
@@ -177,22 +170,20 @@ const SalesPage: React.FC = () => {
       />
 
       <Box mt={4} sx={{ width: "100%", overflowX: "auto" }}>
-        <DataGridPro
+        <DataGridPremium
           loading={loading}
           rows={transformedRows}
           columns={columns}
-          columnVisibilityModel={visibilityModel}
-          onColumnVisibilityModelChange={(model) => {
-            setVisibilityModel(model);
-            localStorage.setItem(
-              "columnVisibilityModelSales",
-              JSON.stringify(model)
-            );
-          }}
-          initialState={{
-            columns: {
-              columnVisibilityModel: { id: false, dateCreatedUtc: false },
-            },
+          initialState={initialGridState}
+          onStateChange={(newState: GridState) => {
+            const stateToSave = {
+              columns: newState.columns,
+              sorting: newState.sorting,
+              filter: newState.filter,
+              aggregation: newState.aggregation,
+              pinnedColumns: newState.pinnedColumns,
+            };
+            localStorage.setItem("salesGridState", JSON.stringify(stateToSave));
           }}
           pagination
           paginationMode="server"
@@ -210,14 +201,6 @@ const SalesPage: React.FC = () => {
           rowSelection={false}
           pageSizeOptions={[5, 10, 25, { value: -1, label: "Wszystkie" }]}
           slots={{
-            toolbar: (props) => (
-              <CustomToolbar
-                {...props}
-                withExport={true}
-                onClickExport={onClickExport}
-                loadingExport={loadingExport}
-              />
-            ),
             noRowsOverlay: NoRowsOverlay,
           }}
           showToolbar

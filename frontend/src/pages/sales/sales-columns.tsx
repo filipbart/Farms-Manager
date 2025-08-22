@@ -131,6 +131,7 @@ export const getSalesColumns = ({
       field: "comment",
       headerName: "Komentarz",
       width: 250,
+      aggregable: false,
       renderCell: (params) => <CommentCell value={params.value} />,
     },
     {

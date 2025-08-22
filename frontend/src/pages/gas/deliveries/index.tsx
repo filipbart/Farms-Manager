@@ -1,12 +1,10 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
-import { DataGridPro } from "@mui/x-data-grid-pro";
 import { useReducer, useState, useMemo, useEffect } from "react";
 import { toast } from "react-toastify";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import { downloadFile } from "../../../utils/download-file";
 import ApiUrl from "../../../common/ApiUrl";
 import FiltersForm from "../../../components/filters/filters-form";
-import CustomToolbar from "../../../components/datagrid/custom-toolbar";
 import NoRowsOverlay from "../../../components/datagrid/custom-norows";
 import type {
   DraftGasInvoice,
@@ -27,6 +25,7 @@ import AddGasDeliveryModal from "../../../components/modals/gas/deliveries/add-g
 import UploadGasInvoicesModal from "../../../components/modals/gas/deliveries/upload-gas-invoices-modal";
 import SaveGasInvoicesModal from "../../../components/modals/gas/deliveries/save-gas-invoices-modal";
 import EditGasDeliveryModal from "../../../components/modals/gas/deliveries/edit-gas-delivery-modal";
+import { DataGridPremium, type GridState } from "@mui/x-data-grid-premium";
 
 const GasDeliveriesPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -48,9 +47,15 @@ const GasDeliveriesPage: React.FC = () => {
     refetch: fetchGasDeliveries,
   } = useGasDeliveries(filters);
 
-  const [visibilityModel, setVisibilityModel] = useState(() => {
-    const saved = localStorage.getItem("columnVisibilityModelGasDeliveries");
-    return saved ? JSON.parse(saved) : {};
+  const [initialGridState] = useState(() => {
+    const savedState = localStorage.getItem("gasDeliveriesGridState");
+    return savedState
+      ? JSON.parse(savedState)
+      : {
+          columns: {
+            columnVisibilityModel: { dateCreatedUtc: false },
+          },
+        };
   });
 
   const [downloadingFilePath, setDownloadFilePath] = useState<string | null>(
@@ -176,27 +181,23 @@ const GasDeliveriesPage: React.FC = () => {
       />
 
       <Box mt={4} sx={{ width: "100%", overflowX: "auto" }}>
-        <DataGridPro
+        <DataGridPremium
           loading={loading}
           rows={gasDeliveries}
           columns={columns}
-          columnVisibilityModel={visibilityModel}
-          onColumnVisibilityModelChange={(model) => {
-            setVisibilityModel(model);
+          initialState={initialGridState}
+          onStateChange={(newState: GridState) => {
+            const stateToSave = {
+              columns: newState.columns,
+              sorting: newState.sorting,
+              filter: newState.filter,
+              aggregation: newState.aggregation,
+              pinnedColumns: newState.pinnedColumns,
+            };
             localStorage.setItem(
-              "columnVisibilityModelGasDeliveries",
-              JSON.stringify(model)
+              "gasDeliveriesGridState",
+              JSON.stringify(stateToSave)
             );
-          }}
-          initialState={{
-            columns: {
-              columnVisibilityModel: { id: false },
-            },
-          }}
-          localeText={{
-            paginationRowsPerPage: "Wierszy na stronę:",
-            paginationDisplayedRows: ({ from, to, count }) =>
-              `${from} do ${to} z ${count}`,
           }}
           paginationMode="server"
           pagination
@@ -213,7 +214,7 @@ const GasDeliveriesPage: React.FC = () => {
           rowCount={totalRows}
           rowSelection={false}
           pageSizeOptions={[5, 10, 25, { value: -1, label: "Wszystkie" }]}
-          slots={{ toolbar: CustomToolbar, noRowsOverlay: NoRowsOverlay }}
+          slots={{ noRowsOverlay: NoRowsOverlay }}
           showToolbar
           sx={{
             [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },

@@ -75,6 +75,7 @@ export const getGasDeliveriesColumns = ({
       headerName: "Komentarz",
       flex: 1,
       sortable: false,
+      aggregable: false,
       renderCell: (params) => <CommentCell value={params.value} />,
     },
     {

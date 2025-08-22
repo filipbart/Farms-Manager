@@ -1,5 +1,4 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
-import { DataGridPro } from "@mui/x-data-grid-pro";
 import { useReducer, useState, useMemo, useEffect } from "react";
 import { toast } from "react-toastify";
 import FiltersForm from "../../../components/filters/filters-form";
@@ -20,7 +19,6 @@ import { ExpensesService } from "../../../services/expenses-service";
 import { downloadFile } from "../../../utils/download-file";
 import ApiUrl from "../../../common/ApiUrl";
 import { getExpenseProductionColumns } from "./expenses-production-columns";
-import CustomToolbar from "../../../components/datagrid/custom-toolbar";
 import NoRowsOverlay from "../../../components/datagrid/custom-norows";
 import { mapExpenseProductionOrderTypeToField } from "../../../common/helpers/expenses-productions-order-type-helper";
 import { getExpensesProductionsFiltersConfig } from "./filter-config.expenses-production";
@@ -28,6 +26,7 @@ import AddExpenseProductionModal from "../../../components/modals/expenses/produ
 import EditExpenseProductionModal from "../../../components/modals/expenses/production/edit-expense-production-modal";
 import UploadExpenseInvoicesModal from "../../../components/modals/expenses/production/upload-expense-invoices-modal";
 import SaveExpensesInvoicesModal from "../../../components/modals/expenses/production/save-expenses-invoices-modal";
+import { DataGridPremium, type GridState } from "@mui/x-data-grid-premium";
 
 const ExpenseProductionPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -50,11 +49,16 @@ const ExpenseProductionPage: React.FC = () => {
     loading,
     refetch: fetchExpenseProductions,
   } = useExpenseProductions(filters);
-  const [visibilityModel, setVisibilityModel] = useState(() => {
-    const saved = localStorage.getItem(
-      "columnVisibilityModelExpenseProductions"
-    );
-    return saved ? JSON.parse(saved) : {};
+
+  const [initialGridState] = useState(() => {
+    const savedState = localStorage.getItem("expensesProductionGridState");
+    return savedState
+      ? JSON.parse(savedState)
+      : {
+          columns: {
+            columnVisibilityModel: { dateCreatedUtc: false },
+          },
+        };
   });
 
   const [downloadingFilePath, setDownloadFilePath] = useState<string | null>(
@@ -194,27 +198,23 @@ const ExpenseProductionPage: React.FC = () => {
       />
 
       <Box mt={4} sx={{ width: "100%", overflowX: "auto" }}>
-        <DataGridPro
+        <DataGridPremium
           loading={loading}
           rows={expenseProductions}
           columns={columns}
-          columnVisibilityModel={visibilityModel}
-          onColumnVisibilityModelChange={(model) => {
-            setVisibilityModel(model);
+          initialState={initialGridState}
+          onStateChange={(newState: GridState) => {
+            const stateToSave = {
+              columns: newState.columns,
+              sorting: newState.sorting,
+              filter: newState.filter,
+              aggregation: newState.aggregation,
+              pinnedColumns: newState.pinnedColumns,
+            };
             localStorage.setItem(
-              "columnVisibilityModelExpenseProductions",
-              JSON.stringify(model)
+              "expensesProductionGridState",
+              JSON.stringify(stateToSave)
             );
-          }}
-          initialState={{
-            columns: {
-              columnVisibilityModel: { id: false, dateCreatedUtc: false },
-            },
-          }}
-          localeText={{
-            paginationRowsPerPage: "Wierszy na stronę:",
-            paginationDisplayedRows: ({ from, to, count }) =>
-              `${from} do ${to} z ${count}`,
           }}
           scrollbarSize={17}
           paginationMode="server"
@@ -232,7 +232,7 @@ const ExpenseProductionPage: React.FC = () => {
           rowCount={totalRows}
           rowSelection={false}
           pageSizeOptions={[5, 10, 25, { value: -1, label: "Wszystkie" }]}
-          slots={{ toolbar: CustomToolbar, noRowsOverlay: NoRowsOverlay }}
+          slots={{ noRowsOverlay: NoRowsOverlay }}
           showToolbar
           sx={{
             [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },

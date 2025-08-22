@@ -1,5 +1,4 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
-import { DataGridPro } from "@mui/x-data-grid-pro";
 import { useReducer, useState, useMemo, useEffect } from "react";
 import { toast } from "react-toastify";
 import { type ProductionDataWeighingsDictionary } from "../../../models/production-data/weighings-filters";
@@ -20,6 +19,7 @@ import {
 import AddProductionDataFlockLossModal from "../../../components/modals/production-data/flock-loss/add-flock-loss-modal";
 import EditProductionDataFlockLossModal from "../../../components/modals/production-data/flock-loss/edit-flock-loss-modal";
 import { ProductionDataFlockLossService } from "../../../services/production-data/flock-loss-measures-service";
+import { DataGridPremium, type GridState } from "@mui/x-data-grid-premium";
 
 const ProductionDataFlockLossPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -34,9 +34,16 @@ const ProductionDataFlockLossPage: React.FC = () => {
   const [selectedFlockLoss, setSelectedFlockLoss] =
     useState<ProductionDataFlockLossListModel | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [visibilityModel, setVisibilityModel] = useState(() => {
-    const saved = localStorage.getItem("columnVisibilityModelFlockLoss");
-    return saved ? JSON.parse(saved) : {};
+
+  const [initialGridState] = useState(() => {
+    const savedState = localStorage.getItem("productionDataFlockLossGridState");
+    return savedState
+      ? JSON.parse(savedState)
+      : {
+          columns: {
+            columnVisibilityModel: { dateCreatedUtc: false },
+          },
+        };
   });
 
   const uniqueCycles = useMemo(() => {
@@ -153,22 +160,23 @@ const ProductionDataFlockLossPage: React.FC = () => {
       />
 
       <Box mt={4} sx={{ width: "100%", overflowX: "auto" }}>
-        <DataGridPro
+        <DataGridPremium
           loading={loading}
           rows={flockLosses}
           columns={columns}
-          columnVisibilityModel={visibilityModel}
-          onColumnVisibilityModelChange={(model) => {
-            setVisibilityModel(model);
+          initialState={initialGridState}
+          onStateChange={(newState: GridState) => {
+            const stateToSave = {
+              columns: newState.columns,
+              sorting: newState.sorting,
+              filter: newState.filter,
+              aggregation: newState.aggregation,
+              pinnedColumns: newState.pinnedColumns,
+            };
             localStorage.setItem(
-              "columnVisibilityModelFlockLoss",
-              JSON.stringify(model)
+              "productionDataFlockLossGridState",
+              JSON.stringify(stateToSave)
             );
-          }}
-          initialState={{
-            columns: {
-              columnVisibilityModel: { id: false },
-            },
           }}
           paginationMode="server"
           pagination

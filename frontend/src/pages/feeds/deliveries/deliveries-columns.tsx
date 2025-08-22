@@ -216,6 +216,7 @@ export const getFeedsDeliveriesColumns = ({
       field: "comment",
       headerName: "Komentarz",
       flex: 1,
+      aggregable: false,
       renderCell: (params) => <CommentCell value={params.value} />,
     },
     { field: "dateCreatedUtc", headerName: "Data utworzenia wpisu", flex: 1 },

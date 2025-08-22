@@ -35,12 +35,6 @@ export const getEmployeePayslipColumns = ({
       field: "employeeFullName",
       headerName: "Pracownik",
       flex: 1.5,
-      renderCell: (params) => {
-        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
-          return <strong>Suma:</strong>;
-        }
-        return params.value;
-      },
     },
 
     {
@@ -51,7 +45,6 @@ export const getEmployeePayslipColumns = ({
       headerAlign: "left",
       align: "left",
       aggregable: true,
-      availableAggregationFunctions: ["sum"],
     },
     {
       field: "bankTransferAmount",
@@ -61,7 +54,6 @@ export const getEmployeePayslipColumns = ({
       headerAlign: "left",
       align: "left",
       aggregable: true,
-      availableAggregationFunctions: ["sum"],
     },
     {
       field: "bonusAmount",
@@ -71,7 +63,6 @@ export const getEmployeePayslipColumns = ({
       headerAlign: "left",
       align: "left",
       aggregable: true,
-      availableAggregationFunctions: ["sum"],
     },
     {
       field: "overtimePay",
@@ -81,7 +72,6 @@ export const getEmployeePayslipColumns = ({
       headerAlign: "left",
       align: "left",
       aggregable: true,
-      availableAggregationFunctions: ["sum"],
     },
     {
       field: "overtimeHours",
@@ -91,7 +81,6 @@ export const getEmployeePayslipColumns = ({
       headerAlign: "left",
       align: "left",
       aggregable: true,
-      availableAggregationFunctions: ["sum"],
     },
     {
       field: "deductions",
@@ -101,7 +90,6 @@ export const getEmployeePayslipColumns = ({
       headerAlign: "left",
       align: "left",
       aggregable: true,
-      availableAggregationFunctions: ["sum"],
     },
     {
       field: "otherAllowances",
@@ -111,7 +99,6 @@ export const getEmployeePayslipColumns = ({
       headerAlign: "left",
       align: "left",
       aggregable: true,
-      availableAggregationFunctions: ["sum"],
     },
     {
       field: "totalAmount",
@@ -121,7 +108,6 @@ export const getEmployeePayslipColumns = ({
       headerAlign: "left",
       align: "left",
       aggregable: true,
-      availableAggregationFunctions: ["sum"],
     },
     {
       field: "netPay",
@@ -131,13 +117,13 @@ export const getEmployeePayslipColumns = ({
       headerAlign: "left",
       align: "left",
       aggregable: true,
-      availableAggregationFunctions: ["sum"],
     },
     {
       field: "comment",
       headerName: "Uwagi",
       flex: 1,
       sortable: false,
+      aggregable: false,
       renderCell: (params) => <CommentCell value={params.value} />,
     },
     {

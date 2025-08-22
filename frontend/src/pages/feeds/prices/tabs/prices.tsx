@@ -1,10 +1,8 @@
 import { Box, Button, tablePaginationClasses } from "@mui/material";
-import { DataGridPro } from "@mui/x-data-grid-pro";
 import { useReducer, useState, useMemo, useEffect } from "react";
 import { toast } from "react-toastify";
 import { mapFeedsPricesOrderTypeToField } from "../../../../common/helpers/feeds-price-order-type-helper";
 import NoRowsOverlay from "../../../../components/datagrid/custom-norows";
-import CustomToolbar from "../../../../components/datagrid/custom-toolbar";
 import FiltersForm from "../../../../components/filters/filters-form";
 import AddFeedPriceModal from "../../../../components/modals/feeds/prices/add-feed-price-modal";
 import type { CycleDictModel } from "../../../../models/common/dictionaries";
@@ -21,6 +19,7 @@ import { getFeedsPriceColumns } from "../price-columns";
 import type { FeedPriceListModel } from "../../../../models/feeds/prices/feed-price";
 import type { PaginateModel } from "../../../../common/interfaces/paginate";
 import EditFeedPriceModal from "../../../../components/modals/feeds/prices/edit-feed-price-modal";
+import { DataGridPremium, type GridState } from "@mui/x-data-grid-premium";
 
 const FeedsPricesTab: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -33,6 +32,17 @@ const FeedsPricesTab: React.FC = () => {
   const [openModal, setOpenModal] = useState(false);
   const [selectedFeedPrice, setSelectedFeedPrice] = useState<null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const [initialGridState] = useState(() => {
+    const savedState = localStorage.getItem("feedPricesGridState");
+    return savedState
+      ? JSON.parse(savedState)
+      : {
+          columns: {
+            columnVisibilityModel: { dateCreatedUtc: false },
+          },
+        };
+  });
 
   const deleteFeedPrice = async (id: string) => {
     try {
@@ -144,21 +154,25 @@ const FeedsPricesTab: React.FC = () => {
       />
 
       <Box mt={4} sx={{ width: "100%", overflowX: "auto" }}>
-        <DataGridPro
+        <DataGridPremium
           loading={loading}
           rows={feedsPrices}
           columns={columns}
-          initialState={{
-            columns: {
-              columnVisibilityModel: { id: false, dateCreatedUtc: false },
-            },
+          initialState={initialGridState}
+          onStateChange={(newState: GridState) => {
+            const stateToSave = {
+              columns: newState.columns,
+              sorting: newState.sorting,
+              filter: newState.filter,
+              aggregation: newState.aggregation,
+              pinnedColumns: newState.pinnedColumns,
+            };
+            localStorage.setItem(
+              "feedPricesGridState",
+              JSON.stringify(stateToSave)
+            );
           }}
           scrollbarSize={17}
-          localeText={{
-            paginationRowsPerPage: "Wierszy na stronę:",
-            paginationDisplayedRows: ({ from, to, count }) =>
-              `${from} do ${to} z ${count}`,
-          }}
           paginationMode="server"
           pagination
           paginationModel={{
@@ -174,7 +188,7 @@ const FeedsPricesTab: React.FC = () => {
           rowCount={totalRows}
           rowSelection={false}
           pageSizeOptions={[5, 10, 25, { value: -1, label: "Wszystkie" }]}
-          slots={{ toolbar: CustomToolbar, noRowsOverlay: NoRowsOverlay }}
+          slots={{ noRowsOverlay: NoRowsOverlay }}
           showToolbar
           sx={{
             [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },

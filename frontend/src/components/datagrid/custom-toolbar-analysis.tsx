@@ -21,7 +21,11 @@ import TextField from "@mui/material/TextField";
 import InputAdornment from "@mui/material/InputAdornment";
 import CancelIcon from "@mui/icons-material/Cancel";
 import SearchIcon from "@mui/icons-material/Search";
-import { ExportExcel, type GridToolbarProps } from "@mui/x-data-grid-premium";
+import {
+  ExportExcel,
+  PivotPanelTrigger,
+  type GridToolbarProps,
+} from "@mui/x-data-grid-premium";
 import {
   Box,
   Button,
@@ -33,7 +37,7 @@ import {
   styled,
 } from "@mui/material";
 import { useState, useRef } from "react";
-import { MdDelete, MdSave } from "react-icons/md";
+import { MdDelete, MdOutlinePivotTableChart, MdSave } from "react-icons/md";
 import { toast } from "react-toastify";
 import type { ColumnViewRow } from "../../services/columns-views-service";
 
@@ -194,6 +198,18 @@ const CustomToolbarAnalysis: React.FC<CustomToolbarAnalysisProps> = ({
             )}
           />
         </Tooltip>
+        <Tooltip title="Pivot">
+          <PivotPanelTrigger
+            render={(triggerProps, state) => (
+              <ToolbarButton
+                {...triggerProps}
+                color={state.active ? "primary" : "default"}
+              />
+            )}
+          >
+            <MdOutlinePivotTableChart fontSize="large" />
+          </PivotPanelTrigger>
+        </Tooltip>
         <Tooltip title="Eksportuj">
           <ToolbarButton
             ref={exportMenuTriggerRef}
@@ -206,6 +222,7 @@ const CustomToolbarAnalysis: React.FC<CustomToolbarAnalysisProps> = ({
             <FileDownloadIcon fontSize="small" />
           </ToolbarButton>
         </Tooltip>
+
         <Menu
           id="export-menu"
           anchorEl={exportMenuTriggerRef.current}

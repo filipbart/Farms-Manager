@@ -2,7 +2,7 @@ import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
 import {
   DataGridPremium,
   GRID_AGGREGATION_ROOT_FOOTER_ROW_ID,
-  type GridDataSource,
+  type GridState,
 } from "@mui/x-data-grid-premium";
 import { useReducer, useState, useMemo, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
@@ -13,7 +13,6 @@ import { useEmployeePayslips } from "../../../hooks/employees/useEmployeePayslip
 import { EmployeePayslipsService } from "../../../services/employee-payslips-service";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import { getEmployeePayslipColumns } from "./payslips-columns";
-import CustomToolbar from "../../../components/datagrid/custom-toolbar";
 import NoRowsOverlay from "../../../components/datagrid/custom-norows";
 import {
   EmployeePayslipsOrderType,
@@ -21,7 +20,6 @@ import {
   initialFilters,
   mapEmployeePayslipOrderTypeToField,
   type EmployeePayslipsDictionary,
-  type EmployeePayslipsFilterPaginationModel,
 } from "../../../models/employees/employees-payslips-filters";
 import { getEmployeePayslipsFiltersConfig } from "./filter-config.employee-payslips";
 import AddEmployeePayslipModal from "../../../components/modals/employees/add-employee-payslip-modal";
@@ -35,101 +33,32 @@ const EmployeePayslipsPage: React.FC = () => {
     useState<EmployeePayslipListModel | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  const { totalRows, loading, fetchPayslips } = useEmployeePayslips(filters);
+  const { payslips, totalRows, loading, fetchPayslips } =
+    useEmployeePayslips(filters);
 
-  const [visibilityModel, setVisibilityModel] = useState(() => {
-    const saved = localStorage.getItem("columnVisibilityModelEmployeePayslips");
-    return saved ? JSON.parse(saved) : {};
-  });
-
-  const dataSource: GridDataSource = useMemo(
-    () => ({
-      getRows: async (params) => {
-        // Mapowanie sortowania
-        let orderBy: EmployeePayslipsOrderType | undefined;
-        let isDescending: boolean | undefined;
-        if (params.sortModel.length > 0) {
-          const sortField = params.sortModel[0].field;
-          const foundOrderBy = Object.values(EmployeePayslipsOrderType).find(
-            (orderType) =>
-              mapEmployeePayslipOrderTypeToField(orderType) === sortField
-          );
-          orderBy = foundOrderBy;
-          isDescending = params.sortModel[0].sort === "desc";
-        }
-
-        const filtersForApi: EmployeePayslipsFilterPaginationModel = {
-          ...filters,
-          page: params.paginationModel?.page,
-          pageSize: params.paginationModel?.pageSize,
-          aggregationModel: params.aggregationModel,
-          orderBy,
-          isDescending,
+  const [initialGridState] = useState(() => {
+    const savedState = localStorage.getItem("employeePayslipsGridState");
+    return savedState
+      ? JSON.parse(savedState)
+      : {
+          columns: {
+            columnVisibilityModel: { dateCreatedUtc: false },
+          },
+          aggregation: {
+            model: {
+              baseSalary: "sum",
+              bankTransferAmount: "sum",
+              bonusAmount: "sum",
+              overtimePay: "sum",
+              overtimeHours: "sum",
+              deductions: "sum",
+              otherAllowances: "sum",
+              netPay: "sum",
+              totalAmount: "sum",
+            },
+          },
         };
-
-        try {
-          const response = await EmployeePayslipsService.getPayslips(
-            filtersForApi
-          );
-
-          const responseData = response.responseData;
-          return {
-            rows: responseData?.list.items ?? [],
-            rowCount: responseData?.list.totalRows ?? 0,
-            aggregateRow: responseData?.aggregation,
-          };
-        } catch {
-          toast.error("Nie udało się pobrać danych rozliczeń.");
-
-          return { rows: [], rowCount: 0 };
-        }
-      },
-
-      /**
-       * Ta funkcja mówi siatce, jak odczytać wartość z obiektu `aggregateRow`.
-       * Ponieważ Twoje API zwraca klucze pasujące do nazw pól (np. 'netPay'),
-       * funkcja jest bardzo prosta.
-       */
-      getAggregatedValue: (row, field) => {
-        return row[field];
-      },
-    }),
-    [filters]
-  );
-
-  const aggregationFunctions = {
-    sum: { columnTypes: ["number"], label: "" },
-    avg: {},
-    min: {},
-    max: {},
-    size: {},
-  };
-
-  const initialState = {
-    pagination: {
-      paginationModel: {
-        page: 0,
-        pageSize: 10,
-      },
-    },
-
-    sorting: {
-      sortModel: [{ field: "employeeFullName", sort: "asc" as "asc" | "desc" }],
-    },
-
-    aggregation: {
-      model: {
-        baseSalary: "sum",
-        bankTransferAmount: "sum",
-        bonusAmount: "sum",
-        overtimePay: "sum",
-        overtimeHours: "sum",
-        deductions: "sum",
-        otherAllowances: "sum",
-        netPay: "sum",
-      },
-    },
-  };
+  });
 
   const uniqueCycles = useMemo(() => {
     if (!dictionary?.cycles) return [];
@@ -176,7 +105,7 @@ const EmployeePayslipsPage: React.FC = () => {
 
   useEffect(() => {
     fetchPayslips();
-  }, [fetchPayslips]);
+  }, [filters]);
 
   const columns = useMemo(
     () =>
@@ -220,16 +149,19 @@ const EmployeePayslipsPage: React.FC = () => {
         <DataGridPremium
           loading={loading}
           columns={columns}
-          //rows={payslips}
-          dataSource={dataSource}
-          initialState={initialState}
-          aggregationFunctions={aggregationFunctions}
-          columnVisibilityModel={visibilityModel}
-          onColumnVisibilityModelChange={(model) => {
-            setVisibilityModel(model);
+          rows={payslips}
+          initialState={initialGridState}
+          onStateChange={(newState: GridState) => {
+            const stateToSave = {
+              columns: newState.columns,
+              sorting: newState.sorting,
+              filter: newState.filter,
+              aggregation: newState.aggregation,
+              pinnedColumns: newState.pinnedColumns,
+            };
             localStorage.setItem(
-              "columnVisibilityModelEmployeePayslips",
-              JSON.stringify(model)
+              "employeePayslipsGridState",
+              JSON.stringify(stateToSave)
             );
           }}
           scrollbarSize={17}
@@ -249,7 +181,6 @@ const EmployeePayslipsPage: React.FC = () => {
           rowSelection={false}
           pageSizeOptions={[5, 10, 25, { value: -1, label: "Wszystkie" }]}
           slots={{
-            toolbar: CustomToolbar,
             noRowsOverlay: NoRowsOverlay,
           }}
           showToolbar

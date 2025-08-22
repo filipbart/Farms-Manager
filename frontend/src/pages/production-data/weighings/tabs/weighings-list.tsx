@@ -1,9 +1,7 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
-import { DataGridPro } from "@mui/x-data-grid-pro";
 import { useReducer, useState, useMemo, useEffect } from "react";
 import { toast } from "react-toastify";
 import NoRowsOverlay from "../../../../components/datagrid/custom-norows";
-import CustomToolbar from "../../../../components/datagrid/custom-toolbar";
 import FiltersForm from "../../../../components/filters/filters-form";
 import AddProductionDataWeighingModal from "../../../../components/modals/production-data/weighings/add-production-data-weighing-modal";
 import EditProductionDataWeighingModal from "../../../../components/modals/production-data/weighings/edit-production-data-weighing-modal";
@@ -20,6 +18,7 @@ import { ProductionDataWeighingsService } from "../../../../services/production-
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import { getWeighingsColumns } from "./weighings-columns";
 import { getProductionDataWeighingsFiltersConfig } from "./filter-config.production-data-weighings";
+import { DataGridPremium, type GridState } from "@mui/x-data-grid-premium";
 
 const ProductionDataWeighingsTab: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -34,9 +33,16 @@ const ProductionDataWeighingsTab: React.FC = () => {
   const [selectedWeighing, setSelectedWeighing] =
     useState<ProductionDataWeighingListModel | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [visibilityModel, setVisibilityModel] = useState(() => {
-    const saved = localStorage.getItem("columnVisibilityModelWeighings");
-    return saved ? JSON.parse(saved) : {};
+
+  const [initialGridState] = useState(() => {
+    const savedState = localStorage.getItem("productionDataWeighingsGridState");
+    return savedState
+      ? JSON.parse(savedState)
+      : {
+          columns: {
+            columnVisibilityModel: { dateCreatedUtc: false },
+          },
+        };
   });
 
   const uniqueCycles = useMemo(() => {
@@ -153,27 +159,23 @@ const ProductionDataWeighingsTab: React.FC = () => {
       />
 
       <Box mt={4} sx={{ width: "100%", overflowX: "auto" }}>
-        <DataGridPro
+        <DataGridPremium
           loading={loading}
           rows={weighings}
           columns={columns}
-          columnVisibilityModel={visibilityModel}
-          onColumnVisibilityModelChange={(model) => {
-            setVisibilityModel(model);
+          initialState={initialGridState}
+          onStateChange={(newState: GridState) => {
+            const stateToSave = {
+              columns: newState.columns,
+              sorting: newState.sorting,
+              filter: newState.filter,
+              aggregation: newState.aggregation,
+              pinnedColumns: newState.pinnedColumns,
+            };
             localStorage.setItem(
-              "columnVisibilityModelWeighings",
-              JSON.stringify(model)
+              "productionDataWeighingsGridState",
+              JSON.stringify(stateToSave)
             );
-          }}
-          initialState={{
-            columns: {
-              columnVisibilityModel: { id: false },
-            },
-          }}
-          localeText={{
-            paginationRowsPerPage: "Wierszy na stronę:",
-            paginationDisplayedRows: ({ from, to, count }) =>
-              `${from} do ${to} z ${count}`,
           }}
           paginationMode="server"
           pagination
@@ -190,7 +192,7 @@ const ProductionDataWeighingsTab: React.FC = () => {
           rowCount={totalRows}
           rowSelection={false}
           pageSizeOptions={[5, 10, 25, { value: -1, label: "Wszystkie" }]}
-          slots={{ toolbar: CustomToolbar, noRowsOverlay: NoRowsOverlay }}
+          slots={{ noRowsOverlay: NoRowsOverlay }}
           showToolbar
           sx={{
             [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },

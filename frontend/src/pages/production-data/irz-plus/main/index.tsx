@@ -1,16 +1,16 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
-import {
-  DataGridPro,
-  type GridCellParams,
-  type GridColDef,
-} from "@mui/x-data-grid-pro";
+import { type GridCellParams, type GridColDef } from "@mui/x-data-grid-pro";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import { FallenStockService } from "../../../../services/production-data/fallen-stocks-service";
 import { type FallenStockFilterModel } from "../../../../models/fallen-stocks/fallen-stocks-filters";
 import { useFallenStocks } from "../../../../hooks/useFallenStocks";
-import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
+import {
+  DataGridPremium,
+  GRID_AGGREGATION_ROOT_FOOTER_ROW_ID,
+  type GridState,
+} from "@mui/x-data-grid-premium";
 import ActionsCell from "../../../../components/datagrid/actions-cell";
 import AddFallenStocksModal from "../../../../components/modals/production-data/fallen-stocks/add-fallen-stocks-modal";
 import EditFallenStocksModal from "../../../../components/modals/production-data/fallen-stocks/edit-fallen-stocks-modal";
@@ -33,9 +33,17 @@ const MainFallenStockPage: React.FC<MainFallenStockPagePropse> = ({
 
   const { viewModel, loading, fetchFallenStocks } = useFallenStocks(filters);
 
-  const [visibilityModel, setVisibilityModel] = useState(() => {
-    const saved = localStorage.getItem("columnVisibilityModelFallenStock");
-    return saved ? JSON.parse(saved) : {};
+  const [initialGridState] = useState(() => {
+    const savedState = localStorage.getItem(
+      "productionDataFallenStockGridState"
+    );
+    return savedState
+      ? JSON.parse(savedState)
+      : {
+          columns: {
+            columnVisibilityModel: { dateCreatedUtc: false },
+          },
+        };
   });
 
   useEffect(() => {
@@ -208,18 +216,24 @@ const MainFallenStockPage: React.FC<MainFallenStockPagePropse> = ({
       </Box>
 
       <Box mt={4} sx={{ width: "100%", overflowX: "auto" }}>
-        <DataGridPro
+        <DataGridPremium
           loading={loading}
           rows={transformedData.insertionRows}
           columns={columns}
           hideFooter
           pinnedRows={{ bottom: transformedData.summaryRows }}
-          columnVisibilityModel={visibilityModel}
-          onColumnVisibilityModelChange={(model) => {
-            setVisibilityModel(model);
+          initialState={initialGridState}
+          onStateChange={(newState: GridState) => {
+            const stateToSave = {
+              columns: newState.columns,
+              sorting: newState.sorting,
+              filter: newState.filter,
+              aggregation: newState.aggregation,
+              pinnedColumns: newState.pinnedColumns,
+            };
             localStorage.setItem(
-              "columnVisibilityModelFallenStock",
-              JSON.stringify(model)
+              "productionDataFallenStockGridState",
+              JSON.stringify(stateToSave)
             );
           }}
           getRowClassName={(params) => {
@@ -236,14 +250,6 @@ const MainFallenStockPage: React.FC<MainFallenStockPagePropse> = ({
             return classNames.join(" ");
           }}
           scrollbarSize={17}
-          initialState={{
-            columns: {
-              columnVisibilityModel: { id: false, dateCreatedUtc: false },
-            },
-            pinnedColumns: {
-              left: ["rowTitle"],
-            },
-          }}
           rowSelection={false}
           showToolbar
           sx={{

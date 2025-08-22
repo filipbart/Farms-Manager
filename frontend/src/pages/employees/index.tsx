@@ -1,5 +1,4 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
-import { DataGridPro, type GridRowParams } from "@mui/x-data-grid-pro";
 import { useReducer, useState, useMemo, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
 import {
@@ -15,11 +14,15 @@ import { EmployeesService } from "../../services/employees-service";
 import { getEmployeesColumns } from "./employees-columns";
 import FiltersForm from "../../components/filters/filters-form";
 import { getEmployeesFiltersConfig } from "./filter-config.employees";
-import CustomToolbar from "../../components/datagrid/custom-toolbar";
 import NoRowsOverlay from "../../components/datagrid/custom-norows";
 import { useNavigate } from "react-router-dom";
 import AddEmployeeModal from "../../components/modals/employees/add-employee-modal";
 import type { EmployeeListModel } from "../../models/employees/employees";
+import {
+  DataGridPremium,
+  type GridRowParams,
+  type GridState,
+} from "@mui/x-data-grid-premium";
 
 const EmployeesPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -30,9 +33,15 @@ const EmployeesPage: React.FC = () => {
     useEmployees(filters);
   const nav = useNavigate();
 
-  const [visibilityModel, setVisibilityModel] = useState(() => {
-    const saved = localStorage.getItem("columnVisibilityModelEmployees");
-    return saved ? JSON.parse(saved) : {};
+  const [initialGridState] = useState(() => {
+    const savedState = localStorage.getItem("employeesGridState");
+    return savedState
+      ? JSON.parse(savedState)
+      : {
+          columns: {
+            columnVisibilityModel: { dateCreatedUtc: false },
+          },
+        };
   });
 
   const deleteEmployee = useCallback(
@@ -111,25 +120,26 @@ const EmployeesPage: React.FC = () => {
       />
 
       <Box mt={4} sx={{ width: "100%", overflowX: "auto" }}>
-        <DataGridPro
+        <DataGridPremium
           loading={loading}
           rows={employees}
           columns={columns}
-          columnVisibilityModel={visibilityModel}
-          onRowClick={(params) => {
-            nav(`/employees/${params.id}`);
-          }}
-          onColumnVisibilityModelChange={(model) => {
-            setVisibilityModel(model);
+          initialState={initialGridState}
+          onStateChange={(newState: GridState) => {
+            const stateToSave = {
+              columns: newState.columns,
+              sorting: newState.sorting,
+              filter: newState.filter,
+              aggregation: newState.aggregation,
+              pinnedColumns: newState.pinnedColumns,
+            };
             localStorage.setItem(
-              "columnVisibilityModelEmployees",
-              JSON.stringify(model)
+              "employeesGridState",
+              JSON.stringify(stateToSave)
             );
           }}
-          initialState={{
-            columns: {
-              columnVisibilityModel: { id: false },
-            },
+          onRowClick={(params) => {
+            nav(`/employees/${params.id}`);
           }}
           paginationMode="server"
           pagination
@@ -146,7 +156,7 @@ const EmployeesPage: React.FC = () => {
           rowCount={totalRows}
           rowSelection={false}
           pageSizeOptions={[5, 10, 25, { value: -1, label: "Wszystkie" }]}
-          slots={{ toolbar: CustomToolbar, noRowsOverlay: NoRowsOverlay }}
+          slots={{ noRowsOverlay: NoRowsOverlay }}
           showToolbar
           getRowClassName={getRowClassName}
           sx={{

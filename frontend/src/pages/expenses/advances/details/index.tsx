@@ -23,14 +23,13 @@ import { getAdvancesColumns } from "./expenses-advances-columns";
 import { downloadFile } from "../../../../utils/download-file";
 import ApiUrl from "../../../../common/ApiUrl";
 import NoRowsOverlay from "../../../../components/datagrid/custom-norows";
-import CustomToolbar from "../../../../components/datagrid/custom-toolbar";
 import type { ExpenseAdvanceListModel } from "../../../../models/expenses/advances/expenses-advances";
-import { DataGridPro } from "@mui/x-data-grid-pro";
 import AddExpenseAdvanceModal from "../../../../components/modals/expenses/advances/add-expense-advance-modal";
 import { toast } from "react-toastify";
 import { ExpensesAdvancesService } from "../../../../services/expenses-advances-service";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import EditExpenseAdvanceModal from "../../../../components/modals/expenses/advances/edit-expense-advance-modal";
+import { DataGridPremium, type GridState } from "@mui/x-data-grid-premium";
 
 const generateYearOptions = () => {
   const currentYear = new Date().getFullYear();
@@ -76,9 +75,17 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
     null
   );
 
-  const [visibilityModel, setVisibilityModel] = useState(() => {
-    const saved = localStorage.getItem("columnVisibilityModelExpensesAdvances");
-    return saved ? JSON.parse(saved) : {};
+  const [initialGridState] = useState(() => {
+    const savedState = localStorage.getItem(
+      "expensesProductionAdvancesGridState"
+    );
+    return savedState
+      ? JSON.parse(savedState)
+      : {
+          columns: {
+            columnVisibilityModel: { dateCreatedUtc: false },
+          },
+        };
   });
 
   const [selectedMonth, setSelectedMonth] = useState<number | "">(
@@ -265,28 +272,24 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
       </Paper>
 
       <Box mt={3} sx={{ width: "100%", overflowX: "auto" }}>
-        <DataGridPro
+        <DataGridPremium
           loading={loading}
           rows={advances}
           columns={columns}
           rowCount={totalRows}
-          columnVisibilityModel={visibilityModel}
-          onColumnVisibilityModelChange={(model) => {
-            setVisibilityModel(model);
+          initialState={initialGridState}
+          onStateChange={(newState: GridState) => {
+            const stateToSave = {
+              columns: newState.columns,
+              sorting: newState.sorting,
+              filter: newState.filter,
+              aggregation: newState.aggregation,
+              pinnedColumns: newState.pinnedColumns,
+            };
             localStorage.setItem(
-              "columnVisibilityModelExpenseProductions",
-              JSON.stringify(model)
+              "expensesProductionAdvancesGridState",
+              JSON.stringify(stateToSave)
             );
-          }}
-          initialState={{
-            columns: {
-              columnVisibilityModel: { id: false, dateCreatedUtc: false },
-            },
-          }}
-          localeText={{
-            paginationRowsPerPage: "Wierszy na stronę:",
-            paginationDisplayedRows: ({ from, to, count }) =>
-              `${from} do ${to} z ${count}`,
           }}
           scrollbarSize={17}
           pagination
@@ -328,7 +331,7 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
           }}
           rowSelection={false}
           pageSizeOptions={[5, 10, 25, { value: -1, label: "Wszystkie" }]}
-          slots={{ toolbar: CustomToolbar, noRowsOverlay: NoRowsOverlay }}
+          slots={{ noRowsOverlay: NoRowsOverlay }}
           showToolbar
           sx={{
             [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },

@@ -1,11 +1,9 @@
 import { Box, Button, tablePaginationClasses } from "@mui/material";
-import { DataGridPro } from "@mui/x-data-grid-pro";
 import { useReducer, useState, useMemo, useEffect } from "react";
 import { toast } from "react-toastify";
 import { getHatcheriesPriceColumns } from "./hatcheries-prices-columns";
 import { getHatcheriesPricesFiltersConfig } from "./filter-config.hatcheries-prices";
 import FiltersForm from "../../components/filters/filters-form";
-import CustomToolbar from "../../components/datagrid/custom-toolbar";
 import NoRowsOverlay from "../../components/datagrid/custom-norows";
 import {
   filterReducer,
@@ -19,6 +17,7 @@ import { handleApiResponse } from "../../utils/axios/handle-api-response";
 import { HatcheriesService } from "../../services/hatcheries-service";
 import AddHatcheryPriceModal from "../../components/modals/hatcheries/add-hatchery-price-modal";
 import EditHatcheryPriceModal from "../../components/modals/hatcheries/edit-hatchery-price-modal";
+import { DataGridPremium, type GridState } from "@mui/x-data-grid-premium";
 
 const HatcheriesPricesPanel: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -53,6 +52,17 @@ const HatcheriesPricesPanel: React.FC = () => {
       setLoading(false);
     }
   };
+
+  const [initialGridState] = useState(() => {
+    const savedState = localStorage.getItem("hatcheriesPricesGridState");
+    return savedState
+      ? JSON.parse(savedState)
+      : {
+          columns: {
+            columnVisibilityModel: { dateCreatedUtc: false },
+          },
+        };
+  });
 
   const columns = useMemo(
     () =>
@@ -133,21 +143,25 @@ const HatcheriesPricesPanel: React.FC = () => {
       />
 
       <Box mt={4} sx={{ width: "100%", overflowX: "auto" }}>
-        <DataGridPro
+        <DataGridPremium
           loading={loading}
           rows={hatcheriesPrices}
           columns={columns}
-          initialState={{
-            columns: {
-              columnVisibilityModel: { id: false, dateCreatedUtc: false },
-            },
+          initialState={initialGridState}
+          onStateChange={(newState: GridState) => {
+            const stateToSave = {
+              columns: newState.columns,
+              sorting: newState.sorting,
+              filter: newState.filter,
+              aggregation: newState.aggregation,
+              pinnedColumns: newState.pinnedColumns,
+            };
+            localStorage.setItem(
+              "hatcheriesPricesGridState",
+              JSON.stringify(stateToSave)
+            );
           }}
           scrollbarSize={17}
-          localeText={{
-            paginationRowsPerPage: "Wierszy na stronę:",
-            paginationDisplayedRows: ({ from, to, count }) =>
-              `${from} do ${to} z ${count}`,
-          }}
           paginationMode="server"
           pagination
           paginationModel={{
@@ -163,7 +177,7 @@ const HatcheriesPricesPanel: React.FC = () => {
           rowCount={totalRows}
           rowSelection={false}
           pageSizeOptions={[5, 10, 25, { value: -1, label: "Wszystkie" }]}
-          slots={{ toolbar: CustomToolbar, noRowsOverlay: NoRowsOverlay }}
+          slots={{ noRowsOverlay: NoRowsOverlay }}
           showToolbar
           sx={{
             [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },
