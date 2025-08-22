@@ -88,33 +88,83 @@ public class
         }
 
         var farmIds = farms.Select(f => f.Id).ToList();
-        var cycleIds = await GetFilteredCycleIds(request, farms, ct);
 
-        // 1. DANE DLA STATYSTYK (filtrowane po datach/cyklach)
+        // ########## GŁÓWNA LOGIKA ##########
+
+        // 1. POBIERZ DANE DLA GŁÓWNYCH STATYSTYK (Przychody, Koszty, VAT)
+        var cycleIdsForFilter = await GetFilteredCycleIds(request, farms, ct);
         var filteredSales = await _saleRepository.ListAsync(
-            new GetSalesForDashboardSpec(farmIds, cycleIds, request.Filters.DateSince, request.Filters.DateTo), ct);
-        var filteredFeedInvoices = await _feedInvoiceRepository.ListAsync(
-            new GetFeedsInvoicesForDashboardSpec(farmIds, cycleIds, request.Filters.DateSince, request.Filters.DateTo),
+            new GetSalesForDashboardSpec(farmIds, cycleIdsForFilter, request.Filters.DateSince, request.Filters.DateTo),
             ct);
-        var filteredExpenses = await _expenseProductionRepository.ListAsync(
-            new GetProductionExpensesForDashboardSpec(farmIds, cycleIds, request.Filters.DateSince,
+        var filteredFeedInvoices = await _feedInvoiceRepository.ListAsync(
+            new GetFeedsInvoicesForDashboardSpec(farmIds, cycleIdsForFilter, request.Filters.DateSince,
                 request.Filters.DateTo), ct);
+        var filteredExpenses = await _expenseProductionRepository.ListAsync(
+            new GetProductionExpensesForDashboardSpec(farmIds, cycleIdsForFilter, request.Filters.DateSince,
+                request.Filters.DateTo), ct);
+        var gasCostForStats = await GetGasCostAsync(farmIds, cycleIdsForFilter, request.Filters.DateSince,
+            request.Filters.DateTo, ct);
 
-        decimal gasCostForStats;
-        if (cycleIds.Count != 0)
+        // 2. WYZNACZ I POBIERZ DANE SPECJALNIE DLA WSKAŹNIKÓW KPI (Dochód na kg/m²)
+        decimal incomePerKg, incomePerSqm;
+
+        switch (request.Filters.DateCategory?.ToLower())
         {
-            var gasConsumptions =
-                await _gasConsumptionRepository.ListAsync(new GasConsumptionsForDashboardSpec(farmIds, cycleIds), ct);
-            gasCostForStats = gasConsumptions.Sum(t => t.Cost);
-        }
-        else
-        {
-            var gasDeliveries = await _gasDeliveryRepository.ListAsync(
-                new GasDeliveriesForDashboardSpec(farmIds, request.Filters.DateSince, request.Filters.DateTo), ct);
-            gasCostForStats = gasDeliveries.Sum(d => d.UnitPrice * d.UsedQuantity);
+            case "year":
+                // Dla roku: pobierz wszystkie dane z całego roku
+                var year = request.Filters.DateSince!.Value.Year;
+                var yearStart = new DateOnly(year, 1, 1);
+                var yearEnd = new DateOnly(year, 12, 31);
+
+                var salesForYear =
+                    await _saleRepository.ListAsync(new GetSalesForDashboardSpec(farmIds, null, yearStart, yearEnd),
+                        ct);
+                var feedsForYear =
+                    await _feedInvoiceRepository.ListAsync(
+                        new GetFeedsInvoicesForDashboardSpec(farmIds, null, yearStart, yearEnd), ct);
+                var expensesForYear =
+                    await _expenseProductionRepository.ListAsync(
+                        new GetProductionExpensesForDashboardSpec(farmIds, null, yearStart, yearEnd), ct);
+                var gasCostForYear = await GetGasCostAsync(farmIds, null, yearStart, yearEnd, ct);
+                (incomePerKg, incomePerSqm) =
+                    CalculateIncomeKpis(salesForYear, feedsForYear, expensesForYear, gasCostForYear, farms);
+                break;
+
+            case "month":
+                // Dla miesiąca: pobierz dane tylko dla aktywnych cykli
+                var activeCycleIds = farms.Where(f => f.ActiveCycleId.HasValue).Select(f => f.ActiveCycleId.Value)
+                    .ToList();
+                if (activeCycleIds.Count != 0)
+                {
+                    var salesForActive =
+                        await _saleRepository.ListAsync(new GetSalesForDashboardSpec(farmIds, activeCycleIds), ct);
+                    var feedsForActive =
+                        await _feedInvoiceRepository.ListAsync(
+                            new GetFeedsInvoicesForDashboardSpec(farmIds, activeCycleIds), ct);
+                    var expensesForActive =
+                        await _expenseProductionRepository.ListAsync(
+                            new GetProductionExpensesForDashboardSpec(farmIds, activeCycleIds), ct);
+                    var gasCostForActive = await GetGasCostAsync(farmIds, activeCycleIds, null, null, ct);
+                    (incomePerKg, incomePerSqm) = CalculateIncomeKpis(salesForActive, feedsForActive, expensesForActive,
+                        gasCostForActive, farms);
+                }
+                else
+                {
+                    (incomePerKg, incomePerSqm) = (0, 0);
+                }
+
+                break;
+
+            case "cycle":
+            case "range":
+            default:
+                // Dla cyklu i zakresu dat: użyj tych samych danych co dla głównych statystyk
+                (incomePerKg, incomePerSqm) = CalculateIncomeKpis(filteredSales, filteredFeedInvoices, filteredExpenses,
+                    gasCostForStats, farms);
+                break;
         }
 
-        // 2. DANE DLA WYKRESÓW I STATUSÓW (historyczne, filtrowane tylko po farmach)
+        // 3. POBIERZ DANE DLA WYKRESÓW I POZOSTAŁYCH KOMPONENTÓW (zawsze historyczne)
         var historicalSales = await _saleRepository.ListAsync(new GetSalesForDashboardSpec(farmIds), ct);
         var historicalFeedInvoices =
             await _feedInvoiceRepository.ListAsync(new GetFeedsInvoicesForDashboardSpec(farmIds), ct);
@@ -130,8 +180,9 @@ public class
             await _gasConsumptionRepository.ListAsync(new GasConsumptionsForFarmsSpec(farmIds), ct);
         var gasCostForCharts = allGasConsumptions.Sum(g => g.Cost);
 
-        // 3. Budowanie komponentów odpowiedzi (sekwencyjnie)
-        var stats = BuildDashboardStats(filteredSales, filteredFeedInvoices, filteredExpenses, gasCostForStats, farms);
+        // 4. Budowanie komponentów odpowiedzi
+        var stats = BuildDashboardStats(filteredSales, filteredFeedInvoices, filteredExpenses, gasCostForStats, farms,
+            incomePerKg, incomePerSqm);
         var chickenHousesStatus = BuildChickenHousesStatus(farms, allInsertions, historicalSales, allFailures);
         var fcrChart = BuildFcrChart(farms, historicalSales, historicalFeedInvoices);
         var gasConsumptionChart = BuildGasConsumptionChart(farms, allGasConsumptions);
@@ -173,23 +224,56 @@ public class
         return cycleIds;
     }
 
-    private static DashboardStats BuildDashboardStats(IReadOnlyList<SaleEntity> sales,
+    private async Task<decimal> GetGasCostAsync(List<Guid> farmIds, List<Guid> cycleIds, DateOnly? dateSince,
+        DateOnly? dateTo, CancellationToken ct)
+    {
+        if (cycleIds != null && cycleIds.Count != 0)
+        {
+            var gasConsumptions =
+                await _gasConsumptionRepository.ListAsync(new GasConsumptionsForDashboardSpec(farmIds, cycleIds), ct);
+            return gasConsumptions.Sum(t => t.Cost);
+        }
+
+        var gasDeliveries =
+            await _gasDeliveryRepository.ListAsync(new GasDeliveriesForDashboardSpec(farmIds, dateSince, dateTo), ct);
+        return gasDeliveries.Sum(d => d.UnitPrice * d.UsedQuantity);
+    }
+
+    // Funkcja pomocnicza do obliczania wskaźników KPI
+    private static (decimal incomePerKg, decimal incomePerSqm) CalculateIncomeKpis(IReadOnlyList<SaleEntity> sales,
         IReadOnlyList<FeedInvoiceEntity> feedInvoices,
         IReadOnlyList<ExpenseProductionEntity> expenses, decimal gasCost, IReadOnlyList<FarmEntity> farms)
     {
         var feedCosts = feedInvoices.Sum(t => t.SubTotal);
         var expensesCost = expenses.Sum(t => t.SubTotal);
         var totalRevenue = sales.Sum(s => (s.Weight - s.DeadWeight - s.ConfiscatedWeight) * s.PriceWithExtras);
+        var sumExpenses = feedCosts + gasCost + expensesCost;
+
+        var totalWeight = sales.Sum(t => t.Weight);
+        var totalArea = farms.Sum(f => f.Henhouses?.Sum(h => h.Area) ?? 0);
+
+        var incomePerKg = totalWeight > 0 ? (totalRevenue - sumExpenses) / totalWeight : 0;
+        var incomePerSqm = totalArea > 0 ? (totalRevenue - sumExpenses) / totalArea : 0;
+
+        return (incomePerKg, incomePerSqm);
+    }
+
+    // Zaktualizowana sygnatura BuildDashboardStats
+    private static DashboardStats BuildDashboardStats(IReadOnlyList<SaleEntity> sales,
+        IReadOnlyList<FeedInvoiceEntity> feedInvoices,
+        IReadOnlyList<ExpenseProductionEntity> expenses, decimal gasCost, IReadOnlyList<FarmEntity> farms,
+        decimal incomePerKg, decimal incomePerSqm)
+    {
+        var feedCosts = feedInvoices.Sum(t => t.SubTotal);
+        var expensesCost = expenses.Sum(t => t.SubTotal);
+        var totalRevenue = sales.Sum(s => (s.Weight - s.DeadWeight - s.ConfiscatedWeight) * s.PriceWithExtras);
+        var sumExpenses = feedCosts + gasCost + expensesCost;
 
         var feedVat = feedInvoices.Sum(t => t.VatAmount);
         var expensesVat = expenses.Sum(e => e.VatAmount);
         var gasVat = gasCost * 0.23m;
-
-        var sumExpenses = feedCosts + gasCost + expensesCost;
         var sumVat = feedVat + gasVat + expensesVat;
 
-        var totalArea = farms.Sum(f => f.Henhouses?.Sum(h => h.Area) ?? 0);
-        var totalWeight = sales.Sum(t => t.Weight);
         var totalFeedQuantity = feedInvoices.Sum(t => t.Quantity);
 
         return new DashboardStats
@@ -197,8 +281,8 @@ public class
             Revenue = totalRevenue,
             Expenses = sumExpenses,
             VatFromExpenses = sumVat,
-            IncomePerKg = totalWeight > 0 ? (totalRevenue - sumExpenses) / totalWeight : 0,
-            IncomePerSqm = totalArea > 0 ? (totalRevenue - sumExpenses) / totalArea : 0,
+            IncomePerKg = incomePerKg, // Użyj przekazanej wartości
+            IncomePerSqm = incomePerSqm, // Użyj przekazanej wartości
             AvgFeedPrice = totalFeedQuantity > 0 ? Math.Round(feedCosts / totalFeedQuantity, 2) : 0
         };
     }
@@ -465,11 +549,11 @@ public class
 
                     var insertedCount = henhouseInsertions.Sum(i => i.Quantity);
                     var lossesCount = henhouseFailures.Sum(f => f.DeadCount + f.DefectiveCount);
-                    var soldAndLostOnSaleCount = henhouseSales.Sum(s => s.Quantity + s.DeadCount + s.ConfiscatedCount);
+                    var soldCount = henhouseSales.Sum(s => s.Quantity);
 
-                    chickenCount = soldAndLostOnSaleCount + lossesCount - insertedCount;
+                    chickenCount = insertedCount - soldCount - lossesCount;
 
-                    if (insertedCount > 0 && chickenCount <= insertedCount * 0.01m)
+                    if (insertedCount > 0 && chickenCount <= insertedCount * 0.04m)
                     {
                         chickenCount = 0;
                     }

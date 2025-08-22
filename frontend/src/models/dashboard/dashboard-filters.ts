@@ -7,9 +7,10 @@ export interface DashboardDictionary {
 
 export interface DashboardFilters {
   farmId?: string;
-  cycle?: CycleDictModel;
+  cycle?: string;
   dateSince?: string | null;
   dateTo?: string | null;
+  dateCategory: string;
 }
 
 export const initialFilters: DashboardFilters = {
@@ -17,6 +18,7 @@ export const initialFilters: DashboardFilters = {
   cycle: undefined,
   dateSince: null,
   dateTo: null,
+  dateCategory: "",
 };
 
 export function filterReducer(

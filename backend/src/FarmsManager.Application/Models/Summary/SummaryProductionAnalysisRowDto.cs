@@ -311,11 +311,7 @@ public class SummaryProductionAnalysisRowDto
         get
         {
             var birdsAccountedFor = PartSaleSoldCount.GetValueOrDefault() +
-                                    PartSaleDeadCount.GetValueOrDefault() +
-                                    PartSaleConfiscatedCount.GetValueOrDefault() +
                                     TotalSaleSoldCount.GetValueOrDefault() +
-                                    TotalSaleDeadCount.GetValueOrDefault() +
-                                    TotalSaleConfiscatedCount.GetValueOrDefault() +
                                     DeadCountCycle.GetValueOrDefault() +
                                     DefectiveCountCycle.GetValueOrDefault();
 

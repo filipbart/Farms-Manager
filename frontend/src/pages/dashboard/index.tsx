@@ -101,27 +101,25 @@ const DashboardPage: React.FC = () => {
   }, [dictionary]);
 
   useEffect(() => {
-    let payload: Partial<DashboardFilters> = {};
+    const payload: Partial<DashboardFilters> = {
+      dateCategory: dateCategory,
+    };
+
     if (dateCategory === "cycle") {
-      const foundCycle = selectedCycle
-        ? uniqueCycles.find(
-            (c) => `${c.identifier}-${c.year}` === selectedCycle
-          )
-        : undefined;
-      payload = { cycle: foundCycle, dateSince: null, dateTo: null };
+      payload.cycle = selectedCycle;
+      payload.dateSince = null;
+      payload.dateTo = null;
     } else {
       let dateSince: string | null = null;
       let dateTo: string | null = null;
 
       if (dateCategory === "month") {
         const from = new Date(selectedYear, selectedMonth, 1);
-
         const to = new Date(selectedYear, selectedMonth + 1, 0);
         dateSince = from.toISOString().split("T")[0];
         dateTo = to.toISOString().split("T")[0];
       } else if (dateCategory === "year") {
         const from = new Date(selectedYear, 0, 1);
-
         const to = new Date(selectedYear, 11, 31);
         dateSince = from.toISOString().split("T")[0];
         dateTo = to.toISOString().split("T")[0];
@@ -130,7 +128,9 @@ const DashboardPage: React.FC = () => {
         dateTo = dateRange.to?.format("YYYY-MM-DD") ?? null;
       }
 
-      payload = { cycle: undefined, dateSince, dateTo };
+      payload.cycle = undefined;
+      payload.dateSince = dateSince;
+      payload.dateTo = dateTo;
     }
 
     dispatch({ type: "setMultiple", payload });

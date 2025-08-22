@@ -20,6 +20,7 @@ public record GetDashboardDataQueryFilters
 
     public DateOnly? DateSince { get; init; }
     public DateOnly? DateTo { get; init; }
+    public string DateCategory { get; init; }
 }
 
 public record GetDashboardDataQuery(GetDashboardDataQueryFilters Filters)

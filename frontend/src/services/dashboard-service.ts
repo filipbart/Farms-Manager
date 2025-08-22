@@ -16,9 +16,7 @@ export class DashboardService {
   public static async getDashboardData(filters: DashboardFilters) {
     return await AxiosWrapper.get<GetDashboardDataQueryResponse>(
       ApiUrl.Dashboard,
-      {
-        ...filters,
-      }
+      { ...filters }
     );
   }
 }
