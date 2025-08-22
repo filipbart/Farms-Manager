@@ -3,6 +3,7 @@ import dayjs from "dayjs";
 import type { HatcheryPriceListModel } from "../../models/hatcheries/hatcheries-prices";
 import ActionsCell from "../../components/datagrid/actions-cell";
 import { CommentCell } from "../../components/datagrid/comment-cell";
+import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
 
 export const getHatcheriesPriceColumns = ({
   setSelectedHatcheryPrice,
@@ -44,17 +45,22 @@ export const getHatcheriesPriceColumns = ({
       type: "actions",
       headerName: "Akcje",
       width: 200,
-      getActions: (params) => [
-        <ActionsCell
-          key="actions"
-          params={params}
-          onEdit={(row) => {
-            setSelectedHatcheryPrice(row);
-            setIsEditModalOpen(true);
-          }}
-          onDelete={deleteHatcheryPrice}
-        />,
-      ],
+      getActions: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return [];
+        }
+        return [
+          <ActionsCell
+            key="actions"
+            params={params}
+            onEdit={(row) => {
+              setSelectedHatcheryPrice(row);
+              setIsEditModalOpen(true);
+            }}
+            onDelete={deleteHatcheryPrice}
+          />,
+        ];
+      },
     },
   ];
 };

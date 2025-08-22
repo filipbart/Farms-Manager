@@ -29,7 +29,10 @@ import { downloadFile } from "../../../utils/download-file";
 import AddCorrectionModal from "../../../components/modals/feeds/deliveries/add-correction-modal";
 import EditCorrectionModal from "../../../components/modals/feeds/deliveries/edit-correction-modal";
 import { NotificationContext } from "../../../context/notification-context";
-import { DataGridPremium } from "@mui/x-data-grid-premium";
+import {
+  DataGridPremium,
+  GRID_AGGREGATION_ROOT_FOOTER_ROW_ID,
+} from "@mui/x-data-grid-premium";
 
 const FeedsDeliveriesPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -328,9 +331,23 @@ const FeedsDeliveriesPage: React.FC = () => {
           pageSizeOptions={[5, 10, 25, { value: -1, label: "Wszystkie" }]}
           slots={{ noRowsOverlay: NoRowsOverlay }}
           showToolbar
+          getRowClassName={(params) => {
+            if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+              return "aggregated-row";
+            }
+            return "";
+          }}
           sx={{
             [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },
             [`& .${tablePaginationClasses.input}`]: { display: "inline-flex" },
+            "& .aggregated-row": {
+              fontWeight: "bold",
+
+              "& .MuiDataGrid-cell": {
+                borderTop: "1px solid rgba(224, 224, 224, 1)",
+                backgroundColor: "rgba(240, 240, 240, 0.7)",
+              },
+            },
           }}
           scrollbarSize={17}
           sortingMode="server"

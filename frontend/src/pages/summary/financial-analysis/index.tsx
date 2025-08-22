@@ -6,6 +6,7 @@ import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import { SummaryService } from "../../../services/summary-service";
 import {
   DataGridPremium,
+  GRID_AGGREGATION_ROOT_FOOTER_ROW_ID,
   type GridToolbarProps,
   useGridApiRef,
 } from "@mui/x-data-grid-premium";
@@ -230,9 +231,23 @@ const SummaryFinancialAnalysisPage: React.FC = () => {
             noRowsOverlay: NoRowsOverlay,
           }}
           showToolbar
+          getRowClassName={(params) => {
+            if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+              return "aggregated-row";
+            }
+            return "";
+          }}
           sx={{
             [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },
             [`& .${tablePaginationClasses.input}`]: { display: "inline-flex" },
+            "& .aggregated-row": {
+              fontWeight: "bold",
+
+              "& .MuiDataGrid-cell": {
+                borderTop: "1px solid rgba(224, 224, 224, 1)",
+                backgroundColor: "rgba(240, 240, 240, 0.7)",
+              },
+            },
           }}
         />
       </Box>

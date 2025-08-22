@@ -1,6 +1,7 @@
 import type { GridColDef } from "@mui/x-data-grid";
 import ActionsCell from "../../../components/datagrid/actions-cell";
 import type { ProductionDataFlockLossListModel } from "../../../models/production-data/flock-loss";
+import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
 
 interface GetFlockLossColumnsProps {
   setSelectedFlockLoss: (row: ProductionDataFlockLossListModel) => void;
@@ -136,17 +137,22 @@ export const getFlockLossColumns = ({
       type: "actions",
       headerName: "Akcje",
       width: 100,
-      getActions: (params) => [
-        <ActionsCell
-          key="actions"
-          params={params}
-          onEdit={(row) => {
-            setSelectedFlockLoss(row);
-            setIsEditModalOpen(true);
-          }}
-          onDelete={deleteFlockLoss}
-        />,
-      ],
+      getActions: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return [];
+        }
+        return [
+          <ActionsCell
+            key="actions"
+            params={params}
+            onEdit={(row) => {
+              setSelectedFlockLoss(row);
+              setIsEditModalOpen(true);
+            }}
+            onDelete={deleteFlockLoss}
+          />,
+        ];
+      },
     },
   ];
 };

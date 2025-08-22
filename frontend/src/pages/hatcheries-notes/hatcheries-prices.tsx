@@ -17,7 +17,11 @@ import { handleApiResponse } from "../../utils/axios/handle-api-response";
 import { HatcheriesService } from "../../services/hatcheries-service";
 import AddHatcheryPriceModal from "../../components/modals/hatcheries/add-hatchery-price-modal";
 import EditHatcheryPriceModal from "../../components/modals/hatcheries/edit-hatchery-price-modal";
-import { DataGridPremium, type GridState } from "@mui/x-data-grid-premium";
+import {
+  DataGridPremium,
+  GRID_AGGREGATION_ROOT_FOOTER_ROW_ID,
+  type GridState,
+} from "@mui/x-data-grid-premium";
 
 const HatcheriesPricesPanel: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -179,9 +183,23 @@ const HatcheriesPricesPanel: React.FC = () => {
           pageSizeOptions={[5, 10, 25, { value: -1, label: "Wszystkie" }]}
           slots={{ noRowsOverlay: NoRowsOverlay }}
           showToolbar
+          getRowClassName={(params) => {
+            if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+              return "aggregated-row";
+            }
+            return "";
+          }}
           sx={{
             [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },
             [`& .${tablePaginationClasses.input}`]: { display: "inline-flex" },
+            "& .aggregated-row": {
+              fontWeight: "bold",
+
+              "& .MuiDataGrid-cell": {
+                borderTop: "1px solid rgba(224, 224, 224, 1)",
+                backgroundColor: "rgba(240, 240, 240, 0.7)",
+              },
+            },
           }}
           sortingMode="server"
           onSortModelChange={(model) => {

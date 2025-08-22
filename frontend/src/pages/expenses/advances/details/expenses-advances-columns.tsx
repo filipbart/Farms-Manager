@@ -5,6 +5,7 @@ import { CommentCell } from "../../../../components/datagrid/comment-cell";
 import FileDownloadCell from "../../../../components/datagrid/file-download-cell";
 import type { ExpenseAdvanceListModel } from "../../../../models/expenses/advances/expenses-advances";
 import { AdvanceType } from "../../../../models/expenses/advances/categories";
+import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
 
 interface GetAdvancesColumnsProps {
   setSelectedAdvance: (row: ExpenseAdvanceListModel) => void;
@@ -34,6 +35,9 @@ export const getAdvancesColumns = ({
       headerName: "Typ",
       width: 120,
       renderCell: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return [];
+        }
         const type = params.value as AdvanceType;
         return type === AdvanceType.Income ? "Przychód" : "Wydatek";
       },
@@ -71,30 +75,40 @@ export const getAdvancesColumns = ({
       headerAlign: "center",
       sortable: false,
       width: 100,
-      renderCell: (params) => (
-        <FileDownloadCell
-          filePath={params.row.filePath}
-          downloadingFilePath={downloadingFilePath}
-          onDownload={downloadAdvanceFile}
-        />
-      ),
+      renderCell: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return [];
+        }
+        return (
+          <FileDownloadCell
+            filePath={params.row.filePath}
+            downloadingFilePath={downloadingFilePath}
+            onDownload={downloadAdvanceFile}
+          />
+        );
+      },
     },
     {
       field: "actions",
       type: "actions",
       headerName: "Akcje",
       width: 200,
-      getActions: (params) => [
-        <ActionsCell
-          key="actions"
-          params={params}
-          onEdit={(row) => {
-            setSelectedAdvance(row);
-            setIsEditModalOpen(true);
-          }}
-          onDelete={deleteAdvance}
-        />,
-      ],
+      getActions: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return [];
+        }
+        return [
+          <ActionsCell
+            key="actions"
+            params={params}
+            onEdit={(row) => {
+              setSelectedAdvance(row);
+              setIsEditModalOpen(true);
+            }}
+            onDelete={deleteAdvance}
+          />,
+        ];
+      },
     },
   ];
 };

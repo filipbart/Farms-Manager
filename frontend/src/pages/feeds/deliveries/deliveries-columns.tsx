@@ -6,6 +6,7 @@ import { orange, red } from "@mui/material/colors";
 import { CommentCell } from "../../../components/datagrid/comment-cell";
 import FileDownloadCell from "../../../components/datagrid/file-download-cell";
 import ActionsCell from "../../../components/datagrid/actions-cell";
+import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
 
 export const getFeedsDeliveriesColumns = ({
   setSelectedFeedDelivery,
@@ -152,6 +153,9 @@ export const getFeedsDeliveriesColumns = ({
       headerName: "Data opłacenia",
       flex: 1,
       renderCell: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return [];
+        }
         const date = params.row.paymentDateUtc;
         return date
           ? `Opłacono dnia: ${new Date(date).toLocaleString()}`
@@ -165,6 +169,9 @@ export const getFeedsDeliveriesColumns = ({
       headerName: "Faktura",
       flex: 1,
       renderCell: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return [];
+        }
         const isCorrection = params.row.isCorrection;
         const filePath = params.row.filePath;
         const id = params.row.id;
@@ -189,27 +196,32 @@ export const getFeedsDeliveriesColumns = ({
       headerName: "Akcje",
       flex: 1,
       minWidth: 150,
-      getActions: (params) => [
-        <ActionsCell
-          key="actions"
-          params={params}
-          onEdit={(row) => {
-            setSelectedFeedDelivery(row);
-            if (row.isCorrection) {
-              setIsEditCorrectionModalOpen(true);
-            } else {
-              setIsEditModalOpen(true);
-            }
-          }}
-          onDelete={(id) => {
-            if (params.row.isCorrection) {
-              deleteFeedCorrection(id);
-            } else {
-              deleteFeedDelivery(id);
-            }
-          }}
-        />,
-      ],
+      getActions: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return [];
+        }
+        return [
+          <ActionsCell
+            key="actions"
+            params={params}
+            onEdit={(row) => {
+              setSelectedFeedDelivery(row);
+              if (row.isCorrection) {
+                setIsEditCorrectionModalOpen(true);
+              } else {
+                setIsEditModalOpen(true);
+              }
+            }}
+            onDelete={(id) => {
+              if (params.row.isCorrection) {
+                deleteFeedCorrection(id);
+              } else {
+                deleteFeedDelivery(id);
+              }
+            }}
+          />,
+        ];
+      },
     },
 
     {
@@ -217,7 +229,12 @@ export const getFeedsDeliveriesColumns = ({
       headerName: "Komentarz",
       flex: 1,
       aggregable: false,
-      renderCell: (params) => <CommentCell value={params.value} />,
+      renderCell: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return [];
+        }
+        return <CommentCell value={params.value} />;
+      },
     },
     { field: "dateCreatedUtc", headerName: "Data utworzenia wpisu", flex: 1 },
   ];

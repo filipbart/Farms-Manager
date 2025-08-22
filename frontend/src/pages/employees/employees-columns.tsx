@@ -6,6 +6,7 @@ import type {
   EmployeeListModel,
   EmployeeFileModel,
 } from "../../models/employees/employees";
+import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
 
 interface GetEmployeesColumnsProps {
   deleteEmployee: (id: string) => void;
@@ -79,6 +80,9 @@ export const getEmployeesColumns = ({
       sortable: false,
       aggregable: false,
       renderCell: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return [];
+        }
         const files = params.value as EmployeeFileModel[];
         if (!files || files.length === 0) {
           return (
@@ -108,20 +112,25 @@ export const getEmployeesColumns = ({
       type: "actions",
       headerName: "Akcje",
       width: 100,
-      getActions: (params) => [
-        <Button
-          key="delete"
-          variant="outlined"
-          size="small"
-          color="error"
-          onClick={(e) => {
-            e.stopPropagation();
-            deleteEmployee(params.row.id);
-          }}
-        >
-          Usuń
-        </Button>,
-      ],
+      getActions: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return [];
+        }
+        return [
+          <Button
+            key="delete"
+            variant="outlined"
+            size="small"
+            color="error"
+            onClick={(e) => {
+              e.stopPropagation();
+              deleteEmployee(params.row.id);
+            }}
+          >
+            Usuń
+          </Button>,
+        ];
+      },
     },
   ];
 };

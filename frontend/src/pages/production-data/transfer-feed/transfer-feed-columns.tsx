@@ -2,6 +2,7 @@ import type { GridColDef, GridColumnGroupingModel } from "@mui/x-data-grid";
 import type { ProductionDataTransferFeedListModel } from "../../../models/production-data/transfer-feed";
 import dayjs from "dayjs";
 import ActionsCell from "../../../components/datagrid/actions-cell";
+import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
 
 interface GetFeedTransfersColumnsProps {
   setSelectedTransfer: (row: ProductionDataTransferFeedListModel) => void;
@@ -49,17 +50,22 @@ export const getFeedTransfersColumns = ({
       type: "actions",
       headerName: "Akcje",
       width: 200,
-      getActions: (params) => [
-        <ActionsCell
-          key="actions"
-          params={params}
-          onEdit={(row) => {
-            setSelectedTransfer(row);
-            setIsEditModalOpen(true);
-          }}
-          onDelete={deleteTransfer}
-        />,
-      ],
+      getActions: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return [];
+        }
+        return [
+          <ActionsCell
+            key="actions"
+            params={params}
+            onEdit={(row) => {
+              setSelectedTransfer(row);
+              setIsEditModalOpen(true);
+            }}
+            onDelete={deleteTransfer}
+          />,
+        ];
+      },
     },
     {
       field: "dateCreatedUtc",

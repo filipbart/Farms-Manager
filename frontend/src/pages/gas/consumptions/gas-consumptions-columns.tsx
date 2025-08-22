@@ -1,6 +1,7 @@
 import type { GridColDef } from "@mui/x-data-grid";
 import type { GasConsumptionListModel } from "../../../models/gas/gas-consumptions";
 import ActionsCell from "../../../components/datagrid/actions-cell";
+import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
 
 interface GetGasConsumptionsColumnsProps {
   setSelectedGasConsumption: (row: GasConsumptionListModel) => void;
@@ -45,17 +46,22 @@ export const getGasConsumptionsColumns = ({
       type: "actions",
       headerName: "Akcje",
       width: 200,
-      getActions: (params) => [
-        <ActionsCell
-          key="actions"
-          params={params}
-          onEdit={(row) => {
-            setSelectedGasConsumption(row);
-            setIsEditModalOpen(true);
-          }}
-          onDelete={deleteGasConsumption}
-        />,
-      ],
+      getActions: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return [];
+        }
+        return [
+          <ActionsCell
+            key="actions"
+            params={params}
+            onEdit={(row) => {
+              setSelectedGasConsumption(row);
+              setIsEditModalOpen(true);
+            }}
+            onDelete={deleteGasConsumption}
+          />,
+        ];
+      },
     },
   ];
 };

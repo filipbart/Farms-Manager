@@ -4,6 +4,7 @@ import ActionsCell from "../../components/datagrid/actions-cell";
 import InsertionSendToIrzCell from "../../components/datagrid/insertion-send-to-irz-cell";
 import { Box, Tooltip } from "@mui/material";
 import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
+import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
 
 export const getInsertionsColumns = ({
   setSelectedInsertion,
@@ -55,6 +56,9 @@ export const getInsertionsColumns = ({
       align: "center",
       headerAlign: "center",
       renderCell: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return [];
+        }
         const isReported = params.value === true;
         const comment = params.row.wiosComment;
 
@@ -93,16 +97,21 @@ export const getInsertionsColumns = ({
       flex: 1,
       minWidth: 200,
       sortable: false,
-      renderCell: (params) => (
-        <InsertionSendToIrzCell
-          isSentToIrz={params.row.isSentToIrz}
-          dateIrzSentUtc={params.row.dateIrzSentUtc}
-          insertionId={params.row.id}
-          internalGroupId={params.row.internalGroupId}
-          dispatch={dispatch}
-          filters={filters}
-        />
-      ),
+      renderCell: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return [];
+        }
+        return (
+          <InsertionSendToIrzCell
+            isSentToIrz={params.row.isSentToIrz}
+            dateIrzSentUtc={params.row.dateIrzSentUtc}
+            insertionId={params.row.id}
+            internalGroupId={params.row.internalGroupId}
+            dispatch={dispatch}
+            filters={filters}
+          />
+        );
+      },
     },
 
     {
@@ -110,17 +119,22 @@ export const getInsertionsColumns = ({
       type: "actions",
       headerName: "Akcje",
       width: 200,
-      getActions: (params) => [
-        <ActionsCell
-          key="actions"
-          params={params}
-          onEdit={(row) => {
-            setSelectedInsertion(row);
-            setIsEditModalOpen(true);
-          }}
-          onDelete={deleteInsertion}
-        />,
-      ],
+      getActions: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return [];
+        }
+        return [
+          <ActionsCell
+            key="actions"
+            params={params}
+            onEdit={(row) => {
+              setSelectedInsertion(row);
+              setIsEditModalOpen(true);
+            }}
+            onDelete={deleteInsertion}
+          />,
+        ];
+      },
     },
 
     {
@@ -128,6 +142,9 @@ export const getInsertionsColumns = ({
       headerName: "Numer dokumentu IRZplus",
       flex: 1,
       renderCell: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return [];
+        }
         return params.value ? params.value : "Brak numeru";
       },
     },

@@ -2,6 +2,7 @@ import { Box, Typography } from "@mui/material";
 import type { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import type { ProductionDataWeighingListModel } from "../../../../models/production-data/weighings";
 import ActionsCell from "../../../../components/datagrid/actions-cell";
+import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
 
 interface GetWeighingsColumnsProps {
   setSelectedWeighing: (row: ProductionDataWeighingListModel) => void;
@@ -141,17 +142,22 @@ export const getWeighingsColumns = ({
       type: "actions",
       headerName: "Akcje",
       width: 200,
-      getActions: (params) => [
-        <ActionsCell
-          key="actions"
-          params={params}
-          onEdit={(row) => {
-            setSelectedWeighing(row);
-            setIsEditModalOpen(true);
-          }}
-          onDelete={deleteWeighing}
-        />,
-      ],
+      getActions: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return [];
+        }
+        return [
+          <ActionsCell
+            key="actions"
+            params={params}
+            onEdit={(row) => {
+              setSelectedWeighing(row);
+              setIsEditModalOpen(true);
+            }}
+            onDelete={deleteWeighing}
+          />,
+        ];
+      },
     },
   ];
 };

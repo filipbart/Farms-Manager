@@ -2,6 +2,7 @@ import dayjs from "dayjs";
 import type { ProductionDataRemainingFeedListModel } from "../../../models/production-data/remaining-feed";
 import type { GridColDef } from "@mui/x-data-grid";
 import ActionsCell from "../../../components/datagrid/actions-cell";
+import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
 
 interface GetRemainingFeedColumnsProps {
   setSelectedRemainingFeed: (row: ProductionDataRemainingFeedListModel) => void;
@@ -56,17 +57,22 @@ export const getRemainingFeedColumns = ({
       type: "actions",
       headerName: "Akcje",
       width: 200,
-      getActions: (params) => [
-        <ActionsCell
-          key="actions"
-          params={params}
-          onEdit={(row) => {
-            setSelectedRemainingFeed(row);
-            setIsEditModalOpen(true);
-          }}
-          onDelete={deleteRemainingFeed}
-        />,
-      ],
+      getActions: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return [];
+        }
+        return [
+          <ActionsCell
+            key="actions"
+            params={params}
+            onEdit={(row) => {
+              setSelectedRemainingFeed(row);
+              setIsEditModalOpen(true);
+            }}
+            onDelete={deleteRemainingFeed}
+          />,
+        ];
+      },
     },
     {
       field: "dateCreatedUtc",

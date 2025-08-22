@@ -2,6 +2,7 @@ import type { GridColDef } from "@mui/x-data-grid";
 import dayjs from "dayjs";
 import type { ProductionDataFailureListModel } from "../../../models/production-data/failures";
 import ActionsCell from "../../../components/datagrid/actions-cell";
+import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
 
 interface GetProductionDataFailuresColumnsProps {
   setSelectedFailure: (row: ProductionDataFailureListModel) => void;
@@ -59,17 +60,22 @@ export const getProductionDataFailuresColumns = ({
       type: "actions",
       headerName: "Akcje",
       width: 200,
-      getActions: (params) => [
-        <ActionsCell
-          key="actions"
-          params={params}
-          onEdit={(row) => {
-            setSelectedFailure(row);
-            setIsEditModalOpen(true);
-          }}
-          onDelete={deleteFailure}
-        />,
-      ],
+      getActions: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return [];
+        }
+        return [
+          <ActionsCell
+            key="actions"
+            params={params}
+            onEdit={(row) => {
+              setSelectedFailure(row);
+              setIsEditModalOpen(true);
+            }}
+            onDelete={deleteFailure}
+          />,
+        ];
+      },
     },
   ];
 };

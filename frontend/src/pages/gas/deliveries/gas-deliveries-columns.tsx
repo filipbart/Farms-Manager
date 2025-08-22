@@ -5,6 +5,7 @@ import type { GasDeliveryListModel } from "../../../models/gas/gas-deliveries";
 import { CommentCell } from "../../../components/datagrid/comment-cell";
 import FileDownloadCell from "../../../components/datagrid/file-download-cell";
 import ActionsCell from "../../../components/datagrid/actions-cell";
+import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
 
 interface GetGasDeliveriesColumnsProps {
   setSelectedGasDelivery: (row: GasDeliveryListModel) => void;
@@ -84,13 +85,18 @@ export const getGasDeliveriesColumns = ({
       align: "center",
       headerAlign: "center",
       sortable: false,
-      renderCell: (params) => (
-        <FileDownloadCell
-          filePath={params.row.filePath}
-          downloadingFilePath={downloadingFilePath}
-          onDownload={downloadGasDeliveryFile}
-        />
-      ),
+      renderCell: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return [];
+        }
+        return (
+          <FileDownloadCell
+            filePath={params.row.filePath}
+            downloadingFilePath={downloadingFilePath}
+            onDownload={downloadGasDeliveryFile}
+          />
+        );
+      },
     },
     {
       field: "actions",
@@ -98,6 +104,10 @@ export const getGasDeliveriesColumns = ({
       headerName: "Akcje",
       width: 200,
       getActions: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return [];
+        }
+
         const isUsed = params.row.usedQuantity > 0;
 
         // Callbacki przekazywane do ActionsCell:

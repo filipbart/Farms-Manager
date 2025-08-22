@@ -257,7 +257,13 @@ const MainFallenStockPage: React.FC<MainFallenStockPagePropse> = ({
             [`& .${tablePaginationClasses.input}`]: { display: "inline-flex" },
             "& .aggregated-row": {
               fontWeight: "bold",
+
+              "& .MuiDataGrid-cell": {
+                borderTop: "1px solid rgba(224, 224, 224, 1)",
+                backgroundColor: "rgba(240, 240, 240, 0.7)",
+              },
             },
+
             "& .flock-state-low": { backgroundColor: "rgba(255, 72, 66, 0.3)" },
             "& .flock-state-medium": {
               backgroundColor: "rgba(255, 170, 0, 0.3)",

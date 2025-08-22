@@ -10,7 +10,7 @@ import {
   Paper,
 } from "@mui/material";
 import { useEffect, useReducer, useState, useMemo } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import dayjs from "dayjs";
 import { useExpenseAdvances } from "../../../../hooks/expenses/advances/useExpensesAdvances";
 import {
@@ -29,7 +29,11 @@ import { toast } from "react-toastify";
 import { ExpensesAdvancesService } from "../../../../services/expenses-advances-service";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import EditExpenseAdvanceModal from "../../../../components/modals/expenses/advances/edit-expense-advance-modal";
-import { DataGridPremium, type GridState } from "@mui/x-data-grid-premium";
+import {
+  DataGridPremium,
+  GRID_AGGREGATION_ROOT_FOOTER_ROW_ID,
+  type GridState,
+} from "@mui/x-data-grid-premium";
 
 const generateYearOptions = () => {
   const currentYear = new Date().getFullYear();
@@ -74,6 +78,8 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
   const [downloadingFilePath, setDownloadFilePath] = useState<string | null>(
     null
   );
+
+  const nav = useNavigate();
 
   const [initialGridState] = useState(() => {
     const savedState = localStorage.getItem(
@@ -234,7 +240,19 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
             ))}
           </TextField>
         </Grid>
-        <Grid size={{ xs: 12, sm: 6 }} display="flex" justifyContent="flex-end">
+        <Grid
+          gap={2}
+          size={{ xs: 12, sm: 6 }}
+          display="flex"
+          justifyContent="flex-end"
+        >
+          <Button
+            variant="outlined"
+            color="inherit"
+            onClick={() => nav("/expenses/advances")}
+          >
+            Cofnij do listy
+          </Button>
           <Button
             variant="contained"
             color="primary"
@@ -333,9 +351,23 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
           pageSizeOptions={[5, 10, 25, { value: -1, label: "Wszystkie" }]}
           slots={{ noRowsOverlay: NoRowsOverlay }}
           showToolbar
+          getRowClassName={(params) => {
+            if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+              return "aggregated-row";
+            }
+            return "";
+          }}
           sx={{
             [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },
             [`& .${tablePaginationClasses.input}`]: { display: "inline-flex" },
+            "& .aggregated-row": {
+              fontWeight: "bold",
+
+              "& .MuiDataGrid-cell": {
+                borderTop: "1px solid rgba(224, 224, 224, 1)",
+                backgroundColor: "rgba(240, 240, 240, 0.7)",
+              },
+            },
           }}
         />
       </Box>

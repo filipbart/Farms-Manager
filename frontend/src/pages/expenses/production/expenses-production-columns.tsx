@@ -3,6 +3,7 @@ import dayjs from "dayjs";
 import type { ExpenseProductionListModel } from "../../../models/expenses/production/expenses-productions";
 import ActionsCell from "../../../components/datagrid/actions-cell";
 import FileDownloadCell from "../../../components/datagrid/file-download-cell";
+import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
 
 interface GetExpenseProductionColumnsProps {
   setSelectedExpenseProduction: (row: ExpenseProductionListModel) => void;
@@ -93,30 +94,40 @@ export const getExpenseProductionColumns = ({
       headerAlign: "center",
       sortable: false,
       flex: 0.5,
-      renderCell: (params) => (
-        <FileDownloadCell
-          filePath={params.row.filePath}
-          downloadingFilePath={downloadingFilePath}
-          onDownload={downloadExpenseProductionFile}
-        />
-      ),
+      renderCell: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return [];
+        }
+        return (
+          <FileDownloadCell
+            filePath={params.row.filePath}
+            downloadingFilePath={downloadingFilePath}
+            onDownload={downloadExpenseProductionFile}
+          />
+        );
+      },
     },
     {
       field: "actions",
       type: "actions",
       headerName: "Akcje",
       width: 200,
-      getActions: (params) => [
-        <ActionsCell
-          key="actions"
-          params={params}
-          onEdit={(row) => {
-            setSelectedExpenseProduction(row);
-            setIsEditModalOpen(true);
-          }}
-          onDelete={deleteExpenseProduction}
-        />,
-      ],
+      getActions: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return [];
+        }
+        return [
+          <ActionsCell
+            key="actions"
+            params={params}
+            onEdit={(row) => {
+              setSelectedExpenseProduction(row);
+              setIsEditModalOpen(true);
+            }}
+            onDelete={deleteExpenseProduction}
+          />,
+        ];
+      },
     },
   ];
 };

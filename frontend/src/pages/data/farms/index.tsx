@@ -132,6 +132,14 @@ const FarmsPage: React.FC = () => {
             minHeight: farms.length === 0 ? 300 : "auto",
             [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },
             [`& .${tablePaginationClasses.input}`]: { display: "inline-flex" },
+            "& .aggregated-row": {
+              fontWeight: "bold",
+
+              "& .MuiDataGrid-cell": {
+                borderTop: "1px solid rgba(224, 224, 224, 1)",
+                backgroundColor: "rgba(240, 240, 240, 0.7)",
+              },
+            },
             "& .MuiDataGrid-columnHeaders": { borderTop: "none" },
           }}
         />

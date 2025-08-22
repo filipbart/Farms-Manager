@@ -2,6 +2,7 @@ import type { GridColDef } from "@mui/x-data-grid";
 import dayjs from "dayjs";
 import FileDownloadCell from "../../../components/datagrid/file-download-cell";
 import ActionsCell from "../../../components/datagrid/actions-cell";
+import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
 
 export const getFeedsPaymentsColumns = ({
   deleteFeedPayment,
@@ -32,27 +33,38 @@ export const getFeedsPaymentsColumns = ({
     {
       field: "fileDownload",
       headerName: "Faktura",
+      align: "center",
       flex: 1,
-      renderCell: (params) => (
-        <FileDownloadCell
-          filePath={params.row.filePath}
-          downloadingFilePath={downloadFilePath}
-          onDownload={downloadPaymentFile}
-        />
-      ),
+      renderCell: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return [];
+        }
+        return (
+          <FileDownloadCell
+            filePath={params.row.filePath}
+            downloadingFilePath={downloadFilePath}
+            onDownload={downloadPaymentFile}
+          />
+        );
+      },
     },
     {
       field: "actions",
       type: "actions",
       headerName: "Akcje",
       flex: 1,
-      getActions: (params) => [
-        <ActionsCell
-          key="actions"
-          params={params}
-          onDelete={deleteFeedPayment}
-        />,
-      ],
+      getActions: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return [];
+        }
+        return [
+          <ActionsCell
+            key="actions"
+            params={params}
+            onDelete={deleteFeedPayment}
+          />,
+        ];
+      },
     },
   ];
 };

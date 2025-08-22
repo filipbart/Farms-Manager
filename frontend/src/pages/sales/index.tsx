@@ -22,7 +22,11 @@ import { getSalesColumns } from "./sales-columns";
 import { useSales } from "../../hooks/sales/useSales";
 import ApiUrl from "../../common/ApiUrl";
 import { downloadFile } from "../../utils/download-file";
-import { DataGridPremium, type GridState } from "@mui/x-data-grid-premium";
+import {
+  DataGridPremium,
+  GRID_AGGREGATION_ROOT_FOOTER_ROW_ID,
+  type GridState,
+} from "@mui/x-data-grid-premium";
 
 const SalesPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -204,9 +208,23 @@ const SalesPage: React.FC = () => {
             noRowsOverlay: NoRowsOverlay,
           }}
           showToolbar
+          getRowClassName={(params) => {
+            if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+              return "aggregated-row";
+            }
+            return "";
+          }}
           sx={{
             [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },
             [`& .${tablePaginationClasses.input}`]: { display: "inline-flex" },
+            "& .aggregated-row": {
+              fontWeight: "bold",
+
+              "& .MuiDataGrid-cell": {
+                borderTop: "1px solid rgba(224, 224, 224, 1)",
+                backgroundColor: "rgba(240, 240, 240, 0.7)",
+              },
+            },
           }}
           scrollbarSize={17}
           sortingMode="server"

@@ -19,7 +19,11 @@ import { getProductionDataFiltersConfig } from "../filter-config.production-data
 import AddProductionDataRemainingFeedModal from "../../../components/modals/production-data/remaining-feed/add-production-data-remaining-feed-modal";
 import EditProductionDataRemainingFeedModal from "../../../components/modals/production-data/remaining-feed/edit-production-data-failure-modal";
 import { ProductionDataService } from "../../../services/production-data/production-data-service";
-import { DataGridPremium, type GridState } from "@mui/x-data-grid-premium";
+import {
+  DataGridPremium,
+  GRID_AGGREGATION_ROOT_FOOTER_ROW_ID,
+  type GridState,
+} from "@mui/x-data-grid-premium";
 
 const ProductionDataRemainingFeedPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
@@ -196,9 +200,23 @@ const ProductionDataRemainingFeedPage: React.FC = () => {
           pageSizeOptions={[5, 10, 25, { value: -1, label: "Wszystkie" }]}
           slots={{ noRowsOverlay: NoRowsOverlay }}
           showToolbar
+          getRowClassName={(params) => {
+            if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+              return "aggregated-row";
+            }
+            return "";
+          }}
           sx={{
             [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },
             [`& .${tablePaginationClasses.input}`]: { display: "inline-flex" },
+            "& .aggregated-row": {
+              fontWeight: "bold",
+
+              "& .MuiDataGrid-cell": {
+                borderTop: "1px solid rgba(224, 224, 224, 1)",
+                backgroundColor: "rgba(240, 240, 240, 0.7)",
+              },
+            },
           }}
           sortingMode="server"
           onSortModelChange={(model) => {

@@ -4,6 +4,7 @@ import { CommentCell } from "../../components/datagrid/comment-cell";
 import SaleSendToIrzCell from "../../components/datagrid/sale-send-to-irz-cell";
 import ActionsCell from "../../components/datagrid/actions-cell";
 import FileDownloadCell from "../../components/datagrid/file-download-cell";
+import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
 
 // Zaktualizowano interfejs propsów, aby przyjmował `uniqueExtraNames`
 interface GetSalesColumnsProps {
@@ -140,13 +141,18 @@ export const getSalesColumns = ({
       width: 180,
       sortable: false,
       type: "actions",
-      renderCell: (params) => (
-        <SaleSendToIrzCell
-          dispatch={dispatch}
-          row={params.row}
-          filters={filters}
-        />
-      ),
+      renderCell: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return [];
+        }
+        return (
+          <SaleSendToIrzCell
+            dispatch={dispatch}
+            row={params.row}
+            filters={filters}
+          />
+        );
+      },
     },
     {
       field: "actions",
@@ -154,17 +160,22 @@ export const getSalesColumns = ({
       headerName: "Akcje",
       sortable: false,
       width: 120,
-      getActions: (params) => [
-        <ActionsCell
-          key="actions"
-          params={params}
-          onEdit={(row) => {
-            setSelectedSale(row);
-            setIsEditModalOpen(true);
-          }}
-          onDelete={deleteSale}
-        />,
-      ],
+      getActions: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return [];
+        }
+        return [
+          <ActionsCell
+            key="actions"
+            params={params}
+            onEdit={(row) => {
+              setSelectedSale(row);
+              setIsEditModalOpen(true);
+            }}
+            onDelete={deleteSale}
+          />,
+        ];
+      },
     },
     {
       field: "fileDownload",
@@ -173,19 +184,29 @@ export const getSalesColumns = ({
       headerAlign: "center",
       sortable: false,
       width: 130,
-      renderCell: (params) => (
-        <FileDownloadCell
-          filePath={params.row.directoryPath}
-          downloadingFilePath={downloadDirectoryPath}
-          onDownload={downloadSaleDirectory}
-        />
-      ),
+      renderCell: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return [];
+        }
+        return (
+          <FileDownloadCell
+            filePath={params.row.directoryPath}
+            downloadingFilePath={downloadDirectoryPath}
+            onDownload={downloadSaleDirectory}
+          />
+        );
+      },
     },
     {
       field: "documentNumber",
       headerName: "Numer dokumentu IRZplus",
       width: 220,
-      renderCell: (params) => (params.value ? params.value : "Brak numeru"),
+      renderCell: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return [];
+        }
+        return params.value ? params.value : "Brak numeru";
+      },
     },
     {
       field: "dateCreatedUtc",

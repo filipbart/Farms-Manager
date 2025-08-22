@@ -1,6 +1,7 @@
 import type { GridColDef } from "@mui/x-data-grid";
 import dayjs from "dayjs";
 import ActionsCell from "../../../components/datagrid/actions-cell";
+import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
 
 export const getFeedsPriceColumns = ({
   setSelectedFeedPrice,
@@ -37,17 +38,22 @@ export const getFeedsPriceColumns = ({
       type: "actions",
       headerName: "Akcje",
       width: 200,
-      getActions: (params) => [
-        <ActionsCell
-          key="actions"
-          params={params}
-          onEdit={(row) => {
-            setSelectedFeedPrice(row);
-            setIsEditModalOpen(true);
-          }}
-          onDelete={deleteFeedPrice}
-        />,
-      ],
+      getActions: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return [];
+        }
+        return [
+          <ActionsCell
+            key="actions"
+            params={params}
+            onEdit={(row) => {
+              setSelectedFeedPrice(row);
+              setIsEditModalOpen(true);
+            }}
+            onDelete={deleteFeedPrice}
+          />,
+        ];
+      },
     },
     { field: "dateCreatedUtc", headerName: "Data utworzenia wpisu", flex: 1 },
   ];

@@ -3,6 +3,7 @@ import dayjs from "dayjs";
 import type { SalesInvoiceListModel } from "../../../models/sales/sales-invoices";
 import ActionsCell from "../../../components/datagrid/actions-cell";
 import FileDownloadCell from "../../../components/datagrid/file-download-cell";
+import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
 
 interface GetSalesInvoicesColumnsProps {
   setSelectedSalesInvoice: (row: SalesInvoiceListModel) => void;
@@ -92,30 +93,40 @@ export const getSalesInvoicesColumns = ({
       headerAlign: "center",
       sortable: false,
       width: 100,
-      renderCell: (params) => (
-        <FileDownloadCell
-          filePath={params.row.filePath}
-          downloadingFilePath={downloadingFilePath}
-          onDownload={downloadSalesInvoiceFile}
-        />
-      ),
+      renderCell: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return [];
+        }
+        return (
+          <FileDownloadCell
+            filePath={params.row.filePath}
+            downloadingFilePath={downloadingFilePath}
+            onDownload={downloadSalesInvoiceFile}
+          />
+        );
+      },
     },
     {
       field: "actions",
       type: "actions",
       headerName: "Akcje",
       width: 200,
-      getActions: (params) => [
-        <ActionsCell
-          key="actions"
-          params={params}
-          onEdit={(row) => {
-            setSelectedSalesInvoice(row);
-            setIsEditModalOpen(true);
-          }}
-          onDelete={deleteSalesInvoice}
-        />,
-      ],
+      getActions: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return [];
+        }
+        return [
+          <ActionsCell
+            key="actions"
+            params={params}
+            onEdit={(row) => {
+              setSelectedSalesInvoice(row);
+              setIsEditModalOpen(true);
+            }}
+            onDelete={deleteSalesInvoice}
+          />,
+        ];
+      },
     },
   ];
 };

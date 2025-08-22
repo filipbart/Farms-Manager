@@ -2,6 +2,7 @@ import { Button } from "@mui/material";
 import type { GridColDef } from "@mui/x-data-grid";
 import dayjs from "dayjs";
 import type { UserListModel } from "../../../models/users/users";
+import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
 
 interface GetUsersColumnsProps {
   deleteUser: (id: string) => void;
@@ -34,20 +35,25 @@ export const getUsersColumns = ({
       type: "actions",
       headerName: "Akcje",
       width: 150,
-      getActions: (params) => [
-        <Button
-          key="delete"
-          variant="outlined"
-          size="small"
-          color="error"
-          onClick={(e) => {
-            e.stopPropagation();
-            deleteUser(params.row.id);
-          }}
-        >
-          Usuń
-        </Button>,
-      ],
+      getActions: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return [];
+        }
+        return [
+          <Button
+            key="delete"
+            variant="outlined"
+            size="small"
+            color="error"
+            onClick={(e) => {
+              e.stopPropagation();
+              deleteUser(params.row.id);
+            }}
+          >
+            Usuń
+          </Button>,
+        ];
+      },
     },
   ];
 };
