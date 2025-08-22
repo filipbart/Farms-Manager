@@ -108,33 +108,31 @@ const DashboardPage: React.FC = () => {
             (c) => `${c.identifier}-${c.year}` === selectedCycle
           )
         : undefined;
-      payload = { cycle: foundCycle, dateFrom: null, dateTo: null };
+      payload = { cycle: foundCycle, dateSince: null, dateTo: null };
     } else {
-      payload = { cycle: undefined };
+      let dateSince: string | null = null;
+      let dateTo: string | null = null;
+
       if (dateCategory === "month") {
         const from = new Date(selectedYear, selectedMonth, 1);
+
         const to = new Date(selectedYear, selectedMonth + 1, 0);
-        payload = {
-          ...payload,
-          dateFrom: from.toISOString().split("T")[0],
-          dateTo: to.toISOString().split("T")[0],
-        };
+        dateSince = from.toISOString().split("T")[0];
+        dateTo = to.toISOString().split("T")[0];
       } else if (dateCategory === "year") {
         const from = new Date(selectedYear, 0, 1);
+
         const to = new Date(selectedYear, 11, 31);
-        payload = {
-          ...payload,
-          dateFrom: from.toISOString().split("T")[0],
-          dateTo: to.toISOString().split("T")[0],
-        };
+        dateSince = from.toISOString().split("T")[0];
+        dateTo = to.toISOString().split("T")[0];
       } else if (dateCategory === "range") {
-        payload = {
-          ...payload,
-          dateFrom: dateRange.from?.format("YYYY-MM-DD") ?? "",
-          dateTo: dateRange.to?.format("YYYY-MM-DD") ?? "",
-        };
+        dateSince = dateRange.from?.format("YYYY-MM-DD") ?? null;
+        dateTo = dateRange.to?.format("YYYY-MM-DD") ?? null;
       }
+
+      payload = { cycle: undefined, dateSince, dateTo };
     }
+
     dispatch({ type: "setMultiple", payload });
   }, [
     dateCategory,

@@ -8,14 +8,14 @@ export interface DashboardDictionary {
 export interface DashboardFilters {
   farmId?: string;
   cycle?: CycleDictModel;
-  dateFrom?: string | null;
+  dateSince?: string | null;
   dateTo?: string | null;
 }
 
 export const initialFilters: DashboardFilters = {
   farmId: undefined,
   cycle: undefined,
-  dateFrom: null,
+  dateSince: null,
   dateTo: null,
 };
 

@@ -467,7 +467,7 @@ public class
                     var lossesCount = henhouseFailures.Sum(f => f.DeadCount + f.DefectiveCount);
                     var soldAndLostOnSaleCount = henhouseSales.Sum(s => s.Quantity + s.DeadCount + s.ConfiscatedCount);
 
-                    chickenCount = insertedCount - (soldAndLostOnSaleCount + lossesCount);
+                    chickenCount = soldAndLostOnSaleCount + lossesCount - insertedCount;
 
                     if (insertedCount > 0 && chickenCount <= insertedCount * 0.01m)
                     {
