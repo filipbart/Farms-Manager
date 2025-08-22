@@ -181,7 +181,7 @@ public class
         var gasCostForCharts = allGasConsumptions.Sum(g => g.Cost);
 
         // 4. Budowanie komponentów odpowiedzi
-        var stats = BuildDashboardStats(filteredSales, filteredFeedInvoices, filteredExpenses, gasCostForStats, farms,
+        var stats = BuildDashboardStats(filteredSales, filteredFeedInvoices, filteredExpenses, gasCostForStats,
             incomePerKg, incomePerSqm);
         var chickenHousesStatus = BuildChickenHousesStatus(farms, allInsertions, historicalSales, allFailures);
         var fcrChart = BuildFcrChart(farms, historicalSales, historicalFeedInvoices);
@@ -218,7 +218,7 @@ public class
             var cycle = await _cycleRepository.FirstOrDefaultAsync(
                 new GetCycleByYearIdentifierAndFarmSpec(farm.Id, request.Filters.CycleDict.Year,
                     request.Filters.CycleDict.Identifier), ct);
-            if (cycle != null) cycleIds.Add(cycle.Id);
+            cycleIds.Add(cycle?.Id ?? Guid.Empty);
         }
 
         return cycleIds;
@@ -236,7 +236,7 @@ public class
 
         var gasDeliveries =
             await _gasDeliveryRepository.ListAsync(new GasDeliveriesForDashboardSpec(farmIds, dateSince, dateTo), ct);
-        return gasDeliveries.Sum(d => d.UnitPrice * d.UsedQuantity);
+        return gasDeliveries.Sum(d => d.UnitPrice * d.Quantity);
     }
 
     // Funkcja pomocnicza do obliczania wskaźników KPI
@@ -258,10 +258,8 @@ public class
         return (incomePerKg, incomePerSqm);
     }
 
-    // Zaktualizowana sygnatura BuildDashboardStats
     private static DashboardStats BuildDashboardStats(IReadOnlyList<SaleEntity> sales,
-        IReadOnlyList<FeedInvoiceEntity> feedInvoices,
-        IReadOnlyList<ExpenseProductionEntity> expenses, decimal gasCost, IReadOnlyList<FarmEntity> farms,
+        IReadOnlyList<FeedInvoiceEntity> feedInvoices, IReadOnlyList<ExpenseProductionEntity> expenses, decimal gasCost,
         decimal incomePerKg, decimal incomePerSqm)
     {
         var feedCosts = feedInvoices.Sum(t => t.SubTotal);
@@ -281,8 +279,8 @@ public class
             Revenue = totalRevenue,
             Expenses = sumExpenses,
             VatFromExpenses = sumVat,
-            IncomePerKg = incomePerKg, // Użyj przekazanej wartości
-            IncomePerSqm = incomePerSqm, // Użyj przekazanej wartości
+            IncomePerKg = incomePerKg,
+            IncomePerSqm = incomePerSqm,
             AvgFeedPrice = totalFeedQuantity > 0 ? Math.Round(feedCosts / totalFeedQuantity, 2) : 0
         };
     }

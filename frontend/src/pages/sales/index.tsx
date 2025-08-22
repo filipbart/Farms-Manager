@@ -42,6 +42,29 @@ const SalesPage: React.FC = () => {
     string | null
   >(null);
 
+  const { transformedRows, uniqueExtraNames } = useMemo(() => {
+    if (!sales || sales.length === 0) {
+      return { transformedRows: [], uniqueExtraNames: [] };
+    }
+
+    const extraNamesSet = new Set<string>();
+    sales.forEach((sale) => {
+      sale.otherExtras?.forEach((extra) => extraNamesSet.add(extra.name));
+    });
+    const uniqueExtraNames = Array.from(extraNamesSet);
+
+    const transformedRows = sales.map((sale) => {
+      const newRow: Record<string, any> = { ...sale };
+      uniqueExtraNames.forEach((extraName) => {
+        const extra = sale.otherExtras?.find((e) => e.name === extraName);
+        newRow[extraName] = extra ? extra.value : 0;
+      });
+      return newRow;
+    });
+
+    return { transformedRows, uniqueExtraNames };
+  }, [sales]);
+
   const uniqueCycles = useMemo(() => {
     if (!dictionary?.cycles) return [];
     const map = new Map<string, CycleDictModel>();
@@ -120,8 +143,9 @@ const SalesPage: React.FC = () => {
         downloadDirectoryPath,
         dispatch,
         filters,
+        uniqueExtraNames,
       }),
-    [dispatch, filters]
+    [dispatch, filters, downloadDirectoryPath, uniqueExtraNames]
   );
 
   return (
@@ -155,7 +179,7 @@ const SalesPage: React.FC = () => {
       <Box mt={4} sx={{ width: "100%", overflowX: "auto" }}>
         <DataGridPro
           loading={loading}
-          rows={sales}
+          rows={transformedRows}
           columns={columns}
           columnVisibilityModel={visibilityModel}
           onColumnVisibilityModelChange={(model) => {

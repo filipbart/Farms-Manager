@@ -7,6 +7,7 @@ using FarmsManager.Domain.Aggregates.FallenStockAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.UserAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
+using FarmsManager.Shared.Extensions;
 using MediatR;
 
 namespace FarmsManager.Application.Queries.FallenStock;
@@ -70,22 +71,30 @@ public class
             await _fallenStockPickupRepository.ListAsync(new FallenStockPickupsByFarmAndCycleSpec(farm.Id, cycle.Id),
                 cancellationToken);
 
-        // _irzplusService.PrepareOptions(user.IrzplusCredentials);
-        // var irzplusFlock = await _irzplusService.GetFlockAsync(farm, cancellationToken);
+        var response = new BaseResponse<GetIrzSummaryDataQueryResponse>();
+        var irzplusCredential = user.IrzplusCredentials?.FirstOrDefault(t => t.FarmId == farm.Id);
+        if (irzplusCredential is null)
+        {
+            response.AddError("IrzplusCredentials", "Brak danych logowania do systemu IRZplus");
+            return response;
+        }
+
+        _irzplusService.PrepareOptions(irzplusCredential);
+        var irzplusFlock = await _irzplusService.GetFlockAsync(farm, cancellationToken);
 
         var queryResponse = new GetIrzSummaryDataQueryResponse
         {
-            CurrentStockSize = 0, //irzplusFlock.ListaDrob?.FirstOrDefault()?.OgolnaLiczbaDrobiu ?? 0,
+            CurrentStockSize = irzplusFlock.ListaDrob?.FirstOrDefault()?.LiczbaDrobiu ?? 0,
             ReportedFallenStock = fallenStocks.Sum(t => t.Quantity),
             CollectedFallenStock = fallenStockPickups.Sum(t => t.Quantity)
         };
 
-        var response = BaseResponse.CreateResponse(queryResponse);
+        response = BaseResponse.CreateResponse(queryResponse);
 
-        // if (irzplusFlock.Komunikat.IsNotEmpty())
-        // {
-        //     response.AddError("IRZplus", irzplusFlock.Komunikat);
-        // }
+        if (irzplusFlock.Komunikat.IsNotEmpty())
+        {
+            response.AddError("IRZplus", irzplusFlock.Komunikat);
+        }
 
         return response;
     }

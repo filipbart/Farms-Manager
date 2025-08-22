@@ -1,10 +1,21 @@
 import type { GridColDef } from "@mui/x-data-grid";
 import dayjs from "dayjs";
-import { OtherExtrasCell } from "../../models/sales/sale-other-extras-cell";
 import { CommentCell } from "../../components/datagrid/comment-cell";
 import SaleSendToIrzCell from "../../components/datagrid/sale-send-to-irz-cell";
 import ActionsCell from "../../components/datagrid/actions-cell";
 import FileDownloadCell from "../../components/datagrid/file-download-cell";
+
+// Zaktualizowano interfejs propsów, aby przyjmował `uniqueExtraNames`
+interface GetSalesColumnsProps {
+  setSelectedSale: (s: any) => void;
+  deleteSale: (id: string) => void;
+  setIsEditModalOpen: (v: boolean) => void;
+  downloadSaleDirectory: (path: string) => void;
+  downloadDirectoryPath: string | null;
+  dispatch: any;
+  filters: any;
+  uniqueExtraNames: string[]; // Nowa właściwość
+}
 
 export const getSalesColumns = ({
   setSelectedSale,
@@ -14,16 +25,10 @@ export const getSalesColumns = ({
   downloadDirectoryPath,
   dispatch,
   filters,
-}: {
-  setSelectedSale: (s: any) => void;
-  deleteSale: (id: string) => void;
-  setIsEditModalOpen: (v: boolean) => void;
-  downloadSaleDirectory: (path: string) => void;
-  downloadDirectoryPath: string | null;
-  dispatch: any;
-  filters: any;
-}): GridColDef[] => {
-  return [
+  uniqueExtraNames, // Nowa właściwość
+}: GetSalesColumnsProps): GridColDef[] => {
+  // Kolumny, które zawsze pojawiają się na początku
+  const staticColumns: GridColDef[] = [
     { field: "cycleText", headerName: "Identyfikator", width: 120 },
     { field: "farmName", headerName: "Ferma", width: 180 },
     { field: "henhouseName", headerName: "Kurnik", width: 150 },
@@ -32,10 +37,8 @@ export const getSalesColumns = ({
       field: "saleDate",
       headerName: "Data sprzedaży",
       width: 150,
-      type: "string",
-      valueGetter: (date: any) => {
-        return date ? dayjs(date).format("YYYY-MM-DD") : "";
-      },
+      type: "date",
+      valueGetter: (value: string) => (value ? dayjs(value).toDate() : null),
     },
     { field: "typeDesc", headerName: "Typ sprzedaży", width: 150 },
     {
@@ -105,17 +108,25 @@ export const getSalesColumns = ({
     {
       field: "priceWithExtras",
       headerName: "Cena z dodatkami [zł]",
-      width: 130,
+      width: 180,
       type: "number",
       headerAlign: "left",
       align: "left",
     },
-    {
-      field: "otherExtras",
-      headerName: "Inne dodatki",
-      width: 150,
-      renderCell: (params) => <OtherExtrasCell value={params.value} />,
-    },
+  ];
+
+  // Dynamiczne tworzenie kolumn dla każdego "dodatku"
+  const extraColumns: GridColDef[] = uniqueExtraNames.map((extraName) => ({
+    field: extraName,
+    headerName: `${extraName} [zł]`,
+    width: 160,
+    type: "number",
+    headerAlign: "left",
+    align: "left",
+  }));
+
+  // Kolumny, które zawsze pojawiają się na końcu
+  const finalColumns: GridColDef[] = [
     {
       field: "comment",
       headerName: "Komentarz",
@@ -141,7 +152,7 @@ export const getSalesColumns = ({
       type: "actions",
       headerName: "Akcje",
       sortable: false,
-      width: 180,
+      width: 120,
       getActions: (params) => [
         <ActionsCell
           key="actions"
@@ -156,32 +167,34 @@ export const getSalesColumns = ({
     },
     {
       field: "fileDownload",
-      headerName: "Zawarte dokumenty",
+      headerName: "Dokumenty",
       align: "center",
       headerAlign: "center",
       sortable: false,
-      width: 180,
-      renderCell: (params) => {
-        const directoryPath = params.row.directoryPath;
-
-        return (
-          <FileDownloadCell
-            filePath={directoryPath}
-            downloadingFilePath={downloadDirectoryPath}
-            onDownload={downloadSaleDirectory}
-          />
-        );
-      },
+      width: 130,
+      renderCell: (params) => (
+        <FileDownloadCell
+          filePath={params.row.directoryPath}
+          downloadingFilePath={downloadDirectoryPath}
+          onDownload={downloadSaleDirectory}
+        />
+      ),
     },
     {
       field: "documentNumber",
       headerName: "Numer dokumentu IRZplus",
+      width: 220,
       renderCell: (params) => (params.value ? params.value : "Brak numeru"),
     },
     {
       field: "dateCreatedUtc",
-      headerName: "Data utworzenia wpisu",
-      flex: 1,
+      headerName: "Data utworzenia",
+      type: "dateTime",
+      width: 180,
+      valueGetter: (value: string) => (value ? dayjs(value).toDate() : null),
     },
   ];
+
+  // Połączenie wszystkich kolumn w jedną listę
+  return [...staticColumns, ...extraColumns, ...finalColumns];
 };

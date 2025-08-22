@@ -38,8 +38,8 @@ public class UpdateFarmCommandHandler : IRequestHandler<UpdateFarmCommand, Empty
 
         farmToUpdate.Update(
             request.Data.Name,
-            request.Data.Nip,
             request.Data.ProducerNumber,
+            request.Data.Nip,
             request.Data.Address);
 
         farmToUpdate.SetModified(userId);

@@ -37,6 +37,7 @@ import { ExpensesPieChart } from "../../components/dashboard/expenses-pie-chart"
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import type { Dayjs } from "dayjs";
 import { ProductionResultsChart } from "../../components/dashboard/production-results-charts";
+import dayjs from "dayjs";
 
 const emptyDashboardData: GetDashboardDataQueryResponse = {
   stats: {
@@ -114,10 +115,16 @@ const DashboardPage: React.FC = () => {
       let dateTo: string | null = null;
 
       if (dateCategory === "month") {
-        const from = new Date(selectedYear, selectedMonth, 1);
-        const to = new Date(selectedYear, selectedMonth + 1, 0);
-        dateSince = from.toISOString().split("T")[0];
-        dateTo = to.toISOString().split("T")[0];
+        const from = dayjs()
+          .year(selectedYear)
+          .month(selectedMonth)
+          .startOf("month");
+        const to = dayjs()
+          .year(selectedYear)
+          .month(selectedMonth)
+          .endOf("month");
+        dateSince = from.format("YYYY-MM-DD");
+        dateTo = to.format("YYYY-MM-DD");
       } else if (dateCategory === "year") {
         const from = new Date(selectedYear, 0, 1);
         const to = new Date(selectedYear, 11, 31);

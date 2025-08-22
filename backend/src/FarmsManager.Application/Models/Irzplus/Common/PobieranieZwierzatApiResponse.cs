@@ -17,7 +17,7 @@ public class PobieranieZwierzatApiResponse
 /// </summary>
 public class ListaDrobItem
 {
-    [JsonPropertyName("lp")] public int Lp { get; set; }
+    [JsonPropertyName("lp")] public int? Lp { get; set; }
 
     [JsonPropertyName("numerDzialalnosci")]
     public string NumerDzialalnosci { get; set; }
@@ -27,34 +27,34 @@ public class ListaDrobItem
 
     [JsonPropertyName("gatunek")] public Gatunek Gatunek { get; set; }
 
-    [JsonPropertyName("liczbaDrobiu")] public int LiczbaDrobiu { get; set; }
+    [JsonPropertyName("liczbaDrobiu")] public int? LiczbaDrobiu { get; set; }
 
     [JsonPropertyName("ogolnaLiczbaDrobiu")]
-    public int OgolnaLiczbaDrobiu { get; set; }
+    public int? OgolnaLiczbaDrobiu { get; set; }
 
     [JsonPropertyName("liczbaPrzybycDrobiu")]
-    public int LiczbaPrzybycDrobiu { get; set; }
+    public int? LiczbaPrzybycDrobiu { get; set; }
 
     [JsonPropertyName("liczbaWybycDrobiu")]
-    public int LiczbaWybycDrobiu { get; set; }
+    public int? LiczbaWybycDrobiu { get; set; }
 
     [JsonPropertyName("liczbaNieprawidlowosciDrobiu")]
-    public int LiczbaNieprawidlowosciDrobiu { get; set; }
+    public int? LiczbaNieprawidlowosciDrobiu { get; set; }
 
     [JsonPropertyName("liczbaJajWylegowych")]
-    public int LiczbaJajWylegowych { get; set; }
+    public int? LiczbaJajWylegowych { get; set; }
 
     [JsonPropertyName("ogolnaLiczbaJajWylegowych")]
-    public int OgolnaLiczbaJajWylegowych { get; set; }
+    public int? OgolnaLiczbaJajWylegowych { get; set; }
 
     [JsonPropertyName("liczbaPrzybycJajWylegowych")]
-    public int LiczbaPrzybycJajWylegowych { get; set; }
+    public int? LiczbaPrzybycJajWylegowych { get; set; }
 
     [JsonPropertyName("liczbaWybycJajWylegowych")]
-    public int LiczbaWybycJajWylegowych { get; set; }
+    public int? LiczbaWybycJajWylegowych { get; set; }
 
     [JsonPropertyName("liczbaNieprawidlowosciJajWylegowych")]
-    public int LiczbaNieprawidlowosciJajWylegowych { get; set; }
+    public int? LiczbaNieprawidlowosciJajWylegowych { get; set; }
 }
 
 /// <summary>
