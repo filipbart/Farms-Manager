@@ -190,12 +190,6 @@ const EmployeePayslipsPage: React.FC = () => {
             }
             return "";
           }}
-          getRowClassName={(params) => {
-            if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
-              return "aggregated-row";
-            }
-            return "";
-          }}
           sx={{
             [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },
             [`& .${tablePaginationClasses.input}`]: { display: "inline-flex" },

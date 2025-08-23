@@ -1,12 +1,10 @@
 import type { FilterConfig } from "../../../components/filters/filter-types";
 import type { CycleDictModel } from "../../../models/common/dictionaries";
-import type {
-  SalesInvoicesDictionary,
-  SalesInvoicesFilterPaginationModel,
-} from "../../../models/sales/sales-invoices-filters";
+import type { SalesDictionary } from "../../../models/sales/sales-dictionary";
+import type { SalesInvoicesFilterPaginationModel } from "../../../models/sales/sales-invoices-filters";
 
 export const getSalesInvoicesFiltersConfig = (
-  dictionary: SalesInvoicesDictionary | undefined,
+  dictionary: SalesDictionary | undefined,
   uniqueCycles: CycleDictModel[]
 ): FilterConfig<keyof SalesInvoicesFilterPaginationModel>[] => [
   {
