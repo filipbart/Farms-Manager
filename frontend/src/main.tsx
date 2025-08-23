@@ -11,7 +11,7 @@ LicenseInfo.setLicenseKey(import.meta.env.VITE_MUI_LICENSE_KEY);
 createRoot(document.getElementById("root")!).render(
   <>
     <StrictMode>
-      <BrowserRouter>
+      <BrowserRouter basename="/panel">
         <App />
       </BrowserRouter>
     </StrictMode>

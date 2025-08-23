@@ -9,7 +9,7 @@ export const RouterContext = createContext({} as RouterContextModel);
 
 export const RouterProvider = ({ children }: any) => {
   const getRoute = (routeName: RouteName, args?: any) => {
-    let route = `/${routeName}`;
+    let route = `${routeName}`;
     if (args) {
       Object.keys(args).forEach((key) => {
         route += `/${args[key]}`;
