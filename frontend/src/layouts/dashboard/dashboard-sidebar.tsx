@@ -117,11 +117,24 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
     }
   }, [location.pathname]);
 
+  const headingStyles = {
+    px: 2,
+    pt: 3,
+    pb: 1,
+    color: "neutral.400",
+    fontSize: "0.75rem",
+    fontWeight: "bold",
+    textTransform: "uppercase",
+  };
+
   const contentList = (
     <List sx={{ width: "100%", backgroundColor: "primary.dark" }}>
+      <Typography sx={headingStyles}>Główne</Typography>
       {hasPermission("dashboard:view") && (
         <SidebarMenuItem to="/" title="Strona główna" icon={<IoHome />} />
       )}
+
+      <Typography sx={headingStyles}>Produkcja i Finanse</Typography>
       {hasPermission("insertions:view") && (
         <SidebarMenuItem
           to="/insertions"
@@ -129,7 +142,6 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           icon={<FaClone />}
         />
       )}
-
       {hasPermission("sales:view") && (
         <SidebarMenuItem
           to="/sales"
@@ -159,7 +171,6 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           )}
         </SidebarMenuItem>
       )}
-
       {hasPermission("feeds:view") && (
         <SidebarMenuItem
           to="/feeds"
@@ -195,7 +206,6 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           )}
         </SidebarMenuItem>
       )}
-
       {hasPermission("expenses:view") && (
         <SidebarMenuItem
           to="/expenses"
@@ -235,6 +245,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         </SidebarMenuItem>
       )}
 
+      <Typography sx={headingStyles}>Operacje</Typography>
       {hasPermission("productiondata:view") && (
         <SidebarMenuItem
           to="/production-data"
@@ -297,7 +308,6 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           )}
         </SidebarMenuItem>
       )}
-
       {hasPermission("gas:view") && (
         <SidebarMenuItem
           to="/gas"
@@ -322,7 +332,6 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           )}
         </SidebarMenuItem>
       )}
-
       {hasPermission("hatcherynotes:view") && (
         <SidebarMenuItem
           to="/hatcheries-notes"
@@ -330,7 +339,6 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           icon={<MdNotes />}
         />
       )}
-
       {hasPermission("employees:view") && (
         <SidebarMenuItem
           to="/employees"
@@ -360,6 +368,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         </SidebarMenuItem>
       )}
 
+      <Typography sx={headingStyles}>Raporty</Typography>
       {hasPermission("summary:view") && (
         <SidebarMenuItem
           to="/summary"
@@ -385,6 +394,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         </SidebarMenuItem>
       )}
 
+      <Typography sx={headingStyles}>System</Typography>
       {hasPermission("data:view") && (
         <SidebarMenuItem
           to="/data"
@@ -430,7 +440,6 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           )}
         </SidebarMenuItem>
       )}
-
       {hasPermission("settings:view") && (
         <SidebarMenuItem
           to="/settings"
