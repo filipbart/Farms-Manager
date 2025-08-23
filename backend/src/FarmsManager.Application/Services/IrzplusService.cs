@@ -87,7 +87,7 @@ public class IrzplusService : IIrzplusService
         httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {authData.AccessToken}");
 
         var jsonContent = new StringContent(dispositionJson, Encoding.UTF8, "application/json");
-        var response = await httpClient.PostAsync("drob/dokument/api/test/zzssd", jsonContent, ct);
+        var response = await httpClient.PostAsync("drob/dokument/api/prod/zzssd", jsonContent, ct);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -115,7 +115,7 @@ public class IrzplusService : IIrzplusService
         httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {authData.AccessToken}");
 
         var jsonContent = new StringContent(dispositionJson, Encoding.UTF8, "application/json");
-        var response = await httpClient.PostAsync("drob/dokument/api/test/zzssd", jsonContent, ct);
+        var response = await httpClient.PostAsync("drob/dokument/api/prod/zzssd", jsonContent, ct);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -146,7 +146,7 @@ public class IrzplusService : IIrzplusService
         httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {authData.AccessToken}");
 
         var jsonContent = new StringContent(dispositionJson, Encoding.UTF8, "application/json");
-        var response = await httpClient.PostAsync("drob/dokument/api/test/zzssd", jsonContent, ct);
+        var response = await httpClient.PostAsync("drob/dokument/api/prod/zzssd", jsonContent, ct);
 
         if (!response.IsSuccessStatusCode)
         {
