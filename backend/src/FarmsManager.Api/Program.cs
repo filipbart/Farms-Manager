@@ -126,7 +126,7 @@ using (var lifetimeScope = app.Services.GetAutofacRoot().BeginLifetimeScope())
 
 app.UseCors(builder =>
 {
-    var allowedOrigins = app.Configuration.GetSection("AllowedOrigins").Get<string[]>();
+    var allowedOrigins = app.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
     builder.AllowAnyHeader();
     builder.AllowAnyMethod();
     builder.AllowCredentials();

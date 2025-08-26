@@ -1,7 +1,7 @@
 export default class ApiUrl {
   private static BaseUrl = import.meta.env.PROD
-    ? "/api/"
-    : import.meta.env.VITE_API_URL || "/api/";
+    ? import.meta.env.VITE_API_BASE_URL
+    : "/api/";
 
   public static User = this.BaseUrl + "user";
   public static Me = this.User + "/me";

@@ -11,10 +11,10 @@ export default ({ mode }: { mode: string }) => {
     plugins: [react(), tailwindcss()],
     server: {
       port: Number(env.SERVER_PORT) || 3000,
-      allowedHosts: [env.VITE_ALLOWED_HOSTS],
+      allowedHosts: ["all"],
       proxy: {
         "/api": {
-          target: env.VITE_API_BASE_URL,
+          target: env.VITE_API_PROXY,
           changeOrigin: true,
           ws: true,
         },

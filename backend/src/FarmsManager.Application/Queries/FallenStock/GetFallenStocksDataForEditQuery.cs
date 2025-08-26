@@ -19,9 +19,9 @@ public record GetFallenStocksDataForEditQueryResponse
     public string UtilizationPlantName { get; init; }
     public DateOnly Date { get; init; }
     public string TypeDesc { get; init; }
-    public List<FallenStockEntryDto> Entries { get; init; } = [];
+    public List<FallenStockQueryEntryDto> Entries { get; init; } = [];
 
-    public record FallenStockEntryDto
+    public record FallenStockQueryEntryDto
     {
         public Guid HenhouseId { get; init; }
         public string HenhouseName { get; init; }
@@ -78,11 +78,11 @@ public class GetFallenStocksDataForEditQueryHandler : IRequestHandler<GetFallenS
                     new UtilizationPlantByIdSpec(firstEntry.UtilizationPlantId.Value), ct);
         }
 
-        var entryDtos = new List<GetFallenStocksDataForEditQueryResponse.FallenStockEntryDto>();
+        var entryDtos = new List<GetFallenStocksDataForEditQueryResponse.FallenStockQueryEntryDto>();
         foreach (var entry in fallenStockEntries)
         {
             var henhouse = await _henhouseRepository.GetAsync(new HenhouseByIdSpec(entry.HenhouseId), ct);
-            entryDtos.Add(new GetFallenStocksDataForEditQueryResponse.FallenStockEntryDto
+            entryDtos.Add(new GetFallenStocksDataForEditQueryResponse.FallenStockQueryEntryDto
             {
                 HenhouseId = entry.HenhouseId,
                 HenhouseName = henhouse.Name,
