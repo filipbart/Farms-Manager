@@ -324,10 +324,12 @@ const DashboardPage: React.FC = () => {
               ) : (
                 <StatCard
                   title="Przychody"
-                  value={displayData.stats.revenue.toLocaleString("pl-PL", {
-                    style: "currency",
-                    currency: "PLN",
-                  })}
+                  value={
+                    displayData.stats?.revenue?.toLocaleString("pl-PL", {
+                      style: "currency",
+                      currency: "PLN",
+                    }) ?? "-"
+                  }
                   icon={<MdTrendingUp />}
                   color="success"
                 />
@@ -339,10 +341,12 @@ const DashboardPage: React.FC = () => {
               ) : (
                 <StatCard
                   title="Wydatki"
-                  value={displayData.stats.expenses.toLocaleString("pl-PL", {
-                    style: "currency",
-                    currency: "PLN",
-                  })}
+                  value={
+                    displayData.stats?.expenses?.toLocaleString("pl-PL", {
+                      style: "currency",
+                      currency: "PLN",
+                    }) ?? "-"
+                  }
                   icon={<MdTrendingDown />}
                   color="error"
                 />
@@ -354,10 +358,12 @@ const DashboardPage: React.FC = () => {
               ) : (
                 <StatCard
                   title="Dochód"
-                  value={displayData.stats.income.toLocaleString("pl-PL", {
-                    style: "currency",
-                    currency: "PLN",
-                  })}
+                  value={
+                    displayData.stats?.income?.toLocaleString("pl-PL", {
+                      style: "currency",
+                      currency: "PLN",
+                    }) ?? "-"
+                  }
                   icon={<MdAccountBalanceWallet />}
                   color="primary"
                 />
@@ -371,10 +377,12 @@ const DashboardPage: React.FC = () => {
           ) : (
             <StatCard
               title="VAT z wydatków"
-              value={displayData.stats.vatFromExpenses.toLocaleString("pl-PL", {
-                style: "currency",
-                currency: "PLN",
-              })}
+              value={
+                displayData.stats?.vatFromExpenses?.toLocaleString("pl-PL", {
+                  style: "currency",
+                  currency: "PLN",
+                }) ?? "-"
+              }
               icon={<FaPercentage />}
               color="warning"
             />
@@ -401,10 +409,14 @@ const DashboardPage: React.FC = () => {
               ) : (
                 <StatCard
                   title="Dochód z kg żywca"
-                  value={`${displayData.stats.incomePerKg.toLocaleString(
-                    "pl-PL",
-                    { minimumFractionDigits: 2, maximumFractionDigits: 2 }
-                  )} zł`}
+                  value={
+                    !displayData.stats?.incomePerKg
+                      ? "-"
+                      : `${displayData.stats?.incomePerKg?.toLocaleString(
+                          "pl-PL",
+                          { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+                        )} zł`
+                  }
                   icon={<FaPiggyBank />}
                   color="success"
                 />
@@ -416,10 +428,14 @@ const DashboardPage: React.FC = () => {
               ) : (
                 <StatCard
                   title="Dochód z m²"
-                  value={`${displayData.stats.incomePerSqm.toLocaleString(
-                    "pl-PL",
-                    { minimumFractionDigits: 2, maximumFractionDigits: 2 }
-                  )} zł`}
+                  value={
+                    !displayData.stats?.incomePerSqm
+                      ? "-"
+                      : `${displayData.stats?.incomePerSqm?.toLocaleString(
+                          "pl-PL",
+                          { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+                        )} zł`
+                  }
                   icon={<FaChartArea />}
                   color="primary"
                 />
@@ -431,9 +447,13 @@ const DashboardPage: React.FC = () => {
               ) : (
                 <StatCard
                   title="Średnia cena paszy"
-                  value={`${displayData.stats.avgFeedPrice.toLocaleString(
-                    "pl-PL"
-                  )} zł/t`}
+                  value={
+                    !displayData.stats?.avgFeedPrice
+                      ? "-"
+                      : `${displayData.stats?.avgFeedPrice?.toLocaleString(
+                          "pl-PL"
+                        )} zł/t`
+                  }
                   icon={<MdOutlineShoppingCart />}
                   color="info"
                 />
@@ -458,7 +478,7 @@ const DashboardPage: React.FC = () => {
                 Kurniki w obsadzie
               </Typography>
               <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
-                {displayData.chickenHousesStatus.farms.map((farm) => {
+                {displayData.chickenHousesStatus?.farms.map((farm) => {
                   const activeHenhouses = farm.henhouses.filter(
                     (h) => h.chickenCount > 0
                   );
@@ -494,7 +514,7 @@ const DashboardPage: React.FC = () => {
               <Typography variant="h6">
                 Łącznie sztuk w obsadzie:{" "}
                 <strong>
-                  {displayData.chickenHousesStatus.totalChickenCount.toLocaleString(
+                  {displayData.chickenHousesStatus?.totalChickenCount.toLocaleString(
                     "pl-PL"
                   )}
                 </strong>
@@ -507,7 +527,7 @@ const DashboardPage: React.FC = () => {
           {isLoading ? (
             <Skeleton variant="rounded" height="100%" />
           ) : (
-            <ExpensesPieChart data={displayData.expensesPieChart.data} />
+            <ExpensesPieChart data={displayData.expensesPieChart?.data} />
           )}
         </Grid>
 

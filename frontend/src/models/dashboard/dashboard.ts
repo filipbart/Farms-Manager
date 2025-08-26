@@ -80,12 +80,12 @@ export interface DashboardNotificationItem {
 }
 
 export interface GetDashboardDataQueryResponse {
-  stats: DashboardStats;
-  fcrChart: DashboardFcrChart;
-  gasConsumptionChart: DashboardGasConsumptionChart;
-  ewwChart: DashboardEwwChart;
-  flockLossChart: DashboardFlockLossChart;
-  chickenHousesStatus: DashboardChickenHousesStatus;
-  expensesPieChart: DashboardExpensesPieChart;
-  notifications: DashboardNotificationItem[];
+  stats?: DashboardStats;
+  fcrChart?: DashboardFcrChart;
+  gasConsumptionChart?: DashboardGasConsumptionChart;
+  ewwChart?: DashboardEwwChart;
+  flockLossChart?: DashboardFlockLossChart;
+  chickenHousesStatus?: DashboardChickenHousesStatus;
+  expensesPieChart?: DashboardExpensesPieChart;
+  notifications?: DashboardNotificationItem[];
 }

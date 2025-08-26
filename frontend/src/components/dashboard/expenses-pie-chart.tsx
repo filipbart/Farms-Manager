@@ -3,7 +3,7 @@ import { PieChart } from "@mui/x-charts/PieChart";
 import type { ExpensesPieChartDataPoint } from "../../models/dashboard/dashboard";
 
 interface ExpensesPieChartProps {
-  data: ExpensesPieChartDataPoint[];
+  data?: ExpensesPieChartDataPoint[];
 }
 
 export function ExpensesPieChart({ data }: ExpensesPieChartProps) {

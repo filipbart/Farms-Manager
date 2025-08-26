@@ -55,7 +55,7 @@ const getLinkPath = (notification: DashboardNotificationItem): string => {
 };
 
 interface DashboardNotificationsProps {
-  notifications: DashboardNotificationItem[];
+  notifications?: DashboardNotificationItem[];
 }
 
 export function DashboardNotifications({
@@ -69,7 +69,7 @@ export function DashboardNotifications({
         Najbliższe terminy i powiadomienia
       </Typography>
 
-      {notifications.length === 0 ? (
+      {notifications?.length === 0 ? (
         <Box
           sx={{
             flexGrow: 1,
@@ -86,7 +86,7 @@ export function DashboardNotifications({
         </Box>
       ) : (
         <List sx={{ overflowY: "auto", p: 0 }}>
-          {notifications.map((notification, index) => {
+          {notifications?.map((notification, index) => {
             const config = priorityConfig[notification.priority];
             return (
               <ListItem

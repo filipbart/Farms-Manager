@@ -19,10 +19,10 @@ import type {
 type ChartType = "fcr" | "eww" | "gas" | "loss";
 
 interface ProductionResultsChartProps {
-  fcrData: DashboardFcrChart;
-  ewwData: DashboardEwwChart;
-  gasData: DashboardGasConsumptionChart;
-  lossData: DashboardFlockLossChart;
+  fcrData?: DashboardFcrChart;
+  ewwData?: DashboardEwwChart;
+  gasData?: DashboardGasConsumptionChart;
+  lossData?: DashboardFlockLossChart;
 }
 
 const chartOptions = {
