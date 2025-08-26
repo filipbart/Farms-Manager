@@ -41,6 +41,7 @@ public class SendInsertionToIrzCommandHandler : IRequestHandler<SendInsertionToI
         var user = await _userRepository.SingleOrDefaultAsync(new UserByIdSpec(userId), ct) ??
                    throw DomainException.UserNotFound();
 
+        return response; //TODO off
 
         List<InsertionEntity> insertionsToSend = [];
         if (request.InsertionId.HasValue)
