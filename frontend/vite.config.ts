@@ -10,9 +10,8 @@ export default ({ mode }: { mode: string }) => {
     base: "/panel/",
     plugins: [react(), tailwindcss()],
     server: {
-      // host: true,
       port: Number(env.SERVER_PORT) || 3000,
-      allowedHosts: ["62e92af4a312.ngrok-free.app"],
+      allowedHosts: [env.VITE_ALLOWED_HOSTS],
       proxy: {
         "/api": {
           target: env.VITE_API_BASE_URL,
