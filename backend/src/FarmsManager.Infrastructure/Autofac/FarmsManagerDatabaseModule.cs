@@ -28,7 +28,13 @@ public class FarmsManagerDatabaseModule : Module
         builder.Register(_ =>
             {
                 var optionsBuilder = new DbContextOptionsBuilder<FarmsManagerContext>()
-                    .UseNpgsql(npgsqlDataSource)
+                    .UseNpgsql(npgsqlDataSource, options =>
+                    {
+                        options.EnableRetryOnFailure(
+                            maxRetryCount: 5,
+                            maxRetryDelay: TimeSpan.FromSeconds(30),
+                            errorCodesToAdd: null);
+                    })
                     .UseLazyLoadingProxies()
                     .UseSnakeCaseNamingConvention()
                     .EnableSensitiveDataLogging();
