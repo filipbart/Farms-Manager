@@ -11,7 +11,7 @@ public class FeedDeliveryInvoiceModel
     [AzureDiField("BankAccountNumber", customField: true)]
     public string BankAccountNumber { get; init; }
     
-    [AzureDiField("vendorNameSpółka", customField: true)]
+    [AzureDiField("VendorName")]
     public string VendorName { get; init; }
 
     [AzureDiField("InvoiceDate")]
