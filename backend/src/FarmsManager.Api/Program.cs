@@ -52,22 +52,6 @@ webAppBuilder.Services
     .AddRouting(options => options.LowercaseUrls = true)
     .AddResponseCompression()
     .AddEndpointsApiExplorer()
-    .AddCors(options =>
-    {
-        var allowedOrigins = webAppBuilder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
-
-        options.AddPolicy("CorsPolicy",
-            policy =>
-            {
-                if (allowedOrigins != null)
-                {
-                    policy.WithOrigins(allowedOrigins)
-                        .AllowAnyHeader()
-                        .AllowAnyMethod()
-                        .AllowCredentials();
-                }
-            });
-    })
     .AddSwaggerGen(options =>
     {
         var filePath = Path.Combine(AppContext.BaseDirectory, "FarmsManager.Api.xml");
@@ -140,7 +124,14 @@ using (var lifetimeScope = app.Services.GetAutofacRoot().BeginLifetimeScope())
     }
 }
 
-app.UseCors("CorsPolicy");
+app.UseCors(builder =>
+{
+    var allowedOrigins = app.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
+    builder.AllowAnyHeader();
+    builder.AllowAnyMethod();
+    builder.AllowCredentials();
+    if (allowedOrigins != null) builder.WithOrigins(allowedOrigins);
+});
 
 app.UseAuthentication();
 app.UseAuthorization();
