@@ -47,8 +47,8 @@ public class AddUserCommandHandler : IRequestHandler<AddUserCommand, EmptyBaseRe
 
 
         var newUser = UserEntity.CreateUser(
-            request.Data.Name,
             request.Data.Login,
+            request.Data.Name,
             userId
         );
 
