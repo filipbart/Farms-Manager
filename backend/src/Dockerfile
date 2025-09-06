@@ -9,7 +9,7 @@ COPY ["FarmsManager.sln", "."]
 COPY ["FarmsManager.Api/FarmsManager.Api.csproj", "FarmsManager.Api/"]
 COPY ["FarmsManager.Application/FarmsManager.Application.csproj", "FarmsManager.Application/"]
 COPY ["FarmsManager.Domain/FarmsManager.Domain.csproj", "FarmsManager.Domain/"]
-COPY ["FarmsManager.Hostbuilder/FarmsManager.Hostbuilder.csproj", "FarmsManager.Hostbuilder/"]
+COPY ["FarmsManager.HostBuilder/FarmsManager.HostBuilder.csproj", "FarmsManager.HostBuilder/"]
 COPY ["FarmsManager.Infrastructure/FarmsManager.Infrastructure.csproj", "FarmsManager.Infrastructure/"]
 COPY ["FarmsManager.Shared/FarmsManager.Shared.csproj", "FarmsManager.Shared/"]
 
