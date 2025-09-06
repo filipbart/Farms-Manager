@@ -43,5 +43,5 @@ jobs:
           password: ${{ secrets.FTP_FRONTEND_PASSWORD }}
           
           # Folder źródłowy - czyli folder 'build' wewnątrz folderu 'frontend'
-          local-dir: ./frontend/build/
+          local-dir: ./frontend/dist/
           
