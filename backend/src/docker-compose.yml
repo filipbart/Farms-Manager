@@ -1,0 +1,10 @@
+services:
+  farms_manager_backend:
+    image: ghcr.io/filipbart/Farms-Manager:latest
+    container_name: fm-container
+    restart: always
+    ports:      
+      - "80:8082"
+    volumes:
+      - ./config.toml:/app/config.toml
+    

@@ -1,0 +1,85 @@
+# Lokalizacja: .github/workflows/deploy.yml
+
+name: Build and Deploy Backend to VPS
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'backend/**'
+
+env:
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # === ETAP 1: Budowanie i wysyłanie obrazu Docker ===
+  build-and-push:
+    runs-on: ubuntu-latest
+    # Nadanie uprawnień do zapisu pakietów (obrazów Docker) w GitHub Packages.
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    # Krok 1: Pobranie kodu z repozytorium
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # Krok 2: Logowanie do rejestru kontenerów GitHub (GHCR)
+    - name: Log in to the Container registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    # Krok 3: Wyciągnięcie metadanych dla obrazu (np. tagów)
+    - name: Extract metadata for Docker
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ghcr.io/${{ env.IMAGE_NAME }}
+
+    # Krok 4: Budowanie i wysyłanie obrazu Docker do GHCR
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        # Kontekst budowania - folder, który Docker "widzi" podczas budowy.
+        context: ./backend/src
+        # Ścieżka do pliku Dockerfile.
+        file: ./backend/src/Dockerfile
+        # Włącz wysyłanie obrazu do rejestru.
+        push: true
+        # Użyj tagów wygenerowanych w poprzednim kroku (np. :latest, :main).
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+
+  # === ETAP 2: Wdrożenie obrazu na serwerze VPS ===
+  deploy:
+    # Uruchom ten etap tylko po sukcesie etapu 'build-and-push'.
+    needs: build-and-push
+    runs-on: ubuntu-latest
+
+    steps:
+    # Krok 5: Wdrożenie na serwerze przez SSH
+    - name: Deploy to VPS
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.VPS_SSH_HOST }}
+        username: ${{ secrets.VPS_SSH_USERNAME }}
+        key: ${{ secrets.VPS_SSH_KEY }}
+        script: |
+          # Przejdź do folderu z aplikacją na serwerze
+          cd /opt/mojabackend
+
+          # Zaloguj się do GHCR, używając Personal Access Token (PAT)
+          echo ${{ secrets.GH_PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+          # Pobierz najnowszą wersję obrazu z rejestru
+          docker-compose pull
+
+          # Uruchom ponownie kontener w tle z nowym obrazem
+          docker-compose up -d
+
+          # Opcjonalnie: Wyczyść stare, nieużywane obrazy, aby oszczędzić miejsce na dysku
+          docker image prune -f
