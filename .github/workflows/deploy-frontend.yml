@@ -1,0 +1,47 @@
+name: Deploy Frontend to home.pl
+
+on:
+  push:
+    branches: [ "main" ]
+    # Uruchom workflow tylko, gdy zmiany dotyczą folderu frontend
+    paths:
+      - 'frontend/**'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      # Krok 2: Ustawienie środowiska Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          # Użyj wersji Node.js, na której pracujesz
+          node-version: '20'
+          # Przyspieszenie instalacji paczek
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      # Krok 3: Instalacja zależności i budowanie aplikacji
+      - name: Install dependencies and build
+        # Ustawiamy folder roboczy na 'frontend', aby komendy wykonały się we właściwym miejscu
+        working-directory: ./frontend
+        run: |
+          npm install
+          npm run build
+      
+      # Krok 4: Wdrożenie plików na serwer przez FTP
+      - name: Deploy files via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          # Dane do logowania pobierane z sekretów
+          server: ${{ secrets.FTP_FRONTEND_SERVER }}
+          username: ${{ secrets.FTP_FRONTEND_USERNAME }}
+          password: ${{ secrets.FTP_FRONTEND_PASSWORD }}
+          
+          # Folder źródłowy - czyli folder 'build' wewnątrz folderu 'frontend'
+          local-dir: ./frontend/build/
+          
