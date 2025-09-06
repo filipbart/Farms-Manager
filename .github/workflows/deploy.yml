@@ -85,10 +85,10 @@ jobs:
           echo ${{ secrets.GH_PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
           # Pobierz najnowszą wersję obrazu z rejestru
-          docker-compose pull
+          docker compose pull
 
           # Uruchom ponownie kontener w tle z nowym obrazem
-          docker-compose up -d
+          docker compose up -d
 
           # Opcjonalnie: Wyczyść stare, nieużywane obrazy, aby oszczędzić miejsce na dysku
           docker image prune -f
