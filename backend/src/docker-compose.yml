@@ -1,6 +1,6 @@
 services:
   farms_manager_backend:
-    image: ghcr.io/filipbart/Farms-Manager:latest
+    image: ghcr.io/filipbart/farms-manager:latest
     container_name: fm-container
     restart: always
     ports:      
