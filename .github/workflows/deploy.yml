@@ -42,6 +42,9 @@ jobs:
       uses: docker/metadata-action@v5
       with:
         images: ghcr.io/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=raw,value=latest,enable={{is_default_branch}}
 
     # Krok 4: Budowanie i wysyłanie obrazu Docker do GHCR
     - name: Build and push Docker image
