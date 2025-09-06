@@ -11,5 +11,6 @@ public sealed class UserByIdSpec : BaseSpecification<UserEntity>, ISingleResultS
 
         Query.Where(t => t.Id == id);
         Query.Include(t => t.Farms);
+        Query.Include(t => t.Permissions);
     }
 }
