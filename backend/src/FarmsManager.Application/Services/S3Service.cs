@@ -422,7 +422,7 @@ public class S3Service : IS3Service
             if (_isDevelopment)
                 return _s3Client.GetPreSignedURL(request);
 
-            var contentDisposition = $"attachment; filename={fileName}";
+            var contentDisposition = $"inline; filename={fileName}";
 
             request.ResponseHeaderOverrides = new ResponseHeaderOverrides
             {
