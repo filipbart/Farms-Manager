@@ -1,14 +1,14 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
-import { type GridColDef, type GridRenderCellParams } from "@mui/x-data-grid";
-import { useEffect, useMemo, useState } from "react";
+import { type GridColDef, DataGridPro } from "@mui/x-data-grid-pro";
+import { useEffect, useState } from "react";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import type { HatcheryRowModel } from "../../../models/hatcheries/hatchery-row-model";
 import type { PaginateModel } from "../../../common/interfaces/paginate";
 import { HatcheriesService } from "../../../services/hatcheries-service";
 import AddHatcheryModal from "../../../components/modals/hatcheries/add-hatchery-modal";
-import { DataGridPro } from "@mui/x-data-grid-pro";
 import { toast } from "react-toastify";
 import EditHatcheryModal from "../../../components/modals/hatcheries/edit-hatchery-modal";
+import ActionsCell from "../../../components/datagrid/actions-cell";
 
 const HatcheriesPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -37,6 +37,7 @@ const HatcheriesPage: React.FC = () => {
     fetchHatcheries();
   }, []);
 
+  // --- Obsługa modali ---
   const handleAddOpen = () => setAddModalOpen(true);
   const handleAddClose = () => setAddModalOpen(false);
   const handleAddSave = async () => {
@@ -58,6 +59,18 @@ const HatcheriesPage: React.FC = () => {
     await fetchHatcheries();
   };
 
+  const deleteHatchery = async (id: string) => {
+    await handleApiResponse(
+      () => HatcheriesService.deleteHatcheryAsync(id),
+      () => {
+        toast.success("Wylęgarnia została usunięta");
+        fetchHatcheries();
+      },
+      undefined,
+      "Nie udało się usunąć wylęgarni"
+    );
+  };
+
   const columns: GridColDef<HatcheryRowModel>[] = [
     { field: "name", headerName: "Nazwa", flex: 1 },
     { field: "fullName", headerName: "Pełna nazwa", flex: 1 },
@@ -73,45 +86,22 @@ const HatcheriesPage: React.FC = () => {
     },
     {
       field: "actions",
+      type: "actions",
       headerName: "Akcje",
       flex: 1,
-      sortable: false,
-      filterable: false,
-      renderCell: (params: GridRenderCellParams<any, HatcheryRowModel>) => (
-        <div className="text-center">
-          <Button variant="outlined" onClick={() => handleEditOpen(params.row)}>
-            Edytuj
-          </Button>
-          <Button
-            variant="outlined"
-            color="error"
-            sx={{ ml: 1 }}
-            onClick={async () => {
-              await handleApiResponse(
-                () => HatcheriesService.deleteHatcheryAsync(params.row.id),
-                () => {
-                  toast.success("Wylęgarnia została usunięta");
-                  fetchHatcheries();
-                },
-                undefined,
-                "Nie udało się usunąć wylęgarni"
-              );
-            }}
-          >
-            Usuń
-          </Button>
-        </div>
-      ),
+      cellClassName: "actions",
+      getActions: (params) => {
+        return [
+          <ActionsCell
+            key="actions"
+            params={params}
+            onEdit={handleEditOpen}
+            onDelete={deleteHatchery}
+          />,
+        ];
+      },
     },
   ];
-
-  const data = useMemo(
-    () => ({
-      rows: hatcheries,
-      columns: columns,
-    }),
-    [hatcheries]
-  );
 
   return (
     <Box p={4}>
@@ -140,7 +130,7 @@ const HatcheriesPage: React.FC = () => {
       >
         <DataGridPro
           loading={loading}
-          {...data}
+          rows={hatcheries}
           columns={columns}
           localeText={{
             noRowsLabel: "Brak wpisów",

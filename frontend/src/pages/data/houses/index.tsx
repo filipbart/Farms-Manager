@@ -6,8 +6,8 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { type GridColDef, type GridRenderCellParams } from "@mui/x-data-grid";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { DataGridPro, type GridColDef } from "@mui/x-data-grid-pro";
+import { useCallback, useEffect, useState } from "react";
 import { FarmsService } from "../../../services/farms-service";
 import type FarmRowModel from "../../../models/farms/farm-row-model";
 import type { PaginateModel } from "../../../common/interfaces/paginate";
@@ -17,12 +17,11 @@ import Loading from "../../../components/loading/loading";
 import AddHenhouseModal from "../../../components/modals/farms/add-henhouse-modal";
 import { toast } from "react-toastify";
 import { useFarms } from "../../../hooks/useFarms";
-import { DataGridPro } from "@mui/x-data-grid-pro";
 import EditHenhouseModal from "../../../components/modals/farms/edit-henhouse-modal";
+import ActionsCell from "../../../components/datagrid/actions-cell";
 
 const HousesPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
-
   const { farms, loadingFarms, fetchFarms } = useFarms();
   const [henhouses, setHenhouses] = useState<HouseRowModel[]>([]);
   const [chosenFarm, setChosenFarm] = useState<FarmRowModel>();
@@ -32,12 +31,7 @@ const HousesPage: React.FC = () => {
   const [selectedHenhouse, setSelectedHenhouse] =
     useState<HouseRowModel | null>(null);
 
-  const setChosenFarmCallback = useCallback((chosenFarm: FarmRowModel) => {
-    setChosenFarm(chosenFarm);
-    fetchHouses(chosenFarm.id);
-  }, []);
-
-  const fetchHouses = async (farmId: string) => {
+  const fetchHouses = useCallback(async (farmId: string) => {
     if (!farmId) return;
     setLoading(true);
     await handleApiResponse<PaginateModel<HouseRowModel>>(
@@ -49,7 +43,15 @@ const HousesPage: React.FC = () => {
       "Nie udało się pobrać listy kurników"
     );
     setLoading(false);
-  };
+  }, []);
+
+  const setChosenFarmCallback = useCallback(
+    (chosenFarm: FarmRowModel) => {
+      setChosenFarm(chosenFarm);
+      fetchHouses(chosenFarm.id);
+    },
+    [fetchHouses]
+  );
 
   useEffect(() => {
     fetchFarms();
@@ -59,7 +61,7 @@ const HousesPage: React.FC = () => {
   const handleAddClose = () => setAddModalOpen(false);
   const handleAddSave = async () => {
     setAddModalOpen(false);
-    await fetchHouses(chosenFarm?.id ?? "");
+    if (chosenFarm) await fetchHouses(chosenFarm.id);
   };
 
   const handleEditOpen = (henhouse: HouseRowModel) => {
@@ -73,7 +75,21 @@ const HousesPage: React.FC = () => {
   const handleEditSave = async () => {
     setEditModalOpen(false);
     setSelectedHenhouse(null);
-    await fetchHouses(chosenFarm?.id ?? "");
+    if (chosenFarm) await fetchHouses(chosenFarm.id);
+  };
+
+  const deleteHenhouse = async (id: string) => {
+    setLoading(true);
+    await handleApiResponse(
+      () => FarmsService.deleteHenhouseAsync(id),
+      async () => {
+        toast.success("Kurnik został usunięty");
+        if (chosenFarm) await fetchHouses(chosenFarm.id);
+      },
+      undefined,
+      "Nie udało się usunąć kurnika"
+    );
+    setLoading(false);
   };
 
   const columns: GridColDef<HouseRowModel>[] = [
@@ -90,47 +106,21 @@ const HousesPage: React.FC = () => {
     },
     {
       field: "actions",
+      type: "actions",
       headerName: "Akcje",
-      flex: 2,
-      sortable: false,
-      filterable: false,
-      renderCell: (params: GridRenderCellParams<any, HouseRowModel>) => (
-        <div className="text-center">
-          <Button variant="outlined" onClick={() => handleEditOpen(params.row)}>
-            Edytuj
-          </Button>
-          <Button
-            variant="outlined"
-            color="error"
-            sx={{ ml: 1 }}
-            onClick={async () => {
-              setLoading(true);
-              await handleApiResponse(
-                () => FarmsService.deleteHenhouseAsync(params.row.id),
-                async () => {
-                  toast.success("Kurnik został usunięty");
-                  await fetchHouses(chosenFarm?.id ?? "");
-                },
-                undefined,
-                "Nie udało się usunąć kurnika"
-              );
-              setLoading(false);
-            }}
-          >
-            Usuń
-          </Button>
-        </div>
-      ),
+      flex: 1.5,
+      getActions: (params) => {
+        return [
+          <ActionsCell
+            key="actions"
+            params={params}
+            onEdit={handleEditOpen}
+            onDelete={deleteHenhouse}
+          />,
+        ];
+      },
     },
   ];
-
-  const data = useMemo(
-    () => ({
-      rows: henhouses,
-      columns: columns,
-    }),
-    [henhouses]
-  );
 
   return (
     <Box p={4}>
@@ -187,7 +177,8 @@ const HousesPage: React.FC = () => {
       <Box mt={4} sx={{ width: "100%", overflowX: "auto" }}>
         <DataGridPro
           loading={loading}
-          {...data}
+          rows={henhouses}
+          columns={columns}
           localeText={{
             noRowsLabel:
               chosenFarm === undefined ? "Wybierz fermę" : "Brak wpisów",
@@ -199,14 +190,6 @@ const HousesPage: React.FC = () => {
             minHeight: henhouses.length === 0 ? 300 : "auto",
             [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },
             [`& .${tablePaginationClasses.input}`]: { display: "inline-flex" },
-            "& .aggregated-row": {
-              fontWeight: "bold",
-
-              "& .MuiDataGrid-cell": {
-                borderTop: "1px solid rgba(224, 224, 224, 1)",
-                backgroundColor: "rgba(240, 240, 240, 0.7)",
-              },
-            },
             "& .MuiDataGrid-columnHeaders": { borderTop: "none" },
           }}
         />

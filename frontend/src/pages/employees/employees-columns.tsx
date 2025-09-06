@@ -1,4 +1,4 @@
-import { Box, Button, Tooltip, Typography } from "@mui/material";
+import { Box, Tooltip, Typography } from "@mui/material";
 import type { GridColDef } from "@mui/x-data-grid";
 import dayjs from "dayjs";
 import { CommentCell } from "../../components/datagrid/comment-cell";
@@ -7,6 +7,7 @@ import type {
   EmployeeFileModel,
 } from "../../models/employees/employees";
 import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
+import ActionsCell from "../../components/datagrid/actions-cell";
 
 interface GetEmployeesColumnsProps {
   deleteEmployee: (id: string) => void;
@@ -81,7 +82,7 @@ export const getEmployeesColumns = ({
       aggregable: false,
       renderCell: (params) => {
         if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
-          return [];
+          return null;
         }
         const files = params.value as EmployeeFileModel[];
         if (!files || files.length === 0) {
@@ -117,18 +118,11 @@ export const getEmployeesColumns = ({
           return [];
         }
         return [
-          <Button
-            key="delete"
-            variant="outlined"
-            size="small"
-            color="error"
-            onClick={(e) => {
-              e.stopPropagation();
-              deleteEmployee(params.row.id);
-            }}
-          >
-            Usuń
-          </Button>,
+          <ActionsCell
+            key="actions"
+            params={params}
+            onDelete={deleteEmployee}
+          />,
         ];
       },
     },

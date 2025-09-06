@@ -1,14 +1,14 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
-import { type GridColDef, type GridRenderCellParams } from "@mui/x-data-grid";
-import { useEffect, useMemo, useState } from "react";
+import { DataGridPro, type GridColDef } from "@mui/x-data-grid-pro";
+import { useEffect, useState } from "react";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import type { PaginateModel } from "../../../common/interfaces/paginate";
 import type { SlaughterhouseRowModel } from "../../../models/slaughterhouses/slaughterhouse-row-model";
 import { SlaughterhousesService } from "../../../services/slaughterhouses-service";
 import AddSlaughterhouseModal from "../../../components/modals/slaughterhouses/add-slaugtherhouse-modal";
-import { DataGridPro } from "@mui/x-data-grid-pro";
 import { toast } from "react-toastify";
 import EditSlaughterhouseModal from "../../../components/modals/slaughterhouses/edit-slaughterhouse-modal";
+import ActionsCell from "../../../components/datagrid/actions-cell";
 
 const SlaughterhousesPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -59,6 +59,18 @@ const SlaughterhousesPage: React.FC = () => {
     await fetchSlaughterhouses();
   };
 
+  const deleteSlaughterhouse = async (id: string) => {
+    await handleApiResponse(
+      () => SlaughterhousesService.deleteSlaughterhouseAsync(id),
+      () => {
+        toast.success("Ubojnia została usunięta");
+        fetchSlaughterhouses();
+      },
+      undefined,
+      "Nie udało się usunąć ubojni"
+    );
+  };
+
   const columns: GridColDef<SlaughterhouseRowModel>[] = [
     { field: "name", headerName: "Nazwa", flex: 1 },
     { field: "producerNumber", headerName: "Numer producenta", flex: 1 },
@@ -73,50 +85,19 @@ const SlaughterhousesPage: React.FC = () => {
     },
     {
       field: "actions",
+      type: "actions",
       headerName: "Akcje",
       flex: 1,
-      sortable: false,
-      filterable: false,
-      renderCell: (
-        params: GridRenderCellParams<any, SlaughterhouseRowModel>
-      ) => (
-        <div className="text-center">
-          <Button variant="outlined" onClick={() => handleEditOpen(params.row)}>
-            Edytuj
-          </Button>
-          <Button
-            variant="outlined"
-            color="error"
-            sx={{ ml: 1 }}
-            onClick={async () => {
-              await handleApiResponse(
-                () =>
-                  SlaughterhousesService.deleteSlaughterhouseAsync(
-                    params.row.id
-                  ),
-                () => {
-                  toast.success("Ubojnia została usunięta");
-                  fetchSlaughterhouses();
-                },
-                undefined,
-                "Nie udało się usunąć ubojni"
-              );
-            }}
-          >
-            Usuń
-          </Button>
-        </div>
-      ),
+      getActions: (params) => [
+        <ActionsCell
+          key="actions"
+          params={params}
+          onEdit={handleEditOpen}
+          onDelete={deleteSlaughterhouse}
+        />,
+      ],
     },
   ];
-
-  const data = useMemo(
-    () => ({
-      rows: slaughterhouses,
-      columns: columns,
-    }),
-    [slaughterhouses]
-  );
 
   return (
     <Box p={4}>
@@ -145,7 +126,7 @@ const SlaughterhousesPage: React.FC = () => {
       >
         <DataGridPro
           loading={loading}
-          {...data}
+          rows={slaughterhouses}
           columns={columns}
           localeText={{
             noRowsLabel: "Brak wpisów",

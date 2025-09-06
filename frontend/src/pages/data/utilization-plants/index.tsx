@@ -1,14 +1,14 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
-import { type GridColDef, type GridRenderCellParams } from "@mui/x-data-grid";
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { DataGridPro, type GridColDef } from "@mui/x-data-grid-pro";
+import { useEffect, useState, useCallback } from "react";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
-import { DataGridPro } from "@mui/x-data-grid-pro";
 import { toast } from "react-toastify";
 import { UtilizationPlantsService } from "../../../services/utilization-plants-service";
 import type { UtilizationPlantRowModel } from "../../../models/utilization-plants/utilization-plants";
 import { useUtilizationPlants } from "../../../hooks/useUtilizationPlants";
 import AddUtilizationPlantModal from "../../../components/modals/utilization-plants/add-utilization-plant-modal";
 import EditUtilizationPlantModal from "../../../components/modals/utilization-plants/edit-utilization-plant-modal";
+import ActionsCell from "../../../components/datagrid/actions-cell";
 
 const UtilizationPlantsPage: React.FC = () => {
   const [openAddModal, setOpenAddModal] = useState(false);
@@ -56,50 +56,6 @@ const UtilizationPlantsPage: React.FC = () => {
     fetchUtilizationPlants();
   };
 
-  const columns: GridColDef<UtilizationPlantRowModel>[] = useMemo(
-    () => [
-      { field: "name", headerName: "Nazwa", flex: 1 },
-      { field: "irzNumber", headerName: "Numer IRZ", flex: 1 },
-      { field: "nip", headerName: "NIP", flex: 1 },
-      { field: "address", headerName: "Adres", flex: 1 },
-      {
-        field: "dateCreatedUtc",
-        headerName: "Data utworzenia rekordu",
-        type: "dateTime",
-        flex: 1,
-        valueGetter: (params: any) => {
-          return params ? new Date(params) : null;
-        },
-      },
-      {
-        field: "actions",
-        headerName: "Akcje",
-        flex: 1,
-        sortable: false,
-        filterable: false,
-        renderCell: (params: GridRenderCellParams) => (
-          <Box textAlign="center">
-            <Button
-              variant="outlined"
-              onClick={() => handleEditOpen(params.row)}
-            >
-              Edytuj
-            </Button>
-            <Button
-              variant="outlined"
-              color="error"
-              sx={{ ml: 1 }}
-              onClick={() => handleDelete(params.row.id)}
-            >
-              Usuń
-            </Button>
-          </Box>
-        ),
-      },
-    ],
-    [handleDelete]
-  );
-
   const handleAddClose = () => {
     setOpenAddModal(false);
   };
@@ -108,6 +64,34 @@ const UtilizationPlantsPage: React.FC = () => {
     setOpenAddModal(false);
     fetchUtilizationPlants();
   };
+
+  const columns: GridColDef<UtilizationPlantRowModel>[] = [
+    { field: "name", headerName: "Nazwa", flex: 1 },
+    { field: "irzNumber", headerName: "Numer IRZ", flex: 1 },
+    { field: "nip", headerName: "NIP", flex: 1 },
+    { field: "address", headerName: "Adres", flex: 1 },
+    {
+      field: "dateCreatedUtc",
+      headerName: "Data utworzenia rekordu",
+      type: "dateTime",
+      flex: 1,
+      valueGetter: (value: any) => (value ? new Date(value) : null),
+    },
+    {
+      field: "actions",
+      type: "actions",
+      headerName: "Akcje",
+      flex: 1,
+      getActions: (params) => [
+        <ActionsCell
+          key="actions"
+          params={params}
+          onEdit={handleEditOpen}
+          onDelete={handleDelete}
+        />,
+      ],
+    },
+  ];
 
   return (
     <Box p={4}>
