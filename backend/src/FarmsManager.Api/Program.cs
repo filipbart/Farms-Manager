@@ -129,6 +129,7 @@ app.UseCors(builder =>
     var allowedOrigins = app.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
     builder.AllowAnyHeader();
     builder.AllowAnyMethod();
+    builder.AllowCredentials();
     if (allowedOrigins != null) builder.WithOrigins(allowedOrigins);
 });
 
