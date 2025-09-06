@@ -4,7 +4,7 @@ services:
     container_name: fm-container
     restart: always
     ports:      
-      - "80:8082"
+      - "8082:8082"
     volumes:
       - ./config.toml:/app/config.toml
     
