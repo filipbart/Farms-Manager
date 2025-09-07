@@ -67,6 +67,7 @@ public class UploadDeliveriesFilesCommandHandler : IRequestHandler<UploadDeliver
         {
             var fileId = Guid.NewGuid();
             var extension = Path.GetExtension(file.FileName);
+            var newFileName = fileId + extension;
             var filePath = "draft/" + fileId + extension;
 
             using var memoryStream = new MemoryStream();
@@ -74,7 +75,7 @@ public class UploadDeliveriesFilesCommandHandler : IRequestHandler<UploadDeliver
             var fileBytes = memoryStream.ToArray();
             var key = await _s3Service.UploadFileAsync(fileBytes, FileType.FeedDeliveryInvoice, filePath);
 
-            var preSignedUrl = _s3Service.GeneratePreSignedUrl(FileType.FeedDeliveryInvoice, filePath, file.FileName);
+            var preSignedUrl = _s3Service.GeneratePreSignedUrl(FileType.FeedDeliveryInvoice, filePath, newFileName);
 
             var feedDeliveryInvoiceModel = await _azureDiService.AnalyzeInvoiceAsync<FeedDeliveryInvoiceModel>(preSignedUrl);
             var extractedFields = _mapper.Map<AddFeedDeliveryInvoiceDto>(feedDeliveryInvoiceModel);

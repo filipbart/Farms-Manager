@@ -73,6 +73,7 @@ public class UploadExpensesInvoicesCommandHandler : IRequestHandler<UploadExpens
         {
             var fileId = Guid.NewGuid();
             var extension = Path.GetExtension(file.FileName);
+            var newFileName = fileId + extension;
             var filePath = "draft/" + fileId + extension;
 
             using var memoryStream = new MemoryStream();
@@ -80,7 +81,7 @@ public class UploadExpensesInvoicesCommandHandler : IRequestHandler<UploadExpens
             var fileBytes = memoryStream.ToArray();
             var key = await _s3Service.UploadFileAsync(fileBytes, FileType.ExpenseProduction, filePath);
 
-            var preSignedUrl = _s3Service.GeneratePreSignedUrl(FileType.ExpenseProduction, filePath, file.FileName);
+            var preSignedUrl = _s3Service.GeneratePreSignedUrl(FileType.ExpenseProduction, filePath, newFileName);
 
             var expenseProductionInvoiceModel =
                 await _azureDiService.AnalyzeInvoiceAsync<ExpenseProductionInvoiceModel>(preSignedUrl);

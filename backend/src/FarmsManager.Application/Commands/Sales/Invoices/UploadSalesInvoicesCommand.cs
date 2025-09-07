@@ -76,6 +76,7 @@ public class UploadSalesInvoicesCommandHandler : IRequestHandler<UploadSalesInvo
         {
             var fileId = Guid.NewGuid();
             var extension = Path.GetExtension(file.FileName);
+            var newFileName = fileId + extension;
             var filePath = "draft/" + fileId + extension;
 
             using var memoryStream = new MemoryStream();
@@ -83,7 +84,7 @@ public class UploadSalesInvoicesCommandHandler : IRequestHandler<UploadSalesInvo
             var fileBytes = memoryStream.ToArray();
             var key = await _s3Service.UploadFileAsync(fileBytes, FileType.SalesInvoices, filePath);
 
-            var preSignedUrl = _s3Service.GeneratePreSignedUrl(FileType.SalesInvoices, filePath, file.FileName);
+            var preSignedUrl = _s3Service.GeneratePreSignedUrl(FileType.SalesInvoices, filePath, newFileName);
 
             var salesInvoiceModel = await _azureDiService.AnalyzeInvoiceAsync<SaleInvoiceModel>(preSignedUrl);
             var extractedFields = _mapper.Map<AddSaleInvoiceDto>(salesInvoiceModel);

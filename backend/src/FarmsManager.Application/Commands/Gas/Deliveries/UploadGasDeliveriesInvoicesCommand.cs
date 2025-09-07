@@ -75,6 +75,7 @@ public class UploadGasDeliveriesInvoicesCommandHandler : IRequestHandler<UploadG
         {
             var fileId = Guid.NewGuid();
             var extension = Path.GetExtension(file.FileName);
+            var newFileName = fileId + extension;
             var filePath = "draft/" + fileId + extension;
 
             using var memoryStream = new MemoryStream();
@@ -82,7 +83,7 @@ public class UploadGasDeliveriesInvoicesCommandHandler : IRequestHandler<UploadG
             var fileBytes = memoryStream.ToArray();
             var key = await _s3Service.UploadFileAsync(fileBytes, FileType.GasDelivery, filePath);
 
-            var preSignedUrl = _s3Service.GeneratePreSignedUrl(FileType.GasDelivery, filePath, file.FileName);
+            var preSignedUrl = _s3Service.GeneratePreSignedUrl(FileType.GasDelivery, filePath, newFileName);
 
             var gasInvoiceModel = await _azureDiService.AnalyzeInvoiceAsync<GasDeliveryInvoiceModel>(preSignedUrl);
             var extractedFields = _mapper.Map<AddGasDeliveryInvoiceDto>(gasInvoiceModel);
@@ -146,7 +147,8 @@ public class UploadGasDeliveriesInvoicesCommandProfile : Profile
             .ForMember(m => m.ContractorId, opt => opt.Ignore())
             .ForMember(m => m.Comment, opt => opt.Ignore())
             .ForMember(m => m.ContractorName, opt => opt.MapFrom(t => t.VendorName))
-            .ForMember(m => m.Quantity, opt => opt.MapFrom(t => t.Items.Count != 0 ? t.Items.Sum(i => i.Quantity) : null))
+            .ForMember(m => m.Quantity,
+                opt => opt.MapFrom(t => t.Items.Count != 0 ? t.Items.Sum(i => i.Quantity) : null))
             .ForMember(m => m.UnitPrice,
                 opt => opt.MapFrom(t => t.Items.Count != 0 ? t.Items.FirstOrDefault().UnitPrice : null));
     }
