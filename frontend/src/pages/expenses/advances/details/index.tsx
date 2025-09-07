@@ -11,7 +11,6 @@ import {
 } from "@mui/material";
 import { useEffect, useReducer, useState, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import dayjs from "dayjs";
 import { useExpenseAdvances } from "../../../../hooks/expenses/advances/useExpensesAdvances";
 import {
   ExpensesAdvancesOrderType,
@@ -41,6 +40,7 @@ const generateYearOptions = () => {
   for (let i = 0; i < 10; i++) years.push(currentYear - i);
   return years;
 };
+
 const monthOptions = [
   { value: 1, label: "Styczeń" },
   { value: 2, label: "Luty" },
@@ -58,14 +58,12 @@ const monthOptions = [
 
 const formatCurrencyPLN = (value: number | null | undefined): string => {
   const numberToFormat = value ?? 0;
-
   const formatter = new Intl.NumberFormat("pl-PL", {
     style: "currency",
     currency: "PLN",
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
-
   return formatter.format(numberToFormat);
 };
 
@@ -78,7 +76,6 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
   const [downloadingFilePath, setDownloadFilePath] = useState<string | null>(
     null
   );
-
   const nav = useNavigate();
 
   const [initialGridState] = useState(() => {
@@ -94,12 +91,12 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
         };
   });
 
-  const [selectedMonth, setSelectedMonth] = useState<number | "">(
-    new Date().getMonth() + 1
-  );
-  const [selectedYear, setSelectedYear] = useState<number | "">(
-    new Date().getFullYear()
-  );
+  const [selectedMonths, setSelectedMonths] = useState<number[]>([
+    new Date().getMonth() + 1,
+  ]);
+  const [selectedYears, setSelectedYears] = useState<number[]>([
+    new Date().getFullYear(),
+  ]);
 
   const downloadExpenseAdvanceFile = async (path: string) => {
     await downloadFile({
@@ -115,8 +112,8 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
     filterReducer,
     {
       ...initialFilters,
-      dateSince: dayjs().startOf("month").format("YYYY-MM-DD"),
-      dateTo: dayjs().endOf("month").format("YYYY-MM-DD"),
+      years: [new Date().getFullYear()],
+      months: [new Date().getMonth() + 1],
     },
     (initialState) => {
       const savedPageSize = localStorage.getItem("expenseAdvancesPageSize");
@@ -133,36 +130,26 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
     employeeId,
     filters
   );
-  const { employeeFullName, list, balance, totalIncome, totalExpenses } =
-    response || {};
+  const {
+    employeeFullName,
+    list,
+    totalBalance,
+    balance,
+    totalIncome,
+    totalExpenses,
+  } = response || {};
   const { items: advances = [], totalRows = 0 } = list || {};
 
   useEffect(() => {
-    let dateSince: string | undefined = undefined;
-    let dateTo: string | undefined = undefined;
-    const currentYear = new Date().getFullYear();
-
-    if (selectedYear && selectedMonth) {
-      const date = dayjs()
-        .year(selectedYear)
-        .month(selectedMonth - 1);
-      dateSince = date.startOf("month").format("YYYY-MM-DD");
-      dateTo = date.endOf("month").format("YYYY-MM-DD");
-    } else if (selectedYear && !selectedMonth) {
-      const date = dayjs().year(selectedYear);
-      dateSince = date.startOf("year").format("YYYY-MM-DD");
-      dateTo = date.endOf("year").format("YYYY-MM-DD");
-    } else if (!selectedYear && selectedMonth) {
-      const date = dayjs()
-        .year(currentYear)
-        .month(selectedMonth - 1);
-      dateSince = date.startOf("month").format("YYYY-MM-DD");
-      dateTo = date.endOf("month").format("YYYY-MM-DD");
-    }
-    //
-
-    dispatch({ type: "setMultiple", payload: { dateSince, dateTo } });
-  }, [selectedMonth, selectedYear]);
+    dispatch({
+      type: "setMultiple",
+      payload: {
+        years: selectedYears,
+        months: selectedMonths,
+        page: 0,
+      },
+    });
+  }, [selectedMonths, selectedYears]);
 
   const deleteAdvance = async (id: string) => {
     await handleApiResponse(
@@ -224,11 +211,25 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
           <TextField
             select
             label="Miesiąc"
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(Number(e.target.value))}
+            value={selectedMonths}
+            onChange={(e) => {
+              const value = e.target.value;
+              setSelectedMonths(
+                typeof value === "string" ? value.split(",").map(Number) : value
+              );
+            }}
             fullWidth
+            slotProps={{
+              select: {
+                multiple: true,
+                renderValue: (selected: any) =>
+                  monthOptions
+                    .filter((opt) => (selected as number[]).includes(opt.value))
+                    .map((opt) => opt.label)
+                    .join(", "),
+              },
+            }}
           >
-            <MenuItem value="">Wszystkie</MenuItem>
             {monthOptions.map((option) => (
               <MenuItem key={option.value} value={option.value}>
                 {option.label}
@@ -240,11 +241,22 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
           <TextField
             select
             label="Rok"
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(Number(e.target.value))}
+            value={selectedYears}
+            onChange={(e) => {
+              const value = e.target.value;
+              setSelectedYears(
+                typeof value === "string" ? value.split(",").map(Number) : value
+              );
+            }}
             fullWidth
+            slotProps={{
+              select: {
+                multiple: true,
+                renderValue: (selected: any) =>
+                  (selected as number[]).join(", "),
+              },
+            }}
           >
-            <MenuItem value="">Wszystkie</MenuItem>
             {generateYearOptions().map((year) => (
               <MenuItem key={year} value={year}>
                 {year}
@@ -277,8 +289,17 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
 
       <Paper sx={{ p: 2, mb: 3 }} variant="outlined">
         <Grid container spacing={2} justifyContent="space-around">
-          <Grid size={{ xs: 12, md: 4 }} textAlign="center">
-            <Typography variant="h6">Saldo</Typography>
+          <Grid size={{ xs: 12, md: 3 }} textAlign="center">
+            <Typography variant="h6">Stan konta</Typography>
+            <Typography
+              variant="h5"
+              color={(totalBalance ?? 0) >= 0 ? "text.primary" : "error.main"}
+            >
+              {formatCurrencyPLN(totalBalance)}
+            </Typography>
+          </Grid>
+          <Grid size={{ xs: 12, md: 3 }} textAlign="center">
+            <Typography variant="h6">Saldo dla wybranego okresu</Typography>
             <Typography
               variant="h5"
               color={(balance ?? 0) >= 0 ? "text.primary" : "error.main"}
@@ -286,13 +307,13 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
               {formatCurrencyPLN(balance)}
             </Typography>
           </Grid>
-          <Grid size={{ xs: 12, md: 4 }} textAlign="center">
+          <Grid size={{ xs: 12, md: 3 }} textAlign="center">
             <Typography variant="h6">Zaliczki</Typography>
             <Typography variant="h5" color="success.main">
               {formatCurrencyPLN(totalIncome)}
             </Typography>
           </Grid>
-          <Grid size={{ xs: 12, md: 4 }} textAlign="center">
+          <Grid size={{ xs: 12, md: 3 }} textAlign="center">
             <Typography variant="h6">Wydatki</Typography>
             <Typography variant="h5" color="error.main">
               {formatCurrencyPLN(totalExpenses)}
@@ -379,7 +400,6 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
             [`& .${tablePaginationClasses.input}`]: { display: "inline-flex" },
             "& .aggregated-row": {
               fontWeight: "bold",
-
               "& .MuiDataGrid-cell": {
                 borderTop: "1px solid rgba(224, 224, 224, 1)",
                 backgroundColor: "rgba(240, 240, 240, 0.7)",

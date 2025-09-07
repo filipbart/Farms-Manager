@@ -18,6 +18,7 @@ export interface ExpenseAdvanceListModel {
 export interface GetExpensesAdvancesResponse {
   employeeFullName: string;
   list: PaginateModel<ExpenseAdvanceListModel>;
+  totalBalance: number;
   balance: number;
   totalIncome: number;
   totalExpenses: number;

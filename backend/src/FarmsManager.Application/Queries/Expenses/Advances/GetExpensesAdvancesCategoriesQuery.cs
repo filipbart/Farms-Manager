@@ -1,3 +1,4 @@
+using Ardalis.Specification;
 using AutoMapper;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Extensions;
@@ -54,5 +55,6 @@ public sealed class GetAllAdvancesCategoriesSpec : BaseSpecification<ExpenseAdva
     public GetAllAdvancesCategoriesSpec()
     {
         EnsureExists();
+        Query.OrderBy(t => t.Name);
     }
 }

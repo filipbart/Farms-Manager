@@ -22,6 +22,7 @@ public class GetExpensesAdvancesQueryResponse
 {
     public string EmployeeFullName { get; init; }
     public PaginationModel<ExpenseAdvanceRowDto> List { get; init; }
+    public decimal TotalBalance { get; init; }
     public decimal Balance { get; init; }
     public decimal TotalIncome { get; init; }
     public decimal TotalExpenses { get; init; }

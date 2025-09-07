@@ -64,4 +64,7 @@ export interface ExpensesAdvancesFilter {
 
 export interface ExpensesAdvancesFilterPaginationModel
   extends ExpensesAdvancesFilter,
-    OrderedPaginationParams<ExpensesAdvancesOrderType> {}
+    OrderedPaginationParams<ExpensesAdvancesOrderType> {
+  years?: number[];
+  months?: number[];
+}

@@ -15,8 +15,8 @@ public enum ExpensesAdvancesOrderBy
 
 public record GetExpensesAdvancesQueryFilters : OrderedPaginationParams<ExpensesAdvancesOrderBy>
 {
-    public DateOnly? DateSince { get; init; }
-    public DateOnly? DateTo { get; init; }
+    public List<int> Years { get; init; }
+    public List<int> Months { get; init; }
 }
 
 public record GetExpensesAdvancesQuery(Guid EmployeeId, GetExpensesAdvancesQueryFilters Filters)

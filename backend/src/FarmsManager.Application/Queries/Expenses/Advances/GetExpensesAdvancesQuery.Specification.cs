@@ -25,14 +25,14 @@ public sealed class GetAllExpensesAdvancesSpec : BaseSpecification<ExpenseAdvanc
 
     private void PopulateFilters(GetExpensesAdvancesQueryFilters filters)
     {
-        if (filters.DateSince is not null)
+        if (filters.Years != null && filters.Years.Count != 0)
         {
-            Query.Where(ea => ea.Date >= filters.DateSince.Value);
+            Query.Where(ea => filters.Years.Contains(ea.Date.Year));
         }
 
-        if (filters.DateTo is not null)
+        if (filters.Months != null && filters.Months.Count != 0)
         {
-            Query.Where(ea => ea.Date <= filters.DateTo.Value);
+            Query.Where(ea => filters.Months.Contains(ea.Date.Month));
         }
     }
 

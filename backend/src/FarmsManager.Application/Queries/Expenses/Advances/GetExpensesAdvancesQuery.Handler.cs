@@ -30,8 +30,13 @@ public class GetExpensesAdvancesQueryHandler : IRequestHandler<GetExpensesAdvanc
         var employee = await _employeeRepository.GetAsync(new EmployeeByIdSpec(request.EmployeeId), cancellationToken);
         var data = await _expenseAdvanceRepository.ListAsync<ExpenseAdvanceRowDto>(
             new GetAllExpensesAdvancesSpec(request.EmployeeId, request.Filters, true), cancellationToken);
-        var count = await _expenseAdvanceRepository.CountAsync(
+        var allData = await _expenseAdvanceRepository.ListAsync(
             new GetAllExpensesAdvancesSpec(request.EmployeeId, request.Filters, false), cancellationToken);
+
+        var count = allData.Count;
+        var allExpenses = allData.Where(t => t.Type == ExpenseAdvanceCategoryType.Expense).Sum(t => t.Amount);
+        var allIncome = allData.Where(t => t.Type == ExpenseAdvanceCategoryType.Income).Sum(t => t.Amount);
+        var allBalance = allIncome - allExpenses;
 
         var totalExpenses = data.Where(t => t.Type == ExpenseAdvanceCategoryType.Expense).Sum(t => t.Amount);
         var totalIncome = data.Where(t => t.Type == ExpenseAdvanceCategoryType.Income).Sum(t => t.Amount);
@@ -44,6 +49,7 @@ public class GetExpensesAdvancesQueryHandler : IRequestHandler<GetExpensesAdvanc
                 TotalRows = count,
                 Items = data
             },
+            TotalBalance = allBalance,
             Balance = balance,
             TotalIncome = totalIncome,
             TotalExpenses = totalExpenses,
