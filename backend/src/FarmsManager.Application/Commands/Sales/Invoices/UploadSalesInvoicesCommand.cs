@@ -82,11 +82,12 @@ public class UploadSalesInvoicesCommandHandler : IRequestHandler<UploadSalesInvo
             using var memoryStream = new MemoryStream();
             await file.CopyToAsync(memoryStream, cancellationToken);
             var fileBytes = memoryStream.ToArray();
-            var key = await _s3Service.UploadFileAsync(fileBytes, FileType.SalesInvoices, filePath);
+            var key = await _s3Service.UploadFileAsync(fileBytes, FileType.SalesInvoices, filePath, cancellationToken);
 
             var preSignedUrl = _s3Service.GeneratePreSignedUrl(FileType.SalesInvoices, filePath, newFileName);
 
-            var salesInvoiceModel = await _azureDiService.AnalyzeInvoiceAsync<SaleInvoiceModel>(preSignedUrl);
+            var salesInvoiceModel =
+                await _azureDiService.AnalyzeInvoiceAsync<SaleInvoiceModel>(preSignedUrl, cancellationToken);
             var extractedFields = _mapper.Map<AddSaleInvoiceDto>(salesInvoiceModel);
 
             var existedInvoice = await _saleInvoiceRepository.FirstOrDefaultAsync(

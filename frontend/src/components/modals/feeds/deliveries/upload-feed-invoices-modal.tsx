@@ -29,6 +29,7 @@ const UploadFeedInvoicesModal: React.FC<UploadFeedInvoicesModalProps> = ({
   onUpload,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -40,10 +41,13 @@ const UploadFeedInvoicesModal: React.FC<UploadFeedInvoicesModalProps> = ({
 
   const handleUpload = async () => {
     if (selectedFiles.length > 0) {
+      setLoading(true);
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
       try {
-        setLoading(true);
         await handleApiResponse(
-          () => FeedsService.uploadInvoices(selectedFiles),
+          () => FeedsService.uploadInvoices(selectedFiles, controller.signal),
           (data) => {
             if (data && data.responseData) {
               onUpload(data.responseData.files);
@@ -53,19 +57,30 @@ const UploadFeedInvoicesModal: React.FC<UploadFeedInvoicesModalProps> = ({
           undefined,
           "Błąd podczas wgrywania faktur"
         );
-      } catch {
-        toast.error("Błąd podczas wgrywania faktur");
+      } catch (error: any) {
+        if (error.name !== "CanceledError") {
+          toast.error("Błąd podczas wgrywania faktur");
+        }
       } finally {
         setLoading(false);
+        abortControllerRef.current = null;
+        handleClose();
       }
-
-      setSelectedFiles([]);
-      onClose();
     }
   };
 
   const handleClose = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+      toast.info("Przesyłanie zostało anulowane.");
+    }
+
     setSelectedFiles([]);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+    setLoading(false);
     onClose();
   };
 

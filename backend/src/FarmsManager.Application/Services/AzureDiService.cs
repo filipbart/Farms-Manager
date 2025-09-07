@@ -21,7 +21,8 @@ public class AzureDiService : IAzureDiService
         _client = new DocumentIntelligenceClient(new Uri(endpoint), credential);
     }
 
-    public async Task<T> AnalyzeInvoiceAsync<T>(string preSignedUrl) where T : class, new()
+    public async Task<T> AnalyzeInvoiceAsync<T>(string preSignedUrl, CancellationToken cancellationToken)
+        where T : class, new()
     {
         var options = new AnalyzeDocumentOptions(ModelId, new Uri(preSignedUrl));
         options.Features.Add("queryFields");
@@ -32,7 +33,7 @@ public class AzureDiService : IAzureDiService
             options.QueryFields.Add(field);
         }
 
-        var operation = await _client.AnalyzeDocumentAsync(WaitUntil.Completed, options);
+        var operation = await _client.AnalyzeDocumentAsync(WaitUntil.Completed, options, cancellationToken);
         var result = operation.Value;
 
         if (!result.Documents.Any())

@@ -81,11 +81,12 @@ public class UploadGasDeliveriesInvoicesCommandHandler : IRequestHandler<UploadG
             using var memoryStream = new MemoryStream();
             await file.CopyToAsync(memoryStream, cancellationToken);
             var fileBytes = memoryStream.ToArray();
-            var key = await _s3Service.UploadFileAsync(fileBytes, FileType.GasDelivery, filePath);
+            var key = await _s3Service.UploadFileAsync(fileBytes, FileType.GasDelivery, filePath, cancellationToken);
 
             var preSignedUrl = _s3Service.GeneratePreSignedUrl(FileType.GasDelivery, filePath, newFileName);
 
-            var gasInvoiceModel = await _azureDiService.AnalyzeInvoiceAsync<GasDeliveryInvoiceModel>(preSignedUrl);
+            var gasInvoiceModel =
+                await _azureDiService.AnalyzeInvoiceAsync<GasDeliveryInvoiceModel>(preSignedUrl, cancellationToken);
             var extractedFields = _mapper.Map<AddGasDeliveryInvoiceDto>(gasInvoiceModel);
 
             var existedInvoice = await _gasDeliveryRepository.FirstOrDefaultAsync(

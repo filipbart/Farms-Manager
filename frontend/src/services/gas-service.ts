@@ -78,7 +78,7 @@ export class GasService {
     return await AxiosWrapper.delete(ApiUrl.DeleteGasDelivery(id));
   }
 
-  public static async uploadInvoices(files: File[]) {
+  public static async uploadInvoices(files: File[], signal: AbortSignal) {
     const formData = new FormData();
     files.forEach((file) => {
       formData.append("files", file);
@@ -91,6 +91,7 @@ export class GasService {
         headers: {
           "Content-Type": "multipart/form-data",
         },
+        signal: signal,
       }
     );
   }

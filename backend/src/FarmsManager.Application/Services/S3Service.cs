@@ -289,7 +289,8 @@ public class S3Service : IS3Service
     }
 
 
-    public async Task<string> UploadFileAsync(byte[] fileBytes, FileType fileType, string path, bool publicRead = false)
+    public async Task<string> UploadFileAsync(byte[] fileBytes, FileType fileType, string path,
+        CancellationToken cancellationToken, bool publicRead = false)
     {
         await EnsureBucketExistsAsync();
 
@@ -306,7 +307,7 @@ public class S3Service : IS3Service
 
         try
         {
-            var s3Response = await _s3Client.PutObjectAsync(request);
+            var s3Response = await _s3Client.PutObjectAsync(request, cancellationToken);
             if (s3Response.HttpStatusCode != HttpStatusCode.OK)
             {
                 throw new Exception("Błąd podczas zapisywania pliku do S3");

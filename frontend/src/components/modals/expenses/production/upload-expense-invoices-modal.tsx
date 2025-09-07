@@ -16,6 +16,7 @@ import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import type { DraftExpenseInvoice } from "../../../../models/expenses/production/expenses-productions";
 import { ExpensesService } from "../../../../services/expenses-service";
 import AppDialog from "../../../common/app-dialog";
+
 interface UploadExpenseInvoicesModalProps {
   open: boolean;
   onClose: () => void;
@@ -28,6 +29,7 @@ const UploadExpenseInvoicesModal: React.FC<UploadExpenseInvoicesModalProps> = ({
   onUpload,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -40,9 +42,13 @@ const UploadExpenseInvoicesModal: React.FC<UploadExpenseInvoicesModalProps> = ({
   const handleUpload = async () => {
     if (selectedFiles.length > 0) {
       setLoading(true);
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
       try {
         await handleApiResponse(
-          () => ExpensesService.uploadInvoices(selectedFiles),
+          () =>
+            ExpensesService.uploadInvoices(selectedFiles, controller.signal),
           (data) => {
             if (data && data.responseData) {
               onUpload(data.responseData.files);
@@ -54,16 +60,25 @@ const UploadExpenseInvoicesModal: React.FC<UploadExpenseInvoicesModalProps> = ({
           undefined,
           "Błąd podczas wgrywania faktur kosztów produkcyjnych"
         );
-      } catch {
-        toast.error("Błąd podczas wgrywania faktur kosztów produkcyjnych");
+      } catch (error: any) {
+        if (error.name !== "CanceledError") {
+          toast.error("Błąd podczas wgrywania faktur kosztów produkcyjnych");
+        }
       } finally {
         setLoading(false);
+        abortControllerRef.current = null;
         handleClose();
       }
     }
   };
 
   const handleClose = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+      toast.info("Przesyłanie zostało anulowane.");
+    }
+
     setSelectedFiles([]);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";

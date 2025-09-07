@@ -29,6 +29,7 @@ const UploadSalesInvoicesModal: React.FC<UploadSalesInvoicesModalProps> = ({
   onUpload,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -41,9 +42,12 @@ const UploadSalesInvoicesModal: React.FC<UploadSalesInvoicesModalProps> = ({
   const handleUpload = async () => {
     if (selectedFiles.length > 0) {
       setLoading(true);
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
       try {
         await handleApiResponse(
-          () => SalesService.uploadInvoices(selectedFiles),
+          () => SalesService.uploadInvoices(selectedFiles, controller.signal),
           (data) => {
             if (data && data.responseData) {
               onUpload(data.responseData.files);
@@ -53,16 +57,25 @@ const UploadSalesInvoicesModal: React.FC<UploadSalesInvoicesModalProps> = ({
           undefined,
           "Błąd podczas wgrywania faktur sprzedażowych"
         );
-      } catch {
-        toast.error("Błąd podczas wgrywania faktur sprzedażowych");
+      } catch (error: any) {
+        if (error.name !== "CanceledError") {
+          toast.error("Błąd podczas wgrywania faktur sprzedażowych");
+        }
       } finally {
         setLoading(false);
+        abortControllerRef.current = null;
         handleClose();
       }
     }
   };
 
   const handleClose = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+      toast.info("Przesyłanie zostało anulowane.");
+    }
+
     setSelectedFiles([]);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";

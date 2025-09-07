@@ -1,6 +1,6 @@
 import type BaseResponse from "./base-response";
 import type DomainException from "./domain-exception";
-import axios from "axios";
+import axios, { type AxiosRequestConfig } from "axios";
 import qs from "qs";
 
 const handleErrorResponse: <T>(error: any) => BaseResponse<T> = (
@@ -102,21 +102,12 @@ export default class AxiosWrapper {
 
   public static post<T>(
     url: string,
-    params?: any,
-    queryParams?: any,
-    withCredentials = false,
-    isFormData = false
+    data?: any,
+    config?: AxiosRequestConfig
   ): Promise<BaseResponse<T>> {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       axios
-        .post<BaseResponse<T>>(url, params, {
-          params: queryParams,
-          withCredentials,
-          paramsSerializer: (params: any) => {
-            return qs.stringify(params, { arrayFormat: "repeat" });
-          },
-          headers: isFormData ? { "Content-Type": "multipart/form-data" } : {},
-        })
+        .post<BaseResponse<T>>(url, data, config)
         .then((response) => {
           resolve({
             ...response.data,
@@ -126,7 +117,12 @@ export default class AxiosWrapper {
           });
         })
         .catch((error) => {
-          resolve(handleErrorResponse(error));
+          if (axios.isCancel(error)) {
+            reject(error);
+            return;
+          }
+
+          reject(handleErrorResponse(error));
         });
     });
   }

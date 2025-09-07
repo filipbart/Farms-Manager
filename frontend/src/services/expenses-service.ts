@@ -103,7 +103,7 @@ export class ExpensesService {
     return await AxiosWrapper.delete(ApiUrl.DeleteExpenseProduction(id));
   }
 
-  public static async uploadInvoices(files: File[]) {
+  public static async uploadInvoices(files: File[], signal: AbortSignal) {
     const formData = new FormData();
     files.forEach((file) => {
       formData.append("files", file);
@@ -116,6 +116,7 @@ export class ExpensesService {
         headers: {
           "Content-Type": "multipart/form-data",
         },
+        signal: signal,
       }
     );
   }

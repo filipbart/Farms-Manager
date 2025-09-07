@@ -1,4 +1,3 @@
-// utils/handleApiResponse.ts
 import { toast } from "react-toastify";
 import type BaseResponse from "./base-response";
 
@@ -28,10 +27,16 @@ export async function handleApiResponse<T>(
 
       onError?.(response);
     }
-  } catch (error) {
+  } catch (error: any) {
+    if (error.name === "CanceledError") {
+      throw error;
+    }
+
     toast.error(
       fallbackErrorMessage ?? "Wystąpił błąd podczas przetwarzania żądania."
     );
+
+    throw error;
   }
 }
 
@@ -39,23 +44,35 @@ export async function handleApiResponseWithResult<T>(
   apiCall: () => Promise<BaseResponse<T>>,
   fallbackErrorMessage?: string | null
 ): Promise<BaseResponse<T> | null> {
-  const response = await apiCall();
+  try {
+    const response = await apiCall();
 
-  if (response.success) {
-    return response;
-  }
+    if (response.success) {
+      return response;
+    }
 
-  if (response.domainException?.errorDescription) {
-    toast.error(response.domainException.errorDescription);
-  } else if (response.errors && typeof response.errors === "object") {
-    Object.values(response.errors)
-      .flat()
-      .forEach((err: any) => toast.error(err));
-  } else {
+    if (response.domainException?.errorDescription) {
+      toast.error(response.domainException.errorDescription);
+    } else if (response.errors && typeof response.errors === "object") {
+      Object.values(response.errors)
+        .flat()
+        .forEach((err: any) => toast.error(err));
+    } else {
+      toast.error(
+        fallbackErrorMessage ?? "Wystąpił błąd podczas przetwarzania żądania."
+      );
+    }
+
+    return null;
+  } catch (error: any) {
+    if (error.name === "CanceledError") {
+      throw error;
+    }
+
     toast.error(
       fallbackErrorMessage ?? "Wystąpił błąd podczas przetwarzania żądania."
     );
-  }
 
-  return null;
+    return null;
+  }
 }

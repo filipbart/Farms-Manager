@@ -79,12 +79,15 @@ public class UploadExpensesInvoicesCommandHandler : IRequestHandler<UploadExpens
             using var memoryStream = new MemoryStream();
             await file.CopyToAsync(memoryStream, cancellationToken);
             var fileBytes = memoryStream.ToArray();
-            var key = await _s3Service.UploadFileAsync(fileBytes, FileType.ExpenseProduction, filePath);
+            var key = await _s3Service.UploadFileAsync(fileBytes, FileType.ExpenseProduction, filePath,
+                cancellationToken: cancellationToken);
 
-            var preSignedUrl = _s3Service.GeneratePreSignedUrl(FileType.ExpenseProduction, filePath, newFileName);
+            var preSignedUrl =
+                _s3Service.GeneratePreSignedUrl(FileType.ExpenseProduction, filePath, newFileName);
 
             var expenseProductionInvoiceModel =
-                await _azureDiService.AnalyzeInvoiceAsync<ExpenseProductionInvoiceModel>(preSignedUrl);
+                await _azureDiService.AnalyzeInvoiceAsync<ExpenseProductionInvoiceModel>(preSignedUrl,
+                    cancellationToken);
             var extractedFields = _mapper.Map<AddExpenseProductionInvoiceDto>(expenseProductionInvoiceModel);
 
             var existedInvoice = await _expenseProductionRepository.FirstOrDefaultAsync(

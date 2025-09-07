@@ -73,11 +73,13 @@ public class UploadDeliveriesFilesCommandHandler : IRequestHandler<UploadDeliver
             using var memoryStream = new MemoryStream();
             await file.CopyToAsync(memoryStream, cancellationToken);
             var fileBytes = memoryStream.ToArray();
-            var key = await _s3Service.UploadFileAsync(fileBytes, FileType.FeedDeliveryInvoice, filePath);
+            var key = await _s3Service.UploadFileAsync(fileBytes, FileType.FeedDeliveryInvoice, filePath,
+                cancellationToken);
 
             var preSignedUrl = _s3Service.GeneratePreSignedUrl(FileType.FeedDeliveryInvoice, filePath, newFileName);
 
-            var feedDeliveryInvoiceModel = await _azureDiService.AnalyzeInvoiceAsync<FeedDeliveryInvoiceModel>(preSignedUrl);
+            var feedDeliveryInvoiceModel =
+                await _azureDiService.AnalyzeInvoiceAsync<FeedDeliveryInvoiceModel>(preSignedUrl, cancellationToken);
             var extractedFields = _mapper.Map<AddFeedDeliveryInvoiceDto>(feedDeliveryInvoiceModel);
 
             var existedInvoice = await _feedInvoiceRepository.SingleOrDefaultAsync(
@@ -132,7 +134,8 @@ public class UploadDeliveriesFilesCommandProfile : Profile
             .ForMember(m => m.HenhouseId, opt => opt.Ignore())
             .ForMember(m => m.ItemName,
                 opt => opt.MapFrom(t => t.Items.Count != 0 ? t.Items.FirstOrDefault().Name : null))
-            .ForMember(m => m.Quantity, opt => opt.MapFrom(t => t.Items.Count != 0 ? t.Items.Sum(i => i.Quantity) : null))
+            .ForMember(m => m.Quantity,
+                opt => opt.MapFrom(t => t.Items.Count != 0 ? t.Items.Sum(i => i.Quantity) : null))
             .ForMember(m => m.UnitPrice,
                 opt => opt.MapFrom(t => t.Items.Count != 0 ? t.Items.FirstOrDefault().UnitPrice : null));
     }
