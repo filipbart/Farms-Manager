@@ -26,7 +26,19 @@ import {
 } from "@mui/x-data-grid-premium";
 
 const GasConsumptionsPage: React.FC = () => {
-  const [filters, dispatch] = useReducer(filterReducer, initialFilters);
+  const [filters, dispatch] = useReducer(
+    filterReducer,
+    initialFilters,
+    (init) => {
+      const savedPageSize = localStorage.getItem("gasConsumptionsPageSize");
+      return {
+        ...init,
+        pageSize: savedPageSize
+          ? parseInt(savedPageSize, 10)
+          : init.pageSize ?? 10,
+      };
+    }
+  );
   const [dictionary, setDictionary] = useState<GasConsumptionsDictionary>();
   const [openAddModal, setOpenAddModal] = useState(false);
   const [selectedGasConsumption, setSelectedGasConsumption] =
@@ -160,12 +172,17 @@ const GasConsumptionsPage: React.FC = () => {
             pageSize: filters.pageSize ?? 10,
             page: filters.page ?? 0,
           }}
-          onPaginationModelChange={({ page, pageSize }) =>
+          onPaginationModelChange={({ page, pageSize }) => {
+            localStorage.setItem(
+              "gasConsumptionsPageSize",
+              pageSize.toString()
+            );
+
             dispatch({
               type: "setMultiple",
               payload: { page, pageSize },
-            })
-          }
+            });
+          }}
           rowCount={totalRows}
           rowSelection={false}
           pageSizeOptions={[5, 10, 25, { value: -1, label: "Wszystkie" }]}

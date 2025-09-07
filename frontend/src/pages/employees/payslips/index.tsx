@@ -26,7 +26,19 @@ import AddEmployeePayslipModal from "../../../components/modals/employees/add-em
 import EditEmployeePayslipModal from "../../../components/modals/employees/edit-employee-payslip-modal";
 
 const EmployeePayslipsPage: React.FC = () => {
-  const [filters, dispatch] = useReducer(filterReducer, initialFilters);
+  const [filters, dispatch] = useReducer(
+    filterReducer,
+    initialFilters,
+    (init) => {
+      const savedPageSize = localStorage.getItem("employeePayslipsPageSize");
+      return {
+        ...init,
+        pageSize: savedPageSize
+          ? parseInt(savedPageSize, 10)
+          : init.pageSize ?? 10,
+      };
+    }
+  );
   const [dictionary, setDictionary] = useState<EmployeePayslipsDictionary>();
   const [openAddPayslipModal, setOpenAddPayslipModal] = useState(false);
   const [selectedPayslip, setSelectedPayslip] =
@@ -171,12 +183,17 @@ const EmployeePayslipsPage: React.FC = () => {
             pageSize: filters.pageSize ?? 10,
             page: filters.page ?? 0,
           }}
-          onPaginationModelChange={({ page, pageSize }) =>
+          onPaginationModelChange={({ page, pageSize }) => {
+            localStorage.setItem(
+              "employeePayslipsPageSize",
+              pageSize.toString()
+            );
+
             dispatch({
               type: "setMultiple",
               payload: { page, pageSize },
-            })
-          }
+            });
+          }}
           rowCount={totalRows}
           rowSelection={false}
           pageSizeOptions={[5, 10, 25, { value: -1, label: "Wszystkie" }]}

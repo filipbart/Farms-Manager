@@ -39,7 +39,19 @@ import {
 import LoadingButton from "../../components/common/loading-button";
 
 const InsertionsPage: React.FC = () => {
-  const [filters, dispatch] = useReducer(filterReducer, initialFilters);
+  const [filters, dispatch] = useReducer(
+    filterReducer,
+    initialFilters,
+    (init) => {
+      const savedPageSize = localStorage.getItem("insertionsPageSize");
+      return {
+        ...init,
+        pageSize: savedPageSize
+          ? parseInt(savedPageSize, 10)
+          : init.pageSize ?? 10,
+      };
+    }
+  );
   const [dictionary, setDictionary] = useState<InsertionDictionary>();
   const [openModal, setOpenModal] = useState(false);
   const [openCycleModal, setOpenCycleModal] = useState(false);
@@ -251,12 +263,14 @@ const InsertionsPage: React.FC = () => {
             pageSize: filters.pageSize ?? 10,
             page: filters.page ?? 0,
           }}
-          onPaginationModelChange={({ page, pageSize }) =>
+          onPaginationModelChange={({ page, pageSize }) => {
+            localStorage.setItem("insertionsPageSize", pageSize.toString());
+
             dispatch({
               type: "setMultiple",
               payload: { page, pageSize },
-            })
-          }
+            });
+          }}
           rowCount={totalRows}
           pageSizeOptions={[5, 10, 25, { value: -1, label: "Wszystkie" }]}
           slots={{ noRowsOverlay: NoRowsOverlay }}

@@ -25,7 +25,21 @@ import {
 } from "@mui/x-data-grid-premium";
 
 const ProductionDataWeighingsTab: React.FC = () => {
-  const [filters, dispatch] = useReducer(filterReducer, initialFilters);
+  const [filters, dispatch] = useReducer(
+    filterReducer,
+    initialFilters,
+    (init) => {
+      const savedPageSize = localStorage.getItem(
+        "productionDataWeighingsPageSize"
+      );
+      return {
+        ...init,
+        pageSize: savedPageSize
+          ? parseInt(savedPageSize, 10)
+          : init.pageSize ?? 10,
+      };
+    }
+  );
   const [dictionary, setDictionary] =
     useState<ProductionDataWeighingsDictionary>();
   const [openModal, setOpenModal] = useState(false);
@@ -187,12 +201,17 @@ const ProductionDataWeighingsTab: React.FC = () => {
             pageSize: filters.pageSize ?? 10,
             page: filters.page ?? 0,
           }}
-          onPaginationModelChange={({ page, pageSize }) =>
+          onPaginationModelChange={({ page, pageSize }) => {
+            localStorage.setItem(
+              "productionDataWeighingsPageSize",
+              pageSize.toString()
+            );
+
             dispatch({
               type: "setMultiple",
               payload: { page, pageSize },
-            })
-          }
+            });
+          }}
           rowCount={totalRows}
           rowSelection={false}
           pageSizeOptions={[5, 10, 25, { value: -1, label: "Wszystkie" }]}

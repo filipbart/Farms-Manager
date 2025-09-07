@@ -35,7 +35,19 @@ import {
 } from "@mui/x-data-grid-premium";
 
 const SalesInvoicesPage: React.FC = () => {
-  const [filters, dispatch] = useReducer(filterReducer, initialFilters);
+  const [filters, dispatch] = useReducer(
+    filterReducer,
+    initialFilters,
+    (init) => {
+      const savedPageSize = localStorage.getItem("salesInvoicesPageSize");
+      return {
+        ...init,
+        pageSize: savedPageSize
+          ? parseInt(savedPageSize, 10)
+          : init.pageSize ?? 10,
+      };
+    }
+  );
   const [dictionary, setDictionary] = useState<SalesDictionary>();
   const { fetchNotifications } = useContext(NotificationContext);
   const [selectedSalesInvoice, setSelectedSalesInvoice] =
@@ -266,12 +278,14 @@ const SalesInvoicesPage: React.FC = () => {
             pageSize: filters.pageSize ?? 10,
             page: filters.page ?? 0,
           }}
-          onPaginationModelChange={({ page, pageSize }) =>
+          onPaginationModelChange={({ page, pageSize }) => {
+            localStorage.setItem("salesInvoicesPageSize", pageSize.toString());
+
             dispatch({
               type: "setMultiple",
               payload: { page, pageSize },
-            })
-          }
+            });
+          }}
           rowCount={totalRows}
           checkboxSelection
           disableRowSelectionOnClick

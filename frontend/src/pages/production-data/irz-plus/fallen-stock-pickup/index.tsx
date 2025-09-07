@@ -47,6 +47,16 @@ const FallenStocksPickupPage: React.FC<FallenStocksPickupPageProps> = ({
         };
   });
 
+  const [paginationModel, setPaginationModel] = useState(() => {
+    const savedPageSize = localStorage.getItem(
+      "productionDataFallenStockPickupPageSize"
+    );
+    return {
+      page: 0,
+      pageSize: savedPageSize ? parseInt(savedPageSize, 10) : 10,
+    };
+  });
+
   useEffect(() => {
     fetchPickups();
   }, [fetchPickups]);
@@ -115,6 +125,15 @@ const FallenStocksPickupPage: React.FC<FallenStocksPickupPageProps> = ({
           rowSelection={false}
           scrollbarSize={17}
           showToolbar
+          pagination
+          paginationModel={paginationModel}
+          onPaginationModelChange={(newModel) => {
+            localStorage.setItem(
+              "productionDataFallenStockPickupPageSize",
+              newModel.pageSize.toString()
+            );
+            setPaginationModel(newModel);
+          }}
           initialState={initialGridState}
           onStateChange={(newState: GridState) => {
             const stateToSave = {

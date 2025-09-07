@@ -24,6 +24,14 @@ const ExpensesContractorsPage: React.FC = () => {
     ExpenseContractorRow | undefined
   >(undefined);
 
+  const [paginationModel, setPaginationModel] = useState(() => {
+    const savedPageSize = localStorage.getItem("expensesContractorsPageSize");
+    return {
+      page: 0,
+      pageSize: savedPageSize ? parseInt(savedPageSize, 10) : 10,
+    };
+  });
+
   const handleOpen = () => setOpenModal(true);
   const handleClose = async () => {
     setOpenModal(false);
@@ -98,6 +106,14 @@ const ExpensesContractorsPage: React.FC = () => {
           rowSelection={false}
           showToolbar={false}
           pagination
+          paginationModel={paginationModel}
+          onPaginationModelChange={(newModel) => {
+            localStorage.setItem(
+              "expensesContractorsPageSize",
+              newModel.pageSize.toString()
+            );
+            setPaginationModel(newModel);
+          }}
           pageSizeOptions={[5, 10, 25, 100, { value: -1, label: "Wszystkie" }]}
           sx={{
             [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },

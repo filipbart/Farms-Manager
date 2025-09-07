@@ -26,7 +26,21 @@ import {
 } from "@mui/x-data-grid-premium";
 
 const ProductionDataRemainingFeedPage: React.FC = () => {
-  const [filters, dispatch] = useReducer(filterReducer, initialFilters);
+  const [filters, dispatch] = useReducer(
+    filterReducer,
+    initialFilters,
+    (init) => {
+      const savedPageSize = localStorage.getItem(
+        "productionDataRemainingFeedPageSize"
+      );
+      return {
+        ...init,
+        pageSize: savedPageSize
+          ? parseInt(savedPageSize, 10)
+          : init.pageSize ?? 10,
+      };
+    }
+  );
   const [dictionary, setDictionary] = useState<ProductionDataDictionary>();
   const [openModal, setOpenModal] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -189,12 +203,17 @@ const ProductionDataRemainingFeedPage: React.FC = () => {
             pageSize: filters.pageSize ?? 10,
             page: filters.page ?? 0,
           }}
-          onPaginationModelChange={({ page, pageSize }) =>
+          onPaginationModelChange={({ page, pageSize }) => {
+            localStorage.setItem(
+              "productionDataRemainingFeedPageSize",
+              pageSize.toString()
+            );
+
             dispatch({
               type: "setMultiple",
               payload: { page, pageSize },
-            })
-          }
+            });
+          }}
           rowCount={totalRows}
           rowSelection={false}
           pageSizeOptions={[5, 10, 25, { value: -1, label: "Wszystkie" }]}

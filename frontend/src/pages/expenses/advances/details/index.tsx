@@ -111,11 +111,23 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
     });
   };
 
-  const [filters, dispatch] = useReducer(filterReducer, {
-    ...initialFilters,
-    dateSince: dayjs().startOf("month").format("YYYY-MM-DD"),
-    dateTo: dayjs().endOf("month").format("YYYY-MM-DD"),
-  });
+  const [filters, dispatch] = useReducer(
+    filterReducer,
+    {
+      ...initialFilters,
+      dateSince: dayjs().startOf("month").format("YYYY-MM-DD"),
+      dateTo: dayjs().endOf("month").format("YYYY-MM-DD"),
+    },
+    (initialState) => {
+      const savedPageSize = localStorage.getItem("expenseAdvancesPageSize");
+      return {
+        ...initialState,
+        pageSize: savedPageSize
+          ? parseInt(savedPageSize, 10)
+          : initialState.pageSize ?? 10,
+      };
+    }
+  );
 
   const { response, loading, fetchExpenseAdvances } = useExpenseAdvances(
     employeeId,
@@ -316,12 +328,17 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
             pageSize: filters.pageSize ?? 10,
             page: filters.page ?? 0,
           }}
-          onPaginationModelChange={({ page, pageSize }) =>
+          onPaginationModelChange={({ page, pageSize }) => {
+            localStorage.setItem(
+              "expenseAdvancesPageSize",
+              pageSize.toString()
+            );
+
             dispatch({
               type: "setMultiple",
               payload: { page, pageSize },
-            })
-          }
+            });
+          }}
           sortingMode="server"
           onSortModelChange={(model) => {
             if (model.length > 0) {

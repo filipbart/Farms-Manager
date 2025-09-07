@@ -19,7 +19,19 @@ import AddUserModal from "../../../components/modals/users/add-user-modal";
 import { DataGridPremium, type GridState } from "@mui/x-data-grid-premium";
 
 const UsersPage: React.FC = () => {
-  const [filters, dispatch] = useReducer(filterReducer, initialFilters);
+  const [filters, dispatch] = useReducer(
+    filterReducer,
+    initialFilters,
+    (init) => {
+      const savedPageSize = localStorage.getItem("usersPageSize");
+      return {
+        ...init,
+        pageSize: savedPageSize
+          ? parseInt(savedPageSize, 10)
+          : init.pageSize ?? 10,
+      };
+    }
+  );
   const [openAddUserModal, setOpenAddUserModal] = useState(false);
 
   const { users, totalRows, loading, fetchUsers } = useUsers(filters);
@@ -113,12 +125,14 @@ const UsersPage: React.FC = () => {
             pageSize: filters.pageSize ?? 10,
             page: filters.page ?? 0,
           }}
-          onPaginationModelChange={({ page, pageSize }) =>
+          onPaginationModelChange={({ page, pageSize }) => {
+            localStorage.setItem("usersPageSize", pageSize.toString());
+
             dispatch({
               type: "setMultiple",
               payload: { page, pageSize },
-            })
-          }
+            });
+          }}
           rowCount={totalRows}
           rowSelection={false}
           pageSizeOptions={[5, 10, 25, { value: -1, label: "Wszystkie" }]}

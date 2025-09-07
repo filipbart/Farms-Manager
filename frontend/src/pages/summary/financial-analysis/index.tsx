@@ -28,7 +28,21 @@ import FiltersForm from "../../../components/filters/filters-form";
 import { getFinancialAnalysisColumns } from "./financial-analysis-columns";
 
 const SummaryFinancialAnalysisPage: React.FC = () => {
-  const [filters, dispatch] = useReducer(filterReducer, initialFilters);
+  const [filters, dispatch] = useReducer(
+    filterReducer,
+    initialFilters,
+    (init) => {
+      const savedPageSize = localStorage.getItem(
+        "summaryFinancialAnalysisPageSize"
+      );
+      return {
+        ...init,
+        pageSize: savedPageSize
+          ? parseInt(savedPageSize, 10)
+          : init.pageSize ?? 10,
+      };
+    }
+  );
   const [dictionary, setDictionary] = useState<AnalysisDictionary>();
   const [loading, setLoading] = useState(false);
   const [analysisData, setAnalysisData] = useState<FinancialAnalysisRowModel[]>(
@@ -217,12 +231,17 @@ const SummaryFinancialAnalysisPage: React.FC = () => {
             pageSize: filters.pageSize ?? 10,
             page: filters.page ?? 0,
           }}
-          onPaginationModelChange={({ page, pageSize }) =>
+          onPaginationModelChange={({ page, pageSize }) => {
+            localStorage.setItem(
+              "summaryFinancialAnalysisPageSize",
+              pageSize.toString()
+            );
+
             dispatch({
               type: "setMultiple",
               payload: { page, pageSize },
-            })
-          }
+            });
+          }}
           rowCount={totalRows}
           rowSelection={false}
           pageSizeOptions={[5, 10, 25, { value: -1, label: "Wszystkie" }]}
