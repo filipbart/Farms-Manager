@@ -490,24 +490,6 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
 
                   <Grid size={{ xs: 12, sm: 4 }}>
                     <TextField
-                      label="Wartość brutto [zł]"
-                      type="number"
-                      slotProps={{
-                        htmlInput: { min: 0, step: "0.01" },
-                        inputLabel: { shrink: true },
-                      }}
-                      error={!!errors.invoiceTotal}
-                      helperText={errors.invoiceTotal?.message}
-                      {...register("invoiceTotal", {
-                        required: "Wartość brutto jest wymagana",
-                        valueAsNumber: true,
-                      })}
-                      fullWidth
-                    />
-                  </Grid>
-
-                  <Grid size={{ xs: 12, sm: 4 }}>
-                    <TextField
                       label="Wartość netto [zł]"
                       type="number"
                       slotProps={{
@@ -541,6 +523,25 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
                       fullWidth
                     />
                   </Grid>
+
+                  <Grid size={{ xs: 12, sm: 4 }}>
+                    <TextField
+                      label="Wartość brutto [zł]"
+                      type="number"
+                      slotProps={{
+                        htmlInput: { min: 0, step: "0.01" },
+                        inputLabel: { shrink: true },
+                      }}
+                      error={!!errors.invoiceTotal}
+                      helperText={errors.invoiceTotal?.message}
+                      {...register("invoiceTotal", {
+                        required: "Wartość brutto jest wymagana",
+                        valueAsNumber: true,
+                      })}
+                      fullWidth
+                    />
+                  </Grid>
+
                   <Grid size={12}>
                     <TextField
                       label="Notatka"
