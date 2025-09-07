@@ -132,7 +132,7 @@ const SidebarMenuItem: React.FC<SidebarMenuItemProps> = ({
   }
 
   const childrenActive = Array.isArray(children)
-    ? !!children.find((child: any) => location.pathname === child.props.to)
+    ? !!children.find((child: any) => location.pathname === child?.props?.to)
     : false;
 
   return (
