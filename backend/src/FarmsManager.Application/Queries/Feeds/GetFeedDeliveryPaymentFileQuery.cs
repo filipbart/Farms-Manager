@@ -92,7 +92,8 @@ public class GetFeedDeliveryPaymentFileQueryHandler : IRequestHandler<GetFeedDel
         var fileBytes = GeneratePdf(invoices, corrections, request.Comment);
         var fileName = $"Przelew_{DateTime.Now:yyyyMMdd_HHmmss}{Extension}";
 
-        var filePath = await _s3Service.UploadFileAsync(fileBytes, FileType.FeedDeliveryPayment, fileName);
+        var filePath =
+            await _s3Service.UploadFileAsync(fileBytes, FileType.FeedDeliveryPayment, fileName, cancellationToken);
 
         var invoice = invoices.First();
         var newFeedPayment = FeedPaymentEntity.CreateNew(invoice.FarmId, invoice.CycleId, fileName, filePath, userId);
@@ -100,6 +101,10 @@ public class GetFeedDeliveryPaymentFileQueryHandler : IRequestHandler<GetFeedDel
 
         invoices.ForEach(t => t.MarkAsPaid(newFeedPayment.Id));
         await _feedInvoiceRepository.UpdateRangeAsync(invoices, cancellationToken);
+
+        corrections.ForEach(t => t.MarkAsPaid(newFeedPayment.Id));
+        await _feedInvoiceCorrectionRepository.UpdateRangeAsync(corrections, cancellationToken);
+
 
         return new FileModel
         {

@@ -19,8 +19,17 @@ public class FeedInvoiceCorrectionEntity : Entity
     public string FilePath { get; protected internal set; }
     public virtual FarmEntity Farm { get; init; }
     public virtual CycleEntity Cycle { get; init; }
-    
+
+    public DateTime? PaymentDateUtc { get; protected internal set; }
+    public Guid? PaymentId { get; protected internal set; }
+
     public void SetFilePath(string filePath) => FilePath = filePath;
+
+    public void MarkAsPaid(Guid paymentId)
+    {
+        PaymentId = paymentId;
+        PaymentDateUtc = DateTime.UtcNow;
+    }
 
     public static FeedInvoiceCorrectionEntity CreateNew(
         Guid farmId,
