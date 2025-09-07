@@ -53,12 +53,13 @@ public sealed class GetAllFarmsSpec : BaseSpecification<FarmEntity>
     public GetAllFarmsSpec(List<Guid> accessibleFarmIds)
     {
         EnsureExists();
-        if (accessibleFarmIds is not null && accessibleFarmIds.Any())
+        if (accessibleFarmIds is not null && accessibleFarmIds.Count != 0)
         {
             Query.Where(t => accessibleFarmIds.Contains(t.Id));
         }
 
         Query.Include(t => t.Henhouses);
         Query.Include(t => t.ActiveCycle);
+        Query.OrderBy(t => t.Name);
     }
 }

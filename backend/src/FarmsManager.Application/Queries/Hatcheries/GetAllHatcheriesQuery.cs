@@ -1,4 +1,5 @@
-﻿using FarmsManager.Application.Common;
+﻿using Ardalis.Specification;
+using FarmsManager.Application.Common;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.HatcheryAggregate.Entities;
@@ -49,5 +50,6 @@ public sealed class GetAllHatcheriesSpec : BaseSpecification<HatcheryEntity>
     public GetAllHatcheriesSpec()
     {
         EnsureExists();
+        Query.OrderBy(t => t.Name);
     }
 }

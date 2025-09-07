@@ -90,12 +90,12 @@ public class
             }
         }
 
-        if (updatedEntities.Any())
+        if (updatedEntities.Count != 0)
         {
             await _flockLossRepository.UpdateRangeAsync(updatedEntities, ct);
         }
 
-        if (newEntities.Any())
+        if (newEntities.Count != 0)
         {
             await _flockLossRepository.AddRangeAsync(newEntities, ct);
         }

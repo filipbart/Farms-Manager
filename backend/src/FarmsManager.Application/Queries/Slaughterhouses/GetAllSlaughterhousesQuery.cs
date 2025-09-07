@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using Ardalis.Specification;
+using AutoMapper;
 using FarmsManager.Application.Common;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Specifications;
@@ -52,6 +53,7 @@ public sealed class GetAllSlaughterhousesSpec : BaseSpecification<Slaughterhouse
     public GetAllSlaughterhousesSpec()
     {
         EnsureExists();
+        Query.OrderBy(t => t.Name);
     }
 }
 

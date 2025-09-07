@@ -1,3 +1,4 @@
+using Ardalis.Specification;
 using AutoMapper;
 using FarmsManager.Application.Common;
 using FarmsManager.Application.Common.Responses;
@@ -53,6 +54,7 @@ public sealed class GetAllUtilizationPlantsSpec : BaseSpecification<UtilizationP
     public GetAllUtilizationPlantsSpec()
     {
         EnsureExists();
+        Query.OrderBy(t => t.Name);
     }
 }
 
