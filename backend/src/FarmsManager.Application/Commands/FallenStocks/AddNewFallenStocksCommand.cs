@@ -172,7 +172,7 @@ public class AddNewFallenStocksCommandHandler : IRequestHandler<AddNewFallenStoc
             return response;
         }
 
-        if (false) //TODO off: request.SendToIrz)
+        if (request.SendToIrz)
         {
             var irzplusCredential = user.IrzplusCredentials?.FirstOrDefault(t => t.FarmId == farm.Id);
             if (irzplusCredential is null)

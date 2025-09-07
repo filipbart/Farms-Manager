@@ -40,8 +40,6 @@ public class SendSaleToIrzCommandHandler : IRequestHandler<SendSaleToIrzCommand,
         var user = await _userRepository.SingleOrDefaultAsync(new UserByIdSpec(userId), ct) ??
                    throw DomainException.UserNotFound();
 
-        return response; //TODO off
-
         List<SaleEntity> salesToSend = [];
         if (request.SaleId.HasValue)
         {
