@@ -10,6 +10,7 @@ import {
   FormControlLabel,
   TextField,
   Grid,
+  Tooltip,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { useFarms } from "../../../../hooks/useFarms";
@@ -214,6 +215,13 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
     dispatch({ type: "RESET" });
   };
 
+  const selectedSlaughterhouse = slaughterhouses.find(
+    (s) => s.id === form.slaughterhouseId
+  );
+  const slaughterhouseTooltip = selectedSlaughterhouse
+    ? `Numer IRZplus: ${selectedSlaughterhouse.producerNumber}`
+    : "";
+
   return (
     <AppDialog open={open} onClose={handleClose} fullWidth maxWidth="lg">
       <DialogTitle>Nowa sprzedaż</DialogTitle>
@@ -296,32 +304,37 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
               </Grid>
 
               <Grid size={{ xs: 12, sm: 6 }}>
-                <LoadingTextField
-                  loading={loadingSlaughterhouses}
-                  select
-                  fullWidth
-                  label="Ubojnia"
-                  value={form.slaughterhouseId}
-                  onChange={(e) => {
-                    dispatch({
-                      type: "SET_FIELD",
-                      name: "slaughterhouseId",
-                      value: e.target.value,
-                    });
-                    setErrors((prev) => ({
-                      ...prev,
-                      slaughterhouseId: undefined,
-                    }));
-                  }}
-                  error={!!errors.slaughterhouseId}
-                  helperText={errors.slaughterhouseId}
-                >
-                  {slaughterhouses.map((slaughterhouse) => (
-                    <MenuItem key={slaughterhouse.id} value={slaughterhouse.id}>
-                      {slaughterhouse.name}
-                    </MenuItem>
-                  ))}
-                </LoadingTextField>
+                <Tooltip title={slaughterhouseTooltip}>
+                  <LoadingTextField
+                    loading={loadingSlaughterhouses}
+                    select
+                    fullWidth
+                    label="Ubojnia"
+                    value={form.slaughterhouseId}
+                    onChange={(e) => {
+                      dispatch({
+                        type: "SET_FIELD",
+                        name: "slaughterhouseId",
+                        value: e.target.value,
+                      });
+                      setErrors((prev) => ({
+                        ...prev,
+                        slaughterhouseId: undefined,
+                      }));
+                    }}
+                    error={!!errors.slaughterhouseId}
+                    helperText={errors.slaughterhouseId}
+                  >
+                    {slaughterhouses.map((slaughterhouse) => (
+                      <MenuItem
+                        key={slaughterhouse.id}
+                        value={slaughterhouse.id}
+                      >
+                        {slaughterhouse.name}
+                      </MenuItem>
+                    ))}
+                  </LoadingTextField>
+                </Tooltip>
               </Grid>
 
               <Grid size={{ xs: 12, sm: 6 }}>

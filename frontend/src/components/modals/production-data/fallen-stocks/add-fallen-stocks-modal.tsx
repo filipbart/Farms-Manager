@@ -10,6 +10,7 @@ import {
   Checkbox,
   FormControlLabel,
   TextField,
+  Tooltip,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { toast } from "react-toastify";
@@ -295,6 +296,13 @@ const AddFallenStocksModal: React.FC<AddFallenStocksModalProps> = ({
 
   const canAddMoreEntries = form.entries.length < henhouses.length;
 
+  const selectedPlant = utilizationPlants.find(
+    (p) => p.id === form.utilizationPlantId
+  );
+  const plantTooltip = selectedPlant
+    ? `Numer IRZplus: ${selectedPlant.irzNumber}`
+    : "";
+
   return (
     <AppDialog open={open} onClose={handleClose} fullWidth maxWidth="lg">
       <DialogTitle>Nowe zgłoszenie sztuk padłych</DialogTitle>
@@ -341,28 +349,30 @@ const AddFallenStocksModal: React.FC<AddFallenStocksModalProps> = ({
           </TextField>
 
           {form.type === FallenStockType.FallCollision && (
-            <LoadingTextField
-              loading={loadingUtilizationPlants}
-              select
-              label="Zakład utylizacyjny"
-              value={form.utilizationPlantId || ""}
-              onChange={(e) =>
-                dispatch({
-                  type: "SET_FIELD",
-                  name: "utilizationPlantId",
-                  value: e.target.value,
-                })
-              }
-              error={!!errors.utilizationPlantId}
-              helperText={errors.utilizationPlantId}
-              fullWidth
-            >
-              {utilizationPlants.map((plant) => (
-                <MenuItem key={plant.id} value={plant.id}>
-                  {plant.name}
-                </MenuItem>
-              ))}
-            </LoadingTextField>
+            <Tooltip title={plantTooltip}>
+              <LoadingTextField
+                loading={loadingUtilizationPlants}
+                select
+                label="Zakład utylizacyjny"
+                value={form.utilizationPlantId || ""}
+                onChange={(e) =>
+                  dispatch({
+                    type: "SET_FIELD",
+                    name: "utilizationPlantId",
+                    value: e.target.value,
+                  })
+                }
+                error={!!errors.utilizationPlantId}
+                helperText={errors.utilizationPlantId}
+                fullWidth
+              >
+                {utilizationPlants.map((plant) => (
+                  <MenuItem key={plant.id} value={plant.id}>
+                    {plant.name}
+                  </MenuItem>
+                ))}
+              </LoadingTextField>
+            </Tooltip>
           )}
 
           <DatePicker

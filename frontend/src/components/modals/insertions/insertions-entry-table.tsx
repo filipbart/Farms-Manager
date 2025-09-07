@@ -10,6 +10,7 @@ import {
   TextField,
   IconButton,
   Typography,
+  Tooltip,
 } from "@mui/material";
 import { FaFloppyDisk, FaPenToSquare, FaXmark } from "react-icons/fa6";
 import { FaTrash } from "react-icons/fa";
@@ -18,11 +19,12 @@ import type {
   InsertionEntry,
   InsertionEntryErrors,
 } from "../../../models/insertions/insertion-entry";
+import type { HatcheryRowModel } from "../../../models/hatcheries/hatchery-row-model";
 
 interface InsertionEntriesTableProps {
   entries: InsertionEntry[];
   henhouses: HouseRowModel[];
-  hatcheries: { id: string; name: string }[];
+  hatcheries: HatcheryRowModel[];
   errors: { [index: number]: InsertionEntryErrors } | undefined;
   dispatch: React.Dispatch<any>;
   setEntryErrors: (index: number, errors: InsertionEntryErrors) => void;
@@ -84,6 +86,13 @@ const InsertionEntriesTable: React.FC<InsertionEntriesTableProps> = ({
               )
           );
 
+          const selectedHatchery = hatcheries.find(
+            (h) => h.id === entry.hatcheryId
+          );
+          const tooltipTitle = selectedHatchery
+            ? `Numer IRZplus: ${selectedHatchery.producerNumber}`
+            : "";
+
           return (
             <TableRow key={index}>
               <TableCell>
@@ -119,30 +128,38 @@ const InsertionEntriesTable: React.FC<InsertionEntriesTableProps> = ({
               <TableCell>
                 {entry.isEditing ? (
                   <>
-                    <Select
-                      value={entry.hatcheryId}
-                      onChange={({ target }) =>
-                        handleFieldChange(index, "hatcheryId", target.value)
-                      }
-                      fullWidth
-                      disabled={loadingHatcheries}
-                      error={!!errors?.[index]?.hatcheryId}
-                      sx={{ minWidth: inputWidth }}
-                    >
-                      {hatcheries.map((hatchery) => (
-                        <MenuItem key={hatchery.id} value={hatchery.id}>
-                          {hatchery.name}
-                        </MenuItem>
-                      ))}
-                    </Select>
+                    <Tooltip title={tooltipTitle} placement="top-start">
+                      <span>
+                        <Select
+                          value={entry.hatcheryId}
+                          onChange={({ target }) =>
+                            handleFieldChange(index, "hatcheryId", target.value)
+                          }
+                          fullWidth
+                          disabled={loadingHatcheries}
+                          error={!!errors?.[index]?.hatcheryId}
+                          sx={{ minWidth: inputWidth }}
+                        >
+                          {hatcheries.map((hatchery) => (
+                            <MenuItem key={hatchery.id} value={hatchery.id}>
+                              {hatchery.name}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </span>
+                    </Tooltip>
                     {errors?.[index]?.hatcheryId && (
                       <Typography variant="caption" color="error">
                         {errors[index].hatcheryId}
                       </Typography>
                     )}
                   </>
+                ) : selectedHatchery ? (
+                  <Tooltip title={tooltipTitle}>
+                    <span>{selectedHatchery.name}</span>
+                  </Tooltip>
                 ) : (
-                  hatcheries.find((h) => h.id === entry.hatcheryId)?.name || "—"
+                  "—"
                 )}
               </TableCell>
 
