@@ -122,7 +122,7 @@ export default class AxiosWrapper {
             return;
           }
 
-          reject(handleErrorResponse(error));
+          resolve(handleErrorResponse(error));
         });
     });
   }
