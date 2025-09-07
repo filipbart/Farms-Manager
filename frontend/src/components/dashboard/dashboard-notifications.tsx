@@ -45,7 +45,7 @@ const getLinkPath = (notification: DashboardNotificationItem): string => {
     case "SaleInvoice":
       return `/sales/invoices`;
     case "FeedInvoice":
-      return `/feed/invoices`;
+      return `/feed/deliveries`;
     case "EmployeeContract":
     case "EmployeeReminder":
       return `/employees/${notification.sourceId}`;
