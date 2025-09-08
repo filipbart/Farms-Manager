@@ -84,6 +84,12 @@ const FeedsDeliveriesPage: React.FC = () => {
   const [loadingPaymentFile, setLoadingPaymentFile] = useState(false);
 
   const [openCorrectionModal, setOpenCorrectionModal] = useState(false);
+  const [isCorrectionMode, setIsCorrectionMode] = useState(false);
+
+  const handleCancelCorrectionMode = () => {
+    setIsCorrectionMode(false);
+    setSelectedRows({ type: "include", ids: new Set() });
+  };
 
   const uploadFiles = async (draftFiles: DraftFeedInvoice[]) => {
     if (draftFiles.length === 0) {
@@ -266,32 +272,52 @@ const FeedsDeliveriesPage: React.FC = () => {
       >
         <Typography variant="h4">Dostawy pasz</Typography>
         <Box display="flex" gap={2} alignItems="center">
-          {selectedRows.ids.size > 0 && (
+          {isCorrectionMode ? (
+            <>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => setOpenCorrectionModal(true)}
+                disabled={selectedRows.ids.size === 0}
+              >
+                Wprowadź fakturę korygującą
+              </Button>
+              <Button
+                variant="outlined"
+                color="inherit"
+                onClick={handleCancelCorrectionMode}
+              >
+                Anuluj
+              </Button>
+            </>
+          ) : (
             <>
               <Button
                 variant="outlined"
                 color="primary"
-                onClick={() => setOpenCorrectionModal(true)}
+                onClick={() => setIsCorrectionMode(true)}
               >
                 Utwórz korektę
               </Button>
-              <LoadingButton
-                loading={loadingPaymentFile}
-                variant="outlined"
+              {selectedRows.ids.size > 0 && (
+                <LoadingButton
+                  loading={loadingPaymentFile}
+                  variant="outlined"
+                  color="primary"
+                  onClick={() => setOpenPaymentModal(true)}
+                >
+                  Przelew
+                </LoadingButton>
+              )}
+              <Button
+                variant="contained"
                 color="primary"
-                onClick={() => setOpenPaymentModal(true)}
+                onClick={() => setOpenUploadModal(true)}
               >
-                Przelew
-              </LoadingButton>
+                Wprowadź fakturę
+              </Button>
             </>
           )}
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => setOpenUploadModal(true)}
-          >
-            Wprowadź fakturę
-          </Button>
         </Box>
       </Box>
 
@@ -321,7 +347,9 @@ const FeedsDeliveriesPage: React.FC = () => {
           }}
           checkboxSelection
           disableRowSelectionOnClick
-          isRowSelectable={(params) => !params.row.paymentDateUtc}
+          isRowSelectable={(params) =>
+            isCorrectionMode || !params.row.paymentDateUtc
+          }
           onRowSelectionModelChange={(newSelection) => {
             setSelectedRows(newSelection);
           }}
@@ -446,9 +474,11 @@ const FeedsDeliveriesPage: React.FC = () => {
           open={openCorrectionModal}
           onClose={() => {
             setOpenCorrectionModal(false);
+            handleCancelCorrectionMode();
           }}
           onSave={() => {
             setOpenCorrectionModal(false);
+            handleCancelCorrectionMode();
             dispatch({ type: "setMultiple", payload: { page: filters.page } });
           }}
           selectedDeliveries={selectedRows.ids}

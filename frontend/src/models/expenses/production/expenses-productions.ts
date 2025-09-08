@@ -1,5 +1,8 @@
 export interface ExpenseProductionListModel {
   id: string;
+  farmId: string;
+  cycleId: string;
+  expenseContractorId: string;
   cycleText: string;
   farmName: string;
   contractorName: string;
@@ -28,13 +31,17 @@ export interface AddExpenseProductionData {
 }
 
 export interface UpdateExpenseProductionData {
+  farmId: string;
+  cycleId: string;
+  expenseContractorId: string;
   invoiceNumber: string;
   invoiceTotal: number;
   subTotal: number;
   vatAmount: number;
   invoiceDate: string;
+  cycleDisplay?: string;
+  expenseTypeNameDisplay?: string;
 }
-
 export interface ExpenseInvoiceData {
   farmId?: string;
   cycleId?: string;

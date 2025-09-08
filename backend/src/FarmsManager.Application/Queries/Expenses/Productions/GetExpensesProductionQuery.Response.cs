@@ -4,7 +4,10 @@ namespace FarmsManager.Application.Queries.Expenses.Productions;
 
 public class ExpenseProductionRow
 {
-    public string Id { get; init; }
+    public Guid Id { get; init; }
+    public Guid FarmId { get; init; }
+    public Guid CycleId { get; init; }
+    public Guid ExpenseContractorId { get; init; }
     public string CycleText { get; init; }
     public string FarmName { get; init; }
     public string ContractorName { get; init; }

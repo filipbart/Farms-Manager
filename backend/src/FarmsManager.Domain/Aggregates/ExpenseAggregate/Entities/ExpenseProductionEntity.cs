@@ -9,8 +9,8 @@ public class ExpenseProductionEntity : Entity
     {
     }
 
-    public Guid FarmId { get; init; }
-    public Guid CycleId { get; init; }
+    public Guid FarmId { get; protected internal set; }
+    public Guid CycleId { get; protected internal set; }
     public Guid ExpenseContractorId { get; protected internal set; }
     public string InvoiceNumber { get; protected internal set; }
     public decimal InvoiceTotal { get; protected internal set; }
@@ -48,6 +48,11 @@ public class ExpenseProductionEntity : Entity
             CreatedBy = userId
         };
     }
+
+
+    public void SetFarm(Guid farmId) => FarmId = farmId;
+    public void SetCycle(Guid cycleId) => CycleId = cycleId;
+    public void SetExpenseContractor(Guid expenseContractorId) => ExpenseContractorId = expenseContractorId;
 
     public void Update(
         string invoiceNumber,

@@ -74,7 +74,7 @@ public class AddExpenseProductionCommandHandler : IRequestHandler<AddExpenseProd
             await request.Data.File.CopyToAsync(memoryStream, ct);
             var fileBytes = memoryStream.ToArray();
 
-            var key = await _s3Service.UploadFileAsync(fileBytes, FileType.ExpenseProduction, filePath);
+            var key = await _s3Service.UploadFileAsync(fileBytes, FileType.ExpenseProduction, filePath, ct);
             newExpenseProduction.SetFilePath(key);
         }
 

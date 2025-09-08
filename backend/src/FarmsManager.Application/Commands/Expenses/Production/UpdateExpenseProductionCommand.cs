@@ -10,6 +10,9 @@ namespace FarmsManager.Application.Commands.Expenses.Production;
 
 public record UpdateExpenseProductionData
 {
+    public Guid FarmId { get; init; }
+    public Guid CycleId { get; init; }
+    public Guid ExpenseContractorId { get; init; }
     public string InvoiceNumber { get; init; }
     public decimal InvoiceTotal { get; init; }
     public decimal SubTotal { get; init; }
@@ -39,8 +42,29 @@ public class UpdateExpenseProductionCommandHandler : IRequestHandler<UpdateExpen
             await _expenseProductionRepository.GetAsync(new GetExpenseProductionByIdSpec(request.Id),
                 cancellationToken);
 
-        entity.Update(request.Data.InvoiceNumber, request.Data.InvoiceTotal, request.Data.SubTotal,
-            request.Data.VatAmount, request.Data.InvoiceDate);
+        if (entity.FarmId != request.Data.FarmId)
+        {
+            entity.SetFarm(request.Data.FarmId);
+        }
+
+        if (entity.CycleId != request.Data.CycleId)
+        {
+            entity.SetCycle(request.Data.CycleId);
+        }
+
+        if (entity.ExpenseContractorId != request.Data.ExpenseContractorId)
+        {
+            entity.SetExpenseContractor(request.Data.ExpenseContractorId);
+        }
+
+        entity.Update(
+            request.Data.InvoiceNumber,
+            request.Data.InvoiceTotal,
+            request.Data.SubTotal,
+            request.Data.VatAmount,
+            request.Data.InvoiceDate
+        );
+
         entity.SetModified(userId);
         await _expenseProductionRepository.UpdateAsync(entity, cancellationToken);
         return BaseResponse.EmptyResponse;
@@ -51,6 +75,9 @@ public class UpdateExpenseProductionCommandValidator : AbstractValidator<UpdateE
 {
     public UpdateExpenseProductionCommandValidator()
     {
+        RuleFor(t => t.Data.FarmId).NotEmpty().WithMessage("Ferma jest wymagana.");
+        RuleFor(t => t.Data.CycleId).NotEmpty().WithMessage("Cykl jest wymagany.");
+        RuleFor(t => t.Data.ExpenseContractorId).NotEmpty().WithMessage("Kontrahent jest wymagany.");
         RuleFor(t => t.Data.InvoiceNumber).NotEmpty();
         RuleFor(t => t.Data.InvoiceTotal).GreaterThan(0);
         RuleFor(t => t.Data.SubTotal).GreaterThan(0);

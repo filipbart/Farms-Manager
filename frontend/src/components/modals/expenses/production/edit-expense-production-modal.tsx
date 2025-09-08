@@ -5,6 +5,8 @@ import {
   Grid,
   DialogActions,
   TextField,
+  MenuItem,
+  Autocomplete,
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -21,6 +23,11 @@ import type {
   UpdateExpenseProductionData,
 } from "../../../../models/expenses/production/expenses-productions";
 import AppDialog from "../../../common/app-dialog";
+import { useFarms } from "../../../../hooks/useFarms";
+import { useExpensesContractor } from "../../../../hooks/expenses/useExpensesContractors";
+import LoadingTextField from "../../../common/loading-textfield";
+import { FarmsService } from "../../../../services/farms-service";
+import type CycleDto from "../../../../models/farms/latest-cycle";
 
 interface EditExpenseProductionModalProps {
   open: boolean;
@@ -35,7 +42,16 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
   onSave,
   expenseProductionToEdit,
 }) => {
+  const { farms, loadingFarms, fetchFarms } = useFarms();
+  const {
+    expensesContractors,
+    loadingExpensesContractors,
+    fetchExpensesContractors,
+  } = useExpensesContractor();
+
   const [loading, setLoading] = useState(false);
+  const [cycles, setCycles] = useState<CycleDto[]>([]);
+  const [loadingCycles, setLoadingCycles] = useState(false);
 
   const {
     control,
@@ -43,11 +59,52 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
+    watch,
   } = useForm<UpdateExpenseProductionData>();
 
+  const watchedFarmId = watch("farmId");
+
   useEffect(() => {
-    if (expenseProductionToEdit) {
+    if (open) {
+      fetchFarms();
+      fetchExpensesContractors();
+    }
+  }, [open, fetchFarms, fetchExpensesContractors]);
+
+  useEffect(() => {
+    const fetchCyclesForFarm = async (farmId: string) => {
+      setLoadingCycles(true);
+      try {
+        await handleApiResponse(
+          () => FarmsService.getFarmCycles(farmId),
+          (data) => setCycles(data.responseData ?? [])
+        );
+      } catch {
+        toast.error("Nie udało się pobrać cykli dla wybranej fermy.");
+      } finally {
+        setLoadingCycles(false);
+      }
+    };
+
+    if (watchedFarmId) {
+      fetchCyclesForFarm(watchedFarmId);
+    } else {
+      setCycles([]);
+    }
+  }, [watchedFarmId]);
+
+  useEffect(() => {
+    if (
+      expenseProductionToEdit &&
+      farms.length > 0 &&
+      expensesContractors.length > 0
+    ) {
       reset({
+        farmId: expenseProductionToEdit.farmId,
+        cycleId: expenseProductionToEdit.cycleId,
+        expenseContractorId: expenseProductionToEdit.expenseContractorId,
+        expenseTypeNameDisplay: expenseProductionToEdit.expenseTypeName,
         invoiceNumber: expenseProductionToEdit.invoiceNumber,
         invoiceTotal: expenseProductionToEdit.invoiceTotal,
         subTotal: expenseProductionToEdit.subTotal,
@@ -55,10 +112,16 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
         invoiceDate: expenseProductionToEdit.invoiceDate,
       });
     }
-  }, [expenseProductionToEdit, reset]);
+  }, [expenseProductionToEdit, reset, farms, expensesContractors]);
+
+  const handleContractorChange = (contractorId: string | null) => {
+    const selected = expensesContractors.find((c) => c.id === contractorId);
+    setValue("expenseTypeNameDisplay", selected?.expenseType || "");
+  };
 
   const handleClose = () => {
     reset();
+    setCycles([]);
     onClose();
   };
 
@@ -90,6 +153,91 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
       <form onSubmit={handleSubmit(handleSave)}>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <LoadingTextField
+                label="Ferma"
+                select
+                fullWidth
+                loading={loadingFarms}
+                value={watch("farmId") || ""}
+                error={!!errors.farmId}
+                helperText={errors.farmId?.message}
+                {...register("farmId", {
+                  required: "Farma jest wymagana",
+                  onChange: () => setValue("cycleId", ""),
+                })}
+              >
+                {farms.map((farm) => (
+                  <MenuItem key={farm.id} value={farm.id}>
+                    {farm.name}
+                  </MenuItem>
+                ))}
+              </LoadingTextField>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <LoadingTextField
+                loading={loadingCycles}
+                label="Cykl"
+                select
+                fullWidth
+                disabled={!watchedFarmId || cycles.length === 0}
+                value={watch("cycleId") || ""}
+                error={!!errors.cycleId}
+                helperText={errors.cycleId?.message}
+                {...register("cycleId", { required: "Cykl jest wymagany" })}
+              >
+                {cycles.map((cycle) => (
+                  <MenuItem key={cycle.id} value={cycle.id}>
+                    {`${cycle.identifier}/${cycle.year}`}
+                  </MenuItem>
+                ))}
+              </LoadingTextField>
+            </Grid>
+
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Controller
+                name="expenseContractorId"
+                control={control}
+                rules={{ required: "Kontrahent jest wymagany" }}
+                render={({ field, fieldState: { error } }) => (
+                  <Autocomplete
+                    options={expensesContractors}
+                    getOptionLabel={(option) => option.name || ""}
+                    isOptionEqualToValue={(option, value) =>
+                      option.id === value?.id
+                    }
+                    loading={loadingExpensesContractors}
+                    value={
+                      expensesContractors.find(
+                        (contractor) => contractor.id === field.value
+                      ) || null
+                    }
+                    onChange={(_, newValue) => {
+                      const newId = newValue ? newValue.id : "";
+                      field.onChange(newId);
+                      handleContractorChange(newId);
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Kontrahent"
+                        error={!!error}
+                        helperText={error?.message}
+                      />
+                    )}
+                  />
+                )}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                label="Typ wydatku"
+                value={watch("expenseTypeNameDisplay") || ""}
+                slotProps={{ input: { readOnly: true } }}
+                fullWidth
+              />
+            </Grid>
+
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 label="Numer faktury"
@@ -132,7 +280,7 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
               <TextField
                 label="Netto [zł]"
                 type="number"
-                InputProps={{ slotProps: { input: { step: "any" } } }}
+                slotProps={{ htmlInput: { step: "any" } }}
                 {...register("subTotal", {
                   required: "Wartość netto jest wymagana",
                   valueAsNumber: true,
@@ -148,7 +296,7 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
               <TextField
                 label="VAT [zł]"
                 type="number"
-                InputProps={{ slotProps: { input: { step: "any" } } }}
+                slotProps={{ htmlInput: { step: "any" } }}
                 {...register("vatAmount", {
                   required: "VAT jest wymagany",
                   valueAsNumber: true,
@@ -164,7 +312,7 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
               <TextField
                 label="Brutto [zł]"
                 type="number"
-                InputProps={{ slotProps: { input: { step: "any" } } }}
+                slotProps={{ htmlInput: { step: "any" } }}
                 {...register("invoiceTotal", {
                   required: "Wartość brutto jest wymagana",
                   valueAsNumber: true,
