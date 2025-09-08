@@ -39,8 +39,8 @@ public class UpdateExpenseProductionCommandHandler : IRequestHandler<UpdateExpen
             await _expenseProductionRepository.GetAsync(new GetExpenseProductionByIdSpec(request.Id),
                 cancellationToken);
 
-        entity.Update(request.Data.InvoiceNumber, request.Data.SubTotal, request.Data.VatAmount,
-            request.Data.InvoiceTotal, request.Data.InvoiceDate);
+        entity.Update(request.Data.InvoiceNumber, request.Data.InvoiceTotal, request.Data.SubTotal,
+            request.Data.VatAmount, request.Data.InvoiceDate);
         entity.SetModified(userId);
         await _expenseProductionRepository.UpdateAsync(entity, cancellationToken);
         return BaseResponse.EmptyResponse;
