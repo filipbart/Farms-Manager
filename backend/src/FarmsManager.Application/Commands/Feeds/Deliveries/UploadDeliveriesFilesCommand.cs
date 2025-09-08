@@ -1,14 +1,18 @@
-﻿using AutoMapper;
+﻿using Ardalis.Specification;
+using AutoMapper;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.FileSystem;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models.AzureDi;
 using FarmsManager.Application.Models.Invoices;
+using FarmsManager.Application.Specifications;
 using FarmsManager.Application.Specifications.Farms;
 using FarmsManager.Application.Specifications.Feeds;
 using FarmsManager.Application.Specifications.Henhouses;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
+using FarmsManager.Domain.Exceptions;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Http;
@@ -43,12 +47,15 @@ public class UploadDeliveriesFilesCommandHandler : IRequestHandler<UploadDeliver
     private readonly IS3Service _s3Service;
     private readonly IAzureDiService _azureDiService;
     private readonly IFarmRepository _farmRepository;
+    private readonly IUserDataResolver _userDataResolver;
     private readonly IHenhouseRepository _henhouseRepository;
     private readonly IFeedInvoiceRepository _feedInvoiceRepository;
+    private readonly IFeedContractorRepository _feedContractorRepository;
 
     public UploadDeliveriesFilesCommandHandler(IMapper mapper, IS3Service s3Service, IAzureDiService azureDiService,
         IFarmRepository farmRepository, IHenhouseRepository henhouseRepository,
-        IFeedInvoiceRepository feedInvoiceRepository)
+        IFeedInvoiceRepository feedInvoiceRepository, IFeedContractorRepository feedContractorRepository,
+        IUserDataResolver userDataResolver)
     {
         _mapper = mapper;
         _s3Service = s3Service;
@@ -56,11 +63,14 @@ public class UploadDeliveriesFilesCommandHandler : IRequestHandler<UploadDeliver
         _farmRepository = farmRepository;
         _henhouseRepository = henhouseRepository;
         _feedInvoiceRepository = feedInvoiceRepository;
+        _feedContractorRepository = feedContractorRepository;
+        _userDataResolver = userDataResolver;
     }
 
     public async Task<BaseResponse<UploadDeliveriesFilesCommandResponse>> Handle(UploadDeliveriesFilesCommand request,
         CancellationToken cancellationToken)
     {
+        var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var response = new UploadDeliveriesFilesCommandResponse();
 
         foreach (var file in request.Data.Files)
@@ -99,9 +109,21 @@ public class UploadDeliveriesFilesCommandHandler : IRequestHandler<UploadDeliver
                 await _henhouseRepository.FirstOrDefaultAsync(
                     new HenhouseByNameSpec(feedDeliveryInvoiceModel.HenhouseName), cancellationToken);
 
+            var feedContractor = await _feedContractorRepository.FirstOrDefaultAsync(
+                new FeedContractorByNipSpec(feedDeliveryInvoiceModel.VendorNip.Replace("-", "")),
+                cancellationToken);
+
+            if (feedContractor is null)
+            {
+                feedContractor = FeedContractorEntity.CreateNewFromInvoice(
+                    feedDeliveryInvoiceModel.VendorName, feedDeliveryInvoiceModel.VendorNip, userId);
+                await _feedContractorRepository.AddAsync(feedContractor, cancellationToken);
+            }
+
             extractedFields.FarmId = farm?.Id;
             extractedFields.CycleId = farm?.ActiveCycleId;
             extractedFields.HenhouseId = henhouse?.Id;
+            extractedFields.VendorName = feedContractor.Name;
 
             response.Files.Add(new UploadDeliveryFileData
             {
@@ -138,5 +160,18 @@ public class UploadDeliveriesFilesCommandProfile : Profile
                 opt => opt.MapFrom(t => t.Items.Count != 0 ? t.Items.Sum(i => i.Quantity) : null))
             .ForMember(m => m.UnitPrice,
                 opt => opt.MapFrom(t => t.Items.Count != 0 ? t.Items.FirstOrDefault().UnitPrice : null));
+    }
+}
+
+public sealed class FeedContractorByNipSpec : BaseSpecification<FeedContractorEntity>,
+    ISingleResultSpecification<FeedContractorEntity>
+{
+    public FeedContractorByNipSpec(string nip)
+    {
+        nip = nip.Replace("PL", "").Replace("-", "").Replace(" ", "").Trim();
+        EnsureExists();
+        DisableTracking();
+
+        Query.Where(t => t.Nip == nip);
     }
 }

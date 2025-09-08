@@ -13,6 +13,9 @@ public class FeedDeliveryInvoiceModel
     
     [AzureDiField("VendorName")]
     public string VendorName { get; init; }
+        
+    [AzureDiField("VendorTaxId")]
+    public string VendorNip { get; init; }
 
     [AzureDiField("InvoiceDate")]
     public DateOnly? InvoiceDate { get; init; }
