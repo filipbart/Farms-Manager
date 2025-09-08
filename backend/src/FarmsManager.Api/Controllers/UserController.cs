@@ -55,4 +55,17 @@ public class UserController(IMediator mediator) : BaseController
     {
         return Ok(await mediator.Send(new UpdateMeCommand(data)));
     }
+
+    /// <summary>
+    /// Aktualizuje awatar użytkownika
+    /// </summary>
+    /// <param name="command"></param>
+    /// <returns></returns>
+    [HttpPost("avatar")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> UpdateAvatar([FromForm] UpdateUserAvatarCommand command)
+    {
+        return Ok(await mediator.Send(command));
+    }
 }

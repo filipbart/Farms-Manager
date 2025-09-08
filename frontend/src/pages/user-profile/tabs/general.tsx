@@ -1,17 +1,17 @@
-import React, { useState, useEffect } from "react";
 import {
-  Box,
   Typography,
-  Grid,
-  TextField,
   Button,
+  DialogTitle,
+  DialogContent,
+  Grid,
+  DialogActions,
+  TextField,
+  Box,
   Divider,
   Dialog,
-  DialogActions,
-  DialogContent,
   DialogContentText,
-  DialogTitle,
 } from "@mui/material";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { MdSave } from "react-icons/md";
 import { toast } from "react-toastify";
@@ -19,6 +19,7 @@ import { useAuth } from "../../../auth/useAuth";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import type { UpdateMyData } from "../../../models/user/user-details";
 import { UserService } from "../../../services/user-service";
+import AvatarUploader from "../../../components/user/avatar-uploader";
 
 interface ProfileFormState {
   name: string;
@@ -99,8 +100,13 @@ const GeneralSettingsTab: React.FC = () => {
         <Typography variant="h5" mb={3}>
           Mój profil
         </Typography>
-        <Grid container spacing={2.5}>
-          <Grid size={{ xs: 12, sm: 6 }}>
+
+        <Grid container spacing={3} alignItems="center">
+          <Grid size={{ xs: 12, md: 4 }} display="flex" justifyContent="center">
+            <AvatarUploader />
+          </Grid>
+          <Grid size={{ xs: 12, md: 8 }}></Grid>
+          <Grid size={{ xs: 12, md: 3 }}>
             <TextField
               label="Imię i nazwisko"
               fullWidth

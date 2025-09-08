@@ -17,6 +17,7 @@ public class UserEntity : Entity
     public List<IrzplusCredentials> IrzplusCredentials { get; protected internal set; }
     public bool IsAdmin { get; protected internal set; }
     public bool MustChangePassword { get; protected internal set; }
+    public string AvatarPath { get; protected internal set; }
 
 
     private readonly List<UserPermissionEntity> _permissions = new();
@@ -57,6 +58,8 @@ public class UserEntity : Entity
     {
         IsAdmin = isAdmin;
     }
+
+    public void ChangeAvatarPath(string avatarPath) => AvatarPath = avatarPath;
 
     public void AddIrzplusCredentials(IrzplusCredentials irzplusCredentials)
     {

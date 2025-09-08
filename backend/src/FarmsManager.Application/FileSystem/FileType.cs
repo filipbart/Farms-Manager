@@ -11,4 +11,5 @@ public enum FileType
     ExpenseAdvance,
     GasDelivery,
     Employees,
+    Avatar
 }

@@ -4,6 +4,7 @@ export default interface UserModel {
   name: string;
   isAdmin: boolean;
   mustChangePassword: boolean;
+  avatarPath?: string;
   permissions: string[];
   accessibleFarmIds: string[];
 }

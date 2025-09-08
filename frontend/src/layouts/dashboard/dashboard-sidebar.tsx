@@ -492,7 +492,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             />
           </Box>
           <div className="flex items-center m-3 p-3 rounded-lg bg-gray-100 select-none">
-            <Avatar />
+            <Avatar src={auth.userData?.avatarPath} alt="User Avatar" />
             <div className="ml-3 flex flex-col flex-grow">
               <Typography variant="h6">{auth.userData?.name}</Typography>
               <Typography variant="body2">{auth.userData?.login}</Typography>

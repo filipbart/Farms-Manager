@@ -5,6 +5,7 @@ export default class ApiUrl {
 
   public static User = this.BaseUrl + "user";
   public static Me = this.User + "/me";
+  public static UpdateAvatar = this.User + "/avatar";
   public static UserDetails = this.User + "/details";
   public static GetNotifications = this.User + "/notifications";
   public static Authenticate = this.BaseUrl + "auth/authenticate";

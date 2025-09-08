@@ -60,7 +60,7 @@ const DashboardNavbar: React.FC<DashboardNavbarProps> = ({
           size="large"
           color="inherit"
         >
-          <Avatar alt="User Avatar" />
+          <Avatar alt="User Avatar" src={auth.userData?.avatarPath} />
         </IconButton>
       </Toolbar>
     </AppBar>

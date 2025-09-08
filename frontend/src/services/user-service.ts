@@ -22,4 +22,15 @@ export class UserService {
   public static async updateData(data: UpdateMyData) {
     return await AxiosWrapper.patch(ApiUrl.Me, data);
   }
+
+  public static async updateUserAvatar(file: File) {
+    const formData = new FormData();
+    formData.append("avatarFile", file);
+
+    return await AxiosWrapper.post(ApiUrl.UpdateAvatar, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  }
 }
