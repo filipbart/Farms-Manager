@@ -16,6 +16,7 @@ public record MeQueryResponse
     public string Login { get; init; }
     public string Name { get; init; }
     public bool IsAdmin { get; init; }
+    public bool MustChangePassword { get; init; }
     public List<string> Permissions { get; init; }
     public List<Guid> AccessibleFarmIds { get; init; }
 }

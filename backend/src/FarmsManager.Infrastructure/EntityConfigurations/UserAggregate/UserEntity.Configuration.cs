@@ -13,5 +13,7 @@ public class UserEntityConfiguration : BaseConfiguration<UserEntity>
         builder.HasKey(t => t.Id);
         builder.Property(t => t.Login);
         builder.Property(t => t.IrzplusCredentials).IsRequired(false).HasColumnType("jsonb");
+        builder.Property(t => t.IsAdmin).IsRequired().HasDefaultValue(false);
+        builder.Property(t => t.MustChangePassword).IsRequired().HasDefaultValue(true);
     }
 }

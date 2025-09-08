@@ -8,6 +8,7 @@ public class UserEntity : Entity
 {
     protected UserEntity()
     {
+        MustChangePassword = true;
     }
 
     public string Login { get; init; }
@@ -15,6 +16,7 @@ public class UserEntity : Entity
     public string Name { get; protected internal set; }
     public List<IrzplusCredentials> IrzplusCredentials { get; protected internal set; }
     public bool IsAdmin { get; protected internal set; }
+    public bool MustChangePassword { get; protected internal set; }
 
 
     private readonly List<UserPermissionEntity> _permissions = new();
@@ -37,6 +39,11 @@ public class UserEntity : Entity
     public void ChangePassword(string passwordHash)
     {
         Guard.Against.NullOrWhiteSpace(passwordHash);
+        if (MustChangePassword)
+        {
+            MustChangePassword = false;
+        }
+
         PasswordHash = passwordHash;
     }
 

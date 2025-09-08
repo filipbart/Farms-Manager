@@ -13,7 +13,7 @@ public class AuthenticateCommand : IRequest<BaseResponse<AuthenticateCommandResp
     public string Password { get; set; }
 }
 
-public record AuthenticateCommandResponse(string AccessToken, DateTime ExpiryAtUtc);
+public record AuthenticateCommandResponse(string AccessToken, DateTime ExpiryAtUtc, bool MustChangePassword = false);
 
 public record
     AuthenticateCommandHandler : IRequestHandler<AuthenticateCommand, BaseResponse<AuthenticateCommandResponse>>
@@ -38,13 +38,13 @@ public record
         var user = await _userRepository.SingleOrDefaultAsync(new UserByLoginSpec(request.Login), ct) ??
                    throw DomainException.InvalidCredentials();
 
-        if (_passwordHasher.VerifyPassword(request.Password, user.PasswordHash) == false)
+        if (!_passwordHasher.VerifyPassword(request.Password, user.PasswordHash))
         {
             throw DomainException.InvalidCredentials();
         }
 
         var tokenResponse = await _userSessionService.GenerateToken(user, ct);
         return BaseResponse.CreateResponse(new AuthenticateCommandResponse(tokenResponse.Token,
-            DateTime.UtcNow + tokenResponse.ValidFor));
+            DateTime.UtcNow + tokenResponse.ValidFor, user.MustChangePassword));
     }
 }

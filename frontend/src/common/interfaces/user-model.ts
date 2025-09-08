@@ -2,7 +2,8 @@ export default interface UserModel {
   id: string;
   login: string;
   name: string;
-  isAdmin?: boolean;
+  isAdmin: boolean;
+  mustChangePassword: boolean;
   permissions: string[];
   accessibleFarmIds: string[];
 }

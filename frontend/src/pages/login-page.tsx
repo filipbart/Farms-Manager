@@ -38,12 +38,19 @@ const LoginPage: React.FC = () => {
 
     auth.setAuthToken(response.responseData?.accessToken || "");
     await auth.fetchUserData();
-    toast.success("Zalogowano pomyślnie!");
+    if (response?.responseData?.mustChangePassword) {
+      toast.warn("Musisz zmienić swoje hasło przed kontynuowaniem.");
+      nav("/user-profile");
+    } else {
+      toast.success("Zalogowano pomyślnie!");
+      nav("/");
+    }
   };
 
   if (auth.isAuthenticated()) {
     nav("/");
   }
+
   return (
     <div
       className="flex items-center justify-center h-screen"

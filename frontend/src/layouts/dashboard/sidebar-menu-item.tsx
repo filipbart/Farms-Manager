@@ -12,6 +12,9 @@ import { type ReactNode } from "react";
 import { MdExpandLess, MdExpandMore } from "react-icons/md";
 import { Link, useLocation } from "react-router-dom";
 import { NotificationPriority } from "../../models/common/notifications";
+import { useAuth } from "../../auth/useAuth";
+import { RouteName } from "../../router/route-names";
+import { useRouter } from "../../router/use-router";
 
 interface SidebarMenuItemProps {
   children?: any;
@@ -70,6 +73,12 @@ const SidebarMenuItem: React.FC<SidebarMenuItemProps> = ({
   const location = useLocation();
   const theme = useTheme();
 
+  const { userData } = useAuth();
+  const { getRoute } = useRouter();
+
+  const userProfilePath = getRoute(RouteName.UserProfile);
+  const isDisabled = !!userData?.mustChangePassword && to !== userProfilePath;
+
   const getBadgeColor = () => {
     switch (notificationPriority) {
       case NotificationPriority.High:
@@ -113,6 +122,7 @@ const SidebarMenuItem: React.FC<SidebarMenuItemProps> = ({
     return (
       <ListItemStyle
         selected={location.pathname === to}
+        disabled={isDisabled}
         component={Link}
         to={to}
       >
