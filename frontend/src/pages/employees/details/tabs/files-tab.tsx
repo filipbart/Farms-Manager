@@ -23,12 +23,18 @@ const EmployeeFilesTab: React.FC = () => {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const handleDownload = async (path: string) => {
+    const lastDotIndex = path.lastIndexOf(".");
+    const fileExtension =
+      lastDotIndex !== -1 && lastDotIndex < path.length - 1
+        ? path.substring(lastDotIndex + 1)
+        : "pdf";
     await downloadFile({
       url: ApiUrl.GetFile,
       params: { filePath: path },
       defaultFilename: "Plik",
       setLoading: (v) => setLoadingFilePath(v ? path : null),
       errorMessage: "Błąd podczas pobierania pliku",
+      fileExtension: fileExtension,
     });
   };
 

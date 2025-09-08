@@ -99,12 +99,18 @@ const FeedsPaymentsPage: React.FC = () => {
   };
 
   const downloadPaymentFile = async (filePath: string) => {
+    const lastDotIndex = filePath.lastIndexOf(".");
+    const fileExtension =
+      lastDotIndex !== -1 && lastDotIndex < filePath.length - 1
+        ? filePath.substring(lastDotIndex + 1)
+        : "pdf";
     await downloadFile({
       url: ApiUrl.GetFile,
       params: { filePath },
       defaultFilename: "Przelew",
       setLoading: (value) => setDownloadFilePath(value ? filePath : null),
       errorMessage: "Błąd podczas pobierania przelewu",
+      fileExtension: fileExtension,
     });
   };
   const fetchDictionaries = async () => {

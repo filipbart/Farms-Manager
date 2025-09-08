@@ -166,12 +166,18 @@ const SalesInvoicesPage: React.FC = () => {
   }, [fetchSalesInvoices]);
 
   const downloadSalesInvoiceFile = async (path: string) => {
+    const lastDotIndex = path.lastIndexOf(".");
+    const fileExtension =
+      lastDotIndex !== -1 && lastDotIndex < path.length - 1
+        ? path.substring(lastDotIndex + 1)
+        : "pdf";
     await downloadFile({
       url: ApiUrl.GetFile,
       params: { filePath: path },
       defaultFilename: "FakturaSprzedazy",
       setLoading: (value) => setDownloadFilePath(value ? path : null),
       errorMessage: "Błąd podczas pobierania faktury sprzedaży",
+      fileExtension: fileExtension,
     });
   };
 
