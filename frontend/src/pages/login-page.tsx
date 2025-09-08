@@ -1,7 +1,14 @@
 import React, { useState } from "react";
 import logo from "../assets/logo.png";
-
-import { TextField, Button } from "@mui/material";
+import {
+  TextField,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Typography,
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useAuth } from "../auth/useAuth";
@@ -11,6 +18,7 @@ import { toast } from "react-toastify";
 const LoginPage: React.FC = () => {
   const auth = useAuth();
   const [loading, setLoading] = useState(false);
+  const [showPasswordWarning, setShowPasswordWarning] = useState(false);
   const nav = useNavigate();
 
   const {
@@ -21,35 +29,39 @@ const LoginPage: React.FC = () => {
 
   const handleLogin = async (val: any) => {
     if (loading) return;
-
     setLoading(true);
-    const response = await AuthService.login(val.login, val.password);
-    if (!response.success && response.domainException) {
-      toast.error(response.domainException.errorDescription);
-      setLoading(false);
-      return;
-    }
 
-    if (!response.success) {
-      toast.error("Nie udało się zalogować. Sprawdź dane logowania.");
-      setLoading(false);
-      return;
-    }
+    try {
+      const response = await AuthService.login(val.login, val.password);
 
-    auth.setAuthToken(response.responseData?.accessToken || "");
-    await auth.fetchUserData();
-    if (response?.responseData?.mustChangePassword) {
-      toast.warn("Musisz zmienić swoje hasło przed kontynuowaniem.");
-      nav("/user-profile");
-    } else {
-      toast.success("Zalogowano pomyślnie!");
-      nav("/");
+      if (!response.success) {
+        toast.error(
+          response.domainException?.errorDescription ||
+            "Nie udało się zalogować. Sprawdź dane logowania."
+        );
+        return;
+      }
+
+      auth.setAuthToken(response.responseData?.accessToken || "");
+      await auth.fetchUserData();
+
+      if (response.responseData?.mustChangePassword) {
+        setShowPasswordWarning(true);
+      } else {
+        toast.success("Zalogowano pomyślnie!");
+        nav("/");
+      }
+    } catch {
+      toast.error("Wystąpił nieoczekiwany błąd logowania.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (auth.isAuthenticated()) {
-    nav("/");
-  }
+  const handleConfirmPasswordChange = () => {
+    setShowPasswordWarning(false);
+    nav("/user-profile");
+  };
 
   return (
     <div
@@ -92,16 +104,41 @@ const LoginPage: React.FC = () => {
             />
           </div>
           <Button
-            loading={loading}
+            disabled={loading}
             type="submit"
             variant="contained"
             color="primary"
             className="w-full"
           >
-            Zaloguj
+            {loading ? "Logowanie..." : "Zaloguj"}
           </Button>
         </form>
       </div>
+
+      <Dialog
+        open={showPasswordWarning}
+        onClose={handleConfirmPasswordChange}
+        aria-labelledby="password-change-dialog-title"
+      >
+        <DialogTitle id="password-change-dialog-title">
+          Wymagana zmiana hasła
+        </DialogTitle>
+        <DialogContent>
+          <Typography>
+            Twoje konto wymaga natychmiastowej zmiany hasła ze względów
+            bezpieczeństwa. Kliknij "OK", aby kontynuować.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={handleConfirmPasswordChange}
+            variant="contained"
+            autoFocus
+          >
+            OK
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };
