@@ -194,10 +194,7 @@ public class
         var ewwChart = BuildEwwChart(farms, allInsertions, historicalSales, historicalFeedInvoices, allFailures);
         var flockLossChart = BuildFlockLossChart(farms, allFailures, allInsertions);
         var expensesPieChart = BuildExpensesPieChart(historicalFeedInvoices, historicalExpenses, gasCostForCharts);
-        var notifications =
-            await BuildDashboardNotifications(
-                user.NotificationFarmIds ?? farmIds,
-                ct);
+        var notifications = await BuildDashboardNotifications(user.NotificationFarmIds ?? farmIds, ct);
 
         // 4. Składanie odpowiedzi
         var response = new GetDashboardDataQueryResponse
