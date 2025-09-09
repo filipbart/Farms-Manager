@@ -37,7 +37,7 @@ public class GetProductionDataWeighingsQueryHandler : IRequestHandler<GetProduct
     {
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
-        var accessibleFarmIds = user.IsAdmin ? null : user.Farms?.Select(t => t.FarmId).ToList();
+        var accessibleFarmIds = user.AccessibleFarmIds;
 
         var spec = new GetAllProductionDataWeighingsSpec(request.Filters, true, accessibleFarmIds);
         var countSpec = new GetAllProductionDataWeighingsSpec(request.Filters, false, accessibleFarmIds);

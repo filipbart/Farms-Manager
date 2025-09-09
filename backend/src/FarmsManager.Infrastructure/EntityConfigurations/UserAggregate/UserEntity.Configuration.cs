@@ -15,5 +15,7 @@ public class UserEntityConfiguration : BaseConfiguration<UserEntity>
         builder.Property(t => t.IrzplusCredentials).IsRequired(false).HasColumnType("jsonb");
         builder.Property(t => t.IsAdmin).IsRequired().HasDefaultValue(false);
         builder.Property(t => t.MustChangePassword).IsRequired().HasDefaultValue(true);
+        builder.Property(x => x.NotificationFarms).HasConversion(v => string.Join(',', v),
+            v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(Guid.Parse).ToList());
     }
 }

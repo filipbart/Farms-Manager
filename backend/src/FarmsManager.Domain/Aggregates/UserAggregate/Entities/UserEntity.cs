@@ -1,6 +1,7 @@
 ﻿using Ardalis.GuardClauses;
 using FarmsManager.Domain.Aggregates.UserAggregate.Models;
 using FarmsManager.Domain.SeedWork;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FarmsManager.Domain.Aggregates.UserAggregate.Entities;
 
@@ -18,6 +19,40 @@ public class UserEntity : Entity
     public bool IsAdmin { get; protected internal set; }
     public bool MustChangePassword { get; protected internal set; }
     public string AvatarPath { get; protected internal set; }
+    public List<Guid> NotificationFarms { get; protected internal set; } = [];
+
+    [NotMapped]
+    public List<Guid> NotificationFarmIds
+    {
+        get
+        {
+            if (NotificationFarms is { Count: > 0 })
+            {
+                return NotificationFarms;
+            }
+
+            if (IsAdmin)
+            {
+                return null;
+            }
+
+            return Farms?.Select(t => t.FarmId).ToList() ?? [];
+        }
+    }
+
+    [NotMapped]
+    public List<Guid> AccessibleFarmIds
+    {
+        get
+        {
+            if (IsAdmin)
+            {
+                return null;
+            }
+
+            return Farms?.Select(t => t.FarmId).ToList() ?? [];
+        }
+    }
 
 
     private readonly List<UserPermissionEntity> _permissions = new();
@@ -127,5 +162,16 @@ public class UserEntity : Entity
     {
         var farm = _farms.FirstOrDefault(t => t.FarmId == farmId);
         _farms.Remove(farm);
+    }
+
+    public void ChangeNotificationFarms(List<Guid> farms)
+    {
+        if (farms == null)
+        {
+            NotificationFarms = [];
+            return;
+        }
+
+        NotificationFarms = farms;
     }
 }

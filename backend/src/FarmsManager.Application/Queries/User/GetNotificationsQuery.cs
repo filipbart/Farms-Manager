@@ -54,7 +54,7 @@ public class
     {
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
-        var accessibleFarmIds = user.IsAdmin ? null : user.Farms?.Select(t => t.FarmId).ToList();
+        var farmIds = user.NotificationFarmIds;
 
         var now = DateOnly.FromDateTime(DateTime.Now);
         var sevenDaysFromNow = now.AddDays(7);
@@ -64,25 +64,25 @@ public class
         // 1. Faktury Sprzedażowe
         var salesInvoices =
             await _saleInvoiceRepository.ListAsync(
-                new GetOverdueAndUpcomingSaleInvoicesSpec(sevenDaysFromNow, accessibleFarmIds),
+                new GetOverdueAndUpcomingSaleInvoicesSpec(sevenDaysFromNow, farmIds),
                 cancellationToken);
         ProcessNotifications(salesInvoices, d => d.DueDate, notificationData.SalesInvoices, now);
 
         // 2. Dostawy Pasz
         var feedInvoices =
             await _feedInvoiceRepository.ListAsync(
-                new GetOverdueAndUpcomingFeedInvoicesSpec(sevenDaysFromNow, accessibleFarmIds),
+                new GetOverdueAndUpcomingFeedInvoicesSpec(sevenDaysFromNow, farmIds),
                 cancellationToken);
         ProcessNotifications(feedInvoices, d => d.DueDate, notificationData.FeedDeliveries, now);
 
         // 3. Przypomnienia i umowy pracowników
         var employeeReminders =
             await _employeeReminderRepository.ListAsync(
-                new GetOverdueAndUpcomingEmployeesRemindersSpec(now, accessibleFarmIds),
+                new GetOverdueAndUpcomingEmployeesRemindersSpec(now, farmIds),
                 cancellationToken);
         var expiringContracts =
             await _employeeRepository.ListAsync(
-                new GetOverdueAndUpcomingEmployeesContractSpec(sevenDaysFromNow, accessibleFarmIds),
+                new GetOverdueAndUpcomingEmployeesContractSpec(sevenDaysFromNow, farmIds),
                 cancellationToken);
 
         // Łączymy logikę dla przypomnień i umów

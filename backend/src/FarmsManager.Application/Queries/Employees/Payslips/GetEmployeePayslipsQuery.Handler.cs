@@ -34,7 +34,7 @@ public class
     {
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
-        var accessibleFarmIds = user.IsAdmin ? null : user.Farms?.Select(t => t.FarmId).ToList();
+        var accessibleFarmIds = user.AccessibleFarmIds;
 
         var paginatedSpec = new GetAllEmployeePayslipsSpec(request.Filters, true, accessibleFarmIds);
         var fullSpec = new GetAllEmployeePayslipsSpec(request.Filters, false, accessibleFarmIds);

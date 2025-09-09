@@ -30,7 +30,7 @@ public class GetProductionDataRemainingFeedQueryHandler : IRequestHandler<GetPro
     {
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
-        var accessibleFarmIds = user.IsAdmin ? null : user.Farms?.Select(t => t.FarmId).ToList();
+        var accessibleFarmIds = user.AccessibleFarmIds;
         
         var data = await _repository.ListAsync<ProductionDataRemainingFeedRowDto>(
             new GetAllProductionDataRemainingFeedSpec(request.Filters, true, accessibleFarmIds), cancellationToken);

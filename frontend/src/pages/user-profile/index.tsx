@@ -4,6 +4,7 @@ import GeneralSettingsTab from "./tabs/general";
 import IrzPlusSettingsTab from "./tabs/irzplus";
 import { useUserDetails } from "../../hooks/useUserDetails";
 import Loading from "../../components/loading/loading";
+import NotificationSettingsTab from "./tabs/notifications";
 
 const UserProfilePage: React.FC = () => {
   const [value, setValue] = React.useState(0);
@@ -52,6 +53,7 @@ const UserProfilePage: React.FC = () => {
           >
             <Tabs value={value} onChange={handleChange} variant="fullWidth">
               <Tab label="Ogólne" />
+              <Tab label="Powiadomienia" />
               <Tab label="IRZplus" />
             </Tabs>
           </Box>
@@ -59,6 +61,9 @@ const UserProfilePage: React.FC = () => {
             <GeneralSettingsTab />
           </TabPanel>
           <TabPanel value={value} index={1}>
+            <NotificationSettingsTab />
+          </TabPanel>
+          <TabPanel value={value} index={2}>
             <IrzPlusSettingsTab
               userDetails={userDetails}
               onReload={() => fetchUserDetails()}

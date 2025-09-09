@@ -21,6 +21,7 @@ public record MeQueryResponse
     public string AvatarPath { get; set; }
     public List<string> Permissions { get; init; }
     public List<Guid> AccessibleFarmIds { get; init; }
+    public List<Guid> NotificationFarms { get; init; } = [];
 }
 
 public class MeQueryHandler : IRequestHandler<MeQuery, BaseResponse<MeQueryResponse>>

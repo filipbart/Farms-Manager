@@ -33,4 +33,8 @@ export class UserService {
       },
     });
   }
+
+  public static async updateNotificationFarms(farms: string[]) {
+    return await AxiosWrapper.post(ApiUrl.ChangeNotificationFarms, { farms });
+  }
 }

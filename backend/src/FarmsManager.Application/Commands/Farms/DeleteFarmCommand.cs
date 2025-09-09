@@ -34,7 +34,9 @@ public class DeleteFarmCommandHandler : IRequestHandler<DeleteFarmCommand, Empty
         var users = await _userRepository.ListAsync(new GetAllUsersSpec(), cancellationToken);
         foreach (var user in users)
         {
-            var farmCredentials = user.IrzplusCredentials?.FirstOrDefault(c => c.FarmId == request.FarmId);
+            user.NotificationFarms.Remove(farm.Id);
+            user.AccessibleFarmIds.Remove(farm.Id);
+            var farmCredentials = user.IrzplusCredentials?.FirstOrDefault(c => c.FarmId == farm.Id);
             if (farmCredentials != null)
             {
                 user.RemoveIrzplusCredentials(farmCredentials);

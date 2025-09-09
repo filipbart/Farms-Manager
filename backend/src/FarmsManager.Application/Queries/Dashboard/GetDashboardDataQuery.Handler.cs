@@ -78,7 +78,7 @@ public class
             return BaseResponse.CreateResponse(new GetDashboardDataQueryResponse());
         }
 
-        var accessibleFarmIds = user.IsAdmin ? null : user.Farms?.Select(t => t.FarmId).ToList();
+        var accessibleFarmIds = user.AccessibleFarmIds;
 
         var filteredFarmIds = request.Filters.FarmId.HasValue
             ? accessibleFarmIds != null && !accessibleFarmIds.Contains(request.Filters.FarmId.Value)
@@ -194,7 +194,9 @@ public class
         var ewwChart = BuildEwwChart(farms, allInsertions, historicalSales, historicalFeedInvoices, allFailures);
         var flockLossChart = BuildFlockLossChart(farms, allFailures, allInsertions);
         var expensesPieChart = BuildExpensesPieChart(historicalFeedInvoices, historicalExpenses, gasCostForCharts);
-        var notifications = await BuildDashboardNotifications(farmIds, ct);
+        var notifications =
+            await BuildDashboardNotifications(user.NotificationFarmIds?.Count != 0 ? user.NotificationFarmIds : farmIds,
+                ct);
 
         // 4. Składanie odpowiedzi
         var response = new GetDashboardDataQueryResponse

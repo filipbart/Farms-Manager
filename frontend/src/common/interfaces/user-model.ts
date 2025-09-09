@@ -7,4 +7,5 @@ export default interface UserModel {
   avatarPath?: string;
   permissions: string[];
   accessibleFarmIds: string[];
+  notificationFarms: string[];
 }
