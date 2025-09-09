@@ -195,7 +195,8 @@ public class
         var flockLossChart = BuildFlockLossChart(farms, allFailures, allInsertions);
         var expensesPieChart = BuildExpensesPieChart(historicalFeedInvoices, historicalExpenses, gasCostForCharts);
         var notifications =
-            await BuildDashboardNotifications(user.NotificationFarmIds?.Count != 0 ? user.NotificationFarmIds : farmIds,
+            await BuildDashboardNotifications(
+                user.NotificationFarmIds ?? farmIds,
                 ct);
 
         // 4. Składanie odpowiedzi
