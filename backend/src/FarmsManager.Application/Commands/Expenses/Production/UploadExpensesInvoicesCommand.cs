@@ -10,6 +10,7 @@ using FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
+using FarmsManager.Shared.Extensions;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Http;
@@ -95,31 +96,37 @@ public class UploadExpensesInvoicesCommandHandler : IRequestHandler<UploadExpens
 
             if (existedInvoice is not null)
             {
-                throw new Exception($"Istnieje już dostawa z tym numerem faktury: {existedInvoice.InvoiceNumber}");
+                throw new Exception(
+                    $"Istnieje już koszt produkcyjny z tym numerem faktury: {existedInvoice.InvoiceNumber}");
+            }
+
+            if (expenseProductionInvoiceModel is null)
+            {
+                throw new Exception("Faktura nie jest możliwa do odczytu");
             }
 
             var farm = await _farmRepository.FirstOrDefaultAsync(new FarmByNipOrNameSpec(
-                    expenseProductionInvoiceModel.CustomerNip.Replace("-", ""),
+                    expenseProductionInvoiceModel.CustomerNip?.Replace("-", ""),
                     expenseProductionInvoiceModel.CustomerName),
                 cancellationToken);
 
             var expenseContractor = await _expenseContractorRepository.FirstOrDefaultAsync(
-                new ExpenseContractorByNipSpec(expenseProductionInvoiceModel.VendorNip.Replace("-", "")),
+                new ExpenseContractorByNipSpec(expenseProductionInvoiceModel.VendorNip?.Replace("-", "")),
                 cancellationToken);
 
-            if (expenseContractor is null)
+            if (expenseContractor is null && expenseProductionInvoiceModel.VendorNip.IsNotEmpty())
             {
                 expenseContractor = ExpenseContractorEntity.CreateNewFromInvoice(
-                    expenseProductionInvoiceModel.VendorName, expenseProductionInvoiceModel.VendorNip,
+                    expenseProductionInvoiceModel.VendorName, expenseProductionInvoiceModel.VendorNip ?? string.Empty,
                     expenseProductionInvoiceModel.VendorAddress.Replace("\n", ""), userId);
                 await _expenseContractorRepository.AddAsync(expenseContractor, cancellationToken);
             }
 
             extractedFields.FarmId = farm?.Id;
             extractedFields.CycleId = farm?.ActiveCycleId;
-            extractedFields.ContractorId = expenseContractor.Id;
-            extractedFields.ExpenseTypeId = expenseContractor.ExpenseTypeId;
-            extractedFields.ExpenseTypeName = expenseContractor.ExpenseType?.Name;
+            extractedFields.ContractorId = expenseContractor?.Id;
+            extractedFields.ExpenseTypeId = expenseContractor?.ExpenseTypeId;
+            extractedFields.ExpenseTypeName = expenseContractor?.ExpenseType?.Name;
 
             response.ResponseData.Files.Add(new UploadExpensesInvoicesData
             {

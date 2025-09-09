@@ -8,7 +8,7 @@ public sealed class FarmByNipOrNameSpec : BaseSpecification<FarmEntity>, ISingle
 {
     public FarmByNipOrNameSpec(string nip, string name)
     {
-        nip = nip.Replace("PL", "").Replace("-", "").Replace(" ", "").Trim();
+        nip = nip?.Replace("PL", "").Replace("-", "").Replace(" ", "").Trim();
         EnsureExists();
         DisableTracking();
 
