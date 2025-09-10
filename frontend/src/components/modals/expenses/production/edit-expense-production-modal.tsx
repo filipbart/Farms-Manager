@@ -285,7 +285,7 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
                   required: "Wartość netto jest wymagana",
                   valueAsNumber: true,
                   validate: (value) =>
-                    value > 0 || "Wartość netto musi być większa od 0",
+                    value >= 0 || "Wartość netto nie może być ujemna",
                 })}
                 error={!!errors.subTotal}
                 helperText={errors.subTotal?.message}
@@ -317,7 +317,7 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
                   required: "Wartość brutto jest wymagana",
                   valueAsNumber: true,
                   validate: (value) =>
-                    value > 0 || "Wartość brutto musi być większa od 0",
+                    value >= 0 || "Wartość brutto nie może być ujemna",
                 })}
                 error={!!errors.invoiceTotal}
                 helperText={errors.invoiceTotal?.message}
