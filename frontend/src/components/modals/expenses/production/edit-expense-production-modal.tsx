@@ -280,7 +280,7 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
               <TextField
                 label="Netto [zł]"
                 type="number"
-                slotProps={{ htmlInput: { step: "any" } }}
+                slotProps={{ htmlInput: { step: "0.01", min: 0 } }}
                 {...register("subTotal", {
                   required: "Wartość netto jest wymagana",
                   valueAsNumber: true,
@@ -296,7 +296,7 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
               <TextField
                 label="VAT [zł]"
                 type="number"
-                slotProps={{ htmlInput: { step: "any" } }}
+                slotProps={{ htmlInput: { step: "0.01", min: 0 } }}
                 {...register("vatAmount", {
                   required: "VAT jest wymagany",
                   valueAsNumber: true,
@@ -312,7 +312,7 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
               <TextField
                 label="Brutto [zł]"
                 type="number"
-                slotProps={{ htmlInput: { step: "any" } }}
+                slotProps={{ htmlInput: { step: "0.01", min: 0 } }}
                 {...register("invoiceTotal", {
                   required: "Wartość brutto jest wymagana",
                   valueAsNumber: true,
