@@ -12,7 +12,7 @@ import {
   TextField,
   Autocomplete,
 } from "@mui/material";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { MdSave, MdZoomIn } from "react-icons/md";
 import { Controller, useForm } from "react-hook-form";
 import { DatePicker } from "@mui/x-date-pickers";
@@ -97,36 +97,30 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
     },
   });
 
-  const handleFarmChange = useCallback(
-    async (farmId: string) => {
-      setValue("cycleId", "");
-      setValue("cycleDisplay", "");
-      clearErrors("cycleId");
+  const handleFarmChange = async (farmId: string) => {
+    setValue("cycleId", "");
+    setValue("cycleDisplay", "");
+    clearErrors("cycleId");
 
-      const cycle = await loadLatestCycle(farmId);
-      if (cycle) {
-        setValue("cycleId", cycle.id);
-        setValue("cycleDisplay", `${cycle.identifier}/${cycle.year}`);
-      } else {
-        setError("cycleId", {
-          type: "manual",
-          message: "Brak aktywnego cyklu",
-        });
-      }
-    },
-    [setValue, clearErrors, loadLatestCycle, setError]
-  );
+    const cycle = await loadLatestCycle(farmId);
+    if (cycle) {
+      setValue("cycleId", cycle.id);
+      setValue("cycleDisplay", `${cycle.identifier}/${cycle.year}`);
+    } else {
+      setError("cycleId", {
+        type: "manual",
+        message: "Brak aktywnego cyklu",
+      });
+    }
+  };
 
-  const handleContractorChange = useCallback(
-    (contractorId: string | null) => {
-      const selected = expensesContractors.find((c) => c.id === contractorId);
-      setValue("expenseTypeName", selected?.expenseType || "");
-      if (selected?.expenseType) {
-        setValue("expenseTypeId", selected.expenseTypeId || "");
-      }
-    },
-    [expensesContractors, setValue]
-  );
+  const handleContractorChange = (contractorId: string) => {
+    const selected = expensesContractors.find((c) => c.id === contractorId);
+    setValue("expenseTypeName", selected?.expenseType || "");
+    if (selected?.expenseType) {
+      setValue("expenseTypeId", selected.expenseTypeId || "");
+    }
+  };
 
   useEffect(() => {
     if (open) {
@@ -163,7 +157,7 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
         handleContractorChange(matchedContractor.id);
       }
     }
-  }, [expensesContractors, draftExpense, setValue, handleContractorChange]);
+  }, [expensesContractors, draftExpense, setValue]);
 
   useEffect(() => {
     if (draftExpenseInvoices.length === 0 && open) {
@@ -185,15 +179,7 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
     if (data.farmId) {
       handleFarmChange(data.farmId);
     }
-  }, [
-    currentIndex,
-    draftExpenseInvoices,
-    farms,
-    reset,
-    open,
-    handleClose,
-    handleFarmChange,
-  ]);
+  }, [currentIndex, draftExpenseInvoices, farms, reset, open, handleClose]);
 
   const handleSave = async (formData: ExpenseInvoiceData) => {
     setLoading(true);
