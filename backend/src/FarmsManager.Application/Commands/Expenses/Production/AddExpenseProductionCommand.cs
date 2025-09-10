@@ -24,6 +24,7 @@ public record AddExpenseProductionData
     public decimal SubTotal { get; init; }
     public decimal VatAmount { get; init; }
     public DateOnly InvoiceDate { get; init; }
+    public string Comment { get; init; }
     public IFormFile File { get; init; }
 }
 
@@ -62,7 +63,7 @@ public class AddExpenseProductionCommandHandler : IRequestHandler<AddExpenseProd
 
         var newExpenseProduction = ExpenseProductionEntity.CreateNew(farm.Id, cycle.Id, expenseContractor.Id,
             request.Data.InvoiceNumber, request.Data.InvoiceTotal, request.Data.SubTotal, request.Data.VatAmount,
-            request.Data.InvoiceDate, userId);
+            request.Data.InvoiceDate, request.Data.Comment, userId);
 
         if (request.Data.File != null)
         {
@@ -94,5 +95,6 @@ public class AddExpenseProductionCommandValidator : AbstractValidator<AddExpense
         RuleFor(t => t.Data.InvoiceTotal).GreaterThanOrEqualTo(0);
         RuleFor(t => t.Data.SubTotal).GreaterThanOrEqualTo(0);
         RuleFor(t => t.Data.VatAmount).GreaterThanOrEqualTo(0);
+        RuleFor(t => t.Data.Comment).MaximumLength(500);
     }
 }

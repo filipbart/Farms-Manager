@@ -18,6 +18,7 @@ public record UpdateExpenseProductionData
     public decimal SubTotal { get; init; }
     public decimal VatAmount { get; init; }
     public DateOnly InvoiceDate { get; init; }
+    public string Comment { get; init; }
 }
 
 public record UpdateExpenseProductionCommand(Guid Id, UpdateExpenseProductionData Data) : IRequest<EmptyBaseResponse>;
@@ -62,7 +63,8 @@ public class UpdateExpenseProductionCommandHandler : IRequestHandler<UpdateExpen
             request.Data.InvoiceTotal,
             request.Data.SubTotal,
             request.Data.VatAmount,
-            request.Data.InvoiceDate
+            request.Data.InvoiceDate,
+            request.Data.Comment
         );
 
         entity.SetModified(userId);
@@ -83,5 +85,6 @@ public class UpdateExpenseProductionCommandValidator : AbstractValidator<UpdateE
         RuleFor(t => t.Data.SubTotal).GreaterThanOrEqualTo(0);
         RuleFor(t => t.Data.VatAmount).GreaterThanOrEqualTo(0);
         RuleFor(t => t.Data.InvoiceDate).NotEmpty();
+        RuleFor(t => t.Data.Comment).MaximumLength(500);
     }
 }

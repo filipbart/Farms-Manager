@@ -14,6 +14,7 @@ export interface ExpenseProductionListModel {
   invoiceDate: string;
   dateCreatedUtc: string;
   filePath?: string;
+  comment?: string;
 }
 
 export interface AddExpenseProductionData {
@@ -27,6 +28,7 @@ export interface AddExpenseProductionData {
   subTotal: number;
   vatAmount: number;
   invoiceDate: string;
+  comment?: string;
   file?: File;
 }
 
@@ -41,6 +43,7 @@ export interface UpdateExpenseProductionData {
   invoiceDate: string;
   cycleDisplay?: string;
   expenseTypeNameDisplay?: string;
+  comment?: string;
 }
 export interface ExpenseInvoiceData {
   farmId?: string;
@@ -55,6 +58,7 @@ export interface ExpenseInvoiceData {
   subTotal?: number;
   vatAmount?: number;
   invoiceDate?: string;
+  comment?: string;
 }
 
 export interface SaveExpenseInvoiceData {

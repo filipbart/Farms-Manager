@@ -18,6 +18,7 @@ public class ExpenseProductionEntity : Entity
     public decimal VatAmount { get; protected internal set; }
     public DateOnly InvoiceDate { get; protected internal set; }
     public string FilePath { get; protected internal set; }
+    public string Comment { get; protected internal set; }
     public virtual FarmEntity Farm { get; set; }
     public virtual CycleEntity Cycle { get; set; }
     public virtual ExpenseContractorEntity ExpenseContractor { get; set; }
@@ -33,6 +34,7 @@ public class ExpenseProductionEntity : Entity
         decimal subTotal,
         decimal vatAmount,
         DateOnly invoiceDate,
+        string comment,
         Guid? userId = null)
     {
         return new ExpenseProductionEntity
@@ -45,6 +47,7 @@ public class ExpenseProductionEntity : Entity
             SubTotal = subTotal,
             VatAmount = vatAmount,
             InvoiceDate = invoiceDate,
+            Comment = comment,
             CreatedBy = userId
         };
     }
@@ -59,12 +62,14 @@ public class ExpenseProductionEntity : Entity
         decimal invoiceTotal,
         decimal subTotal,
         decimal vatAmount,
-        DateOnly invoiceDate)
+        DateOnly invoiceDate,
+        string comment)
     {
         InvoiceNumber = invoiceNumber;
         InvoiceTotal = invoiceTotal;
         SubTotal = subTotal;
         VatAmount = vatAmount;
         InvoiceDate = invoiceDate;
+        Comment = comment;
     }
 }

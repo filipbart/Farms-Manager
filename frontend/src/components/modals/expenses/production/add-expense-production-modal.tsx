@@ -74,6 +74,7 @@ const AddExpenseProductionModal: React.FC<AddExpenseProductionModalProps> = ({
       subTotal: 0,
       vatAmount: 0,
       invoiceDate: "",
+      comment: "",
     },
   });
 
@@ -293,6 +294,16 @@ const AddExpenseProductionModal: React.FC<AddExpenseProductionModalProps> = ({
                     value={watch("expenseTypeNameDisplay") || ""}
                     slotProps={{ input: { readOnly: true } }}
                     fullWidth
+                  />
+                </Grid>
+
+                <Grid size={{ xs: 12 }}>
+                  <TextField
+                    label="Komentarz"
+                    multiline
+                    rows={3}
+                    fullWidth
+                    {...register("comment")}
                   />
                 </Grid>
 

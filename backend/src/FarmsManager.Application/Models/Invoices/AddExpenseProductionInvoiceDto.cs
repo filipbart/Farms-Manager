@@ -12,4 +12,5 @@ public class AddExpenseProductionInvoiceDto
     public decimal? SubTotal { get; set; }
     public decimal? VatAmount { get; set; }
     public DateOnly? InvoiceDate { get; set; }
+    public string Comment { get; set; }
 }

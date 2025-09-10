@@ -61,7 +61,20 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
     reset,
     setValue,
     watch,
-  } = useForm<UpdateExpenseProductionData>();
+  } = useForm<UpdateExpenseProductionData>({
+    defaultValues: {
+      farmId: "",
+      cycleId: "",
+      expenseContractorId: "",
+      expenseTypeNameDisplay: "",
+      invoiceNumber: "",
+      invoiceTotal: 0,
+      subTotal: 0,
+      vatAmount: 0,
+      invoiceDate: "",
+      comment: "",
+    },
+  });
 
   const watchedFarmId = watch("farmId");
 
@@ -110,6 +123,7 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
         subTotal: expenseProductionToEdit.subTotal,
         vatAmount: expenseProductionToEdit.vatAmount,
         invoiceDate: expenseProductionToEdit.invoiceDate,
+        comment: expenseProductionToEdit.comment,
       });
     }
   }, [expenseProductionToEdit, reset, farms, expensesContractors]);
@@ -273,6 +287,16 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
                     }}
                   />
                 )}
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              <TextField
+                label="Komentarz"
+                multiline
+                rows={3}
+                fullWidth
+                {...register("comment")}
               />
             </Grid>
 

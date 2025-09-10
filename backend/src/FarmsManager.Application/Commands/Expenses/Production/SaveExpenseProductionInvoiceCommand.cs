@@ -79,6 +79,7 @@ public class
             request.Data.SubTotal!.Value,
             request.Data.VatAmount!.Value,
             request.Data.InvoiceDate!.Value,
+            request.Data.Comment,
             userId);
 
         var newPath = request.FilePath.Replace(request.DraftId.ToString(), newExpenseProduction.Id.ToString())
@@ -115,5 +116,6 @@ public class SaveExpenseProductionInvoiceCommandValidator : AbstractValidator<Sa
         RuleFor(x => x.Data.InvoiceTotal).GreaterThanOrEqualTo(0);
         RuleFor(x => x.Data.SubTotal).GreaterThanOrEqualTo(0);
         RuleFor(x => x.Data.VatAmount).GreaterThanOrEqualTo(0);
+        RuleFor(t => t.Data.Comment).MaximumLength(500);
     }
 }

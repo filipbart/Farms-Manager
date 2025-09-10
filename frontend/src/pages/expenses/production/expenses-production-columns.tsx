@@ -4,6 +4,7 @@ import type { ExpenseProductionListModel } from "../../../models/expenses/produc
 import ActionsCell from "../../../components/datagrid/actions-cell";
 import FileDownloadCell from "../../../components/datagrid/file-download-cell";
 import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
+import { CommentCell } from "../../../components/datagrid/comment-cell";
 
 interface GetExpenseProductionColumnsProps {
   setSelectedExpenseProduction: (row: ExpenseProductionListModel) => void;
@@ -128,6 +129,14 @@ export const getExpenseProductionColumns = ({
           />,
         ];
       },
+    },
+    {
+      field: "comment",
+      headerName: "Komentarz",
+      flex: 1,
+      sortable: false,
+      aggregable: false,
+      renderCell: (params) => <CommentCell value={params.value} />,
     },
   ];
 };
