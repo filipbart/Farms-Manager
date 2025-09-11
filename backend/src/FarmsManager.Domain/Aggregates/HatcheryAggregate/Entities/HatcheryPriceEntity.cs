@@ -27,12 +27,10 @@ public class HatcheryPriceEntity : Entity
     }
 
     public void Update(
-        string hatcheryName,
         decimal price,
         DateOnly date,
         string comment)
     {
-        HatcheryName = hatcheryName;
         Price = price;
         Date = date;
         Comment = comment;

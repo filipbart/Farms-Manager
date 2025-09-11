@@ -80,7 +80,7 @@ public class HatcheriesController(IMediator mediator) : BaseController
     {
         return Ok(await mediator.Send(new GetHatcheryPricesNamesQuery()));
     }
-    
+
     /// <summary>
     /// Dodaje nazwę wylęgarni
     /// </summary>
@@ -141,15 +141,15 @@ public class HatcheriesController(IMediator mediator) : BaseController
     /// Aktulizuję cenę
     /// </summary>
     /// <param name="hatcheryPriceId"></param>
-    /// <param name="command"></param>
+    /// <param name="data"></param>
     /// <returns></returns>
     [HttpPatch("prices/update/{hatcheryPriceId:guid}")]
     [HasPermission(AppPermissions.HatcheryNotes.View)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> UpdateHatcheryPrice([FromRoute] Guid hatcheryPriceId, UpdateHatcheryPriceCommand command)
+    public async Task<IActionResult> UpdateHatcheryPrice([FromRoute] Guid hatcheryPriceId, UpdateHatcheryPriceData data)
     {
-        return Ok(await mediator.Send(command with { Id = hatcheryPriceId }));
+        return Ok(await mediator.Send(new UpdateHatcheryPriceCommand(hatcheryPriceId, data)));
     }
 
     /// <summary>
@@ -207,7 +207,7 @@ public class HatcheriesController(IMediator mediator) : BaseController
     {
         return Ok(await mediator.Send(new UpdateHatcheryNoteCommand(hatcheryNoteId, data)));
     }
-    
+
     /// <summary>
     /// Aktualizuje kolejność notatek
     /// </summary>

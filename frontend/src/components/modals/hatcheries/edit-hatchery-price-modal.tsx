@@ -26,7 +26,7 @@ interface EditHatcheryPriceModalProps {
 }
 
 interface PriceFormState {
-  hatcheryId: string;
+  hatcheryName: string;
   price: string | number;
   date: Dayjs | null;
   comment: string;
@@ -38,7 +38,7 @@ interface PriceFormErrors {
 }
 
 const initialState: PriceFormState = {
-  hatcheryId: "",
+  hatcheryName: "",
   price: "",
   date: null,
   comment: "",

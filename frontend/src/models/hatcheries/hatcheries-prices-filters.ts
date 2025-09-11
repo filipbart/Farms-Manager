@@ -16,7 +16,7 @@ export const mapHatcheriesPricesOrderTypeToField = (
 };
 
 export const initialFilters: HatcheriesPricesFilterPaginationModel = {
-  hatcheryIds: [],
+  hatcheryNames: [],
   dateSince: "",
   dateTo: "",
   page: 0,
@@ -53,7 +53,7 @@ export enum HatcheriesPricesOrderType {
 }
 
 export default interface HatcheriesPricesFilter {
-  hatcheryIds: string[];
+  hatcheryNames: string[];
   dateSince: string;
   dateTo: string;
   priceFrom?: number;
