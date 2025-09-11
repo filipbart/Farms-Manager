@@ -8,7 +8,7 @@ export interface HatcheryPriceListModel {
 }
 
 export interface AddHatcheryPriceFormData {
-  hatcheryId: string;
+  hatcheryName: string;
   price: number;
   date: string;
   comment?: string;

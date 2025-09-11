@@ -1,8 +1,6 @@
 import type { FilterConfig } from "../../components/filters/filter-types";
-import type {
-  HatcheriesNames,
-  HatcheriesPricesFilterPaginationModel,
-} from "../../models/hatcheries/hatcheries-prices-filters";
+import type { HatcheriesNames } from "../../models/hatcheries/hatcheries-prices";
+import type { HatcheriesPricesFilterPaginationModel } from "../../models/hatcheries/hatcheries-prices-filters";
 
 export const getHatcheriesPricesFiltersConfig = (
   dictionary: HatcheriesNames | undefined
