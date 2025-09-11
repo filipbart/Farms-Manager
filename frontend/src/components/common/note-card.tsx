@@ -1,6 +1,12 @@
 import { Box, Paper, Typography, TextField, IconButton } from "@mui/material";
 import { useState } from "react";
-import { MdEdit, MdDelete, MdSave, MdCancel } from "react-icons/md";
+import {
+  MdEdit,
+  MdDelete,
+  MdSave,
+  MdCancel,
+  MdDragIndicator,
+} from "react-icons/md";
 
 interface NoteModel {
   id: string;
@@ -12,9 +18,17 @@ interface NoteCardProps {
   note: NoteModel;
   onUpdate: (id: string, title: string, content: string) => void;
   onDelete: (id: string) => void;
+  dndAttributes?: any;
+  dndListeners?: any;
 }
 
-const NoteCard: React.FC<NoteCardProps> = ({ note, onUpdate, onDelete }) => {
+const NoteCard: React.FC<NoteCardProps> = ({
+  note,
+  onUpdate,
+  onDelete,
+  dndAttributes,
+  dndListeners,
+}) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(note.title);
   const [editedContent, setEditedContent] = useState(note.content);
@@ -62,59 +76,79 @@ const NoteCard: React.FC<NoteCardProps> = ({ note, onUpdate, onDelete }) => {
           />
         </>
       ) : (
-        <>
-          <Typography
-            variant="h6"
+        <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}>
+          <Box
             sx={{
-              wordBreak: "break-word",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              cursor: "grab",
+              mb: 1,
             }}
+            {...dndAttributes}
+            {...dndListeners}
           >
-            {note.title}
-          </Typography>
+            <Typography
+              variant="h6"
+              sx={{
+                wordBreak: "break-word",
+                flexGrow: 1,
+              }}
+            >
+              {note.title}
+            </Typography>
+            <MdDragIndicator />
+          </Box>
           <Typography
             variant="body2"
             sx={{
               flexGrow: 1,
-              my: 1,
               whiteSpace: "pre-wrap",
-
               wordBreak: "break-word",
             }}
           >
             {note.content}
           </Typography>
-        </>
+        </Box>
       )}
 
-      <Box display="flex" justifyContent="flex-end" mt={1}>
-        {isEditing ? (
-          <>
-            <IconButton size="small" onClick={handleSave} title="Zapisz">
-              <MdSave />
-            </IconButton>
-            <IconButton size="small" onClick={handleCancel} title="Anuluj">
-              <MdCancel />
-            </IconButton>
-          </>
-        ) : (
-          <>
-            <IconButton
-              size="small"
-              onClick={() => setIsEditing(true)}
-              title="Edytuj"
-            >
-              <MdEdit />
-            </IconButton>
-            <IconButton
-              size="small"
-              onClick={() => onDelete(note.id)}
-              title="Usuń"
-              color="error"
-            >
-              <MdDelete />
-            </IconButton>
-          </>
-        )}
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mt={1}
+      >
+        <Box></Box>
+        <Box>
+          {isEditing ? (
+            <>
+              <IconButton size="small" onClick={handleSave} title="Zapisz">
+                <MdSave />
+              </IconButton>
+              <IconButton size="small" onClick={handleCancel} title="Anuluj">
+                <MdCancel />
+              </IconButton>
+            </>
+          ) : (
+            <>
+              <IconButton
+                size="small"
+                onClick={() => setIsEditing(true)}
+                title="Edytuj"
+              >
+                <MdEdit />
+              </IconButton>
+              <IconButton
+                size="small"
+                onClick={() => onDelete(note.id)}
+                title="Usuń"
+                color="error"
+              >
+                <MdDelete />
+              </IconButton>
+            </>
+          )}
+        </Box>
       </Box>
     </Paper>
   );

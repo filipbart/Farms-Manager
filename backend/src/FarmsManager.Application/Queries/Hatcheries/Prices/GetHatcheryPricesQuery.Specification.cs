@@ -14,8 +14,6 @@ public sealed class GetAllHatcheryPricesSpec : BaseSpecification<HatcheryPriceEn
         PopulateFilters(filters);
         ApplyOrdering(filters);
 
-        Query.Include(hp => hp.Hatchery);
-
         if (withPagination)
         {
             Paginate(filters);
@@ -24,9 +22,9 @@ public sealed class GetAllHatcheryPricesSpec : BaseSpecification<HatcheryPriceEn
 
     private void PopulateFilters(GetHatcheryPricesQueryFilters filters)
     {
-        if (filters.HatcheryIds is not null && filters.HatcheryIds.Count != 0)
+        if (filters.HatcheryNames is not null && filters.HatcheryNames.Count != 0)
         {
-            Query.Where(hp => filters.HatcheryIds.Contains(hp.HatcheryId));
+            Query.Where(hp => filters.HatcheryNames.Contains(hp.HatcheryName));
         }
 
         if (filters.DateSince is not null)
@@ -59,11 +57,11 @@ public sealed class GetAllHatcheryPricesSpec : BaseSpecification<HatcheryPriceEn
             case HatcheriesPricesOrderBy.HatcheryName:
                 if (isDescending)
                 {
-                    Query.OrderByDescending(hp => hp.Hatchery.Name);
+                    Query.OrderByDescending(hp => hp.HatcheryName);
                 }
                 else
                 {
-                    Query.OrderBy(hp => hp.Hatchery.Name);
+                    Query.OrderBy(hp => hp.HatcheryName);
                 }
 
                 break;

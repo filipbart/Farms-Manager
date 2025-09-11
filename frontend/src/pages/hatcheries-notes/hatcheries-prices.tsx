@@ -10,9 +10,11 @@ import {
   HatcheriesPricesOrderType,
   initialFilters,
   mapHatcheriesPricesOrderTypeToField,
-  type HatcheriesPricesDictionary,
 } from "../../models/hatcheries/hatcheries-prices-filters";
-import type { HatcheryPriceListModel } from "../../models/hatcheries/hatcheries-prices";
+import type {
+  HatcheriesNames,
+  HatcheryPriceListModel,
+} from "../../models/hatcheries/hatcheries-prices";
 import { handleApiResponse } from "../../utils/axios/handle-api-response";
 import { HatcheriesService } from "../../services/hatcheries-service";
 import AddHatcheryPriceModal from "../../components/modals/hatcheries/add-hatchery-price-modal";
@@ -37,7 +39,7 @@ const HatcheriesPricesPanel: React.FC = () => {
       };
     }
   );
-  const [dictionary, setDictionary] = useState<HatcheriesPricesDictionary>();
+  const [dictionary, setDictionary] = useState<HatcheriesNames>();
 
   const [loading, setLoading] = useState(false);
   const [hatcheriesPrices, setHatcheriesPrices] = useState<
@@ -93,13 +95,13 @@ const HatcheriesPricesPanel: React.FC = () => {
   const fetchDictionaries = async () => {
     try {
       await handleApiResponse(
-        () => HatcheriesService.getPricesDictionary(),
+        () => HatcheriesService.getPricesNames(),
         (data) => setDictionary(data.responseData),
         undefined,
-        "Błąd podczas pobierania słowników filtrów"
+        "Błąd podczas pobierania nazw wylęgarni"
       );
     } catch {
-      toast.error("Błąd podczas pobierania słowników filtrów");
+      toast.error("Błąd podczas pobierania nazw wylęgarni");
     }
   };
 

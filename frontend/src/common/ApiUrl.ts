@@ -38,8 +38,11 @@ export default class ApiUrl {
     this.Hatcheries + "/delete/" + id;
 
   public static HatcheriesPrices = this.Hatcheries + "/prices";
-  public static HatcheriesPricesDictionary =
-    this.HatcheriesPrices + "/dictionary";
+  public static HatcheriesPricesNames = this.HatcheriesPrices + "/names";
+  public static AddHatcheryPriceName = this.HatcheriesPricesNames + "/add";
+  public static DeleteHatcheryPriceName = (id: string) =>
+    this.HatcheriesPricesNames + "/delete/" + id;
+
   public static AddHatcheryPrice = this.HatcheriesPrices + "/add";
   public static UpdateHatcheryPrice = (id: string) =>
     this.HatcheriesPrices + "/update/" + id;
@@ -47,6 +50,8 @@ export default class ApiUrl {
     this.HatcheriesPrices + "/delete/" + id;
   public static HatcheriesNotes = this.Hatcheries + "/notes";
   public static AddHatcheryNote = this.HatcheriesNotes + "/add";
+  public static UpdateHatcheryNoteOrder =
+    this.HatcheriesNotes + "/update-order";
   public static UpdateHatcheryNote = (id: string) =>
     this.HatcheriesNotes + "/update/" + id;
   public static DeleteHatcheryNote = (id: string) =>

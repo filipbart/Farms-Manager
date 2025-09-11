@@ -4,15 +4,13 @@ namespace FarmsManager.Domain.Aggregates.HatcheryAggregate.Entities;
 
 public class HatcheryPriceEntity : Entity
 {
-    public Guid HatcheryId { get; init; }
     public decimal Price { get; protected internal set; }
     public DateOnly Date { get; protected internal set; }
     public string Comment { get; protected internal set; }
-
-    public virtual HatcheryEntity Hatchery { get; set; }
+    public string HatcheryName { get; protected internal set; }
 
     public static HatcheryPriceEntity CreateNew(
-        Guid hatcheryId,
+        string hatcheryName,
         decimal price,
         DateOnly date,
         string comment,
@@ -20,7 +18,7 @@ public class HatcheryPriceEntity : Entity
     {
         return new HatcheryPriceEntity
         {
-            HatcheryId = hatcheryId,
+            HatcheryName = hatcheryName,
             Price = price,
             Date = date,
             Comment = comment,
@@ -29,10 +27,12 @@ public class HatcheryPriceEntity : Entity
     }
 
     public void Update(
+        string hatcheryName,
         decimal price,
         DateOnly date,
         string comment)
     {
+        HatcheryName = hatcheryName;
         Price = price;
         Date = date;
         Comment = comment;

@@ -10,6 +10,7 @@ public class HatcheryProfile : Profile
     public HatcheryProfile()
     {
         CreateMap<HatcheryEntity, HatcheryRowDto>();
+        CreateMap<HatcheryNameEntity, DictModel>();
         CreateMap<HatcheryEntity, DictModel>();
     }
 }

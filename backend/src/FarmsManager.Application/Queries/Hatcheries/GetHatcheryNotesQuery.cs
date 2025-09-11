@@ -13,6 +13,7 @@ public class HatcheryNoteDto
     public Guid Id { get; init; }
     public string Title { get; init; }
     public string Content { get; init; }
+    public int Order { get; init; }
     public DateTime DateCreatedUtc { get; init; }
 }
 

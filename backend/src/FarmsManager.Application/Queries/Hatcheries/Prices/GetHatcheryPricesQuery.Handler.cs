@@ -37,7 +37,6 @@ public class HatcheryPriceProfile : Profile
 {
     public HatcheryPriceProfile()
     {
-        CreateMap<HatcheryPriceEntity, HatcheryPriceRowDto>()
-            .ForMember(m => m.HatcheryName, opt => opt.MapFrom(t => t.Hatchery.Name));
+        CreateMap<HatcheryPriceEntity, HatcheryPriceRowDto>();
     }
 }

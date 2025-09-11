@@ -11,8 +11,6 @@ public class HatcheryPriceEntityConfiguration : BaseConfiguration<HatcheryPriceE
         base.Configure(builder);
         builder.HasKey(t => t.Id);
 
-        builder.HasIndex(t => new { t.HatcheryId, t.Date }).IsUnique().HasFilter("date_deleted_utc IS NULL");
-
-        builder.HasOne(t => t.Hatchery).WithMany().HasForeignKey(t => t.HatcheryId);
+        builder.HasIndex(t => new { t.HatcheryName, t.Date }).IsUnique().HasFilter("date_deleted_utc IS NULL");
     }
 }

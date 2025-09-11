@@ -12,6 +12,7 @@ namespace FarmsManager.Application.Commands.Hatcheries;
 
 public record UpdateHatcheryPriceData
 {
+    public string HatcheryName { get; init; }
     public decimal Price { get; init; }
     public DateOnly Date { get; init; }
     public string Comment { get; init; }
@@ -23,6 +24,9 @@ public class UpdateHatcheryPriceCommandValidator : AbstractValidator<UpdateHatch
 {
     public UpdateHatcheryPriceCommandValidator()
     {
+        RuleFor(x => x.Data.HatcheryName)
+            .NotEmpty().WithMessage("Wylęgarnia jest wymagana.");
+
         RuleFor(x => x.Data.Price)
             .GreaterThan(0).WithMessage("Cena musi być większa od zera.");
 
@@ -34,12 +38,14 @@ public class UpdateHatcheryPriceCommandValidator : AbstractValidator<UpdateHatch
 public class UpdateHatcheryPriceCommandHandler : IRequestHandler<UpdateHatcheryPriceCommand, EmptyBaseResponse>
 {
     private readonly IHatcheryPriceRepository _hatcheryPriceRepository;
+    private readonly IHatcheryNameRepository _hatcheryNameRepository;
     private readonly IUserDataResolver _userDataResolver;
 
     public UpdateHatcheryPriceCommandHandler(IHatcheryPriceRepository hatcheryPriceRepository,
-        IUserDataResolver userDataResolver)
+        IHatcheryNameRepository hatcheryNameRepository, IUserDataResolver userDataResolver)
     {
         _hatcheryPriceRepository = hatcheryPriceRepository;
+        _hatcheryNameRepository = hatcheryNameRepository;
         _userDataResolver = userDataResolver;
     }
 
@@ -50,10 +56,13 @@ public class UpdateHatcheryPriceCommandHandler : IRequestHandler<UpdateHatcheryP
         var hatcheryPrice =
             await _hatcheryPriceRepository.GetAsync(new HatcheryPriceByIdSpec(request.Id), cancellationToken);
 
+        var hatcheryName = await _hatcheryNameRepository.GetAsync(new HatcheryNameByNameSpec(request.Data.HatcheryName),
+            cancellationToken);
+
         if (hatcheryPrice.Date != request.Data.Date)
         {
             var existingPriceOnNewDate = await _hatcheryPriceRepository.FirstOrDefaultAsync(
-                new HatcheryPriceByHatcheryAndDateSpec(hatcheryPrice.HatcheryId, request.Data.Date),
+                new HatcheryPriceByHatcheryNameAndDateSpec(hatcheryPrice.HatcheryName, request.Data.Date),
                 cancellationToken);
 
 
@@ -64,6 +73,7 @@ public class UpdateHatcheryPriceCommandHandler : IRequestHandler<UpdateHatcheryP
         }
 
         hatcheryPrice.Update(
+            hatcheryName.Name,
             request.Data.Price,
             request.Data.Date,
             request.Data.Comment

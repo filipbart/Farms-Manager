@@ -1,11 +1,11 @@
 import type { FilterConfig } from "../../components/filters/filter-types";
 import type {
-  HatcheriesPricesDictionary,
+  HatcheriesNames,
   HatcheriesPricesFilterPaginationModel,
 } from "../../models/hatcheries/hatcheries-prices-filters";
 
 export const getHatcheriesPricesFiltersConfig = (
-  dictionary: HatcheriesPricesDictionary | undefined
+  dictionary: HatcheriesNames | undefined
 ): FilterConfig<keyof HatcheriesPricesFilterPaginationModel>[] => [
   {
     key: "hatcheryIds",

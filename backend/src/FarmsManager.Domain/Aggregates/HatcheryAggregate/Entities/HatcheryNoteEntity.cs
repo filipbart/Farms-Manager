@@ -6,7 +6,8 @@ public class HatcheryNoteEntity : Entity
 {
     public string Title { get; protected internal set; }
     public string Content { get; protected internal set; }
-    
+    public int Order { get; protected internal set; }
+
     protected HatcheryNoteEntity()
     {
     }
@@ -25,5 +26,10 @@ public class HatcheryNoteEntity : Entity
     {
         Title = title;
         Content = content;
+    }
+
+    public void UpdateOrder(int order)
+    {
+        Order = order;
     }
 }

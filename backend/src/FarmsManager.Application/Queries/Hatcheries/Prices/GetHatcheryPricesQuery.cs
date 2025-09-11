@@ -13,7 +13,7 @@ public enum HatcheriesPricesOrderBy
 
 public record GetHatcheryPricesQueryFilters : OrderedPaginationParams<HatcheriesPricesOrderBy>
 {
-    public List<Guid> HatcheryIds { get; init; }
+    public List<string> HatcheryNames { get; init; }
     public DateOnly? DateSince { get; init; }
     public DateOnly? DateTo { get; init; }
     public decimal? PriceFrom { get; init; }

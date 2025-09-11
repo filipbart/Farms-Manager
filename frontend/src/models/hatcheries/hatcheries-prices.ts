@@ -19,3 +19,12 @@ export interface EditHatcherPriceFormData {
   date: string;
   comment?: string;
 }
+
+export interface HatcheriesNames {
+  hatcheries: HatcheryName[];
+}
+
+export interface HatcheryName {
+  id: string;
+  name: string;
+}

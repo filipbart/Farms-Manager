@@ -1,4 +1,3 @@
-import type { DictModel } from "../common/dictionaries";
 import type { OrderedPaginationParams } from "../common/pagination-params";
 
 export const mapHatcheriesPricesOrderTypeToField = (
@@ -64,7 +63,3 @@ export default interface HatcheriesPricesFilter {
 export interface HatcheriesPricesFilterPaginationModel
   extends HatcheriesPricesFilter,
     OrderedPaginationParams<HatcheriesPricesOrderType> {}
-
-export interface HatcheriesPricesDictionary {
-  hatcheries: DictModel[];
-}

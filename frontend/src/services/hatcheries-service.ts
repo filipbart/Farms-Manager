@@ -8,12 +8,10 @@ import type {
 import type {
   AddHatcheryPriceFormData,
   EditHatcherPriceFormData as EditHatcheryPriceFormData,
+  HatcheriesNames,
   HatcheryPriceListModel,
 } from "../models/hatcheries/hatcheries-prices";
-import type {
-  HatcheriesPricesDictionary,
-  HatcheriesPricesFilterPaginationModel,
-} from "../models/hatcheries/hatcheries-prices-filters";
+import type { HatcheriesPricesFilterPaginationModel } from "../models/hatcheries/hatcheries-prices-filters";
 import type { HatcheryRowModel } from "../models/hatcheries/hatchery-row-model";
 import AxiosWrapper from "../utils/axios/wrapper";
 
@@ -47,10 +45,18 @@ export class HatcheriesService {
     return await AxiosWrapper.post(ApiUrl.DeleteHatchery(id));
   }
 
-  public static async getPricesDictionary() {
-    return await AxiosWrapper.get<HatcheriesPricesDictionary>(
-      ApiUrl.HatcheriesPricesDictionary
+  public static async getPricesNames() {
+    return await AxiosWrapper.get<HatcheriesNames>(
+      ApiUrl.HatcheriesPricesNames
     );
+  }
+
+  public static async deleteHatcheryName(id: string) {
+    return await AxiosWrapper.post(ApiUrl.DeleteHatcheryPriceName(id));
+  }
+
+  public static async addHatcheryName(name: string) {
+    return await AxiosWrapper.post(ApiUrl.AddHatcheryPriceName, { name });
   }
 
   public static async getHatcheriesPrices(
@@ -79,6 +85,12 @@ export class HatcheriesService {
 
   public static async getNotes() {
     return await AxiosWrapper.get<GetNotesResponse>(ApiUrl.HatcheriesNotes);
+  }
+
+  public static async updateNotesOrder(orderedIds: string[]) {
+    return await AxiosWrapper.patch(ApiUrl.UpdateHatcheryNoteOrder, {
+      orderedIds,
+    });
   }
 
   public static async addNote(data: HatcheryNoteData) {

@@ -12,7 +12,7 @@ namespace FarmsManager.Application.Commands.Hatcheries;
 
 public record AddHatcheryPriceCommand : IRequest<EmptyBaseResponse>
 {
-    public Guid HatcheryId { get; init; }
+    public string HatcheryName { get; init; }
     public decimal Price { get; init; }
     public DateOnly Date { get; init; }
     public string Comment { get; init; }
@@ -22,7 +22,7 @@ public class AddHatcheryPriceCommandValidator : AbstractValidator<AddHatcheryPri
 {
     public AddHatcheryPriceCommandValidator()
     {
-        RuleFor(x => x.HatcheryId)
+        RuleFor(x => x.HatcheryName)
             .NotEmpty().WithMessage("Wylęgarnia jest wymagana.");
 
         RuleFor(x => x.Price)
@@ -36,25 +36,27 @@ public class AddHatcheryPriceCommandValidator : AbstractValidator<AddHatcheryPri
 public class AddHatcheryPriceCommandHandler : IRequestHandler<AddHatcheryPriceCommand, EmptyBaseResponse>
 {
     private readonly IHatcheryPriceRepository _hatcheryPriceRepository;
-    private readonly IHatcheryRepository _hatcheryRepository;
+    private readonly IHatcheryNameRepository _hatcheryNameRepository;
     private readonly IUserDataResolver _userDataResolver;
 
     public AddHatcheryPriceCommandHandler(IHatcheryPriceRepository hatcheryPriceRepository,
-        IHatcheryRepository hatcheryRepository, IUserDataResolver userDataResolver)
+        IHatcheryNameRepository hatcheryNameRepository, IUserDataResolver userDataResolver)
     {
         _hatcheryPriceRepository = hatcheryPriceRepository;
-        _hatcheryRepository = hatcheryRepository;
+        _hatcheryNameRepository = hatcheryNameRepository;
         _userDataResolver = userDataResolver;
     }
+
 
     public async Task<EmptyBaseResponse> Handle(AddHatcheryPriceCommand request, CancellationToken cancellationToken)
     {
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
 
-        var hatchery = await _hatcheryRepository.GetAsync(new HatcheryByIdSpec(request.HatcheryId), cancellationToken);
+        var hatcheryName =
+            await _hatcheryNameRepository.GetAsync(new HatcheryNameByNameSpec(request.HatcheryName), cancellationToken);
 
         var existingPrice = await _hatcheryPriceRepository.FirstOrDefaultAsync(
-            new HatcheryPriceByHatcheryAndDateSpec(request.HatcheryId, request.Date),
+            new HatcheryPriceByHatcheryNameAndDateSpec(request.HatcheryName, request.Date),
             cancellationToken);
 
         if (existingPrice is not null)
@@ -63,7 +65,7 @@ public class AddHatcheryPriceCommandHandler : IRequestHandler<AddHatcheryPriceCo
         }
 
         var newPrice = HatcheryPriceEntity.CreateNew(
-            hatchery.Id,
+            hatcheryName.Name,
             request.Price,
             request.Date,
             request.Comment,
@@ -76,13 +78,24 @@ public class AddHatcheryPriceCommandHandler : IRequestHandler<AddHatcheryPriceCo
     }
 }
 
-public sealed class HatcheryPriceByHatcheryAndDateSpec : BaseSpecification<HatcheryPriceEntity>,
+public sealed class HatcheryPriceByHatcheryNameAndDateSpec : BaseSpecification<HatcheryPriceEntity>,
     ISingleResultSpecification<HatcheryPriceEntity>
 {
-    public HatcheryPriceByHatcheryAndDateSpec(Guid id, DateOnly date)
+    public HatcheryPriceByHatcheryNameAndDateSpec(string hatcheryName, DateOnly date)
     {
         EnsureExists();
-        Query.Where(x => x.HatcheryId == id);
+        Query.Where(x => x.HatcheryName == hatcheryName);
         Query.Where(x => x.Date == date);
+    }
+}
+
+public sealed class HatcheryNameByNameSpec : BaseSpecification<HatcheryNameEntity>,
+    ISingleResultSpecification<HatcheryNameEntity>
+{
+    public HatcheryNameByNameSpec(string name)
+    {
+        EnsureExists();
+        DisableTracking();
+        Query.Where(x => x.Name == name);
     }
 }

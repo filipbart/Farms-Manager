@@ -69,16 +69,44 @@ public class HatcheriesController(IMediator mediator) : BaseController
     }
 
     /// <summary>
-    /// Zwraca słownik dla cen
+    /// Zwraca nazwy wylęgarni dla cen
     /// </summary>
     /// <returns></returns>
-    [HttpGet("prices/dictionary")]
+    [HttpGet("prices/names")]
     [HasPermission(AppPermissions.HatcheryNotes.View)]
-    [ProducesResponseType(typeof(BaseResponse<GetHatcheryPricesDictionaryQueryResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(BaseResponse<GetHatcheryPricesNamesQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetPricesDictionary()
     {
-        return Ok(await mediator.Send(new GetHatcheryPricesDictionaryQuery()));
+        return Ok(await mediator.Send(new GetHatcheryPricesNamesQuery()));
+    }
+    
+    /// <summary>
+    /// Dodaje nazwę wylęgarni
+    /// </summary>
+    /// <param name="command"></param>
+    /// <returns></returns>
+    [HttpPost("prices/names/add")]
+    [HasPermission(AppPermissions.HatcheryNotes.View)]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> AddHatcheryName(AddHatcheryNameCommand command)
+    {
+        return Ok(await mediator.Send(command));
+    }
+
+    /// <summary>
+    /// Usuwa nazwę wylęgarni
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    [HttpPost("prices/names/delete/{id:guid}")]
+    [HasPermission(AppPermissions.HatcheryNotes.View)]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> DeleteHatcheryName([FromRoute] Guid id)
+    {
+        return Ok(await mediator.Send(new DeleteHatcheryNameCommand(id)));
     }
 
     /// <summary>
@@ -113,15 +141,15 @@ public class HatcheriesController(IMediator mediator) : BaseController
     /// Aktulizuję cenę
     /// </summary>
     /// <param name="hatcheryPriceId"></param>
-    /// <param name="data"></param>
+    /// <param name="command"></param>
     /// <returns></returns>
     [HttpPatch("prices/update/{hatcheryPriceId:guid}")]
     [HasPermission(AppPermissions.HatcheryNotes.View)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> UpdateHatcheryPrice([FromRoute] Guid hatcheryPriceId, UpdateHatcheryPriceData data)
+    public async Task<IActionResult> UpdateHatcheryPrice([FromRoute] Guid hatcheryPriceId, UpdateHatcheryPriceCommand command)
     {
-        return Ok(await mediator.Send(new UpdateHatcheryPriceCommand(hatcheryPriceId, data)));
+        return Ok(await mediator.Send(command with { Id = hatcheryPriceId }));
     }
 
     /// <summary>
@@ -178,6 +206,20 @@ public class HatcheriesController(IMediator mediator) : BaseController
     public async Task<IActionResult> UpdateHatcheryNote([FromRoute] Guid hatcheryNoteId, HatcheryNoteData data)
     {
         return Ok(await mediator.Send(new UpdateHatcheryNoteCommand(hatcheryNoteId, data)));
+    }
+    
+    /// <summary>
+    /// Aktualizuje kolejność notatek
+    /// </summary>
+    /// <param name="command"></param>
+    /// <returns></returns>
+    [HttpPatch("notes/update-order")]
+    [HasPermission(AppPermissions.HatcheryNotes.View)]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> UpdateHatcheryNotesOrder(UpdateHatcheryNotesOrderCommand command)
+    {
+        return Ok(await mediator.Send(command));
     }
 
     /// <summary>
