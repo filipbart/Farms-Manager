@@ -11,7 +11,7 @@ export const getHatcheriesPricesFiltersConfig = (
     type: "multiSelect",
     options:
       dictionary?.hatcheries.map((hatchery) => ({
-        value: hatchery.id,
+        value: hatchery.name,
         label: hatchery.name,
       })) || [],
     disabled: !dictionary,
