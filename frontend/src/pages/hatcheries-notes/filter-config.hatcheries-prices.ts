@@ -6,7 +6,7 @@ export const getHatcheriesPricesFiltersConfig = (
   dictionary: HatcheriesNames | undefined
 ): FilterConfig<keyof HatcheriesPricesFilterPaginationModel>[] => [
   {
-    key: "hatcheryIds",
+    key: "hatcheryNames",
     label: "Wylęgarnia",
     type: "multiSelect",
     options:
