@@ -29,11 +29,13 @@ public class GetExpensesAdvancesQueryHandler : IRequestHandler<GetExpensesAdvanc
     {
         var employee = await _employeeRepository.GetAsync(new EmployeeByIdSpec(request.EmployeeId), cancellationToken);
         var data = await _expenseAdvanceRepository.ListAsync<ExpenseAdvanceRowDto>(
-            new GetAllExpensesAdvancesSpec(request.EmployeeId, request.Filters, true), cancellationToken);
-        var allData = await _expenseAdvanceRepository.ListAsync(
-            new GetAllExpensesAdvancesSpec(request.EmployeeId, request.Filters, false), cancellationToken);
+            new GetAllExpensesAdvancesSpec(request.EmployeeId, request.Filters, true, true), cancellationToken);
+        var count = await _expenseAdvanceRepository.CountAsync(
+            new GetAllExpensesAdvancesSpec(request.EmployeeId, request.Filters, false, true), cancellationToken);
 
-        var count = allData.Count;
+        var allData = await _expenseAdvanceRepository.ListAsync(
+            new GetAllExpensesAdvancesSpec(request.EmployeeId, request.Filters, false, false), cancellationToken);
+
         var allExpenses = allData.Where(t => t.Type == ExpenseAdvanceCategoryType.Expense).Sum(t => t.Amount);
         var allIncome = allData.Where(t => t.Type == ExpenseAdvanceCategoryType.Income).Sum(t => t.Amount);
         var allBalance = allIncome - allExpenses;

@@ -6,13 +6,17 @@ namespace FarmsManager.Application.Queries.Expenses.Advances;
 
 public sealed class GetAllExpensesAdvancesSpec : BaseSpecification<ExpenseAdvanceEntity>
 {
-    public GetAllExpensesAdvancesSpec(Guid employeeId, GetExpensesAdvancesQueryFilters filters, bool withPagination)
+    public GetAllExpensesAdvancesSpec(Guid employeeId, GetExpensesAdvancesQueryFilters filters, bool withPagination,
+        bool withFilters)
     {
         EnsureExists();
         DisableTracking();
 
-        PopulateFilters(filters);
-        ApplyOrdering(filters);
+        if (withFilters)
+        {
+            PopulateFilters(filters);
+            ApplyOrdering(filters);
+        }
 
         Query.Where(t => t.EmployeeId == employeeId);
         Query.Include(t => t.ExpenseAdvanceCategory);
