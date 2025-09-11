@@ -39,6 +39,11 @@ interface MarkAsReportedToWios {
   comment: string;
 }
 
+interface SendToIrzPlusBulk {
+  insertionIds: GridRowId[];
+  comment: string;
+}
+
 export class InsertionsService {
   public static async addNewInsertion(data: AddInsertionData) {
     return await AxiosWrapper.post<AddNewInsertionResponse>(
@@ -94,5 +99,9 @@ export class InsertionsService {
     insertionId?: string;
   }) {
     return await AxiosWrapper.post(ApiUrl.InsertionSendToIrz, payload);
+  }
+
+  public static async markAsSentToIrz(data: SendToIrzPlusBulk) {
+    return await AxiosWrapper.post(ApiUrl.MarkAsSentToIrzPlus, data);
   }
 }

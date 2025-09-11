@@ -4,12 +4,14 @@ import { toast } from "react-toastify";
 import { InsertionsService } from "../../services/insertions-service";
 import Loading from "../loading/loading";
 import { handleApiResponse } from "../../utils/axios/handle-api-response";
+import { CommentCell } from "./comment-cell";
 
 interface InsertionSendToIrzCellProps {
   isSentToIrz: boolean;
   dateIrzSentUtc: string | null;
   insertionId: string;
   internalGroupId?: string;
+  irzComment?: string;
   dispatch: any;
   filters: any;
 }
@@ -19,6 +21,7 @@ const InsertionSendToIrzCell: React.FC<InsertionSendToIrzCellProps> = ({
   dateIrzSentUtc,
   insertionId,
   internalGroupId,
+  irzComment,
   dispatch,
   filters,
 }) => {
@@ -45,6 +48,10 @@ const InsertionSendToIrzCell: React.FC<InsertionSendToIrzCellProps> = ({
     setLoading(false);
   };
 
+  if (irzComment) {
+    return <CommentCell value={irzComment} />;
+  }
+
   if (dateIrzSentUtc) {
     const formattedDate = new Date(dateIrzSentUtc).toLocaleString("pl-PL", {
       dateStyle: "short",
@@ -52,9 +59,19 @@ const InsertionSendToIrzCell: React.FC<InsertionSendToIrzCellProps> = ({
     });
 
     return (
-      <Typography variant="body2" sx={{ whiteSpace: "nowrap" }}>
-        Wysłano - {formattedDate}
-      </Typography>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: "100%",
+          height: "100%",
+        }}
+      >
+        <Typography variant="body2" sx={{ whiteSpace: "nowrap" }}>
+          Wysłano - {formattedDate}
+        </Typography>
+      </Box>
     );
   }
 

@@ -23,6 +23,7 @@ public class InsertionEntity : Entity
     public bool IsSentToIrz { get; private set; }
     public Guid? SentToIrzBy { get; protected internal set; }
     public string DocumentNumber { get; protected internal set; }
+    public string IrzComment { get; protected internal set; }
 
     public bool ReportedToWios { get; protected internal set; }
     public string WiosComment { get; protected internal set; }
@@ -51,12 +52,13 @@ public class InsertionEntity : Entity
         };
     }
 
-    public void MarkAsSentToIrz(string documentNumber, Guid userId)
+    public void MarkAsSentToIrz(string documentNumber, Guid userId, string comment = null)
     {
         IsSentToIrz = true;
         SentToIrzBy = userId;
         DateIrzSentUtc = DateTime.UtcNow;
         DocumentNumber = documentNumber;
+        IrzComment = comment;
     }
 
     public void MarkAsSentToIrzByAdmin(Guid userId)

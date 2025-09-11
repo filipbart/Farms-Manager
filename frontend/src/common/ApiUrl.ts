@@ -77,6 +77,7 @@ export default class ApiUrl {
   public static InsertionAvailableHenhouses =
     this.Insertions + "/available-henhouses";
   public static InsertionSendToIrz = this.Insertions + "/send-to-irz";
+  public static MarkAsSentToIrzPlus = this.Insertions + "/mark-sent-to-irz";
 
   public static Settings = this.BaseUrl + "settings";
   public static IrzPlusCredentials =

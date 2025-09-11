@@ -68,6 +68,8 @@ const InsertionsPage: React.FC = () => {
   });
   const [isWiosModalOpen, setIsWiosModalOpen] = useState(false);
   const [wiosComment, setWiosComment] = useState("");
+  const [isIrzModalOpen, setIsIrzModalOpen] = useState(false);
+  const [irzComment, setIrzComment] = useState("");
 
   const [initialGridState] = useState(() => {
     const savedState = localStorage.getItem("insertionsGridState");
@@ -180,6 +182,35 @@ const InsertionsPage: React.FC = () => {
     }
   };
 
+  const handleSendToIrzPlusBulk = async () => {
+    setLoading(true);
+    try {
+      await handleApiResponse(
+        () =>
+          InsertionsService.markAsSentToIrz({
+            insertionIds: [...selectedRowIds.ids],
+            comment: irzComment,
+          }),
+        () => {
+          toast.success("Pomyślnie oznaczono jako zgłoszone do IRZplus.");
+          fetchInsertions();
+          setSelectedRowIds({
+            type: "include",
+            ids: new Set(),
+          });
+          setIsIrzModalOpen(false);
+          setIrzComment("");
+        },
+        undefined,
+        "Wystąpił błąd podczas zapisu."
+      );
+    } catch (error) {
+      toast.error(`Wystąpił błąd: ${error}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const columns = useMemo(
     () =>
       getInsertionsColumns({
@@ -205,13 +236,23 @@ const InsertionsPage: React.FC = () => {
         <Typography variant="h4">Wstawienia</Typography>
         <Box display="flex" gap={2}>
           {selectedRowIds.ids.size > 0 && (
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => setIsWiosModalOpen(true)}
-            >
-              Oznacz jako zgłoszone do WIOŚ ({selectedRowIds.ids.size})
-            </Button>
+            <>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => setIsWiosModalOpen(true)}
+              >
+                Oznacz jako zgłoszone do WIOŚ ({selectedRowIds.ids.size})
+              </Button>
+
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => setIsIrzModalOpen(true)}
+              >
+                Oznacz jako zgłoszone do IRZplus ({selectedRowIds.ids.size})
+              </Button>
+            </>
           )}
 
           <Button
@@ -318,7 +359,12 @@ const InsertionsPage: React.FC = () => {
           }}
           checkboxSelection
           disableRowSelectionOnClick
-          isRowSelectable={(params) => !params.row.reportedToWios}
+          isRowSelectable={(params) =>
+            !(
+              (params.row.isSentToIrz || params.row.irzComment != null) &&
+              params.row.reportedToWios
+            )
+          }
           onRowSelectionModelChange={(newSelectionModel) => {
             setSelectedRowIds(newSelectionModel);
           }}
@@ -351,6 +397,35 @@ const InsertionsPage: React.FC = () => {
         open={openCycleModal}
         onClose={() => setOpenCycleModal(false)}
       />
+
+      <Dialog
+        open={isIrzModalOpen}
+        onClose={() => setIsIrzModalOpen(false)}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>Oznacz jako zgłoszone do IRZplus</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Komentarz (opcjonalnie)"
+            type="text"
+            fullWidth
+            variant="outlined"
+            multiline
+            rows={3}
+            value={irzComment}
+            onChange={(e) => setIrzComment(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsIrzModalOpen(false)}>Anuluj</Button>
+          <LoadingButton onClick={handleSendToIrzPlusBulk} loading={loading}>
+            Zatwierdź
+          </LoadingButton>
+        </DialogActions>
+      </Dialog>
 
       <Dialog
         open={isWiosModalOpen}

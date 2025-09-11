@@ -107,6 +107,7 @@ export const getInsertionsColumns = ({
             dateIrzSentUtc={params.row.dateIrzSentUtc}
             insertionId={params.row.id}
             internalGroupId={params.row.internalGroupId}
+            irzComment={params.row.irzComment}
             dispatch={dispatch}
             filters={filters}
           />

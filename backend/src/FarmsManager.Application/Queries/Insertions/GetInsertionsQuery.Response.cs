@@ -17,6 +17,7 @@ public class InsertionRowDto
     public DateTime? DateIrzSentUtc { get; init; }
     public bool IsSentToIrz { get; init; }
     public string DocumentNumber { get; init; }
+    public string IrzComment { get; init; }
     public bool ReportedToWios { get; init; }
     public string WiosComment { get; init; }
 }

@@ -12,6 +12,7 @@ export default interface InsertionListModel {
   dateIrzSentUtc?: Date;
   isSentToIrz: boolean;
   documentNumber?: string;
+  irzComment?: string;
   reportedToWios: boolean;
   wiosComment?: string;
 }
