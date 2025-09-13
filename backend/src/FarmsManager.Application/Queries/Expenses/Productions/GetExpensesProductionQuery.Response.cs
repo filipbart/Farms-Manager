@@ -19,6 +19,7 @@ public class ExpenseProductionRow
     public DateOnly InvoiceDate { get; init; }
     public DateTime DateCreatedUtc { get; init; }
     public string FilePath { get; init; }
+    public string Comment { get; init; }
 }
 
 public class GetExpensesProductionQueryResponse : PaginationModel<ExpenseProductionRow>;

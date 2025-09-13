@@ -133,6 +133,8 @@ export const getExpenseProductionColumns = ({
     {
       field: "comment",
       headerName: "Komentarz",
+      align: "center",
+      headerAlign: "center",
       flex: 1,
       sortable: false,
       aggregable: false,

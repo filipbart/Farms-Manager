@@ -173,7 +173,7 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
 
     const currentDraft = draftExpenseInvoices[newIndex];
     setDraftExpense(currentDraft);
-    const data = { ...currentDraft.extractedFields };
+    const data = { ...currentDraft.extractedFields, comment: "" };
     reset(data);
 
     if (data.farmId) {
