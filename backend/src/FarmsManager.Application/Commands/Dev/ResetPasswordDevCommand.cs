@@ -1,5 +1,6 @@
 ﻿using FarmsManager.Application.Commands.Users;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Interfaces;
 using FarmsManager.Domain.Aggregates.UserAggregate.Interfaces;
 using FluentValidation;
 using MediatR;
@@ -20,11 +21,14 @@ public class ResetPasswordDevCommandValidator : AbstractValidator<ResetPasswordD
 
 public class ResetPasswordDevCommandHandler : IRequestHandler<ResetPasswordDevCommand, EmptyBaseResponse>
 {
+    private readonly IPasswordHasher _passwordHasher;
     private readonly IUserRepository _userRepository;
     private readonly IConfiguration _configuration;
 
-    public ResetPasswordDevCommandHandler(IUserRepository userRepository, IConfiguration configuration)
+    public ResetPasswordDevCommandHandler(IUserRepository userRepository, IConfiguration configuration,
+        IPasswordHasher passwordHasher)
     {
+        _passwordHasher = passwordHasher;
         _userRepository = userRepository;
         _configuration = configuration;
     }
@@ -43,7 +47,8 @@ public class ResetPasswordDevCommandHandler : IRequestHandler<ResetPasswordDevCo
             throw new Exception("User not found.");
         }
 
-        user.ChangePassword(request.NewPassword);
+        var passwordHash = _passwordHasher.HashPassword(request.NewPassword);
+        user.ChangePassword(passwordHash);
 
         _userRepository.Update(user);
         await _userRepository.SaveChangesAsync(cancellationToken);
