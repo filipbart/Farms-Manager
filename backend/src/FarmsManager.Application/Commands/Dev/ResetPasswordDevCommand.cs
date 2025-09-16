@@ -16,6 +16,7 @@ public class ResetPasswordDevCommandValidator : AbstractValidator<ResetPasswordD
     {
         RuleFor(x => x.Login).NotEmpty();
         RuleFor(x => x.Code).NotEmpty();
+        RuleFor(x => x.NewPassword).NotEmpty();
     }
 }
 
