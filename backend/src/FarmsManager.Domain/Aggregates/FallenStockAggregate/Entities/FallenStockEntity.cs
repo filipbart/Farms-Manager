@@ -27,7 +27,7 @@ public class FallenStockEntity : Entity
         Guid internalGroupId,
         FarmEntity farm,
         CycleEntity cycle,
-        UtilizationPlantEntity? utilizationPlant,
+        UtilizationPlantEntity utilizationPlant,
         HenhouseEntity henhouse,
         FallenStockType type,
         DateOnly date,
