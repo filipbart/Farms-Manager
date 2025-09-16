@@ -128,24 +128,26 @@ const IrzPlusSettingsTab: React.FC<IrzPlusSettingsTabProps> = ({
           label="Login"
           variant="outlined"
           error={!!errors?.login}
+          autoComplete="off"
           helperText={errors.login ? (errors.login.message as string) : ""}
           {...register("login")}
           margin="normal"
-          slotProps={{
-            inputLabel: {
-              shrink: true,
-            },
-          }}
+          slotProps={{ inputLabel: { shrink: true } }}
         />
         <TextField
           label="Hasło"
           sx={{ width: "250px" }}
           variant="outlined"
           type={showPassword ? "text" : "password"}
+          autoComplete="off"
+          error={!!errors?.password}
+          helperText={
+            errors.password ? (errors.password.message as string) : ""
+          }
+          {...register("password")}
+          margin="normal"
           slotProps={{
-            inputLabel: {
-              shrink: true,
-            },
+            inputLabel: { shrink: true },
             input: {
               endAdornment: (
                 <InputAdornment position="end">
@@ -159,12 +161,6 @@ const IrzPlusSettingsTab: React.FC<IrzPlusSettingsTabProps> = ({
               ),
             },
           }}
-          error={!!errors?.password}
-          helperText={
-            errors.password ? (errors.password.message as string) : ""
-          }
-          {...register("password")}
-          margin="normal"
         />
         <LoadingButton
           height="20"
