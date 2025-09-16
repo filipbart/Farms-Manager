@@ -1,6 +1,6 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
 import { type GridCellParams, type GridColDef } from "@mui/x-data-grid-pro";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import { FallenStockService } from "../../../../services/production-data/fallen-stocks-service";
@@ -14,7 +14,9 @@ import {
 import ActionsCell from "../../../../components/datagrid/actions-cell";
 import AddFallenStocksModal from "../../../../components/modals/production-data/fallen-stocks/add-fallen-stocks-modal";
 import EditFallenStocksModal from "../../../../components/modals/production-data/fallen-stocks/edit-fallen-stocks-modal";
-import IrzplusSummaryInfo from "../../../../components/fallen-stocks/irzplus-summary-info";
+import IrzplusSummaryInfo, {
+  type IrzplusSummaryInfoRef,
+} from "../../../../components/fallen-stocks/irzplus-summary-info";
 
 interface MainFallenStockPagePropse {
   filters: FallenStockFilterModel;
@@ -23,13 +25,13 @@ interface MainFallenStockPagePropse {
 
 const MainFallenStockPage: React.FC<MainFallenStockPagePropse> = ({
   filters,
-  reloadTrigger,
 }) => {
   const [openAddModal, setOpenAddModal] = useState(false);
   const [selectedFallenStock, setSelectedFallenStock] = useState<any | null>(
     null
   );
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const summaryInfoRef = useRef<IrzplusSummaryInfoRef>(null);
 
   const { viewModel, loading, fetchFallenStocks } = useFallenStocks(filters);
 
@@ -199,9 +201,9 @@ const MainFallenStockPage: React.FC<MainFallenStockPagePropse> = ({
       >
         <Box sx={{ flexGrow: 1 }}>
           <IrzplusSummaryInfo
+            ref={summaryInfoRef}
             farmId={filters.farmId}
             cycle={filters.cycle}
-            reloadTrigger={reloadTrigger}
           />
         </Box>
 
@@ -300,6 +302,7 @@ const MainFallenStockPage: React.FC<MainFallenStockPagePropse> = ({
         onSave={() => {
           setOpenAddModal(false);
           fetchFallenStocks();
+          summaryInfoRef.current?.refetch();
         }}
       />
     </Box>

@@ -1,56 +1,61 @@
 import { Paper, Skeleton, Typography, Grid } from "@mui/material";
-import { useEffect, useState } from "react";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useState,
+} from "react";
 import type { IrzSummaryData } from "../../models/fallen-stocks/fallen-stocks";
 import { handleApiResponse } from "../../utils/axios/handle-api-response";
 import { FallenStockService } from "../../services/production-data/fallen-stocks-service";
 
-const formatNumber = (value: number | null | undefined): string => {
-  const numberToFormat = value ?? 0;
-  return new Intl.NumberFormat("pl-PL").format(numberToFormat);
-};
+export interface IrzplusSummaryInfoRef {
+  refetch: () => void;
+}
 
 interface IrzplusSummaryInfoProps {
   farmId: string | undefined;
   cycle: string | undefined;
-  reloadTrigger: number;
 }
 
-const IrzplusSummaryInfo: React.FC<IrzplusSummaryInfoProps> = ({
-  farmId,
-  cycle,
-  reloadTrigger,
-}) => {
+const IrzplusSummaryInfo = forwardRef<
+  IrzplusSummaryInfoRef,
+  IrzplusSummaryInfoProps
+>(({ farmId, cycle }, ref) => {
   const [data, setData] = useState<IrzSummaryData | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
+  const fetchIrzData = useCallback(async () => {
     if (!farmId || !cycle) {
       setData(null);
       return;
     }
+    setLoading(true);
+    await handleApiResponse(
+      () => FallenStockService.getIrzSummaryData(farmId, cycle),
+      (data) => {
+        if (data && data.responseData) {
+          setData(data.responseData);
+        }
+      },
+      (data) => {
+        if (data && data.responseData) {
+          setData(data.responseData);
+        }
+      },
+      "Błąd podczas pobierania podsumowania z IRZplus."
+    );
+    setLoading(false);
+  }, [farmId, cycle]);
 
-    const fetchIrzData = async () => {
-      setLoading(true);
+  useImperativeHandle(ref, () => ({
+    refetch: fetchIrzData,
+  }));
 
-      await handleApiResponse(
-        () => FallenStockService.getIrzSummaryData(farmId, cycle),
-        (data) => {
-          if (data && data.responseData) {
-            setData(data.responseData);
-          }
-        },
-        (data) => {
-          if (data && data.responseData) {
-            setData(data.responseData);
-          }
-        },
-        "Błąd podczas pobierania podsumowania z IRZplus."
-      );
-      setLoading(false);
-    };
-
+  useEffect(() => {
     fetchIrzData();
-  }, [farmId, cycle, reloadTrigger]);
+  }, [fetchIrzData]);
 
   const renderRow = (label: string, value: number | null | undefined) => (
     <Grid
@@ -89,6 +94,11 @@ const IrzplusSummaryInfo: React.FC<IrzplusSummaryInfoProps> = ({
       )}
     </Paper>
   );
-};
+});
 
 export default IrzplusSummaryInfo;
+
+const formatNumber = (value: number | null | undefined): string => {
+  const numberToFormat = value ?? 0;
+  return new Intl.NumberFormat("pl-PL").format(numberToFormat);
+};

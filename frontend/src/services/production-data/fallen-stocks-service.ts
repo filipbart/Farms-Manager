@@ -64,6 +64,7 @@ export class FallenStockService {
   }
 
   public static async getIrzSummaryData(farmId: string, cycle: string) {
+    console.log("refetch");
     return await AxiosWrapper.get<IrzSummaryData>(ApiUrl.GetIrzSummaryData, {
       farmId,
       cycle,

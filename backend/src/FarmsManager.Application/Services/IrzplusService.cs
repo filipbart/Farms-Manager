@@ -199,11 +199,14 @@ public class IrzplusService : IIrzplusService
         where T : IIrzPlusDisposition
     {
         if (items == null || items.Count == 0)
+        {
             throw new ArgumentException("Lista nie może być pusta");
+        }
 
-        var first = items.First();
+        var firstItem = items[0];
+        var isInsertion = type == IrzPlusDispositionType.Insertion;
 
-        var typZdarzenia = type switch
+        var eventTypeDto = type switch
         {
             IrzPlusDispositionType.Sale => TypZdarzeniaDrobiu.Wybycie.ToKodOpisDto(),
             IrzPlusDispositionType.FallenStocks => TypZdarzeniaDrobiu.Padniecie.ToKodOpisDto(),
@@ -211,44 +214,36 @@ public class IrzplusService : IIrzplusService
             _ => TypZdarzeniaDrobiu.Przybycie.ToKodOpisDto()
         };
 
-        var doDzialalnosci = first.DoDzialalnosci;
+        var totalQuantity = items.Sum(i => i.Quantity);
+        var producerNumber = (isInsertion ? firstItem.DoDzialalnosci : firstItem.ZDzialalnosci).Split('-')[0];
+        var destinationActivity = (type == IrzPlusDispositionType.EndCycle) ? null : firstItem.DoDzialalnosci;
 
-        var sumQuantity = items.Sum(i => i.Quantity);
-        var realproducerNumber = doDzialalnosci.Split("-")[0];
-
-        if (type == IrzPlusDispositionType.EndCycle)
-        {
-            doDzialalnosci = null;
-        }
-
-        var disposition = new DyspozycjaZZSSD
-        {
-            NumerProducenta = realproducerNumber,
-            Zgloszenie = new ZgloszenieZZSSDDTO
+        var reportPositions = items
+            .Select((item, index) => new PozycjaZZSSDDTO
             {
-                Pozycje = null,
-                Gatunek = GatunekDrobiu.Kury.ToKodOpisDto(),
-                DoDzialalnosci = doDzialalnosci,
-                TypZdarzenia = typZdarzenia,
-                DataZdarzenia = first.EventDate,
-                LiczbaDrobiuPrzybylo = sumQuantity,
-                LiczbaJajWylegowychPrzybylo = 0
-            }
-        };
-
-        var pozycje = items.Select((item, i) => new PozycjaZZSSDDTO
-            {
-                Lp = i + 1,
+                Lp = index + 1,
                 StatusPozycji = StatusPozycjiZZSSD.Zatwierdzona.GetEnumMemberValue(),
-                NumerIdenPartiiDrobiu = item.DoDzialalnosci,
-                LiczbaDrobiuUbylo = item.Quantity,
+                NumerIdenPartiiDrobiu = isInsertion ? item.DoDzialalnosci : item.ZDzialalnosci,
+                LiczbaDrobiuUbylo = isInsertion ? 0 : item.Quantity,
                 KategoriaJajWylegowych = null,
                 Budynek = new KodOpisWartosciDto { Kod = item.HenhouseCode, Opis = item.HenhouseName },
                 ZDzialalnosci = item.ZDzialalnosci
-            })
-            .ToList();
+            }).ToList();
 
-        disposition.Zgloszenie.Pozycje = pozycje;
+        var disposition = new DyspozycjaZZSSD
+        {
+            NumerProducenta = producerNumber,
+            Zgloszenie = new ZgloszenieZZSSDDTO
+            {
+                Gatunek = GatunekDrobiu.Kury.ToKodOpisDto(),
+                TypZdarzenia = eventTypeDto,
+                DataZdarzenia = firstItem.EventDate,
+                DoDzialalnosci = destinationActivity,
+                LiczbaDrobiuPrzybylo = isInsertion ? totalQuantity : 0,
+                LiczbaJajWylegowychPrzybylo = 0,
+                Pozycje = reportPositions
+            }
+        };
 
         return disposition;
     }
