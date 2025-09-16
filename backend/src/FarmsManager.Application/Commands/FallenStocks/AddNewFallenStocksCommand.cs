@@ -195,7 +195,8 @@ public class AddNewFallenStocksCommandHandler : IRequestHandler<AddNewFallenStoc
 
             if (dispositionResponse.NumerDokumentu.IsEmpty())
             {
-                throw new Exception("Numer dokumentu z systemu IRZplus jest pusty");
+                throw new Exception(
+                    $"Numer dokumentu z systemu IRZplus jest pusty, komunikat: {dispositionResponse.Komunikat}");
             }
 
             foreach (var fallenStockEntity in newFallenStocks)
