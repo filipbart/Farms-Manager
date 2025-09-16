@@ -42,11 +42,11 @@ webAppBuilder.Logging.AddFilter("Microsoft.AspNetCore.Http.Connections", LogLeve
 
 webAppBuilder.WebHost.UsePortForHttp(FmHostBuilder.ConfigurationRoot.GetValue<int?>("AppPort") ?? 8082);
 
-if (!webAppBuilder.Environment.IsProduction())
-{
-    webAppBuilder.Services.AddControllers()
-        .AddApplicationPart(typeof(DevController).Assembly); // Dodaj kontroler tylko w środowisku innym niż produkcyjne
-}
+// if (!webAppBuilder.Environment.IsProduction())
+// {
+//     webAppBuilder.Services.AddControllers()
+//         .AddApplicationPart(typeof(DevController).Assembly); // Dodaj kontroler tylko w środowisku innym niż produkcyjne
+// }
 
 webAppBuilder.Services
     .AddRouting(options => options.LowercaseUrls = true)
@@ -139,7 +139,7 @@ app.UseResponseCompression();
 app.MapControllers();
 
 app.UseMiddleware<DomainExceptionMiddleware>();
-app.UseMiddleware<BlockDevControllerMiddleware>();
+//app.UseMiddleware<BlockDevControllerMiddleware>();
 app.UseMiddleware<CheckPermissionMiddleware>();
 app.UseMiddleware<FluentValidationExceptionMiddleware>();
 
