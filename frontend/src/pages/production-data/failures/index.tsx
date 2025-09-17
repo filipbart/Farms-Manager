@@ -24,22 +24,23 @@ import {
   GRID_AGGREGATION_ROOT_FOOTER_ROW_ID,
   type GridState,
 } from "@mui/x-data-grid-premium";
+import {
+  getSortOptionsFromGridModel,
+  initializeFiltersFromLocalStorage,
+} from "../../../utils/grid-state-helper";
 
 const ProductionDataFailuresPage: React.FC = () => {
   const [filters, dispatch] = useReducer(
     filterReducer,
     initialFilters,
-    (init) => {
-      const savedPageSize = localStorage.getItem(
-        "productionDataFailuresPageSize"
-      );
-      return {
-        ...init,
-        pageSize: savedPageSize
-          ? parseInt(savedPageSize, 10)
-          : init.pageSize ?? 10,
-      };
-    }
+    (init) =>
+      initializeFiltersFromLocalStorage(
+        init,
+        "productionDataFailuresGridState",
+        "productionDataFailuresPageSize",
+        ProductionDataOrderType,
+        mapProductionDataOrderTypeToField
+      )
   );
   const [dictionary, setDictionary] = useState<ProductionDataDictionary>();
   const [openModal, setOpenModal] = useState(false);
@@ -237,26 +238,20 @@ const ProductionDataFailuresPage: React.FC = () => {
           }}
           sortingMode="server"
           onSortModelChange={(model) => {
-            if (model.length > 0) {
-              const sortField = model[0].field;
-              const foundOrderBy = Object.values(ProductionDataOrderType).find(
-                (orderType) =>
-                  mapProductionDataOrderTypeToField(orderType) === sortField
-              );
-              dispatch({
-                type: "setMultiple",
-                payload: {
-                  orderBy: foundOrderBy,
-                  isDescending: model[0].sort === "desc",
-                  page: 0,
-                },
-              });
-            } else {
-              dispatch({
-                type: "setMultiple",
-                payload: { orderBy: undefined, isDescending: undefined },
-              });
-            }
+            const sortOptions = getSortOptionsFromGridModel(
+              model,
+              ProductionDataOrderType,
+              mapProductionDataOrderTypeToField
+            );
+            const payload =
+              model.length > 0
+                ? { ...sortOptions, page: 0 }
+                : { ...sortOptions };
+
+            dispatch({
+              type: "setMultiple",
+              payload,
+            });
           }}
         />
       </Box>

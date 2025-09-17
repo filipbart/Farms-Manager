@@ -33,20 +33,23 @@ import {
   GRID_AGGREGATION_ROOT_FOOTER_ROW_ID,
   type GridState,
 } from "@mui/x-data-grid-premium";
+import {
+  getSortOptionsFromGridModel,
+  initializeFiltersFromLocalStorage,
+} from "../../../utils/grid-state-helper";
 
 const SalesInvoicesPage: React.FC = () => {
   const [filters, dispatch] = useReducer(
     filterReducer,
     initialFilters,
-    (init) => {
-      const savedPageSize = localStorage.getItem("salesInvoicesPageSize");
-      return {
-        ...init,
-        pageSize: savedPageSize
-          ? parseInt(savedPageSize, 10)
-          : init.pageSize ?? 10,
-      };
-    }
+    (init) =>
+      initializeFiltersFromLocalStorage(
+        init,
+        "saleInvoicesGridState",
+        "salesInvoicesPageSize",
+        SalesInvoicesOrderType,
+        mapSalesInvoiceOrderTypeToField
+      )
   );
   const [dictionary, setDictionary] = useState<SalesDictionary>();
   const { fetchNotifications } = useContext(NotificationContext);
@@ -322,26 +325,20 @@ const SalesInvoicesPage: React.FC = () => {
           }}
           sortingMode="server"
           onSortModelChange={(model) => {
-            if (model.length > 0) {
-              const sortField = model[0].field;
-              const foundOrderBy = Object.values(SalesInvoicesOrderType).find(
-                (orderType) =>
-                  mapSalesInvoiceOrderTypeToField(orderType) === sortField
-              );
-              dispatch({
-                type: "setMultiple",
-                payload: {
-                  orderBy: foundOrderBy,
-                  isDescending: model[0].sort === "desc",
-                  page: 0,
-                },
-              });
-            } else {
-              dispatch({
-                type: "setMultiple",
-                payload: { orderBy: undefined, isDescending: undefined },
-              });
-            }
+            const sortOptions = getSortOptionsFromGridModel(
+              model,
+              SalesInvoicesOrderType,
+              mapSalesInvoiceOrderTypeToField
+            );
+            const payload =
+              model.length > 0
+                ? { ...sortOptions, page: 0 }
+                : { ...sortOptions };
+
+            dispatch({
+              type: "setMultiple",
+              payload,
+            });
           }}
         />
       </Box>

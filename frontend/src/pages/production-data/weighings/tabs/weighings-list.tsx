@@ -23,22 +23,23 @@ import {
   GRID_AGGREGATION_ROOT_FOOTER_ROW_ID,
   type GridState,
 } from "@mui/x-data-grid-premium";
+import {
+  getSortOptionsFromGridModel,
+  initializeFiltersFromLocalStorage,
+} from "../../../../utils/grid-state-helper";
 
 const ProductionDataWeighingsTab: React.FC = () => {
   const [filters, dispatch] = useReducer(
     filterReducer,
     initialFilters,
-    (init) => {
-      const savedPageSize = localStorage.getItem(
-        "productionDataWeighingsPageSize"
-      );
-      return {
-        ...init,
-        pageSize: savedPageSize
-          ? parseInt(savedPageSize, 10)
-          : init.pageSize ?? 10,
-      };
-    }
+    (init) =>
+      initializeFiltersFromLocalStorage(
+        init,
+        "productionDataWeighingsGridState",
+        "productionDataWeighingsPageSize",
+        ProductionDataWeighingsOrderType,
+        mapProductionDataWeighingsOrderTypeToField
+      )
   );
   const [dictionary, setDictionary] =
     useState<ProductionDataWeighingsDictionary>();
@@ -237,29 +238,20 @@ const ProductionDataWeighingsTab: React.FC = () => {
           }}
           sortingMode="server"
           onSortModelChange={(model) => {
-            if (model.length > 0) {
-              const sortField = model[0].field;
-              const foundOrderBy = Object.values(
-                ProductionDataWeighingsOrderType
-              ).find(
-                (orderType) =>
-                  mapProductionDataWeighingsOrderTypeToField(orderType) ===
-                  sortField
-              );
-              dispatch({
-                type: "setMultiple",
-                payload: {
-                  orderBy: foundOrderBy,
-                  isDescending: model[0].sort === "desc",
-                  page: 0,
-                },
-              });
-            } else {
-              dispatch({
-                type: "setMultiple",
-                payload: { orderBy: undefined, isDescending: undefined },
-              });
-            }
+            const sortOptions = getSortOptionsFromGridModel(
+              model,
+              ProductionDataWeighingsOrderType,
+              mapProductionDataWeighingsOrderTypeToField
+            );
+            const payload =
+              model.length > 0
+                ? { ...sortOptions, page: 0 }
+                : { ...sortOptions };
+
+            dispatch({
+              type: "setMultiple",
+              payload,
+            });
           }}
         />
       </Box>

@@ -17,20 +17,23 @@ import { getUsersFiltersConfig } from "./filter-config.users";
 import { UsersService } from "../../../services/users-service";
 import AddUserModal from "../../../components/modals/users/add-user-modal";
 import { DataGridPremium, type GridState } from "@mui/x-data-grid-premium";
+import {
+  getSortOptionsFromGridModel,
+  initializeFiltersFromLocalStorage,
+} from "../../../utils/grid-state-helper";
 
 const UsersPage: React.FC = () => {
   const [filters, dispatch] = useReducer(
     filterReducer,
     initialFilters,
-    (init) => {
-      const savedPageSize = localStorage.getItem("usersPageSize");
-      return {
-        ...init,
-        pageSize: savedPageSize
-          ? parseInt(savedPageSize, 10)
-          : init.pageSize ?? 10,
-      };
-    }
+    (init) =>
+      initializeFiltersFromLocalStorage(
+        init,
+        "settingsUsersGridState",
+        "usersPageSize",
+        UsersOrderType,
+        mapUserOrderTypeToField
+      )
   );
   const [openAddUserModal, setOpenAddUserModal] = useState(false);
 
@@ -158,25 +161,20 @@ const UsersPage: React.FC = () => {
           }}
           sortingMode="server"
           onSortModelChange={(model) => {
-            if (model.length > 0) {
-              const sortField = model[0].field;
-              const foundOrderBy = Object.values(UsersOrderType).find(
-                (orderType) => mapUserOrderTypeToField(orderType) === sortField
-              );
-              dispatch({
-                type: "setMultiple",
-                payload: {
-                  orderBy: foundOrderBy,
-                  isDescending: model[0].sort === "desc",
-                  page: 0,
-                },
-              });
-            } else {
-              dispatch({
-                type: "setMultiple",
-                payload: { orderBy: undefined, isDescending: undefined },
-              });
-            }
+            const sortOptions = getSortOptionsFromGridModel(
+              model,
+              UsersOrderType,
+              mapUserOrderTypeToField
+            );
+            const payload =
+              model.length > 0
+                ? { ...sortOptions, page: 0 }
+                : { ...sortOptions };
+
+            dispatch({
+              type: "setMultiple",
+              payload,
+            });
           }}
         />
       </Box>

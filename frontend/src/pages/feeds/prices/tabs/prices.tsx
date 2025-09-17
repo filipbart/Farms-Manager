@@ -24,20 +24,23 @@ import {
   GRID_AGGREGATION_ROOT_FOOTER_ROW_ID,
   type GridState,
 } from "@mui/x-data-grid-premium";
+import {
+  getSortOptionsFromGridModel,
+  initializeFiltersFromLocalStorage,
+} from "../../../../utils/grid-state-helper";
 
 const FeedsPricesTab: React.FC = () => {
   const [filters, dispatch] = useReducer(
     filterReducer,
     initialFilters,
-    (init) => {
-      const savedPageSize = localStorage.getItem("feedsPricesPageSize");
-      return {
-        ...init,
-        pageSize: savedPageSize
-          ? parseInt(savedPageSize, 10)
-          : init.pageSize ?? 10,
-      };
-    }
+    (init) =>
+      initializeFiltersFromLocalStorage(
+        init,
+        "feedPricesGridState",
+        "feedsPricesPageSize",
+        FeedsPricesOrderType,
+        mapFeedsPricesOrderTypeToField
+      )
   );
   const [dictionary, setDictionary] = useState<FeedsDictionary>();
 
@@ -228,26 +231,20 @@ const FeedsPricesTab: React.FC = () => {
           }}
           sortingMode="server"
           onSortModelChange={(model) => {
-            if (model.length > 0) {
-              const sortField = model[0].field;
-              const foundOrderBy = Object.values(FeedsPricesOrderType).find(
-                (orderType) =>
-                  mapFeedsPricesOrderTypeToField(orderType) === sortField
-              );
-              dispatch({
-                type: "setMultiple",
-                payload: {
-                  orderBy: foundOrderBy,
-                  isDescending: model[0].sort === "desc",
-                  page: 0,
-                },
-              });
-            } else {
-              dispatch({
-                type: "setMultiple",
-                payload: { orderBy: undefined, isDescending: undefined },
-              });
-            }
+            const sortOptions = getSortOptionsFromGridModel(
+              model,
+              FeedsPricesOrderType,
+              mapFeedsPricesOrderTypeToField
+            );
+            const payload =
+              model.length > 0
+                ? { ...sortOptions, page: 0 }
+                : { ...sortOptions };
+
+            dispatch({
+              type: "setMultiple",
+              payload,
+            });
           }}
         />
       </Box>

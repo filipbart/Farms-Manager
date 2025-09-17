@@ -33,6 +33,10 @@ import {
   GRID_AGGREGATION_ROOT_FOOTER_ROW_ID,
   type GridState,
 } from "@mui/x-data-grid-premium";
+import {
+  getSortOptionsFromGridModel,
+  initializeFiltersFromLocalStorage,
+} from "../../../../utils/grid-state-helper";
 
 const generateYearOptions = () => {
   const currentYear = new Date().getFullYear();
@@ -121,15 +125,14 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
       years: [new Date().getFullYear()],
       months: [new Date().getMonth() + 1],
     },
-    (initialState) => {
-      const savedPageSize = localStorage.getItem("expenseAdvancesPageSize");
-      return {
-        ...initialState,
-        pageSize: savedPageSize
-          ? parseInt(savedPageSize, 10)
-          : initialState.pageSize ?? 10,
-      };
-    }
+    (init) =>
+      initializeFiltersFromLocalStorage(
+        init,
+        "expensesProductionAdvancesGridState",
+        "expenseAdvancesPageSize",
+        ExpensesAdvancesOrderType,
+        mapExpensesAdvancesOrderTypeToField
+      )
   );
 
   const { response, loading, fetchExpenseAdvances } = useExpenseAdvances(
@@ -368,28 +371,20 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
           }}
           sortingMode="server"
           onSortModelChange={(model) => {
-            if (model.length > 0) {
-              const sortField = model[0].field;
-              const foundOrderBy = Object.values(
-                ExpensesAdvancesOrderType
-              ).find(
-                (orderType) =>
-                  mapExpensesAdvancesOrderTypeToField(orderType) === sortField
-              );
-              dispatch({
-                type: "setMultiple",
-                payload: {
-                  orderBy: foundOrderBy,
-                  isDescending: model[0].sort === "desc",
-                  page: 0,
-                },
-              });
-            } else {
-              dispatch({
-                type: "setMultiple",
-                payload: { orderBy: undefined, isDescending: undefined },
-              });
-            }
+            const sortOptions = getSortOptionsFromGridModel(
+              model,
+              ExpensesAdvancesOrderType,
+              mapExpensesAdvancesOrderTypeToField
+            );
+            const payload =
+              model.length > 0
+                ? { ...sortOptions, page: 0 }
+                : { ...sortOptions };
+
+            dispatch({
+              type: "setMultiple",
+              payload,
+            });
           }}
           rowSelection={false}
           pageSizeOptions={[5, 10, 25, { value: -1, label: "Wszystkie" }]}

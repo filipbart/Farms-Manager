@@ -1,5 +1,5 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
-import { useReducer, useState, useMemo, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { toast } from "react-toastify";
 import {
   EmployeesOrderType,
@@ -23,20 +23,23 @@ import {
   type GridRowParams,
   type GridState,
 } from "@mui/x-data-grid-premium";
+import {
+  getSortOptionsFromGridModel,
+  initializeFiltersFromLocalStorage,
+} from "../../utils/grid-state-helper";
 
 const EmployeesPage: React.FC = () => {
   const [filters, dispatch] = useReducer(
     filterReducer,
     initialFilters,
-    (init) => {
-      const savedPageSize = localStorage.getItem("employeesPageSize");
-      return {
-        ...init,
-        pageSize: savedPageSize
-          ? parseInt(savedPageSize, 10)
-          : init.pageSize ?? 10,
-      };
-    }
+    (init) =>
+      initializeFiltersFromLocalStorage(
+        init,
+        "employeesGridState",
+        "employeesPageSize",
+        EmployeesOrderType,
+        mapEmployeeOrderTypeToField
+      )
   );
   const [dictionary, setDictionary] = useState<EmployeesDictionary>();
   const [openAddEmployeeModal, setOpenAddEmployeeModal] = useState(false);
@@ -199,26 +202,20 @@ const EmployeesPage: React.FC = () => {
           }}
           sortingMode="server"
           onSortModelChange={(model) => {
-            if (model.length > 0) {
-              const sortField = model[0].field;
-              const foundOrderBy = Object.values(EmployeesOrderType).find(
-                (orderType) =>
-                  mapEmployeeOrderTypeToField(orderType) === sortField
-              );
-              dispatch({
-                type: "setMultiple",
-                payload: {
-                  orderBy: foundOrderBy,
-                  isDescending: model[0].sort === "desc",
-                  page: 0,
-                },
-              });
-            } else {
-              dispatch({
-                type: "setMultiple",
-                payload: { orderBy: undefined, isDescending: undefined },
-              });
-            }
+            const sortOptions = getSortOptionsFromGridModel(
+              model,
+              EmployeesOrderType,
+              mapEmployeeOrderTypeToField
+            );
+            const payload =
+              model.length > 0
+                ? { ...sortOptions, page: 0 }
+                : { ...sortOptions };
+
+            dispatch({
+              type: "setMultiple",
+              payload,
+            });
           }}
         />
       </Box>

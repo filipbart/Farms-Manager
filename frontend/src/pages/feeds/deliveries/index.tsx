@@ -32,21 +32,25 @@ import { NotificationContext } from "../../../context/notification-context";
 import {
   DataGridPremium,
   GRID_AGGREGATION_ROOT_FOOTER_ROW_ID,
+  type GridState,
 } from "@mui/x-data-grid-premium";
+import {
+  getSortOptionsFromGridModel,
+  initializeFiltersFromLocalStorage,
+} from "../../../utils/grid-state-helper";
 
 const FeedsDeliveriesPage: React.FC = () => {
   const [filters, dispatch] = useReducer(
     filterReducer,
     initialFilters,
-    (init) => {
-      const savedPageSize = localStorage.getItem("feedsDeliveriesPageSize");
-      return {
-        ...init,
-        pageSize: savedPageSize
-          ? parseInt(savedPageSize, 10)
-          : init.pageSize ?? 10,
-      };
-    }
+    (init) =>
+      initializeFiltersFromLocalStorage(
+        init,
+        "feedsDeliveriesGridState",
+        "feedsDeliveriesPageSize",
+        FeedsDeliveriesOrderType,
+        mapFeedsDeliveriesOrderTypeToField
+      )
   );
   const [dictionary, setDictionary] = useState<FeedsDictionary>();
   const { fetchNotifications } = useContext(NotificationContext);
@@ -75,9 +79,13 @@ const FeedsDeliveriesPage: React.FC = () => {
     ids: new Set(),
   });
 
-  const [visibilityModel, setVisibilityModel] = useState(() => {
-    const saved = localStorage.getItem("columnVisibilityModelDeliveries");
-    return saved ? JSON.parse(saved) : {};
+  const [initialGridState] = useState(() => {
+    const savedState = localStorage.getItem("feedsDeliveriesGridState");
+    return savedState
+      ? JSON.parse(savedState)
+      : {
+          columns: { columnVisibilityModel: { dateCreatedUtc: false } },
+        };
   });
 
   const [openPaymentModal, setOpenPaymentModal] = useState(false);
@@ -338,17 +346,18 @@ const FeedsDeliveriesPage: React.FC = () => {
           loading={loading}
           rows={feedsDeliveries}
           columns={columns}
-          initialState={{
-            columns: {
-              columnVisibilityModel: { id: false, dateCreatedUtc: false },
-            },
-          }}
-          columnVisibilityModel={visibilityModel}
-          onColumnVisibilityModelChange={(model) => {
-            setVisibilityModel(model);
+          initialState={initialGridState}
+          onStateChange={(newState: GridState) => {
+            const stateToSave = {
+              columns: newState.columns,
+              sorting: newState.sorting,
+              filter: newState.filter,
+              aggregation: newState.aggregation,
+              pinnedColumns: newState.pinnedColumns,
+            };
             localStorage.setItem(
-              "columnVisibilityModelDeliveries",
-              JSON.stringify(model)
+              "feedsDeliveriesGridState",
+              JSON.stringify(stateToSave)
             );
           }}
           checkboxSelection
@@ -403,26 +412,20 @@ const FeedsDeliveriesPage: React.FC = () => {
           scrollbarSize={17}
           sortingMode="server"
           onSortModelChange={(model) => {
-            if (model.length > 0) {
-              const sortField = model[0].field;
-              const foundOrderBy = Object.values(FeedsDeliveriesOrderType).find(
-                (orderType) =>
-                  mapFeedsDeliveriesOrderTypeToField(orderType) === sortField
-              );
-              dispatch({
-                type: "setMultiple",
-                payload: {
-                  orderBy: foundOrderBy,
-                  isDescending: model[0].sort === "desc",
-                  page: 0,
-                },
-              });
-            } else {
-              dispatch({
-                type: "setMultiple",
-                payload: { orderBy: undefined, isDescending: undefined },
-              });
-            }
+            const sortOptions = getSortOptionsFromGridModel(
+              model,
+              FeedsDeliveriesOrderType,
+              mapFeedsDeliveriesOrderTypeToField
+            );
+            const payload =
+              model.length > 0
+                ? { ...sortOptions, page: 0 }
+                : { ...sortOptions };
+
+            dispatch({
+              type: "setMultiple",
+              payload,
+            });
           }}
         />
       </Box>

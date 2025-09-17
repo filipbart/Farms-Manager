@@ -24,20 +24,23 @@ import {
 import { getEmployeePayslipsFiltersConfig } from "./filter-config.employee-payslips";
 import AddEmployeePayslipModal from "../../../components/modals/employees/add-employee-payslip-modal";
 import EditEmployeePayslipModal from "../../../components/modals/employees/edit-employee-payslip-modal";
+import {
+  getSortOptionsFromGridModel,
+  initializeFiltersFromLocalStorage,
+} from "../../../utils/grid-state-helper";
 
 const EmployeePayslipsPage: React.FC = () => {
   const [filters, dispatch] = useReducer(
     filterReducer,
     initialFilters,
-    (init) => {
-      const savedPageSize = localStorage.getItem("employeePayslipsPageSize");
-      return {
-        ...init,
-        pageSize: savedPageSize
-          ? parseInt(savedPageSize, 10)
-          : init.pageSize ?? 10,
-      };
-    }
+    (init) =>
+      initializeFiltersFromLocalStorage(
+        init,
+        "employeePayslipsGridState",
+        "employeePayslipsPageSize",
+        EmployeePayslipsOrderType,
+        mapEmployeePayslipOrderTypeToField
+      )
   );
   const [dictionary, setDictionary] = useState<EmployeePayslipsDictionary>();
   const [openAddPayslipModal, setOpenAddPayslipModal] = useState(false);
@@ -221,28 +224,20 @@ const EmployeePayslipsPage: React.FC = () => {
           }}
           sortingMode="server"
           onSortModelChange={(model) => {
-            if (model.length > 0) {
-              const sortField = model[0].field;
-              const foundOrderBy = Object.values(
-                EmployeePayslipsOrderType
-              ).find(
-                (orderType) =>
-                  mapEmployeePayslipOrderTypeToField(orderType) === sortField
-              );
-              dispatch({
-                type: "setMultiple",
-                payload: {
-                  orderBy: foundOrderBy,
-                  isDescending: model[0].sort === "desc",
-                  page: 0,
-                },
-              });
-            } else {
-              dispatch({
-                type: "setMultiple",
-                payload: { orderBy: undefined, isDescending: undefined },
-              });
-            }
+            const sortOptions = getSortOptionsFromGridModel(
+              model,
+              EmployeePayslipsOrderType,
+              mapEmployeePayslipOrderTypeToField
+            );
+            const payload =
+              model.length > 0
+                ? { ...sortOptions, page: 0 }
+                : { ...sortOptions };
+
+            dispatch({
+              type: "setMultiple",
+              payload,
+            });
           }}
         />
       </Box>

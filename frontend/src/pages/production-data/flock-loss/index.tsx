@@ -24,22 +24,23 @@ import {
   GRID_AGGREGATION_ROOT_FOOTER_ROW_ID,
   type GridState,
 } from "@mui/x-data-grid-premium";
+import {
+  getSortOptionsFromGridModel,
+  initializeFiltersFromLocalStorage,
+} from "../../../utils/grid-state-helper";
 
 const ProductionDataFlockLossPage: React.FC = () => {
   const [filters, dispatch] = useReducer(
     filterReducer,
     initialFilters,
-    (init) => {
-      const savedPageSize = localStorage.getItem(
-        "productionDataFlockLossPageSize"
-      );
-      return {
-        ...init,
-        pageSize: savedPageSize
-          ? parseInt(savedPageSize, 10)
-          : init.pageSize ?? 10,
-      };
-    }
+    (init) =>
+      initializeFiltersFromLocalStorage(
+        init,
+        "productionDataFlockLossGridState",
+        "productionDataFlockLossPageSize",
+        ProductionDataFlockLossOrderType,
+        mapProductionDataFlockLossOrderTypeToField
+      )
   );
   const [dictionary, setDictionary] =
     useState<ProductionDataWeighingsDictionary>();
@@ -238,29 +239,20 @@ const ProductionDataFlockLossPage: React.FC = () => {
           }}
           sortingMode="server"
           onSortModelChange={(model) => {
-            if (model.length > 0) {
-              const sortField = model[0].field;
-              const foundOrderBy = Object.values(
-                ProductionDataFlockLossOrderType
-              ).find(
-                (orderType) =>
-                  mapProductionDataFlockLossOrderTypeToField(orderType) ===
-                  sortField
-              );
-              dispatch({
-                type: "setMultiple",
-                payload: {
-                  orderBy: foundOrderBy,
-                  isDescending: model[0].sort === "desc",
-                  page: 0,
-                },
-              });
-            } else {
-              dispatch({
-                type: "setMultiple",
-                payload: { orderBy: undefined, isDescending: undefined },
-              });
-            }
+            const sortOptions = getSortOptionsFromGridModel(
+              model,
+              ProductionDataFlockLossOrderType,
+              mapProductionDataFlockLossOrderTypeToField
+            );
+            const payload =
+              model.length > 0
+                ? { ...sortOptions, page: 0 }
+                : { ...sortOptions };
+
+            dispatch({
+              type: "setMultiple",
+              payload,
+            });
           }}
         />
       </Box>
