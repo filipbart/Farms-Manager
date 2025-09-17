@@ -24,6 +24,8 @@ import {
 } from "../../../models/employees/employees-payslips";
 import type { EmployeeFarmPayslipModel } from "../../../models/employees/payslips-farms";
 import PayslipEntriesTable from "./employee-payslip-entries-table";
+import { FarmsService } from "../../../services/farms-service";
+import type CycleDto from "../../../models/farms/latest-cycle";
 import { getCurrentPayrollPeriod as getPreviousPayrollPeriod } from "../../../utils/payrollPeriod";
 
 const polishMonthsMap = {
@@ -125,11 +127,19 @@ const AddEmployeePayslipModal: React.FC<AddEmployeePayslipModalProps> = ({
   const [employeesForSelectedFarm, setEmployeesForSelectedFarm] = useState<
     EmployeeFarmPayslipModel[]
   >([]);
-  const [cycleDisplay, setCycleDisplay] = useState("");
+  const [cycles, setCycles] = useState<CycleDto[]>([]);
+  const [loadingCycles, setLoadingCycles] = useState(false);
 
   useEffect(() => {
     fetchPayslipsFarms();
   }, [fetchPayslipsFarms]);
+
+  useEffect(() => {
+    if (open) {
+      // Reset state when modal opens
+      handleClose();
+    }
+  }, [open]);
 
   useEffect(() => {
     if (open && form.entries.length === 0) {
@@ -139,6 +149,7 @@ const AddEmployeePayslipModal: React.FC<AddEmployeePayslipModalProps> = ({
 
   const handleFarmChange = (farmId: string) => {
     dispatch({ type: "RESET" });
+    setCycles([]);
     setErrors({});
 
     const selectedFarm = payslipsFarms.find((f) => f.id === farmId);
@@ -149,14 +160,30 @@ const AddEmployeePayslipModal: React.FC<AddEmployeePayslipModalProps> = ({
         name: "cycleId",
         value: selectedFarm.cycle.id,
       });
-      setCycleDisplay(
-        `${selectedFarm.cycle.identifier}/${selectedFarm.cycle.year}`
-      );
       setEmployeesForSelectedFarm(selectedFarm.employees);
     }
 
     dispatch({ type: "ADD_ENTRY" });
   };
+
+  useEffect(() => {
+    const fetchCyclesForFarm = async (farmId: string) => {
+      setLoadingCycles(true);
+
+      await handleApiResponse(
+        () => FarmsService.getFarmCycles(farmId),
+        (data) => setCycles(data.responseData ?? []),
+        undefined,
+        "Nie udało się pobrać cykli dla wybranej fermy"
+      );
+
+      setLoadingCycles(false);
+    };
+
+    if (form.farmId) {
+      fetchCyclesForFarm(form.farmId);
+    }
+  }, [form.farmId]);
 
   const validateForm = (): boolean => {
     const newErrors: PayslipFormErrors = {};
@@ -226,7 +253,7 @@ const AddEmployeePayslipModal: React.FC<AddEmployeePayslipModalProps> = ({
   const handleClose = () => {
     dispatch({ type: "RESET" });
     setErrors({});
-    setCycleDisplay("");
+    setCycles([]);
     setEmployeesForSelectedFarm([]);
     onClose();
   };
@@ -253,14 +280,28 @@ const AddEmployeePayslipModal: React.FC<AddEmployeePayslipModalProps> = ({
               ))}
             </LoadingTextField>
 
-            <TextField
+            <LoadingTextField
+              loading={loadingCycles}
               label="Cykl"
-              value={cycleDisplay}
-              slotProps={{ htmlInput: { readOnly: true } }}
+              select
+              value={form.cycleId}
+              onChange={(e) =>
+                dispatch({
+                  type: "SET_FIELD",
+                  name: "cycleId",
+                  value: e.target.value,
+                })
+              }
               error={!!errors.cycleId}
               helperText={errors.cycleId}
-              disabled={!form.farmId}
-            />
+              disabled={!form.farmId || loadingCycles || cycles.length === 0}
+            >
+              {cycles.map((cycle) => (
+                <MenuItem key={cycle.id} value={cycle.id}>
+                  {`${cycle.identifier}/${cycle.year}`}
+                </MenuItem>
+              ))}
+            </LoadingTextField>
 
             <TextField
               select

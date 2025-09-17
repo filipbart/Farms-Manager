@@ -33,7 +33,7 @@ public record AddEmployeePayslipCommand : IRequest<EmptyBaseResponse>
     public Guid FarmId { get; init; }
     public Guid CycleId { get; init; }
     public PayrollPeriod PayrollPeriod { get; init; }
-    public List<AddEmployeePayslipEntry> Entries { get; init; } = new();
+    public List<AddEmployeePayslipEntry> Entries { get; init; } = [];
 }
 
 public class AddEmployeePayslipCommandValidator : AbstractValidator<AddEmployeePayslipCommand>

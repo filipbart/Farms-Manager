@@ -2,8 +2,11 @@ import type { PaginateModel } from "../../common/interfaces/paginate";
 
 export interface EmployeePayslipListModel {
   id: string;
+  farmId: string;
   farmName: string;
+  cycleId: string;
   cycleText: string;
+  payrollPeriod: PayrollPeriod;
   payrollPeriodDesc: string;
   employeeFullName: string;
 
@@ -73,6 +76,9 @@ export interface AddEmployeePayslipEntry {
 }
 
 export interface UpdateEmployeePayslip {
+  farmId: string;
+  cycleId: string;
+  payrollPeriod: PayrollPeriod;
   baseSalary: number;
   bankTransferAmount: number;
   bonusAmount: number;

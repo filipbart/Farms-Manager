@@ -7,7 +7,9 @@ namespace FarmsManager.Application.Queries.Employees.Payslips;
 public class EmployeePayslipRowDto
 {
     public Guid Id { get; init; }
+    public Guid FarmId { get; init; }
     public string FarmName { get; init; }
+    public Guid CycleId { get; init; }
     public string CycleText { get; init; }
     public PayrollPeriod PayrollPeriod { get; init; }
     public string PayrollPeriodDesc => PayrollPeriod.GetDescription();

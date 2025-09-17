@@ -6,8 +6,8 @@ namespace FarmsManager.Domain.Aggregates.EmployeeAggregate.Entities;
 
 public class EmployeePayslipEntity : Entity
 {
-    public Guid FarmId { get; init; }
-    public Guid CycleId { get; init; }
+    public Guid FarmId { get; protected internal set; }
+    public Guid CycleId { get; protected internal set; }
     public Guid EmployeeId { get; init; }
 
     public PayrollPeriod PayrollPeriod { get; protected internal set; }
@@ -25,9 +25,10 @@ public class EmployeePayslipEntity : Entity
     public virtual CycleEntity Cycle { get; set; }
     public virtual EmployeeEntity Employee { get; set; }
 
-    /// <summary>
-    /// Metoda fabryczna do tworzenia nowego wpisu wypłaty.
-    /// </summary>
+    protected EmployeePayslipEntity()
+    {
+    }
+
     public static EmployeePayslipEntity CreateNew(
         Guid farmId,
         Guid cycleId,
@@ -63,10 +64,10 @@ public class EmployeePayslipEntity : Entity
         };
     }
 
-    /// <summary>
-    /// Metoda do aktualizacji istniejącego wpisu wypłaty.
-    /// </summary>
     public void Update(
+        FarmEntity farm,
+        CycleEntity cycle,
+        PayrollPeriod payrollPeriod,
         decimal baseSalary,
         decimal bankTransferAmount,
         decimal bonusAmount,
@@ -77,6 +78,9 @@ public class EmployeePayslipEntity : Entity
         decimal netPay,
         string comment)
     {
+        FarmId = farm.Id;
+        CycleId = cycle.Id;
+        PayrollPeriod = payrollPeriod;
         BaseSalary = baseSalary;
         BankTransferAmount = bankTransferAmount;
         BonusAmount = bonusAmount;

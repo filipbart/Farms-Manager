@@ -9,6 +9,7 @@ import {
   Grid,
   Typography,
   Divider,
+  MenuItem,
 } from "@mui/material";
 import { toast } from "react-toastify";
 import { EmployeePayslipsService } from "../../../services/employee-payslips-service";
@@ -16,10 +17,15 @@ import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import LoadingButton from "../../common/loading-button";
 import AppDialog from "../../common/app-dialog";
 import { MdSave } from "react-icons/md";
-import type {
-  EmployeePayslipListModel,
-  UpdateEmployeePayslip,
+import {
+  PayrollPeriod,
+  type EmployeePayslipListModel,
+  type UpdateEmployeePayslip,
 } from "../../../models/employees/employees-payslips";
+import { useFarms } from "../../../hooks/useFarms";
+import { FarmsService } from "../../../services/farms-service";
+import type CycleDto from "../../../models/farms/latest-cycle";
+import LoadingTextField from "../../common/loading-textfield";
 
 interface EditEmployeePayslipModalProps {
   open: boolean;
@@ -29,6 +35,9 @@ interface EditEmployeePayslipModalProps {
 }
 
 interface PayslipFormState {
+  farmId: string;
+  cycleId: string;
+  payrollPeriod: PayrollPeriod | "";
   baseSalary: string | number;
   bankTransferAmount: string | number;
   bonusAmount: string | number;
@@ -40,6 +49,9 @@ interface PayslipFormState {
 }
 
 interface PayslipFormErrors {
+  farmId?: string;
+  cycleId?: string;
+  payrollPeriod?: string;
   baseSalary?: string;
   bankTransferAmount?: string;
   bonusAmount?: string;
@@ -50,6 +62,9 @@ interface PayslipFormErrors {
 }
 
 const initialState: PayslipFormState = {
+  farmId: "",
+  cycleId: "",
+  payrollPeriod: "",
   baseSalary: "",
   bankTransferAmount: "",
   bonusAmount: "",
@@ -58,6 +73,21 @@ const initialState: PayslipFormState = {
   deductions: "",
   otherAllowances: "",
   comment: "",
+};
+
+const polishMonthsMap = {
+  [PayrollPeriod.January]: "Styczeń",
+  [PayrollPeriod.February]: "Luty",
+  [PayrollPeriod.March]: "Marzec",
+  [PayrollPeriod.April]: "Kwiecień",
+  [PayrollPeriod.May]: "Maj",
+  [PayrollPeriod.June]: "Czerwiec",
+  [PayrollPeriod.July]: "Lipiec",
+  [PayrollPeriod.August]: "Sierpień",
+  [PayrollPeriod.September]: "Wrzesień",
+  [PayrollPeriod.October]: "Październik",
+  [PayrollPeriod.November]: "Listopad",
+  [PayrollPeriod.December]: "Grudzień",
 };
 
 function formReducer(state: PayslipFormState, action: any): PayslipFormState {
@@ -82,12 +112,24 @@ const EditEmployeePayslipModal: React.FC<EditEmployeePayslipModalProps> = ({
   const [form, dispatch] = useReducer(formReducer, initialState);
   const [errors, setErrors] = useState<PayslipFormErrors>({});
   const [loading, setLoading] = useState(false);
+  const { farms, loadingFarms, fetchFarms } = useFarms();
+  const [cycles, setCycles] = useState<CycleDto[]>([]);
+  const [loadingCycles, setLoadingCycles] = useState(false);
 
   useEffect(() => {
-    if (payslipToEdit) {
+    if (open) {
+      fetchFarms();
+    }
+  }, [open, fetchFarms]);
+
+  useEffect(() => {
+    if (payslipToEdit && farms.length > 0) {
       dispatch({
         type: "SET_ALL",
         payload: {
+          farmId: payslipToEdit.farmId,
+          cycleId: payslipToEdit.cycleId,
+          payrollPeriod: payslipToEdit.payrollPeriod,
           baseSalary: payslipToEdit.baseSalary,
           bankTransferAmount: payslipToEdit.bankTransferAmount,
           bonusAmount: payslipToEdit.bonusAmount,
@@ -99,7 +141,33 @@ const EditEmployeePayslipModal: React.FC<EditEmployeePayslipModalProps> = ({
         },
       });
     }
-  }, [payslipToEdit]);
+  }, [payslipToEdit, farms]);
+
+  useEffect(() => {
+    const fetchCyclesForFarm = async (farmId: string) => {
+      if (!farmId) {
+        setCycles([]);
+        return;
+      }
+      setLoadingCycles(true);
+      await handleApiResponse(
+        () => FarmsService.getFarmCycles(farmId),
+        (data) => setCycles(data.responseData ?? []),
+        undefined,
+        "Nie udało się pobrać cykli dla wybranej fermy"
+      );
+      setLoadingCycles(false);
+    };
+
+    fetchCyclesForFarm(form.farmId);
+  }, [form.farmId]);
+
+  const handleFarmChange = (farmId: string) => {
+    dispatch({ type: "SET_FIELD", name: "farmId", value: farmId });
+    // Reset cycle when farm changes
+    dispatch({ type: "SET_FIELD", name: "cycleId", value: "" });
+    setCycles([]);
+  };
 
   const netPay = useMemo(() => {
     const baseSalary = Number(form.baseSalary) || 0;
@@ -121,10 +189,16 @@ const EditEmployeePayslipModal: React.FC<EditEmployeePayslipModalProps> = ({
 
   const validateForm = (): boolean => {
     const newErrors: PayslipFormErrors = {};
+    if (!form.farmId) newErrors.farmId = "Ferma jest wymagana.";
+    if (!form.cycleId) newErrors.cycleId = "Cykl jest wymagany.";
+    if (!form.payrollPeriod)
+      newErrors.payrollPeriod = "Okres rozliczeniowy jest wymagany.";
+
     (Object.keys(initialState) as Array<keyof PayslipFormState>).forEach(
       (key) => {
         if (key !== "comment" && Number(form[key]) < 0) {
-          newErrors[key] = "Wartość nie może być ujemna";
+          newErrors[key as keyof PayslipFormErrors] =
+            "Wartość nie może być ujemna";
         }
       }
     );
@@ -139,6 +213,9 @@ const EditEmployeePayslipModal: React.FC<EditEmployeePayslipModalProps> = ({
     setLoading(true);
 
     const dataToSave: UpdateEmployeePayslip = {
+      farmId: form.farmId,
+      cycleId: form.cycleId,
+      payrollPeriod: form.payrollPeriod as PayrollPeriod,
       baseSalary: Number(form.baseSalary),
       bankTransferAmount: Number(form.bankTransferAmount),
       bonusAmount: Number(form.bonusAmount),
@@ -165,6 +242,7 @@ const EditEmployeePayslipModal: React.FC<EditEmployeePayslipModalProps> = ({
   const handleClose = () => {
     dispatch({ type: "RESET" });
     setErrors({});
+    setCycles([]);
     onClose();
   };
 
@@ -183,28 +261,70 @@ const EditEmployeePayslipModal: React.FC<EditEmployeePayslipModalProps> = ({
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
+              <LoadingTextField
+                loading={loadingFarms}
+                select
                 label="Ferma"
-                value={payslipToEdit?.farmName || ""}
+                value={form.farmId}
+                onChange={(e) => handleFarmChange(e.target.value)}
+                error={!!errors.farmId}
+                helperText={errors.farmId}
                 fullWidth
-                disabled
-              />
+              >
+                {farms.map((farm) => (
+                  <MenuItem key={farm.id} value={farm.id}>
+                    {farm.name}
+                  </MenuItem>
+                ))}
+              </LoadingTextField>
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
+              <LoadingTextField
+                loading={loadingCycles}
                 label="Cykl"
-                value={payslipToEdit?.cycleText || ""}
+                select
+                value={form.cycleId}
+                onChange={(e) =>
+                  dispatch({
+                    type: "SET_FIELD",
+                    name: "cycleId",
+                    value: e.target.value,
+                  })
+                }
+                error={!!errors.cycleId}
+                helperText={errors.cycleId}
+                disabled={!form.farmId || loadingCycles || cycles.length === 0}
                 fullWidth
-                disabled
-              />
+              >
+                {cycles.map((cycle) => (
+                  <MenuItem key={cycle.id} value={cycle.id}>
+                    {`${cycle.identifier}/${cycle.year}`}
+                  </MenuItem>
+                ))}
+              </LoadingTextField>
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
+                select
                 label="Okres rozliczeniowy"
-                value={payslipToEdit?.payrollPeriodDesc || ""}
+                value={form.payrollPeriod}
+                onChange={(e) =>
+                  dispatch({
+                    type: "SET_FIELD",
+                    name: "payrollPeriod",
+                    value: e.target.value,
+                  })
+                }
+                error={!!errors.payrollPeriod}
+                helperText={errors.payrollPeriod}
                 fullWidth
-                disabled
-              />
+              >
+                {Object.values(PayrollPeriod).map((period) => (
+                  <MenuItem key={period} value={period}>
+                    {polishMonthsMap[period]}
+                  </MenuItem>
+                ))}
+              </TextField>
             </Grid>
           </Grid>
 
