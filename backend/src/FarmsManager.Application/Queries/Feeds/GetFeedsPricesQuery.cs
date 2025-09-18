@@ -44,7 +44,9 @@ public record GetFeedsPricesQuery(GetFeedsPricesQueryFilters Filters)
 public record FeedPriceRowDto
 {
     public Guid Id { get; init; }
+    public Guid FarmId { get; init; }
     public string FarmName { get; init; }
+    public Guid CycleId { get; init; }
     public string CycleText { get; init; }
     public DateOnly PriceDate { get; init; }
     public string Name { get; init; }
@@ -77,8 +79,9 @@ public class
         var accessibleFarmIds = user.AccessibleFarmIds;
 
         var data = await _feedPriceRepository.ListAsync<FeedPriceRowDto>(
-            new GetAllFeedsPricesSpec(request.Filters, true,accessibleFarmIds), cancellationToken);
-        var count = await _feedPriceRepository.CountAsync(new GetAllFeedsPricesSpec(request.Filters, false,accessibleFarmIds),
+            new GetAllFeedsPricesSpec(request.Filters, true, accessibleFarmIds), cancellationToken);
+        var count = await _feedPriceRepository.CountAsync(
+            new GetAllFeedsPricesSpec(request.Filters, false, accessibleFarmIds),
             cancellationToken);
         return BaseResponse.CreateResponse(new GetFeedsPricesQueryResponse
         {

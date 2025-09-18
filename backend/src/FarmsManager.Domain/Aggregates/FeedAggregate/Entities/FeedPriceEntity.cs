@@ -10,7 +10,7 @@ public class FeedPriceEntity : Entity
     }
 
     public Guid FarmId { get; init; }
-    public Guid CycleId { get; init; }
+    public Guid CycleId { get; protected internal set; }
     public DateOnly PriceDate { get; protected internal set; }
     public string Name { get; protected internal set; }
     public decimal Price { get; protected internal set; }
@@ -36,5 +36,10 @@ public class FeedPriceEntity : Entity
         PriceDate = priceDate;
         Name = name;
         Price = price;
+    }
+
+    public void SetCycle(Guid cycleId)
+    {
+        CycleId = cycleId;
     }
 }

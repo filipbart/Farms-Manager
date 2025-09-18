@@ -20,11 +20,12 @@ import type { GridRowId } from "@mui/x-data-grid";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import { FeedsService } from "../../../../services/feeds-service";
 import { toast } from "react-toastify";
-import { useLatestCycle } from "../../../../hooks/useLatestCycle";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import FilePreview from "../../../common/file-preview";
 import AppDialog from "../../../common/app-dialog";
+import { FarmsService } from "../../../../services/farms-service";
+import type CycleDto from "../../../../models/farms/latest-cycle";
 
 interface AddCorrectionModalProps {
   open: boolean;
@@ -41,8 +42,9 @@ const AddCorrectionModal: React.FC<AddCorrectionModalProps> = ({
 }) => {
   const { farms, loadingFarms, fetchFarms } = useFarms();
   const [selectedFile, setSelectedFile] = useState<File>();
-  const { loadLatestCycle, loadingCycle } = useLatestCycle();
   const [loading, setLoading] = useState(false);
+  const [cycles, setCycles] = useState<CycleDto[]>([]);
+  const [loadingCycles, setLoadingCycles] = useState(false);
 
   const filePreviewUrl = selectedFile ? URL.createObjectURL(selectedFile) : "";
 
@@ -52,8 +54,6 @@ const AddCorrectionModal: React.FC<AddCorrectionModalProps> = ({
     formState: { errors },
     reset,
     setValue,
-    clearErrors,
-    setError,
     control,
     watch,
   } = useForm<CorrectionData>({
@@ -61,13 +61,14 @@ const AddCorrectionModal: React.FC<AddCorrectionModalProps> = ({
       invoiceNumber: "",
       farmId: "",
       cycleId: "",
-      identifierDisplay: "",
       subTotal: 0,
       vatAmount: 0,
       invoiceTotal: 0,
       invoiceDate: "",
     },
   });
+
+  const watchedFarmId = watch("farmId");
 
   useEffect(() => {
     fetchFarms();
@@ -81,29 +82,38 @@ const AddCorrectionModal: React.FC<AddCorrectionModalProps> = ({
     };
   }, [filePreviewUrl]);
 
+  useEffect(() => {
+    const fetchCyclesForFarm = async (farmId: string) => {
+      setLoadingCycles(true);
+
+      const selectedFarm = farms.find((f) => f.id === farmId);
+      if (selectedFarm?.activeCycle) {
+        setValue("cycleId", selectedFarm.activeCycle.id);
+      } else {
+        setValue("cycleId", "");
+      }
+
+      await handleApiResponse(
+        () => FarmsService.getFarmCycles(farmId),
+        (data) => setCycles(data.responseData ?? []),
+        () => setCycles([]),
+        "Nie udało się pobrać listy cykli."
+      );
+      setLoadingCycles(false);
+    };
+
+    if (watchedFarmId && farms.length > 0) {
+      fetchCyclesForFarm(watchedFarmId);
+    } else {
+      setCycles([]);
+    }
+  }, [watchedFarmId, farms, setValue]);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
       const file = e.target.files[0];
       setSelectedFile(file);
       setValue("file", file);
-    }
-  };
-
-  const handleFarmChange = async (farmId: string) => {
-    setValue("cycleId", "");
-    setValue("identifierDisplay", "");
-    clearErrors("cycleId");
-
-    const cycle = await loadLatestCycle(farmId);
-    if (cycle) {
-      setValue("cycleId", cycle.id);
-      clearErrors("cycleId");
-      setValue("identifierDisplay", `${cycle.identifier}/${cycle.year}`);
-    } else {
-      setError("cycleId", {
-        type: "manual",
-        message: "Brak aktywnego cyklu",
-      });
     }
   };
 
@@ -201,10 +211,6 @@ const AddCorrectionModal: React.FC<AddCorrectionModalProps> = ({
                       helperText={errors.farmId?.message}
                       {...register("farmId", {
                         required: "Farma jest wymagana",
-                        onChange: async (e) => {
-                          const value = e.target.value;
-                          await handleFarmChange(value);
-                        },
                       })}
                     >
                       {farms.map((farm) => (
@@ -217,12 +223,24 @@ const AddCorrectionModal: React.FC<AddCorrectionModalProps> = ({
 
                   <Grid size={{ xs: 12 }}>
                     <LoadingTextField
-                      loading={loadingCycle}
+                      loading={loadingCycles}
                       label="Cykl"
-                      value={watch("identifierDisplay") || ""}
-                      slotProps={{ input: { readOnly: true } }}
+                      select
                       fullWidth
-                    />
+                      disabled={!watchedFarmId || cycles.length === 0}
+                      value={watch("cycleId") || ""}
+                      error={!!errors.cycleId}
+                      helperText={errors.cycleId?.message}
+                      {...register("cycleId", {
+                        required: "Cykl jest wymagany",
+                      })}
+                    >
+                      {cycles.map((cycle) => (
+                        <MenuItem key={cycle.id} value={cycle.id}>
+                          {`${cycle.identifier}/${cycle.year}`}
+                        </MenuItem>
+                      ))}
+                    </LoadingTextField>
                   </Grid>
 
                   <Grid size={{ xs: 12 }}>

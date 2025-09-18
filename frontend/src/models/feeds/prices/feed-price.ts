@@ -1,6 +1,8 @@
 export interface FeedPriceListModel {
   id: string;
+  farmId: string;
   farmName: string;
+  cycleId: string;
   cycleText: string;
   priceDate: string;
   name: string;
@@ -25,4 +27,5 @@ export interface UpdateFeedPriceFormData {
   priceDate: string;
   nameId: string;
   price: number;
+  cycleId: string;
 }

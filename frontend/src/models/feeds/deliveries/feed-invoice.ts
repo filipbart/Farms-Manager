@@ -29,7 +29,9 @@ export interface SaveFeedInvoiceDto {
 
 export interface FeedDeliveryListModel {
   id: string;
+  cycleId: string;
   cycleText: string;
+  farmId: string;
   farmName: string;
   henhouseName: string;
   vendorName: string;

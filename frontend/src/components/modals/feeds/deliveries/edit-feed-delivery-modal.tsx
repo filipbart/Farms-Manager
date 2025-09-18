@@ -5,6 +5,7 @@ import {
   Grid,
   DialogActions,
   TextField,
+  MenuItem,
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -17,6 +18,9 @@ import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import { FeedsService } from "../../../../services/feeds-service";
 import { MdSave } from "react-icons/md";
 import AppDialog from "../../../common/app-dialog";
+import { FarmsService } from "../../../../services/farms-service";
+import type CycleDto from "../../../../models/farms/latest-cycle";
+import LoadingTextField from "../../../common/loading-textfield";
 
 interface EditInvoiceModalProps {
   open: boolean;
@@ -32,6 +36,8 @@ const EditFeedDeliveryModal: React.FC<EditInvoiceModalProps> = ({
   onSave,
 }) => {
   const [loading, setLoading] = useState(false);
+  const [cycles, setCycles] = useState<CycleDto[]>([]);
+  const [loadingCycles, setLoadingCycles] = useState(false);
 
   const {
     register,
@@ -39,6 +45,7 @@ const EditFeedDeliveryModal: React.FC<EditInvoiceModalProps> = ({
     control,
     formState: { errors },
     reset,
+    watch,
   } = useForm<FeedDeliveryListModel>({
     defaultValues: feedDelivery!,
   });
@@ -48,6 +55,27 @@ const EditFeedDeliveryModal: React.FC<EditInvoiceModalProps> = ({
       reset(feedDelivery);
     }
   }, [feedDelivery, reset]);
+
+  useEffect(() => {
+    const fetchCycles = async (farmId: string) => {
+      if (!farmId) {
+        setCycles([]);
+        return;
+      }
+      setLoadingCycles(true);
+      await handleApiResponse(
+        () => FarmsService.getFarmCycles(farmId),
+        (data) => setCycles(data.responseData ?? []),
+        () => setCycles([]),
+        "Nie udało się pobrać cykli dla wybranej fermy."
+      );
+      setLoadingCycles(false);
+    };
+
+    if (feedDelivery?.farmId) {
+      fetchCycles(feedDelivery.farmId);
+    }
+  }, [feedDelivery]);
 
   const handleSave = async (formData: FeedDeliveryListModel) => {
     setLoading(true);
@@ -67,13 +95,45 @@ const EditFeedDeliveryModal: React.FC<EditInvoiceModalProps> = ({
     setLoading(false);
   };
 
+  const handleClose = () => {
+    setCycles([]);
+    onClose();
+  };
+
   return (
-    <AppDialog open={open} onClose={onClose} fullWidth maxWidth="md">
+    <AppDialog open={open} onClose={handleClose} fullWidth maxWidth="md">
       <DialogTitle>Edycja faktury</DialogTitle>
 
       <form onSubmit={handleSubmit(handleSave)}>
         <DialogContent dividers>
-          <Grid container spacing={2}>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                label="Ferma"
+                value={feedDelivery?.farmName || ""}
+                fullWidth
+                disabled
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <LoadingTextField
+                loading={loadingCycles}
+                label="Cykl"
+                select
+                fullWidth
+                disabled={loadingCycles || cycles.length === 0}
+                value={watch("cycleId") || ""}
+                error={!!errors.cycleId}
+                helperText={errors.cycleId?.message}
+                {...register("cycleId", { required: "Cykl jest wymagany" })}
+              >
+                {cycles.map((cycle) => (
+                  <MenuItem key={cycle.id} value={cycle.id}>
+                    {`${cycle.identifier}/${cycle.year}`}
+                  </MenuItem>
+                ))}
+              </LoadingTextField>
+            </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 label="Numer faktury"
@@ -275,7 +335,7 @@ const EditFeedDeliveryModal: React.FC<EditInvoiceModalProps> = ({
         </DialogContent>
 
         <DialogActions>
-          <Button onClick={onClose} color="secondary" variant="outlined">
+          <Button onClick={handleClose} color="secondary" variant="outlined">
             Anuluj
           </Button>
           <LoadingButton

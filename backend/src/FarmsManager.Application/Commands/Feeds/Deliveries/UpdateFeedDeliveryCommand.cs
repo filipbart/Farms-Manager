@@ -1,6 +1,8 @@
 ﻿using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
+using FarmsManager.Application.Specifications.Cycle;
 using FarmsManager.Application.Specifications.Feeds;
+using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
@@ -11,6 +13,7 @@ namespace FarmsManager.Application.Commands.Feeds.Deliveries;
 
 public record UpdateFeedDeliveryCommandDto
 {
+    public Guid CycleId { get; init; }
     public string InvoiceNumber { get; init; }
     public string BankAccountNumber { get; init; }
     public string ItemName { get; init; }
@@ -33,14 +36,17 @@ public class UpdateFeedDeliveryCommandHandler : IRequestHandler<UpdateFeedDelive
     private readonly IFeedNameRepository _feedNameRepository;
     private readonly IFeedPriceRepository _feedPriceRepository;
     private readonly IFeedInvoiceRepository _feedInvoiceRepository;
+    private readonly ICycleRepository _cycleRepository;
 
     public UpdateFeedDeliveryCommandHandler(IUserDataResolver userDataResolver, IFeedNameRepository feedNameRepository,
-        IFeedInvoiceRepository feedInvoiceRepository, IFeedPriceRepository feedPriceRepository)
+        IFeedInvoiceRepository feedInvoiceRepository, IFeedPriceRepository feedPriceRepository,
+        ICycleRepository cycleRepository)
     {
         _userDataResolver = userDataResolver;
         _feedNameRepository = feedNameRepository;
         _feedPriceRepository = feedPriceRepository;
         _feedInvoiceRepository = feedInvoiceRepository;
+        _cycleRepository = cycleRepository;
     }
 
     public async Task<EmptyBaseResponse> Handle(UpdateFeedDeliveryCommand request, CancellationToken cancellationToken)
@@ -50,6 +56,12 @@ public class UpdateFeedDeliveryCommandHandler : IRequestHandler<UpdateFeedDelive
             await _feedInvoiceRepository.GetAsync(new GetFeedInvoiceByIdSpec(request.Id), cancellationToken);
         var feedName =
             await _feedNameRepository.GetAsync(new GetFeedNameByNameSpec(request.Data.ItemName), cancellationToken);
+        var cycle = await _cycleRepository.GetAsync(new CycleByIdSpec(request.Data.CycleId), cancellationToken);
+
+        if (feedDelivery.CycleId != cycle.Id)
+        {
+            feedDelivery.SetCycle(cycle.Id);
+        }
 
         feedDelivery.Update(
             request.Data.InvoiceNumber,
@@ -89,6 +101,7 @@ public class UpdateFeedDeliveryCommandValidator : AbstractValidator<UpdateFeedDe
 {
     public UpdateFeedDeliveryCommandValidator()
     {
+        RuleFor(t => t.Data.CycleId).NotEmpty();
         RuleFor(t => t.Data.InvoiceNumber).NotEmpty();
         RuleFor(t => t.Data.BankAccountNumber).NotEmpty();
         RuleFor(t => t.Data.ItemName).NotEmpty();

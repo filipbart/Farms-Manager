@@ -25,11 +25,12 @@ import LoadingButton from "../../../common/loading-button";
 import LoadingTextField from "../../../common/loading-textfield";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
-import { useLatestCycle } from "../../../../hooks/useLatestCycle";
 import { useFeedsNames } from "../../../../hooks/feeds/useFeedsNames";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import type { AddFeedPriceFormData } from "../../../../models/feeds/prices/feed-price";
 import AppDialog from "../../../common/app-dialog";
+import { FarmsService } from "../../../../services/farms-service";
+import type CycleDto from "../../../../models/farms/latest-cycle";
 
 interface AddFeedPriceModalProps {
   open: boolean;
@@ -48,8 +49,6 @@ const AddFeedPriceModal: React.FC<AddFeedPriceModalProps> = ({
     formState: { errors },
     reset,
     setValue,
-    setError,
-    clearErrors,
     watch,
   } = useForm<AddFeedPriceFormData>({
     defaultValues: {
@@ -67,8 +66,9 @@ const AddFeedPriceModal: React.FC<AddFeedPriceModalProps> = ({
 
   const [loading, setLoading] = useState(false);
   const { farms, loadingFarms, fetchFarms } = useFarms();
-  const { loadLatestCycle, loadingCycle } = useLatestCycle();
   const { feedsNames, loadingFeedsNames, fetchFeedsNames } = useFeedsNames();
+  const [cycles, setCycles] = useState<CycleDto[]>([]);
+  const [loadingCycles, setLoadingCycles] = useState(false);
 
   const handleSave = async (data: AddFeedPriceFormData) => {
     if (loading) return;
@@ -92,21 +92,35 @@ const AddFeedPriceModal: React.FC<AddFeedPriceModalProps> = ({
     }
   }, [open, fetchFarms, fetchFeedsNames]);
 
-  const handleFarmChange = async (farmId: string) => {
-    const cycle = await loadLatestCycle(farmId);
-    if (cycle) {
-      setValue("identifierId", cycle.id);
-      clearErrors("identifierId");
-      setValue("identifierDisplay", `${cycle.identifier}/${cycle.year}`);
+  const watchedFarmId = watch("farmId");
+
+  useEffect(() => {
+    const fetchCyclesForFarm = async (farmId: string) => {
+      setLoadingCycles(true);
+
+      const selectedFarm = farms.find((f) => f.id === farmId);
+      if (selectedFarm?.activeCycle) {
+        setValue("identifierId", selectedFarm.activeCycle.id);
+      } else {
+        setValue("identifierId", "");
+      }
+
+      await handleApiResponse(
+        () => FarmsService.getFarmCycles(farmId),
+        (data) => setCycles(data.responseData ?? []),
+        () => setCycles([]),
+        "Nie udało się pobrać listy cykli."
+      );
+      setLoadingCycles(false);
+    };
+
+    if (watchedFarmId && farms.length > 0) {
+      fetchCyclesForFarm(watchedFarmId);
     } else {
+      setCycles([]);
       setValue("identifierId", "");
-      setValue("identifierDisplay", "");
-      setError("identifierId", {
-        type: "manual",
-        message: "Brak aktywnego cyklu",
-      });
     }
-  };
+  }, [watchedFarmId, farms, setValue]);
 
   const close = () => {
     reset();
@@ -137,7 +151,6 @@ const AddFeedPriceModal: React.FC<AddFeedPriceModalProps> = ({
                     helperText={errors.farmId?.message}
                     onChange={async (e) => {
                       field.onChange(e);
-                      await handleFarmChange(e.target.value);
                     }}
                   >
                     {farms.map((farm) => (
@@ -150,14 +163,28 @@ const AddFeedPriceModal: React.FC<AddFeedPriceModalProps> = ({
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <LoadingTextField
-                loading={loadingCycle}
-                label="Cykl"
-                value={watch("identifierDisplay") || ""}
-                InputProps={{ readOnly: true }}
-                error={!!errors.identifierId}
-                helperText={errors.identifierId?.message}
-                fullWidth
+              <Controller
+                name="identifierId"
+                control={control}
+                rules={{ required: "Cykl jest wymagany" }}
+                render={({ field }) => (
+                  <LoadingTextField
+                    {...field}
+                    loading={loadingCycles}
+                    label="Cykl"
+                    select
+                    fullWidth
+                    disabled={!watchedFarmId || cycles.length === 0}
+                    error={!!errors.identifierId}
+                    helperText={errors.identifierId?.message}
+                  >
+                    {cycles.map((cycle) => (
+                      <MenuItem key={cycle.id} value={cycle.id}>
+                        {`${cycle.identifier}/${cycle.year}`}
+                      </MenuItem>
+                    ))}
+                  </LoadingTextField>
+                )}
               />
             </Grid>
             <Grid size={{ xs: 12 }}>

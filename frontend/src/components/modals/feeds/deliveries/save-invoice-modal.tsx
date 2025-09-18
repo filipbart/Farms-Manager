@@ -14,7 +14,6 @@ import {
 import { useState, useEffect } from "react";
 import { MdSave, MdZoomIn } from "react-icons/md";
 import { useFarms } from "../../../../hooks/useFarms";
-import { useLatestCycle } from "../../../../hooks/useLatestCycle";
 import type { HouseRowModel } from "../../../../models/farms/house-row-model";
 import type { DraftFeedInvoice } from "../../../../models/feeds/deliveries/draft-feed-invoice";
 import type { FeedInvoiceData } from "../../../../models/feeds/deliveries/feed-invoice";
@@ -29,6 +28,8 @@ import { FeedsService } from "../../../../services/feeds-service";
 import { toast } from "react-toastify";
 import { useFeedsNames } from "../../../../hooks/feeds/useFeedsNames";
 import AppDialog from "../../../common/app-dialog";
+import { FarmsService } from "../../../../services/farms-service";
+import type CycleDto from "../../../../models/farms/latest-cycle";
 
 interface SaveInvoiceModalProps {
   open: boolean;
@@ -52,12 +53,9 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const [henhouses, setHenhouses] = useState<HouseRowModel[]>([]);
-  const { loadLatestCycle, loadingCycle } = useLatestCycle();
+  const [cycles, setCycles] = useState<CycleDto[]>([]);
+  const [loadingCycles, setLoadingCycles] = useState(false);
   const { feedsNames, loadingFeedsNames, fetchFeedsNames } = useFeedsNames();
-
-  const [draftFeed, setDraftFeed] = useState<DraftFeedInvoice>(
-    draftFeedInvoices[currentIndex]
-  );
 
   const {
     register,
@@ -66,36 +64,52 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
     formState: { errors },
     reset,
     setValue,
-    setError,
     clearErrors,
     watch,
   } = useForm<FeedInvoiceData>();
 
   const [previewOpen, setPreviewOpen] = useState(false);
+  const watchedFarmId = watch("farmId");
 
-  const handleFarmChange = async (farmId: string) => {
-    setValue("cycleId", "");
-    setValue("identifierDisplay", "");
-    setValue("henhouseId", "");
-    clearErrors(["cycleId", "henhouseId"]);
-
-    setHenhouses(farms.find((f) => f.id === farmId)?.henhouses || []);
-
-    const cycle = await loadLatestCycle(farmId);
-    if (cycle) {
-      setValue("cycleId", cycle.id);
-      clearErrors("cycleId");
-      setValue("identifierDisplay", `${cycle.identifier}/${cycle.year}`);
-    } else {
-      setError("cycleId", {
-        type: "manual",
-        message: "Brak aktywnego cyklu",
-      });
-    }
-  };
+  const draftFeed = draftFeedInvoices[currentIndex];
 
   useEffect(() => {
-    const henhouseName = draftFeed?.extractedFields.henhouseName;
+    const fetchCyclesAndHenhouses = async (farmId: string) => {
+      setValue("henhouseId", "");
+      clearErrors("henhouseId");
+      setHenhouses(farms.find((f) => f.id === farmId)?.henhouses || []);
+
+      setLoadingCycles(true);
+      const selectedFarm = farms.find((f) => f.id === farmId);
+      if (selectedFarm?.activeCycle) {
+        setValue("cycleId", selectedFarm.activeCycle.id);
+      } else {
+        setValue("cycleId", "");
+      }
+
+      await handleApiResponse(
+        () => FarmsService.getFarmCycles(farmId),
+        (data) => {
+          setCycles(data.responseData ?? []);
+        },
+        () => {
+          setCycles([]);
+        },
+        "Nie udało się pobrać listy cykli."
+      );
+      setLoadingCycles(false);
+    };
+
+    if (watchedFarmId && farms.length > 0) {
+      fetchCyclesAndHenhouses(watchedFarmId);
+    } else {
+      setCycles([]);
+      setHenhouses([]);
+    }
+  }, [watchedFarmId, farms, setValue, clearErrors]);
+
+  useEffect(() => {
+    const henhouseName = draftFeed?.extractedFields.henhouseName?.toLowerCase();
     const henhouseIdFromBackend = draftFeed?.extractedFields.henhouseId;
 
     if (henhouseIdFromBackend) {
@@ -106,7 +120,7 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
 
     if (henhouseName && henhouses.length > 0) {
       const matchedHenhouse = henhouses.find(
-        (h) => h.name.toLowerCase() === henhouseName.toLowerCase()
+        (h) => h.name.toLowerCase() === henhouseName
       );
 
       if (matchedHenhouse) {
@@ -136,15 +150,42 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
   };
 
   useEffect(() => {
-    fetchFarms();
-    fetchFeedsNames();
-  }, [fetchFarms, fetchFeedsNames]);
+    if (open) {
+      fetchFarms();
+      fetchFeedsNames();
+    }
+  }, [open, fetchFarms, fetchFeedsNames]);
+
+  const inferFarmId = (
+    draft: DraftFeedInvoice,
+    allFarms: typeof farms
+  ): string | undefined => {
+    if (draft.extractedFields.farmId) return draft.extractedFields.farmId;
+
+    const henhouseName = draft.extractedFields.henhouseName?.toLowerCase();
+    const matchedFarms = allFarms.filter(
+      (f) =>
+        f.nip === draft.extractedFields.nip ||
+        f.name?.toLowerCase() ===
+          draft.extractedFields.customerName?.toLowerCase()
+    );
+
+    if (matchedFarms.length === 1) return matchedFarms[0].id;
+
+    if (matchedFarms.length > 1 && henhouseName) {
+      return matchedFarms.find((farm) =>
+        farm.henhouses?.some(
+          (house) => house.name?.toLowerCase() === henhouseName
+        )
+      )?.id;
+    }
+
+    return undefined;
+  };
 
   useEffect(() => {
-    if (draftFeedInvoices.length === 0) {
-      if (open) {
-        handleClose();
-      }
+    if (draftFeedInvoices.length === 0 && open) {
+      handleClose();
       return;
     }
 
@@ -154,50 +195,15 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
       return;
     }
 
-    if (farms.length === 0) {
-      return;
-    }
+    if (farms.length === 0) return;
 
     const currentDraft = draftFeedInvoices[newIndex];
-    setDraftFeed(currentDraft);
-
     const data = { ...currentDraft.extractedFields };
-    let farmToProcess: { id: string } | null = null;
 
-    if (data.farmId) {
-      farmToProcess = { id: data.farmId };
-    } else {
-      const henhouseName = data.henhouseName?.toLowerCase();
-      const matchedFarms = farms.filter(
-        (f) =>
-          f.nip === data.nip ||
-          f.name?.toLowerCase() === data.customerName?.toLowerCase()
-      );
-
-      let selectedFarm = null;
-      if (matchedFarms.length === 1) {
-        selectedFarm = matchedFarms[0];
-      } else if (matchedFarms.length > 1 && henhouseName) {
-        selectedFarm = matchedFarms.find((farm) =>
-          farm.henhouses?.some(
-            (house) => house.name?.toLowerCase() === henhouseName
-          )
-        );
-      }
-
-      if (selectedFarm) {
-        data.farmId = selectedFarm.id;
-        farmToProcess = selectedFarm;
-      }
+    if (!data.farmId) {
+      data.farmId = inferFarmId(currentDraft, farms);
     }
-
     reset(data);
-
-    if (farmToProcess) {
-      handleFarmChange(farmToProcess.id);
-    } else {
-      setHenhouses([]);
-    }
   }, [currentIndex, draftFeedInvoices, farms, reset, open, handleClose]);
 
   const fileType = getFileTypeFromUrl(draftFeed?.fileUrl ?? "");
@@ -260,7 +266,6 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
         <DialogTitle>Podgląd faktury i dane</DialogTitle>
 
         <form onSubmit={handleSubmit(handleSave)}>
-          <input type="hidden" {...register("cycleId")} />
           <DialogContent dividers>
             <Grid container spacing={2}>
               <Grid size={{ md: 12, lg: 5, xl: 6 }}>
@@ -284,11 +289,6 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
                       helperText={errors.farmId?.message}
                       {...register("farmId", {
                         required: "Farma jest wymagana",
-                        onChange: async (
-                          e: React.ChangeEvent<HTMLInputElement>
-                        ) => {
-                          await handleFarmChange(e.target.value);
-                        },
                       })}
                     >
                       {farms.map((farm) => (
@@ -301,14 +301,24 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
 
                   <Grid size={{ xs: 12, sm: 12, md: 6 }}>
                     <LoadingTextField
-                      loading={loadingCycle}
+                      loading={loadingCycles}
                       label="Cykl"
-                      value={watch("identifierDisplay") || ""}
+                      select
+                      fullWidth
+                      disabled={!watchedFarmId || cycles.length === 0}
+                      value={watch("cycleId") || ""}
                       error={!!errors.cycleId}
                       helperText={errors.cycleId?.message}
-                      slotProps={{ input: { readOnly: true } }}
-                      fullWidth
-                    />
+                      {...register("cycleId", {
+                        required: "Cykl jest wymagany",
+                      })}
+                    >
+                      {cycles.map((cycle) => (
+                        <MenuItem key={cycle.id} value={cycle.id}>
+                          {`${cycle.identifier}/${cycle.year}`}
+                        </MenuItem>
+                      ))}
+                    </LoadingTextField>
                   </Grid>
 
                   <Grid size={{ xs: 12, sm: 12, md: 6 }}>

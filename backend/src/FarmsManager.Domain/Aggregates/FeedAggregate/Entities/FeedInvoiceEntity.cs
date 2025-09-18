@@ -10,7 +10,7 @@ public class FeedInvoiceEntity : Entity
     }
 
     public Guid FarmId { get; init; }
-    public Guid CycleId { get; init; }
+    public Guid CycleId { get; protected internal set; }
     public Guid HenhouseId { get; init; }
 
     public string InvoiceNumber { get; protected internal set; }
@@ -116,6 +116,11 @@ public class FeedInvoiceEntity : Entity
             Comment = comment,
             CreatedBy = userId
         };
+    }
+
+    public void SetCycle(Guid cycleId)
+    {
+        CycleId = cycleId;
     }
 
     public void SetFilePath(string filePath) => FilePath = filePath;
