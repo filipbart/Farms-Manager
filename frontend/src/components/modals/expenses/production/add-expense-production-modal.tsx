@@ -104,21 +104,18 @@ const AddExpenseProductionModal: React.FC<AddExpenseProductionModalProps> = ({
         setValue("cycleId", "");
       }
 
-      try {
-        const cyclesResponse = await FarmsService.getFarmCycles(farmId);
-
-        if (cyclesResponse.responseData) {
-          setCycles(cyclesResponse.responseData);
-        } else {
+      await handleApiResponse(
+        () => FarmsService.getFarmCycles(farmId),
+        (data) => {
+          setCycles(data.responseData ?? []);
+          setLoadingCycles(false);
+        },
+        () => {
           setCycles([]);
-          toast.error("Nie udało się pobrać listy cykli.");
-        }
-      } catch {
-        toast.error("Wystąpił błąd podczas pobierania danych o cyklach.");
-        setCycles([]);
-      } finally {
-        setLoadingCycles(false);
-      }
+          setLoadingCycles(false);
+        },
+        "Nie udało się pobrać listy cykli."
+      );
     };
 
     if (watchedFarmId && farms.length > 0) {

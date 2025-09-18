@@ -26,8 +26,9 @@ import type {
   InsertionEntryErrors,
 } from "../../../models/insertions/insertion-entry";
 import { MdSave } from "react-icons/md";
-import { useLatestCycle } from "../../../hooks/useLatestCycle";
 import AppDialog from "../../common/app-dialog";
+import { FarmsService } from "../../../services/farms-service";
+import type CycleDto from "../../../models/farms/latest-cycle";
 
 interface AddInsertionModalProps {
   open: boolean;
@@ -37,15 +38,14 @@ interface AddInsertionModalProps {
 
 interface InsertionFormState {
   farmId: string;
-  identifierId: string;
-  identifierDisplay: string;
+  cycleId: string;
   insertionDate: Dayjs | null;
   entries: InsertionEntry[];
 }
 
 interface InsertionFormErrors {
   farmId?: string;
-  identifierId?: string;
+  cycleId?: string;
   insertionDate?: string;
   entries?: { [index: number]: InsertionEntryErrors };
   entriesGeneral?: string;
@@ -53,8 +53,7 @@ interface InsertionFormErrors {
 
 const initialState: InsertionFormState = {
   farmId: "",
-  identifierId: "",
-  identifierDisplay: "",
+  cycleId: "",
   insertionDate: null,
   entries: [],
 };
@@ -112,8 +111,8 @@ const AddInsertionModal: React.FC<AddInsertionModalProps> = ({
   const { hatcheries, loadingHatcheries, fetchHatcheries } = useHatcheries();
   const [henhouses, setHenhouses] = useState<HouseRowModel[]>([]);
   const [loadingHenhouses, setLoadingHenhouses] = useState(false);
-  const { loadLatestCycle, loadingCycle: loadingLatestCycle } =
-    useLatestCycle();
+  const [cycles, setCycles] = useState<CycleDto[]>([]);
+  const [loadingCycles, setLoadingCycles] = useState(false);
   const [loading, setLoading] = useState(false);
   const [form, dispatch] = useReducer(formReducer, initialState);
   const [errors, setErrors] = useState<InsertionFormErrors>({});
@@ -131,35 +130,41 @@ const AddInsertionModal: React.FC<AddInsertionModalProps> = ({
   }, [open]);
 
   const handleFarmChange = async (farmId: string) => {
+    dispatch({ type: "RESET" }); // Reset whole form to clear entries
     dispatch({ type: "SET_FIELD", name: "farmId", value: farmId });
-    dispatch({ type: "SET_FIELD", name: "identifierId", value: "" });
-    dispatch({ type: "SET_FIELD", name: "identifierDisplay", value: "" });
     setHenhouses([]);
+    setCycles([]);
     setErrors({});
 
-    setLoadingHenhouses(true);
-    await handleApiResponse(
-      () => InsertionsService.getAvailableHenhouses(farmId),
-      (data) => setHenhouses(data.responseData?.items ?? []),
-      undefined,
-      "Nie udało się pobrać listy kurników"
-    );
-    setLoadingHenhouses(false);
-
-    const cycle = await loadLatestCycle(farmId);
-    if (!cycle) {
-      setErrors((prev) => ({
-        ...prev,
-        identifierId: "Brak aktywnego cyklu",
-      }));
-      return;
+    const selectedFarm = farms.find((f) => f.id === farmId);
+    if (selectedFarm?.activeCycle) {
+      dispatch({
+        type: "SET_FIELD",
+        name: "cycleId",
+        value: selectedFarm.activeCycle.id,
+      });
     }
 
-    dispatch({ type: "SET_FIELD", name: "identifierId", value: cycle.id });
-    dispatch({
-      type: "SET_FIELD",
-      name: "identifierDisplay",
-      value: `${cycle.identifier}/${cycle.year}`,
+    setLoadingHenhouses(true);
+    setLoadingCycles(true);
+
+    const henhousesPromise = handleApiResponse(
+      () => InsertionsService.getAvailableHenhouses(farmId),
+      (data) => setHenhouses(data.responseData?.items ?? []),
+      () => setHenhouses([]),
+      "Nie udało się pobrać listy kurników"
+    );
+
+    const cyclesPromise = handleApiResponse(
+      () => FarmsService.getFarmCycles(farmId),
+      (data) => setCycles(data.responseData ?? []),
+      () => setCycles([]),
+      "Nie udało się pobrać listy cykli"
+    );
+
+    await Promise.all([henhousesPromise, cyclesPromise]).finally(() => {
+      setLoadingHenhouses(false);
+      setLoadingCycles(false);
     });
   };
 
@@ -192,7 +197,7 @@ const AddInsertionModal: React.FC<AddInsertionModalProps> = ({
     const newErrors: InsertionFormErrors = {};
 
     if (!form.farmId) newErrors.farmId = "Ferma jest wymagana";
-    if (!form.identifierId) newErrors.identifierId = "Brak aktywnego cyklu";
+    if (!form.cycleId) newErrors.cycleId = "Cykl jest wymagany";
     if (!form.insertionDate) newErrors.insertionDate = "Data jest wymagana";
 
     if (form.entries.length === 0) {
@@ -222,7 +227,7 @@ const AddInsertionModal: React.FC<AddInsertionModalProps> = ({
       () =>
         InsertionsService.addNewInsertion({
           farmId: form.farmId,
-          cycleId: form.identifierId,
+          cycleId: form.cycleId,
           insertionDate: form.insertionDate!.format("YYYY-MM-DD"),
           entries: form.entries.map(
             ({ henhouseId, hatcheryId, quantity, bodyWeight }) => ({
@@ -270,6 +275,7 @@ const AddInsertionModal: React.FC<AddInsertionModalProps> = ({
   const handleClose = () => {
     dispatch({ type: "RESET" });
     setErrors({});
+    setCycles([]);
     setHenhouses([]);
     onClose();
   };
@@ -297,14 +303,28 @@ const AddInsertionModal: React.FC<AddInsertionModalProps> = ({
           </LoadingTextField>
 
           <LoadingTextField
-            loading={loadingLatestCycle}
-            label="Identyfikator"
-            value={form.identifierDisplay}
-            slotProps={{ input: { readOnly: true } }}
-            error={!!errors.identifierId}
-            helperText={errors.identifierId}
+            loading={loadingCycles}
+            label="Cykl"
+            select
+            value={form.cycleId}
+            onChange={(e) =>
+              dispatch({
+                type: "SET_FIELD",
+                name: "cycleId",
+                value: e.target.value,
+              })
+            }
+            error={!!errors.cycleId}
+            helperText={errors.cycleId}
             fullWidth
-          />
+            disabled={!form.farmId || loadingCycles || cycles.length === 0}
+          >
+            {cycles.map((cycle) => (
+              <MenuItem key={cycle.id} value={cycle.id}>
+                {`${cycle.identifier}/${cycle.year}`}
+              </MenuItem>
+            ))}
+          </LoadingTextField>
 
           <DatePicker
             label="Data wstawienia"

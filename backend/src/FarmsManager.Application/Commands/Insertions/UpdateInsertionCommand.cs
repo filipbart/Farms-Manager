@@ -1,5 +1,6 @@
 ﻿using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
+using FarmsManager.Application.Specifications.Cycle;
 using FarmsManager.Application.Specifications.Insertions;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
@@ -9,6 +10,8 @@ namespace FarmsManager.Application.Commands.Insertions;
 
 public record UpdateInsertionCommandDto
 {
+    public Guid CycleId { get; init; }
+
     /// <summary>
     /// Ilość sztuk
     /// </summary>
@@ -31,11 +34,14 @@ public class UpdateInsertionCommandHandler : IRequestHandler<UpdateInsertionComm
 {
     private readonly IUserDataResolver _userDataResolver;
     private readonly IInsertionRepository _insertionRepository;
+    private readonly ICycleRepository _cycleRepository;
 
-    public UpdateInsertionCommandHandler(IUserDataResolver userDataResolver, IInsertionRepository insertionRepository)
+    public UpdateInsertionCommandHandler(IUserDataResolver userDataResolver, IInsertionRepository insertionRepository,
+        ICycleRepository cycleRepository)
     {
         _userDataResolver = userDataResolver;
         _insertionRepository = insertionRepository;
+        _cycleRepository = cycleRepository;
     }
 
 
@@ -43,6 +49,12 @@ public class UpdateInsertionCommandHandler : IRequestHandler<UpdateInsertionComm
     {
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var insertion = await _insertionRepository.GetAsync(new InsertionByIdSpec(request.Id), cancellationToken);
+        var cycle = await _cycleRepository.GetAsync(new CycleByIdSpec(request.Data.CycleId), cancellationToken);
+
+        if (insertion.CycleId != cycle.Id)
+        {
+            insertion.SetCycle(cycle.Id);
+        }
 
         insertion.UpdateData(request.Data.InsertionDate, request.Data.Quantity, request.Data.BodyWeight);
         insertion.SetModified(userId);

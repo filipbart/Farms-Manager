@@ -1,6 +1,8 @@
 export default interface InsertionListModel {
   id: string;
+  cycleId: string;
   cycleText: string;
+  farmId: string;
   farmName: string;
   henhouseName: string;
   insertionDate: Date;

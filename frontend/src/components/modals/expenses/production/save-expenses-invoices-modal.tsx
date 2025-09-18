@@ -109,18 +109,18 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
         setValue("cycleId", "");
       }
 
-      try {
-        const cyclesResponse = await FarmsService.getFarmCycles(farmId);
-        if (cyclesResponse.responseData) {
-          setCycles(cyclesResponse.responseData);
-        } else {
+      await handleApiResponse(
+        () => FarmsService.getFarmCycles(farmId),
+        (data) => {
+          setCycles(data.responseData ?? []);
+          setLoadingCycles(false);
+        },
+        () => {
           setCycles([]);
-        }
-      } catch {
-        setCycles([]);
-      } finally {
-        setLoadingCycles(false);
-      }
+          setLoadingCycles(false);
+        },
+        "Nie udało się pobrać listy cykli."
+      );
     };
 
     if (watchedFarmId && farms.length > 0) {
