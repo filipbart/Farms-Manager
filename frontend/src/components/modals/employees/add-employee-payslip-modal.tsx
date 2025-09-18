@@ -131,15 +131,17 @@ const AddEmployeePayslipModal: React.FC<AddEmployeePayslipModalProps> = ({
   const [loadingCycles, setLoadingCycles] = useState(false);
 
   useEffect(() => {
-    fetchPayslipsFarms();
-  }, [fetchPayslipsFarms]);
-
-  useEffect(() => {
     if (open) {
-      // Reset state when modal opens
-      handleClose();
+      // Reset state and fetch initial data when modal opens
+      dispatch({ type: "RESET" });
+      setErrors({});
+      setCycles([]);
+      setEmployeesForSelectedFarm([]);
+      fetchPayslipsFarms();
+    } else {
+      dispatch({ type: "RESET" });
     }
-  }, [open]);
+  }, [open, fetchPayslipsFarms]);
 
   useEffect(() => {
     if (open && form.entries.length === 0) {

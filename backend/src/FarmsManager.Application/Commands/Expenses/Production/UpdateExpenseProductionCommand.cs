@@ -5,6 +5,10 @@ using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
 using FluentValidation;
 using MediatR;
+using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
+using FarmsManager.Application.Specifications.Farms;
+using FarmsManager.Application.Specifications.Cycle;
+using FarmsManager.Application.Commands.Expenses.Contractors;
 
 namespace FarmsManager.Application.Commands.Expenses.Production;
 
@@ -27,12 +31,19 @@ public class UpdateExpenseProductionCommandHandler : IRequestHandler<UpdateExpen
 {
     private readonly IUserDataResolver _userDataResolver;
     private readonly IExpenseProductionRepository _expenseProductionRepository;
+    private readonly IFarmRepository _farmRepository;
+    private readonly ICycleRepository _cycleRepository;
+    private readonly IExpenseContractorRepository _expenseContractorRepository;
 
     public UpdateExpenseProductionCommandHandler(IUserDataResolver userDataResolver,
-        IExpenseProductionRepository expenseProductionRepository)
+        IExpenseProductionRepository expenseProductionRepository, IFarmRepository farmRepository,
+        ICycleRepository cycleRepository, IExpenseContractorRepository expenseContractorRepository)
     {
         _userDataResolver = userDataResolver;
         _expenseProductionRepository = expenseProductionRepository;
+        _farmRepository = farmRepository;
+        _cycleRepository = cycleRepository;
+        _expenseContractorRepository = expenseContractorRepository;
     }
 
     public async Task<EmptyBaseResponse> Handle(UpdateExpenseProductionCommand request,
@@ -43,19 +54,25 @@ public class UpdateExpenseProductionCommandHandler : IRequestHandler<UpdateExpen
             await _expenseProductionRepository.GetAsync(new GetExpenseProductionByIdSpec(request.Id),
                 cancellationToken);
 
-        if (entity.FarmId != request.Data.FarmId)
+        var farm = await _farmRepository.GetAsync(new FarmByIdSpec(request.Data.FarmId), cancellationToken);
+        var cycle = await _cycleRepository.GetAsync(new CycleByIdSpec(request.Data.CycleId), cancellationToken);
+        var expenseContractor =
+            await _expenseContractorRepository.GetAsync(
+                new GetExpenseContractorByIdSpec(request.Data.ExpenseContractorId), cancellationToken);
+
+        if (entity.FarmId != farm.Id)
         {
-            entity.SetFarm(request.Data.FarmId);
+            entity.SetFarm(farm.Id);
         }
 
-        if (entity.CycleId != request.Data.CycleId)
+        if (entity.CycleId != cycle.Id)
         {
-            entity.SetCycle(request.Data.CycleId);
+            entity.SetCycle(cycle.Id);
         }
 
-        if (entity.ExpenseContractorId != request.Data.ExpenseContractorId)
+        if (entity.ExpenseContractorId != expenseContractor.Id)
         {
-            entity.SetExpenseContractor(request.Data.ExpenseContractorId);
+            entity.SetExpenseContractor(expenseContractor.Id);
         }
 
         entity.Update(

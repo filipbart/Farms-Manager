@@ -10,4 +10,5 @@ public record FarmRowDto
     public string ProducerNumber { get; init; }
     public DateTime DateCreatedUtc { get; init; }
     public List<HenhouseRowDto> Henhouses { get; init; }
+    public CycleDto ActiveCycle { get; init; }
 }

@@ -16,17 +16,17 @@ import { toast } from "react-toastify";
 import { MdSave, MdAttachFile } from "react-icons/md";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
-
 import LoadingTextField from "../../../common/loading-textfield";
 import LoadingButton from "../../../common/loading-button";
 import FilePreview from "../../../common/file-preview";
 import { useFarms } from "../../../../hooks/useFarms";
-import { useLatestCycle } from "../../../../hooks/useLatestCycle";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import type { AddExpenseProductionData } from "../../../../models/expenses/production/expenses-productions";
 import { useExpensesContractor } from "../../../../hooks/expenses/useExpensesContractors";
 import { ExpensesService } from "../../../../services/expenses-service";
 import AppDialog from "../../../common/app-dialog";
+import { FarmsService } from "../../../../services/farms-service";
+import type CycleDto from "../../../../models/farms/latest-cycle";
 
 interface AddExpenseProductionModalProps {
   open: boolean;
@@ -45,10 +45,11 @@ const AddExpenseProductionModal: React.FC<AddExpenseProductionModalProps> = ({
     loadingExpensesContractors,
     fetchExpensesContractors,
   } = useExpensesContractor();
-  const { loadLatestCycle, loadingCycle } = useLatestCycle();
 
   const [selectedFile, setSelectedFile] = useState<File>();
   const [loading, setLoading] = useState(false);
+  const [cycles, setCycles] = useState<CycleDto[]>([]);
+  const [loadingCycles, setLoadingCycles] = useState(false);
 
   const filePreviewUrl = selectedFile ? URL.createObjectURL(selectedFile) : "";
 
@@ -59,14 +60,11 @@ const AddExpenseProductionModal: React.FC<AddExpenseProductionModalProps> = ({
     formState: { errors },
     reset,
     setValue,
-    clearErrors,
-    setError,
     watch,
   } = useForm<AddExpenseProductionData>({
     defaultValues: {
       farmId: "",
       cycleId: "",
-      cycleDisplay: "",
       expenseContractorId: "",
       expenseTypeNameDisplay: "",
       invoiceNumber: "",
@@ -77,6 +75,8 @@ const AddExpenseProductionModal: React.FC<AddExpenseProductionModalProps> = ({
       comment: "",
     },
   });
+
+  const watchedFarmId = watch("farmId");
 
   useEffect(() => {
     if (open) {
@@ -93,29 +93,47 @@ const AddExpenseProductionModal: React.FC<AddExpenseProductionModalProps> = ({
     };
   }, [filePreviewUrl]);
 
+  useEffect(() => {
+    const fetchCyclesForFarm = async (farmId: string) => {
+      setLoadingCycles(true);
+
+      const selectedFarm = farms.find((f) => f.id === farmId);
+      if (selectedFarm?.activeCycle) {
+        setValue("cycleId", selectedFarm.activeCycle.id);
+      } else {
+        setValue("cycleId", "");
+      }
+
+      try {
+        const cyclesResponse = await FarmsService.getFarmCycles(farmId);
+
+        if (cyclesResponse.responseData) {
+          setCycles(cyclesResponse.responseData);
+        } else {
+          setCycles([]);
+          toast.error("Nie udało się pobrać listy cykli.");
+        }
+      } catch {
+        toast.error("Wystąpił błąd podczas pobierania danych o cyklach.");
+        setCycles([]);
+      } finally {
+        setLoadingCycles(false);
+      }
+    };
+
+    if (watchedFarmId && farms.length > 0) {
+      fetchCyclesForFarm(watchedFarmId);
+    } else {
+      setCycles([]);
+      setValue("cycleId", "");
+    }
+  }, [watchedFarmId, setValue, farms]);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
       const file = e.target.files[0];
       setSelectedFile(file);
       setValue("file", file);
-    }
-  };
-
-  const handleFarmChange = async (farmId: string) => {
-    setValue("cycleId", "");
-    setValue("cycleDisplay", "");
-    clearErrors("cycleId");
-
-    const cycle = await loadLatestCycle(farmId);
-    if (cycle) {
-      setValue("cycleId", cycle.id);
-      setValue("cycleDisplay", `${cycle.identifier}/${cycle.year}`);
-      clearErrors("cycleId");
-    } else {
-      setError("cycleId", {
-        type: "manual",
-        message: "Brak aktywnego cyklu dla wybranej fermy",
-      });
     }
   };
 
@@ -130,6 +148,7 @@ const AddExpenseProductionModal: React.FC<AddExpenseProductionModalProps> = ({
 
   const handleClose = () => {
     setSelectedFile(undefined);
+    setCycles([]);
     reset();
     onClose();
   };
@@ -193,7 +212,6 @@ const AddExpenseProductionModal: React.FC<AddExpenseProductionModalProps> = ({
                     helperText={errors.farmId?.message}
                     {...register("farmId", {
                       required: "Farma jest wymagana",
-                      onChange: (e) => handleFarmChange(e.target.value),
                     })}
                   >
                     {farms.map((farm) => (
@@ -205,14 +223,22 @@ const AddExpenseProductionModal: React.FC<AddExpenseProductionModalProps> = ({
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <LoadingTextField
-                    loading={loadingCycle}
+                    loading={loadingCycles}
                     label="Cykl"
-                    value={watch("cycleDisplay") || ""}
-                    slotProps={{ input: { readOnly: true } }}
+                    select
+                    fullWidth
+                    disabled={!watchedFarmId || cycles.length === 0}
+                    value={watch("cycleId") || ""}
                     error={!!errors.cycleId}
                     helperText={errors.cycleId?.message}
-                    fullWidth
-                  />
+                    {...register("cycleId", { required: "Cykl jest wymagany" })}
+                  >
+                    {cycles.map((cycle) => (
+                      <MenuItem key={cycle.id} value={cycle.id}>
+                        {`${cycle.identifier}/${cycle.year}`}
+                      </MenuItem>
+                    ))}
+                  </LoadingTextField>
                 </Grid>
 
                 <Grid size={{ xs: 12, sm: 6 }}>

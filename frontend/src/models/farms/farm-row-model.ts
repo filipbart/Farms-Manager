@@ -1,4 +1,5 @@
 import type { HouseRowModel } from "./house-row-model";
+import type CycleDto from "./latest-cycle";
 
 export default interface FarmRowModel {
   id: string;
@@ -9,4 +10,5 @@ export default interface FarmRowModel {
   henHousesCount: number;
   dateCreatedUtc: Date;
   henhouses: HouseRowModel[];
+  activeCycle: CycleDto;
 }

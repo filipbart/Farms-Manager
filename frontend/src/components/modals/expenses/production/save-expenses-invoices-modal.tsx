@@ -19,7 +19,6 @@ import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import { toast } from "react-toastify";
 import { useFarms } from "../../../../hooks/useFarms";
-import { useLatestCycle } from "../../../../hooks/useLatestCycle";
 import { useExpensesContractor } from "../../../../hooks/expenses/useExpensesContractors";
 import { useExpensesTypes } from "../../../../hooks/expenses/useExpensesTypes";
 import { getFileTypeFromUrl } from "../../../../utils/fileUtils";
@@ -32,6 +31,8 @@ import type {
   ExpenseInvoiceData,
 } from "../../../../models/expenses/production/expenses-productions";
 import AppDialog from "../../../common/app-dialog";
+import { FarmsService } from "../../../../services/farms-service";
+import type CycleDto from "../../../../models/farms/latest-cycle";
 
 interface SaveExpensesInvoicesModalProps {
   open: boolean;
@@ -55,7 +56,8 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
   const [previewOpen, setPreviewOpen] = useState(false);
 
   const { farms, loadingFarms, fetchFarms } = useFarms();
-  const { loadLatestCycle, loadingCycle } = useLatestCycle();
+  const [cycles, setCycles] = useState<CycleDto[]>([]);
+  const [loadingCycles, setLoadingCycles] = useState(false);
   const {
     expensesContractors,
     loadingExpensesContractors,
@@ -78,13 +80,10 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
     reset,
     setValue,
     watch,
-    setError,
-    clearErrors,
   } = useForm<ExpenseInvoiceData>({
     defaultValues: {
       farmId: "",
       cycleId: "",
-      cycleDisplay: "",
       contractorId: "",
       expenseTypeId: "",
       expenseTypeName: "",
@@ -97,22 +96,37 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
     },
   });
 
-  const handleFarmChange = async (farmId: string) => {
-    setValue("cycleId", "");
-    setValue("cycleDisplay", "");
-    clearErrors("cycleId");
+  const watchedFarmId = watch("farmId");
 
-    const cycle = await loadLatestCycle(farmId);
-    if (cycle) {
-      setValue("cycleId", cycle.id);
-      setValue("cycleDisplay", `${cycle.identifier}/${cycle.year}`);
-    } else {
-      setError("cycleId", {
-        type: "manual",
-        message: "Brak aktywnego cyklu",
-      });
+  useEffect(() => {
+    const fetchCyclesForFarm = async (farmId: string) => {
+      setLoadingCycles(true);
+
+      const selectedFarm = farms.find((f) => f.id === farmId);
+      if (selectedFarm?.activeCycle) {
+        setValue("cycleId", selectedFarm.activeCycle.id);
+      } else {
+        setValue("cycleId", "");
+      }
+
+      try {
+        const cyclesResponse = await FarmsService.getFarmCycles(farmId);
+        if (cyclesResponse.responseData) {
+          setCycles(cyclesResponse.responseData);
+        } else {
+          setCycles([]);
+        }
+      } catch {
+        setCycles([]);
+      } finally {
+        setLoadingCycles(false);
+      }
+    };
+
+    if (watchedFarmId && farms.length > 0) {
+      fetchCyclesForFarm(watchedFarmId);
     }
-  };
+  }, [watchedFarmId, farms, setValue]);
 
   const handleContractorChange = (contractorId: string) => {
     const selected = expensesContractors.find((c) => c.id === contractorId);
@@ -176,9 +190,7 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
     const data = { ...currentDraft.extractedFields, comment: "" };
     reset(data);
 
-    if (data.farmId) {
-      handleFarmChange(data.farmId);
-    }
+    // useEffect for watchedFarmId will handle cycle logic
   }, [currentIndex, draftExpenseInvoices, farms, reset, open, handleClose]);
 
   const handleSave = async (formData: ExpenseInvoiceData) => {
@@ -262,7 +274,6 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
         <DialogTitle>Podgląd i weryfikacja faktury kosztowej</DialogTitle>
         <form onSubmit={handleSubmit(handleSave)}>
           <input type="hidden" {...register("cycleId")} />
-          <input type="hidden" {...register("contractorId")} />
 
           <DialogContent dividers>
             <Grid container spacing={3}>
@@ -287,7 +298,6 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
                       helperText={errors.farmId?.message}
                       {...register("farmId", {
                         required: "Farma jest wymagana",
-                        onChange: (e) => handleFarmChange(e.target.value),
                       })}
                     >
                       {farms.map((farm) => (
@@ -299,14 +309,24 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
                   </Grid>
                   <Grid size={{ xs: 12, sm: 6 }}>
                     <LoadingTextField
-                      loading={loadingCycle}
+                      loading={loadingCycles}
                       label="Cykl"
-                      value={watch("cycleDisplay") || ""}
-                      slotProps={{ input: { readOnly: true } }}
+                      select
+                      fullWidth
+                      disabled={!watchedFarmId || cycles.length === 0}
+                      value={watch("cycleId") || ""}
                       error={!!errors.cycleId}
                       helperText={errors.cycleId?.message}
-                      fullWidth
-                    />
+                      {...register("cycleId", {
+                        required: "Cykl jest wymagany",
+                      })}
+                    >
+                      {cycles.map((cycle) => (
+                        <MenuItem key={cycle.id} value={cycle.id}>
+                          {`${cycle.identifier}/${cycle.year}`}
+                        </MenuItem>
+                      ))}
+                    </LoadingTextField>
                   </Grid>
 
                   <Grid size={{ xs: 12, sm: 6 }}>
