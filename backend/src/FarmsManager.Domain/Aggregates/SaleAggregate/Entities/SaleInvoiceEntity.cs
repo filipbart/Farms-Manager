@@ -7,7 +7,7 @@ namespace FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
 public class SaleInvoiceEntity : Entity
 {
     public Guid FarmId { get; init; }
-    public Guid CycleId { get; init; }
+    public Guid CycleId { get; protected internal set; }
     public Guid SlaughterhouseId { get; init; }
     public string InvoiceNumber { get; protected internal set; }
     public DateOnly InvoiceDate { get; protected internal set; }
@@ -69,6 +69,11 @@ public class SaleInvoiceEntity : Entity
         InvoiceTotal = invoiceTotal;
         SubTotal = subTotal;
         VatAmount = vatAmount;
+    }
+
+    public void SetCycle(Guid cycleId)
+    {
+        CycleId = cycleId;
     }
 
     public void SetFilePath(string path)

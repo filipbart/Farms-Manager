@@ -5,7 +5,9 @@ export interface SaleOtherExtras {
 
 export interface SaleListModel {
   id: string;
+  cycleId: string;
   cycleText: string;
+  farmId: string;
   farmName: string;
   henhouseName: string;
   slaughterhouseName: string;

@@ -5,6 +5,7 @@ import {
   Grid,
   DialogActions,
   TextField,
+  MenuItem,
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -20,6 +21,9 @@ import type {
   UpdateSalesInvoiceData,
 } from "../../../../models/sales/sales-invoices";
 import { SalesService } from "../../../../services/sales-service";
+import { FarmsService } from "../../../../services/farms-service";
+import type CycleDto from "../../../../models/farms/latest-cycle";
+import LoadingTextField from "../../../common/loading-textfield";
 
 interface EditSalesInvoiceModalProps {
   open: boolean;
@@ -35,6 +39,8 @@ const EditSaleInvoiceModal: React.FC<EditSalesInvoiceModalProps> = ({
   salesInvoice,
 }) => {
   const [loading, setLoading] = useState(false);
+  const [cycles, setCycles] = useState<CycleDto[]>([]);
+  const [loadingCycles, setLoadingCycles] = useState(false);
 
   const {
     control,
@@ -43,11 +49,35 @@ const EditSaleInvoiceModal: React.FC<EditSalesInvoiceModalProps> = ({
     formState: { errors },
     reset,
     watch,
-  } = useForm<UpdateSalesInvoiceData>();
+  } = useForm<UpdateSalesInvoiceData>({
+    defaultValues: { cycleId: "" },
+  });
+
+  useEffect(() => {
+    const fetchCycles = async (farmId: string) => {
+      if (!farmId) {
+        setCycles([]);
+        return;
+      }
+      setLoadingCycles(true);
+      await handleApiResponse(
+        () => FarmsService.getFarmCycles(farmId),
+        (data) => setCycles(data.responseData ?? []),
+        () => setCycles([]),
+        "Nie udało się pobrać cykli dla wybranej fermy."
+      );
+      setLoadingCycles(false);
+    };
+
+    if (salesInvoice?.farmId) {
+      fetchCycles(salesInvoice.farmId);
+    }
+  }, [salesInvoice]);
 
   useEffect(() => {
     if (salesInvoice) {
       reset({
+        cycleId: salesInvoice.cycleId,
         invoiceNumber: salesInvoice.invoiceNumber,
         invoiceTotal: salesInvoice.invoiceTotal,
         subTotal: salesInvoice.subTotal,
@@ -88,6 +118,33 @@ const EditSaleInvoiceModal: React.FC<EditSalesInvoiceModalProps> = ({
       <form onSubmit={handleSubmit(handleSave)}>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                label="Ferma"
+                value={salesInvoice?.farmName || ""}
+                fullWidth
+                disabled
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <LoadingTextField
+                loading={loadingCycles}
+                label="Cykl"
+                select
+                fullWidth
+                disabled={loadingCycles || cycles.length === 0}
+                value={watch("cycleId") || ""}
+                error={!!errors.cycleId}
+                helperText={errors.cycleId?.message}
+                {...register("cycleId", { required: "Cykl jest wymagany" })}
+              >
+                {cycles.map((cycle) => (
+                  <MenuItem key={cycle.id} value={cycle.id}>
+                    {`${cycle.identifier}/${cycle.year}`}
+                  </MenuItem>
+                ))}
+              </LoadingTextField>
+            </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 label="Numer faktury"

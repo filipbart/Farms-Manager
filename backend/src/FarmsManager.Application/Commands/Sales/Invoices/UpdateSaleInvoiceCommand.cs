@@ -5,11 +5,14 @@ using FarmsManager.Domain.Aggregates.SaleAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
 using FluentValidation;
 using MediatR;
+using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
+using FarmsManager.Application.Specifications.Cycle;
 
 namespace FarmsManager.Application.Commands.Sales.Invoices;
 
 public record UpdateSalesInvoiceData
 {
+    public Guid CycleId { get; init; }
     public string InvoiceNumber { get; init; }
     public decimal InvoiceTotal { get; init; }
     public decimal SubTotal { get; init; }
@@ -25,12 +28,14 @@ public class UpdateSalesInvoiceCommandHandler : IRequestHandler<UpdateSaleInvoic
 {
     private readonly IUserDataResolver _userDataResolver;
     private readonly ISaleInvoiceRepository _saleInvoiceRepository;
+    private readonly ICycleRepository _cycleRepository;
 
     public UpdateSalesInvoiceCommandHandler(IUserDataResolver userDataResolver,
-        ISaleInvoiceRepository saleInvoiceRepository)
+        ISaleInvoiceRepository saleInvoiceRepository, ICycleRepository cycleRepository)
     {
         _userDataResolver = userDataResolver;
         _saleInvoiceRepository = saleInvoiceRepository;
+        _cycleRepository = cycleRepository;
     }
 
     public async Task<EmptyBaseResponse> Handle(UpdateSaleInvoiceCommand request,
@@ -40,6 +45,13 @@ public class UpdateSalesInvoiceCommandHandler : IRequestHandler<UpdateSaleInvoic
         var entity =
             await _saleInvoiceRepository.GetAsync(new SaleInvoiceByIdSpec(request.Id),
                 cancellationToken);
+
+        var cycle = await _cycleRepository.GetAsync(new CycleByIdSpec(request.Data.CycleId), cancellationToken);
+
+        if (entity.CycleId != cycle.Id)
+        {
+            entity.SetCycle(cycle.Id);
+        }
 
         entity.Update(
             request.Data.InvoiceNumber,
@@ -61,6 +73,7 @@ public class UpdateSalesInvoiceCommandValidator : AbstractValidator<UpdateSaleIn
 {
     public UpdateSalesInvoiceCommandValidator()
     {
+        RuleFor(t => t.Data.CycleId).NotEmpty();
         RuleFor(t => t.Data.InvoiceNumber).NotEmpty();
         RuleFor(t => t.Data.InvoiceTotal).GreaterThan(0);
         RuleFor(t => t.Data.SubTotal).GreaterThan(0);

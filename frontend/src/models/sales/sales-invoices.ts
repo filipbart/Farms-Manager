@@ -1,6 +1,8 @@
 export interface SalesInvoiceListModel {
   id: string;
+  cycleId: string;
   cycleText: string;
+  farmId: string;
   farmName: string;
   slaughterhouseName: string;
   invoiceNumber: string;
@@ -15,6 +17,7 @@ export interface SalesInvoiceListModel {
 }
 
 export interface UpdateSalesInvoiceData {
+  cycleId: string;
   invoiceNumber: string;
   invoiceTotal: number;
   subTotal: number;

@@ -109,12 +109,23 @@ const SaleEntriesSection: React.FC<SaleEntriesSectionProps> = ({
                       (h) => h.id === selectedId
                     );
 
-                    handleFieldChange(index, "henhouseId", selectedId);
-                    handleFieldChange(
+                    dispatch({
+                      type: "UPDATE_ENTRY",
                       index,
-                      "henhouseName",
-                      selectedHouse ? selectedHouse.name : ""
-                    );
+                      name: "henhouseId",
+                      value: selectedId,
+                    });
+                    dispatch({
+                      type: "UPDATE_ENTRY",
+                      index,
+                      name: "henhouseName",
+                      value: selectedHouse ? selectedHouse.name : "",
+                    });
+
+                    setEntryErrors(index, {
+                      ...(errors?.[index] || {}),
+                      henhouseId: undefined,
+                    });
                   }}
                   fullWidth
                   disabled={!farmId}

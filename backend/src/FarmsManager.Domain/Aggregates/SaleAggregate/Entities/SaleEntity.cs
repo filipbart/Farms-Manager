@@ -62,7 +62,7 @@ public class SaleEntity : Entity
 
     public SaleType Type { get; init; }
     public Guid FarmId { get; init; }
-    public Guid CycleId { get; init; }
+    public Guid CycleId { get; protected internal set; }
     public DateOnly SaleDate { get; protected internal set; }
     public Guid SlaughterhouseId { get; init; }
     public Guid HenhouseId { get; init; }
@@ -130,6 +130,11 @@ public class SaleEntity : Entity
         {
             OtherExtras.AddRange(otherExtras);
         }
+    }
+
+    public void SetCycle(Guid cycleId)
+    {
+        CycleId = cycleId;
     }
 
     public void MarkAsSentToIrz(string documentNumber, Guid userId)

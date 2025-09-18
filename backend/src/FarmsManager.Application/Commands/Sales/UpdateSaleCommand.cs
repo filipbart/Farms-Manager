@@ -5,11 +5,15 @@ using FarmsManager.Domain.Aggregates.SaleAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Models;
 using FarmsManager.Domain.Exceptions;
 using MediatR;
+using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
+using FarmsManager.Application.Specifications.Cycle;
 
 namespace FarmsManager.Application.Commands.Sales;
 
 public record UpdateSaleCommandDto
 {
+    public Guid CycleId { get; init; }
+
     /// <summary>
     /// Data sprzedaży
     /// </summary>
@@ -77,11 +81,13 @@ public class UpdateSaleCommandHandler : IRequestHandler<UpdateSaleCommand, Empty
 {
     private readonly IUserDataResolver _userDataResolver;
     private readonly ISaleRepository _saleRepository;
+    private readonly ICycleRepository _cycleRepository;
 
-    public UpdateSaleCommandHandler(IUserDataResolver userDataResolver, ISaleRepository saleRepository)
+    public UpdateSaleCommandHandler(IUserDataResolver userDataResolver, ISaleRepository saleRepository, ICycleRepository cycleRepository)
     {
         _userDataResolver = userDataResolver;
         _saleRepository = saleRepository;
+        _cycleRepository = cycleRepository;
     }
 
 
@@ -89,6 +95,12 @@ public class UpdateSaleCommandHandler : IRequestHandler<UpdateSaleCommand, Empty
     {
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var sale = await _saleRepository.GetAsync(new SaleByIdSpec(request.Id), cancellationToken);
+        var cycle = await _cycleRepository.GetAsync(new CycleByIdSpec(request.Data.CycleId), cancellationToken);
+
+        if (sale.CycleId != cycle.Id)
+        {
+            sale.SetCycle(cycle.Id);
+        }
 
         sale.Update(
             request.Data.SaleDate,

@@ -5,7 +5,9 @@ namespace FarmsManager.Application.Queries.Sales.Invoices;
 public class SalesInvoiceRowDto
 {
     public Guid Id { get; init; }
+    public Guid CycleId { get; init; }
     public string CycleText { get; init; }
+    public Guid FarmId { get; init; }
     public string FarmName { get; init; }
     public string SlaughterhouseName { get; init; }
     public string InvoiceNumber { get; init; }

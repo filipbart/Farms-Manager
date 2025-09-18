@@ -31,9 +31,10 @@ import { validateEntry } from "./validation/validate-entry";
 import type { SaleFormErrors } from "../../../../models/sales/sale-form-states";
 import { toast } from "react-toastify";
 import { SalesService } from "../../../../services/sales-service";
-import { useLatestCycle } from "../../../../hooks/useLatestCycle";
 import FilePreview from "../../../common/file-preview";
 import AppDialog from "../../../common/app-dialog";
+import { FarmsService } from "../../../../services/farms-service";
+import type CycleDto from "../../../../models/farms/latest-cycle";
 
 interface AddSaleModalProps {
   open: boolean;
@@ -51,8 +52,8 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
     useSlaughterhouses();
   const { saleFieldsExtra, fetchSaleFieldsExtra } = useSaleFieldsExtra();
   const [henhouses, setHenhouses] = useState<HouseRowModel[]>([]);
-  const { loadLatestCycle, loadingCycle: loadingLatestCycle } =
-    useLatestCycle();
+  const [cycles, setCycles] = useState<CycleDto[]>([]);
+  const [loadingCycles, setLoadingCycles] = useState(false);
   const [loading, setLoading] = useState(false);
   const [form, dispatch] = useReducer(formReducer, initialState);
   const [errors, setErrors] = useState<SaleFormErrors>({});
@@ -107,27 +108,34 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
   }, [open]);
 
   const handleFarmChange = async (farmId: string) => {
+    dispatch({ type: "RESET" });
     dispatch({ type: "SET_FIELD", name: "farmId", value: farmId });
-    dispatch({ type: "SET_FIELD", name: "identifierId", value: "" });
-    dispatch({ type: "SET_FIELD", name: "identifierDisplay", value: "" });
     setHenhouses(farms.find((f) => f.id === farmId)?.henhouses || []);
+    setCycles([]);
     setErrors({});
 
-    const cycle = await loadLatestCycle(farmId);
-    if (!cycle) {
-      setErrors((prev) => ({
-        ...prev,
-        identifierId: "Brak aktywnego cyklu",
-      }));
-      return;
+    const selectedFarm = farms.find((f) => f.id === farmId);
+    if (selectedFarm?.activeCycle) {
+      dispatch({
+        type: "SET_FIELD",
+        name: "identifierId",
+        value: selectedFarm.activeCycle.id,
+      });
     }
 
-    dispatch({ type: "SET_FIELD", name: "identifierId", value: cycle.id });
-    dispatch({
-      type: "SET_FIELD",
-      name: "identifierDisplay",
-      value: `${cycle.identifier}/${cycle.year}`,
-    });
+    setLoadingCycles(true);
+    await handleApiResponse(
+      () => FarmsService.getFarmCycles(farmId),
+      (data) => {
+        setCycles(data.responseData ?? []);
+      },
+      () => {
+        setCycles([]);
+      },
+      "Nie udało się pobrać listy cykli."
+    );
+    setLoadingCycles(false);
+    dispatch({ type: "ADD_ENTRY" });
   };
 
   const setEntryErrors = (index: number, entryErrors: SaleEntryErrors) => {
@@ -268,14 +276,30 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
 
               <Grid size={{ xs: 12, sm: 6 }}>
                 <LoadingTextField
-                  loading={loadingLatestCycle}
+                  loading={loadingCycles}
                   fullWidth
-                  label="Identyfikator"
-                  value={form.identifierDisplay}
-                  slotProps={{ input: { readOnly: true } }}
+                  label="Cykl"
+                  select
+                  value={form.identifierId}
+                  onChange={(e) =>
+                    dispatch({
+                      type: "SET_FIELD",
+                      name: "identifierId",
+                      value: e.target.value,
+                    })
+                  }
                   error={!!errors.identifierId}
                   helperText={errors.identifierId}
-                />
+                  disabled={
+                    !form.farmId || loadingCycles || cycles.length === 0
+                  }
+                >
+                  {cycles.map((cycle) => (
+                    <MenuItem key={cycle.id} value={cycle.id}>
+                      {`${cycle.identifier}/${cycle.year}`}
+                    </MenuItem>
+                  ))}
+                </LoadingTextField>
               </Grid>
 
               <Grid size={{ xs: 12, sm: 6 }}>

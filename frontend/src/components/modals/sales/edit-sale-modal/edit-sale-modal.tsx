@@ -23,6 +23,9 @@ import { MdSave } from "react-icons/md";
 import { toast } from "react-toastify";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import AppDialog from "../../../common/app-dialog";
+import { FarmsService } from "../../../../services/farms-service";
+import type CycleDto from "../../../../models/farms/latest-cycle";
+import LoadingTextField from "../../../common/loading-textfield";
 
 interface EditSaleModalProps {
   open: boolean;
@@ -38,6 +41,8 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({
   sale,
 }) => {
   const [loading, setLoading] = useState(false);
+  const [cycles, setCycles] = useState<CycleDto[]>([]);
+  const [loadingCycles, setLoadingCycles] = useState(false);
   const [form, setForm] = useState<SaleListModel | null>(null);
   const [errors, setErrors] = useState<{
     [key: string]: any;
@@ -50,6 +55,31 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({
       setErrors({});
     }
   }, [sale, open]);
+
+  useEffect(() => {
+    const fetchCycles = async (farmId: string) => {
+      if (!farmId) {
+        setCycles([]);
+        return;
+      }
+      setLoadingCycles(true);
+      await handleApiResponse(
+        () => FarmsService.getFarmCycles(farmId),
+        (data) => {
+          setCycles(data.responseData ?? []);
+        },
+        () => {
+          setCycles([]);
+        },
+        "Nie udało się pobrać cykli dla wybranej fermy."
+      );
+      setLoadingCycles(false);
+    };
+
+    if (form?.farmId) {
+      fetchCycles(form.farmId);
+    }
+  }, [form?.farmId]);
 
   const handleChange = (name: keyof SaleEntry, value: any) => {
     if (!form) return;
@@ -89,6 +119,7 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({
     const newErrors: typeof errors = {};
 
     if (!form.saleDate) newErrors.saleDate = "Wymagana data sprzedaży";
+    if (!form.cycleId) newErrors.cycleId = "Cykl jest wymagany";
 
     if (Number(form.quantity) <= 0) newErrors.quantity = "Wymagana wartość > 0";
     if (Number(form.weight) <= 0) newErrors.weight = "Wymagana wartość > 0";
@@ -132,6 +163,7 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({
     await handleApiResponse(
       () =>
         SalesService.updateSale(form.id, {
+          cycleId: form.cycleId,
           saleDate: form.saleDate,
           quantity: Number(form.quantity),
           weight: Number(form.weight),
@@ -166,7 +198,31 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({
     <AppDialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>Edycja pozycji sprzedaży</DialogTitle>
       <DialogContent dividers>
-        <Grid container spacing={2}>
+        <Grid container spacing={2} sx={{ mt: 1 }}>
+          <Grid size={12}>
+            <TextField label="Ferma" fullWidth value={form.farmName} disabled />
+          </Grid>
+          <Grid size={12}>
+            <LoadingTextField
+              label="Cykl"
+              select
+              fullWidth
+              loading={loadingCycles}
+              value={form.cycleId}
+              onChange={(e) =>
+                setForm((f) => (f ? { ...f, cycleId: e.target.value } : null))
+              }
+              error={!!errors.cycleId}
+              helperText={errors.cycleId}
+              disabled={!form.farmId || loadingCycles || cycles.length === 0}
+            >
+              {cycles.map((cycle) => (
+                <MenuItem key={cycle.id} value={cycle.id}>
+                  {`${cycle.identifier}/${cycle.year}`}
+                </MenuItem>
+              ))}
+            </LoadingTextField>
+          </Grid>
           <Grid sx={{ xs: 12, sm: 4 }}>
             <DatePicker
               label="Data wstawienia"

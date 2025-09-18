@@ -49,20 +49,6 @@ const InsertionEntriesTable: React.FC<InsertionEntriesTableProps> = ({
   loadingHatcheries,
   farmId,
 }) => {
-  const handleFieldChange = (
-    index: number,
-    name: keyof InsertionEntry,
-    value: string
-  ) => {
-    dispatch({
-      type: "UPDATE_ENTRY",
-      index,
-      name,
-      value,
-    });
-    setEntryErrors(index, { ...(errors?.[index] || {}), [name]: undefined });
-  };
-
   return (
     <Table
       size="small"
@@ -100,9 +86,18 @@ const InsertionEntriesTable: React.FC<InsertionEntriesTableProps> = ({
                   <>
                     <Select
                       value={entry.henhouseId}
-                      onChange={({ target }) =>
-                        handleFieldChange(index, "henhouseId", target.value)
-                      }
+                      onChange={({ target }) => {
+                        dispatch({
+                          type: "UPDATE_ENTRY",
+                          index,
+                          name: "henhouseId",
+                          value: target.value,
+                        });
+                        setEntryErrors(index, {
+                          ...(errors?.[index] || {}),
+                          henhouseId: undefined,
+                        });
+                      }}
                       fullWidth
                       disabled={loadingHenhouses || !farmId}
                       error={!!errors?.[index]?.henhouseId}
@@ -132,9 +127,18 @@ const InsertionEntriesTable: React.FC<InsertionEntriesTableProps> = ({
                       <span>
                         <Select
                           value={entry.hatcheryId}
-                          onChange={({ target }) =>
-                            handleFieldChange(index, "hatcheryId", target.value)
-                          }
+                          onChange={({ target }) => {
+                            dispatch({
+                              type: "UPDATE_ENTRY",
+                              index,
+                              name: "hatcheryId",
+                              value: target.value,
+                            });
+                            setEntryErrors(index, {
+                              ...(errors?.[index] || {}),
+                              hatcheryId: undefined,
+                            });
+                          }}
                           fullWidth
                           disabled={loadingHatcheries}
                           error={!!errors?.[index]?.hatcheryId}
@@ -168,9 +172,18 @@ const InsertionEntriesTable: React.FC<InsertionEntriesTableProps> = ({
                   <TextField
                     type="number"
                     value={entry.quantity}
-                    onChange={(e) =>
-                      handleFieldChange(index, "quantity", e.target.value)
-                    }
+                    onChange={(e) => {
+                      dispatch({
+                        type: "UPDATE_ENTRY",
+                        index,
+                        name: "quantity",
+                        value: e.target.value,
+                      });
+                      setEntryErrors(index, {
+                        ...(errors?.[index] || {}),
+                        quantity: undefined,
+                      });
+                    }}
                     slotProps={{ htmlInput: { min: 1, step: 1 } }}
                     sx={{ minWidth: numberInputWidth, width: numberInputWidth }}
                     error={!!errors?.[index]?.quantity}
@@ -187,9 +200,18 @@ const InsertionEntriesTable: React.FC<InsertionEntriesTableProps> = ({
                   <TextField
                     type="number"
                     value={entry.bodyWeight}
-                    onChange={(e) =>
-                      handleFieldChange(index, "bodyWeight", e.target.value)
-                    }
+                    onChange={(e) => {
+                      dispatch({
+                        type: "UPDATE_ENTRY",
+                        index,
+                        name: "bodyWeight",
+                        value: e.target.value,
+                      });
+                      setEntryErrors(index, {
+                        ...(errors?.[index] || {}),
+                        bodyWeight: undefined,
+                      });
+                    }}
                     slotProps={{ htmlInput: { min: 0, step: 0.01 } }}
                     sx={{ minWidth: numberInputWidth, width: numberInputWidth }}
                     error={!!errors?.[index]?.bodyWeight}
