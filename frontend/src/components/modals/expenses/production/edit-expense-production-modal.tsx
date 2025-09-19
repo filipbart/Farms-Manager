@@ -86,26 +86,37 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
   }, [open, fetchFarms, fetchExpensesContractors]);
 
   useEffect(() => {
-    const fetchCyclesForFarm = async (farmId: string) => {
-      setLoadingCycles(true);
-      try {
-        await handleApiResponse(
-          () => FarmsService.getFarmCycles(farmId),
-          (data) => setCycles(data.responseData ?? [])
-        );
-      } catch {
-        toast.error("Nie udało się pobrać cykli dla wybranej fermy.");
-      } finally {
-        setLoadingCycles(false);
+    const fetchCyclesForFarm = async () => {
+      if (!watchedFarmId) {
+        setCycles([]);
+        return;
       }
-    };
+      setLoadingCycles(true);
+      await handleApiResponse(
+        () => FarmsService.getFarmCycles(watchedFarmId),
+        (data) => {
+          const fetchedCycles = data.responseData ?? [];
+          setCycles(fetchedCycles);
 
-    if (watchedFarmId) {
-      fetchCyclesForFarm(watchedFarmId);
-    } else {
-      setCycles([]);
-    }
-  }, [watchedFarmId]);
+          const currentCycleId = watch("cycleId");
+          const isCurrentCycleValid = fetchedCycles.some(
+            (c) => c.id === currentCycleId
+          );
+
+          if (!isCurrentCycleValid) {
+            const activeCycle = farms.find(
+              (f) => f.id === watchedFarmId
+            )?.activeCycle;
+            setValue("cycleId", activeCycle?.id || "");
+          }
+        },
+        () => setCycles([]),
+        "Nie udało się pobrać cykli dla wybranej fermy."
+      );
+      setLoadingCycles(false);
+    };
+    fetchCyclesForFarm();
+  }, [watchedFarmId, farms, setValue, watch]);
 
   useEffect(() => {
     if (
@@ -126,7 +137,7 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
         comment: expenseProductionToEdit.comment,
       });
     }
-  }, [expenseProductionToEdit, reset, farms, expensesContractors]);
+  }, [expenseProductionToEdit, reset, farms, expensesContractors, open]);
 
   const handleContractorChange = (contractorId: string | null) => {
     const selected = expensesContractors.find((c) => c.id === contractorId);
