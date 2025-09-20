@@ -17,7 +17,6 @@ import { toast } from "react-toastify";
 import type { Dayjs } from "dayjs";
 import { MdSave } from "react-icons/md";
 import { useFarms } from "../../../../hooks/useFarms";
-import { useLatestCycle } from "../../../../hooks/useLatestCycle";
 import { useUtilizationPlants } from "../../../../hooks/useUtilizationPlants";
 import {
   FallenStockType,
@@ -30,6 +29,8 @@ import LoadingButton from "../../../common/loading-button";
 import LoadingTextField from "../../../common/loading-textfield";
 import FallenStockEntriesTable from "./fallen-stocks-entry-table";
 import type { HouseRowModel } from "../../../../models/farms/house-row-model";
+import { FarmsService } from "../../../../services/farms-service";
+import type CycleDto from "../../../../models/farms/latest-cycle";
 
 const fallenStockTypeLabels: { [key in FallenStockType]: string } = {
   [FallenStockType.FallCollision]: "Padnięcie/stłuczki",
@@ -45,7 +46,6 @@ interface AddFallenStocksModalProps {
 interface FallenStockFormState {
   farmId: string;
   cycleId: string;
-  cycleDisplay: string;
   type: FallenStockType;
   utilizationPlantId: string | null;
   date: Dayjs | null;
@@ -64,7 +64,6 @@ interface FallenStockFormErrors {
 const initialState: FallenStockFormState = {
   farmId: "",
   cycleId: "",
-  cycleDisplay: "",
   type: FallenStockType.FallCollision,
   utilizationPlantId: null,
   date: null,
@@ -128,14 +127,14 @@ const AddFallenStocksModal: React.FC<AddFallenStocksModalProps> = ({
     loadingUtilizationPlants,
     fetchUtilizationPlants,
   } = useUtilizationPlants();
-  const { loadLatestCycle, loadingCycle: loadingLatestCycle } =
-    useLatestCycle();
 
   const [loading, setLoading] = useState(false);
   const [loadingHenhouses, setLoadingHenhouses] = useState(false);
   const [form, dispatch] = useReducer(formReducer, initialState);
   const [errors, setErrors] = useState<FallenStockFormErrors>({});
   const [henhouses, setHenhouses] = useState<HouseRowModel[]>([]);
+  const [cycles, setCycles] = useState<CycleDto[]>([]);
+  const [loadingCycles, setLoadingCycles] = useState(false);
   const [sendToIrz, setSendToIrz] = useState(true);
 
   useEffect(() => {
@@ -152,24 +151,43 @@ const AddFallenStocksModal: React.FC<AddFallenStocksModalProps> = ({
   const handleFarmChange = async (farmId: string) => {
     dispatch({ type: "SET_FIELD", name: "farmId", value: farmId });
     dispatch({ type: "SET_FIELD", name: "cycleId", value: "" });
-    dispatch({ type: "SET_FIELD", name: "cycleDisplay", value: "" });
     setErrors({});
 
     setHenhouses([]);
+    setCycles([]);
     dispatch({ type: "CLEAR_HENHOUSES_IN_ENTRIES" });
 
-    const cycle = await loadLatestCycle(farmId);
-    if (!cycle) {
-      setErrors((prev) => ({ ...prev, cycleId: "Brak aktywnego cyklu" }));
-      return;
-    }
+    if (!farmId) return;
 
-    dispatch({ type: "SET_FIELD", name: "cycleId", value: cycle.id });
-    dispatch({
-      type: "SET_FIELD",
-      name: "cycleDisplay",
-      value: `${cycle.identifier}/${cycle.year}`,
-    });
+    const selectedFarm = farms.find((f) => f.id === farmId);
+
+    setLoadingCycles(true);
+    await handleApiResponse(
+      () => FarmsService.getFarmCycles(farmId),
+      (data) => {
+        const fetchedCycles = data.responseData ?? [];
+        setCycles(fetchedCycles);
+        const activeCycle = selectedFarm?.activeCycle;
+        if (activeCycle && fetchedCycles.some((c) => c.id === activeCycle.id)) {
+          dispatch({
+            type: "SET_FIELD",
+            name: "cycleId",
+            value: activeCycle.id,
+          });
+        }
+        if (fetchedCycles.length === 0) {
+          setErrors((prev) => ({
+            ...prev,
+            cycleId: "Brak cykli dla tej fermy",
+          }));
+        }
+      },
+      () => {
+        setCycles([]);
+      },
+      "Nie udało się pobrać listy cykli."
+    );
+    setLoadingCycles(false);
   };
 
   const handleTypeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -290,6 +308,8 @@ const AddFallenStocksModal: React.FC<AddFallenStocksModalProps> = ({
   const handleClose = () => {
     dispatch({ type: "RESET" });
     setErrors({});
+    setHenhouses([]);
+    setCycles([]);
     setSendToIrz(true);
     onClose();
   };
@@ -325,14 +345,28 @@ const AddFallenStocksModal: React.FC<AddFallenStocksModalProps> = ({
             ))}
           </LoadingTextField>
           <LoadingTextField
-            loading={loadingLatestCycle}
+            loading={loadingCycles}
             label="Cykl"
-            value={form.cycleDisplay}
-            slotProps={{ htmlInput: { readOnly: true } }}
+            select
+            fullWidth
+            disabled={!form.farmId || loadingCycles || cycles.length === 0}
+            value={form.cycleId}
+            onChange={(e) =>
+              dispatch({
+                type: "SET_FIELD",
+                name: "cycleId",
+                value: e.target.value,
+              })
+            }
             error={!!errors.cycleId}
             helperText={errors.cycleId}
-            fullWidth
-          />
+          >
+            {cycles.map((cycle) => (
+              <MenuItem key={cycle.id} value={cycle.id}>
+                {`${cycle.identifier}/${cycle.year}`}
+              </MenuItem>
+            ))}
+          </LoadingTextField>
 
           <TextField
             select

@@ -7,7 +7,7 @@ namespace FarmsManager.Domain.Aggregates.FallenStockAggregate.Entities;
 public class FallenStockEntity : Entity
 {
     public Guid FarmId { get; init; }
-    public Guid CycleId { get; init; }
+    public Guid CycleId { get; protected internal set; }
     public Guid? UtilizationPlantId { get; init; }
     public Guid HenhouseId { get; init; }
     public FallenStockType Type { get; init; }
@@ -55,6 +55,11 @@ public class FallenStockEntity : Entity
     public void Update(int quantity)
     {
         Quantity = quantity;
+    }
+
+    public void SetCycle(Guid cycleId)
+    {
+        CycleId = cycleId;
     }
 
     public void MarkAsSentToIrz(string documentNumber, Guid userId)

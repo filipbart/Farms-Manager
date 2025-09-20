@@ -10,7 +10,7 @@ public class FallenStockPickupEntity : Entity
     }
 
     public Guid FarmId { get; init; }
-    public Guid CycleId { get; init; }
+    public Guid CycleId { get; protected internal set; }
     public DateOnly Date { get; init; }
     public int Quantity { get; protected internal set; }
     public virtual FarmEntity Farm { get; init; }
@@ -32,5 +32,10 @@ public class FallenStockPickupEntity : Entity
     public void Update(int quantity)
     {
         Quantity = quantity;
+    }
+
+    public void SetCycle(Guid cycleId)
+    {
+        CycleId = cycleId;
     }
 }

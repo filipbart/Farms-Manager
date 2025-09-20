@@ -1,6 +1,8 @@
 ﻿using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
+using FarmsManager.Application.Specifications.Cycle;
 using FarmsManager.Application.Specifications.FallenStocks;
+using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.FallenStockAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
 using FluentValidation;
@@ -16,6 +18,7 @@ public record UpdateFallenStockEntry
 
 public record UpdateFallenStocksData
 {
+    public Guid CycleId { get; init; }
     public List<UpdateFallenStockEntry> Entries { get; init; }
 }
 
@@ -26,12 +29,14 @@ public class UpdateFallenStocksCommandHandler : IRequestHandler<UpdateFallenStoc
 {
     private readonly IUserDataResolver _userDataResolver;
     private readonly IFallenStockRepository _fallenStockRepository;
+    private readonly ICycleRepository _cycleRepository;
 
     public UpdateFallenStocksCommandHandler(IUserDataResolver userDataResolver,
-        IFallenStockRepository fallenStockRepository)
+        IFallenStockRepository fallenStockRepository, ICycleRepository cycleRepository)
     {
         _userDataResolver = userDataResolver;
         _fallenStockRepository = fallenStockRepository;
+        _cycleRepository = cycleRepository;
     }
 
     public async Task<EmptyBaseResponse> Handle(UpdateFallenStocksCommand request, CancellationToken ct)
@@ -45,11 +50,17 @@ public class UpdateFallenStocksCommandHandler : IRequestHandler<UpdateFallenStoc
             throw new Exception("Nie znaleziono żadnych wpisów sztuk upadłych o podanym identyfikatorze grupy.");
         }
 
+        var cycle = await _cycleRepository.GetAsync(new CycleByIdSpec(request.Data.CycleId), ct);
 
         foreach (var existingEntry in existingEntries)
         {
             var updatedEntryData = request.Data.Entries
                 .FirstOrDefault(e => e.HenhouseId == existingEntry.HenhouseId);
+
+            if (existingEntry.CycleId != cycle.Id)
+            {
+                existingEntry.SetCycle(cycle.Id);
+            }
 
             if (updatedEntryData != null)
             {
@@ -69,6 +80,7 @@ public class UpdateFallenStocksValidator : AbstractValidator<UpdateFallenStocksC
     public UpdateFallenStocksValidator()
     {
         RuleFor(x => x.InternalGroupId).NotEmpty();
+        RuleFor(x => x.Data.CycleId).NotEmpty();
         RuleFor(x => x.Data).NotNull();
         RuleFor(x => x.Data.Entries).NotEmpty()
             .WithMessage("Należy dostarczyć co najmniej jedną pozycję do aktualizacji.");

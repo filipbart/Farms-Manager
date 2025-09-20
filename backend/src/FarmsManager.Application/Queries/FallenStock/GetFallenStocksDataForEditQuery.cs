@@ -14,7 +14,9 @@ namespace FarmsManager.Application.Queries.FallenStock;
 
 public record GetFallenStocksDataForEditQueryResponse
 {
+    public Guid FarmId { get; init; }
     public string FarmName { get; init; }
+    public Guid CycleId { get; init; }
     public string CycleDisplay { get; init; }
     public string UtilizationPlantName { get; init; }
     public DateOnly Date { get; init; }
@@ -92,7 +94,9 @@ public class GetFallenStocksDataForEditQueryHandler : IRequestHandler<GetFallenS
 
         var responseData = new GetFallenStocksDataForEditQueryResponse
         {
+            FarmId = farm.Id,
             FarmName = farm.Name,
+            CycleId = cycle.Id,
             CycleDisplay = $"{cycle.Identifier}/{cycle.Year}",
             UtilizationPlantName = utilizationPlant?.Name,
             Date = firstEntry.Date,

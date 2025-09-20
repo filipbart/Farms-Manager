@@ -1,6 +1,8 @@
 export interface FallenStockPickupRow {
   id: string;
+  farmId: string;
   farmName: string;
+  cycleId: string;
   cycleText: string;
   date: string;
   quantity: number;

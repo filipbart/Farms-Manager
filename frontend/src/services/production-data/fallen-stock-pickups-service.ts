@@ -20,11 +20,12 @@ export class FallenStockPickupService {
 
   public static async updateFallenStockPickup(
     fallenStockPickupId: string,
+    cycleId: string,
     quantity: number
   ) {
     return await AxiosWrapper.patch(
       ApiUrl.UpdateFallenStockPickup(fallenStockPickupId),
-      { quantity }
+      { cycleId, quantity }
     );
   }
 

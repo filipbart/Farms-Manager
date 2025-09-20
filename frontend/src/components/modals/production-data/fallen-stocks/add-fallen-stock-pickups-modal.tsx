@@ -15,12 +15,12 @@ import {
   TextField,
   IconButton,
   Grid,
+  MenuItem,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { toast } from "react-toastify";
 import type { Dayjs } from "dayjs";
 import { MdDelete, MdSave } from "react-icons/md";
-import { useLatestCycle } from "../../../../hooks/useLatestCycle";
 import { useFarms } from "../../../../hooks/useFarms";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import AppDialog from "../../../common/app-dialog";
@@ -28,10 +28,11 @@ import LoadingButton from "../../../common/loading-button";
 import LoadingTextField from "../../../common/loading-textfield";
 import type { AddFallenStockPickups } from "../../../../models/fallen-stocks/fallen-stock-pickups";
 import { FallenStockPickupService } from "../../../../services/production-data/fallen-stock-pickups-service";
+import { FarmsService } from "../../../../services/farms-service";
+import type CycleDto from "../../../../models/farms/latest-cycle";
 
 interface PickupFormState {
   cycleId: string;
-  cycleDisplay: string;
   entries: ({ date: Dayjs | null; quantity: number | string } & {
     isNew: boolean;
   })[];
@@ -45,7 +46,6 @@ interface PickupFormErrors {
 
 const initialState: PickupFormState = {
   cycleId: "",
-  cycleDisplay: "",
   entries: [],
 };
 
@@ -92,12 +92,12 @@ const AddFallenStockPickupsModal: React.FC<AddFallenStockPickupsModalProps> = ({
   farmId,
 }) => {
   const { farms, loadingFarms, fetchFarms } = useFarms();
-  const { loadLatestCycle, loadingCycle: loadingLatestCycle } =
-    useLatestCycle();
 
   const [loading, setLoading] = useState(false);
   const [form, dispatch] = useReducer(formReducer, initialState);
   const [errors, setErrors] = useState<PickupFormErrors>({});
+  const [cycles, setCycles] = useState<CycleDto[]>([]);
+  const [loadingCycles, setLoadingCycles] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -111,30 +111,47 @@ const AddFallenStockPickupsModal: React.FC<AddFallenStockPickupsModalProps> = ({
   }, [farms, farmId]);
 
   useEffect(() => {
-    if (open && farmId) {
-      const fetchCycle = async () => {
+    if (open && farmId && farms.length > 0) {
+      const fetchCyclesForFarm = async () => {
+        setLoadingCycles(true);
+        setCycles([]);
         dispatch({ type: "SET_FIELD", name: "cycleId", value: "" });
-        dispatch({ type: "SET_FIELD", name: "cycleDisplay", value: "" });
-        setErrors({});
+        setErrors((prev) => ({ ...prev, cycleId: undefined }));
 
-        const cycle = await loadLatestCycle(farmId);
-        if (!cycle) {
-          setErrors((prev) => ({
-            ...prev,
-            cycleId: "Brak aktywnego cyklu dla wybranej fermy",
-          }));
-          return;
-        }
-        dispatch({ type: "SET_FIELD", name: "cycleId", value: cycle.id });
-        dispatch({
-          type: "SET_FIELD",
-          name: "cycleDisplay",
-          value: `${cycle.identifier}/${cycle.year}`,
-        });
+        const selectedFarm = farms.find((f) => f.id === farmId);
+
+        await handleApiResponse(
+          () => FarmsService.getFarmCycles(farmId),
+          (data) => {
+            const fetchedCycles = data.responseData ?? [];
+            setCycles(fetchedCycles);
+            if (
+              selectedFarm?.activeCycle &&
+              fetchedCycles.some((c) => c.id === selectedFarm.activeCycle.id)
+            ) {
+              dispatch({
+                type: "SET_FIELD",
+                name: "cycleId",
+                value: selectedFarm.activeCycle.id,
+              });
+            } else if (fetchedCycles.length === 0) {
+              setErrors((prev) => ({
+                ...prev,
+                cycleId: "Brak cykli dla tej fermy",
+              }));
+            }
+          },
+          () => setCycles([]),
+          "Nie udało się pobrać listy cykli."
+        );
+        setLoadingCycles(false);
       };
-      fetchCycle();
+      fetchCyclesForFarm();
+    } else if (!farmId) {
+      setCycles([]);
+      dispatch({ type: "SET_FIELD", name: "cycleId", value: "" });
     }
-  }, [open, farmId]);
+  }, [open, farmId, farms]);
 
   useEffect(() => {
     if (open) {
@@ -199,6 +216,7 @@ const AddFallenStockPickupsModal: React.FC<AddFallenStockPickupsModalProps> = ({
   const handleClose = () => {
     dispatch({ type: "RESET" });
     setErrors({});
+    setCycles([]);
     onClose();
   };
 
@@ -218,14 +236,28 @@ const AddFallenStockPickupsModal: React.FC<AddFallenStockPickupsModalProps> = ({
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <LoadingTextField
-              loading={loadingLatestCycle}
+              loading={loadingCycles}
               label="Cykl"
-              value={form.cycleDisplay}
-              slotProps={{ input: { readOnly: true } }}
+              select
+              fullWidth
+              disabled={!farmId || loadingCycles || cycles.length === 0}
+              value={form.cycleId}
+              onChange={(e) =>
+                dispatch({
+                  type: "SET_FIELD",
+                  name: "cycleId",
+                  value: e.target.value,
+                })
+              }
               error={!!errors.cycleId}
               helperText={errors.cycleId}
-              fullWidth
-            />
+            >
+              {cycles.map((cycle) => (
+                <MenuItem key={cycle.id} value={cycle.id}>
+                  {`${cycle.identifier}/${cycle.year}`}
+                </MenuItem>
+              ))}
+            </LoadingTextField>
           </Grid>
         </Grid>
 

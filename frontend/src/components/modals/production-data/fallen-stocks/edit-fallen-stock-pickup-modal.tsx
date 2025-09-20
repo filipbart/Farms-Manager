@@ -6,6 +6,7 @@ import {
   Button,
   TextField,
   Grid,
+  MenuItem,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { toast } from "react-toastify";
@@ -17,6 +18,8 @@ import LoadingButton from "../../../common/loading-button";
 import { FallenStockPickupService } from "../../../../services/production-data/fallen-stock-pickups-service";
 import LoadingTextField from "../../../common/loading-textfield";
 import type { FallenStockPickupRow } from "../../../../models/fallen-stocks/fallen-stock-pickups";
+import type CycleDto from "../../../../models/farms/latest-cycle";
+import { FarmsService } from "../../../../services/farms-service";
 
 interface EditFallenStockPickupModalProps {
   open: boolean;
@@ -32,26 +35,51 @@ const EditFallenStockPickupModal: React.FC<EditFallenStockPickupModalProps> = ({
   pickupToEdit,
 }) => {
   const [loading, setLoading] = useState(false);
-  const [quantity, setQuantity] = useState<number | string>("");
-  const [error, setError] = useState<string | null>(null);
+  const [cycles, setCycles] = useState<CycleDto[]>([]);
+  const [loadingCycles, setLoadingCycles] = useState(false);
+  const [form, setForm] = useState({
+    cycleId: "",
+    quantity: "",
+  });
+  const [errors, setErrors] = useState({
+    cycleId: "",
+    quantity: "",
+  });
 
   useEffect(() => {
-    if (pickupToEdit) {
-      setQuantity(pickupToEdit.quantity);
-    } else {
-      setQuantity("");
-      setError(null);
+    if (pickupToEdit && open) {
+      setForm({
+        cycleId: pickupToEdit.cycleId,
+        quantity: String(pickupToEdit.quantity),
+      });
+
+      const fetchCycles = async () => {
+        if (!pickupToEdit.farmId) return;
+        setLoadingCycles(true);
+        await handleApiResponse(
+          () => FarmsService.getFarmCycles(pickupToEdit.farmId),
+          (data) => setCycles(data.responseData ?? []),
+          () => setCycles([]),
+          "Nie udało się pobrać listy cykli."
+        );
+        setLoadingCycles(false);
+      };
+
+      fetchCycles();
     }
-  }, [pickupToEdit]);
+  }, [pickupToEdit, open]);
 
   const validate = (): boolean => {
-    const quantityNum = Number(quantity);
-    if (!quantity || isNaN(quantityNum) || quantityNum <= 0) {
-      setError("Ilość musi być większa od 0");
-      return false;
+    const newErrors = { cycleId: "", quantity: "" };
+    if (!form.cycleId) {
+      newErrors.cycleId = "Cykl jest wymagany";
     }
-    setError(null);
-    return true;
+    const quantityNum = Number(form.quantity);
+    if (!form.quantity || isNaN(quantityNum) || quantityNum <= 0) {
+      newErrors.quantity = "Ilość musi być większa od 0";
+    }
+    setErrors(newErrors);
+    return Object.values(newErrors).every((v) => !v);
   };
 
   const handleSave = async () => {
@@ -62,12 +90,13 @@ const EditFallenStockPickupModal: React.FC<EditFallenStockPickupModalProps> = ({
       () =>
         FallenStockPickupService.updateFallenStockPickup(
           pickupToEdit.id,
-          Number(quantity)
+          form.cycleId,
+          Number(form.quantity)
         ),
       () => {
         toast.success("Wpis odbioru został zaktualizowany");
         onSave();
-        onClose();
+        handleClose();
       },
       undefined,
       "Nie udało się zaktualizować wpisu"
@@ -76,8 +105,9 @@ const EditFallenStockPickupModal: React.FC<EditFallenStockPickupModalProps> = ({
   };
 
   const handleClose = () => {
-    setQuantity("");
-    setError(null);
+    setForm({ cycleId: "", quantity: "" });
+    setErrors({ cycleId: "", quantity: "" });
+    setCycles([]);
     onClose();
   };
 
@@ -88,7 +118,7 @@ const EditFallenStockPickupModal: React.FC<EditFallenStockPickupModalProps> = ({
         <Grid container spacing={2} sx={{ mt: 0.5 }}>
           <Grid size={{ xs: 12, sm: 6 }}>
             <LoadingTextField
-              loading={loading}
+              loading={false}
               label="Ferma"
               value={pickupToEdit?.farmName ?? ""}
               fullWidth
@@ -97,12 +127,26 @@ const EditFallenStockPickupModal: React.FC<EditFallenStockPickupModalProps> = ({
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <LoadingTextField
-              loading={loading}
+              loading={loadingCycles}
               label="Cykl"
-              value={pickupToEdit?.cycleText ?? ""}
+              select
               fullWidth
-              slotProps={{ input: { readOnly: true } }}
-            />
+              disabled={
+                !pickupToEdit?.farmId || loadingCycles || cycles.length === 0
+              }
+              value={form.cycleId}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, cycleId: e.target.value }))
+              }
+              error={!!errors.cycleId}
+              helperText={errors.cycleId}
+            >
+              {cycles.map((cycle) => (
+                <MenuItem key={cycle.id} value={cycle.id}>
+                  {`${cycle.identifier}/${cycle.year}`}
+                </MenuItem>
+              ))}
+            </LoadingTextField>
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <DatePicker
@@ -121,11 +165,13 @@ const EditFallenStockPickupModal: React.FC<EditFallenStockPickupModalProps> = ({
             <TextField
               label="Ilość [szt.]"
               type="number"
-              value={quantity}
-              onChange={(e) => setQuantity(e.target.value)}
+              value={form.quantity}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, quantity: e.target.value }))
+              }
               fullWidth
-              error={!!error}
-              helperText={error}
+              error={!!errors.quantity}
+              helperText={errors.quantity}
               slotProps={{ htmlInput: { min: 1 } }}
               disabled={loading}
               autoFocus

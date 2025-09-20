@@ -11,6 +11,7 @@ import {
   TableBody,
   TableCell,
   TableHead,
+  MenuItem,
   TableRow,
 } from "@mui/material";
 import { toast } from "react-toastify";
@@ -24,6 +25,9 @@ import type {
   FallenStockEditableEntry,
   GetFallenStockEditData,
 } from "../../../../models/fallen-stocks/fallen-stocks";
+import { FarmsService } from "../../../../services/farms-service";
+import type CycleDto from "../../../../models/farms/latest-cycle";
+import LoadingTextField from "../../../common/loading-textfield";
 
 interface EditFallenStocksModalProps {
   open: boolean;
@@ -31,6 +35,11 @@ interface EditFallenStocksModalProps {
   onSave: () => void;
   internalGroupId: string | null;
 }
+
+type GetFallenStockEditDataExtended = GetFallenStockEditData & {
+  farmId: string;
+  cycleId: string;
+};
 
 const EditFallenStocksModal: React.FC<EditFallenStocksModalProps> = ({
   open,
@@ -40,13 +49,17 @@ const EditFallenStocksModal: React.FC<EditFallenStocksModalProps> = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<Omit<
-    GetFallenStockEditData,
+    GetFallenStockEditDataExtended,
     "entries"
   > | null>(null);
   const [entries, setEntries] = useState<FallenStockEditableEntry[]>([]);
   const [errors, setErrors] = useState<{
     [index: number]: { quantity?: string };
+    cycleId?: string;
   }>({});
+  const [cycles, setCycles] = useState<CycleDto[]>([]);
+  const [loadingCycles, setLoadingCycles] = useState(false);
+  const [selectedCycleId, setSelectedCycleId] = useState("");
 
   useEffect(() => {
     const fetchFallenStockData = async () => {
@@ -56,10 +69,14 @@ const EditFallenStocksModal: React.FC<EditFallenStocksModalProps> = ({
       await handleApiResponse(
         () => FallenStockService.getFallenStocksDataForEdit(internalGroupId),
         (data) => {
-          const responseData = data.responseData;
+          const responseData = data.responseData as
+            | GetFallenStockEditDataExtended
+            | undefined;
           if (responseData) {
             setFormData({
+              farmId: responseData.farmId,
               farmName: responseData.farmName,
+              cycleId: responseData.cycleId,
               cycleDisplay: responseData.cycleDisplay,
               typeDesc: responseData.typeDesc,
               utilizationPlantName: responseData.utilizationPlantName,
@@ -71,6 +88,20 @@ const EditFallenStocksModal: React.FC<EditFallenStocksModalProps> = ({
                 quantity: String(e.quantity),
               }))
             );
+            setSelectedCycleId(responseData.cycleId);
+
+            const fetchCycles = async (farmId: string) => {
+              setLoadingCycles(true);
+              await handleApiResponse(
+                () => FarmsService.getFarmCycles(farmId),
+                (cycleData) => setCycles(cycleData.responseData ?? []),
+                () => setCycles([]),
+                "Nie udało się pobrać listy cykli."
+              );
+              setLoadingCycles(false);
+            };
+
+            if (responseData.farmId) fetchCycles(responseData.farmId);
           }
         },
         undefined,
@@ -100,6 +131,10 @@ const EditFallenStocksModal: React.FC<EditFallenStocksModalProps> = ({
     const newErrors: { [index: number]: { quantity?: string } } = {};
     let isValid = true;
 
+    if (!selectedCycleId) {
+      setErrors((prev) => ({ ...prev, cycleId: "Cykl jest wymagany" }));
+      isValid = false;
+    }
     entries.forEach((entry, index) => {
       const quantityNum = Number(entry.quantity);
       if (entry.quantity === "" || isNaN(quantityNum) || quantityNum <= 0) {
@@ -117,7 +152,11 @@ const EditFallenStocksModal: React.FC<EditFallenStocksModalProps> = ({
 
     setLoading(true);
     await handleApiResponse(
-      () => FallenStockService.updateFallenStocks(internalGroupId, entries),
+      () =>
+        FallenStockService.updateFallenStocks(internalGroupId, {
+          cycleId: selectedCycleId,
+          entries,
+        }),
       () => {
         toast.success("Pomyślnie zaktualizowano zgłoszenie.");
         onSave();
@@ -132,6 +171,7 @@ const EditFallenStocksModal: React.FC<EditFallenStocksModalProps> = ({
   const handleClose = () => {
     setFormData(null);
     setEntries([]);
+    setCycles([]);
     setErrors({});
     onClose();
   };
@@ -156,12 +196,26 @@ const EditFallenStocksModal: React.FC<EditFallenStocksModalProps> = ({
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField
+                  <LoadingTextField
+                    loading={loadingCycles}
                     label="Cykl"
-                    value={formData.cycleDisplay}
-                    slotProps={{ input: { readOnly: true } }}
+                    select
                     fullWidth
-                  />
+                    disabled={loadingCycles || cycles.length === 0}
+                    value={selectedCycleId}
+                    onChange={(e) => {
+                      setSelectedCycleId(e.target.value);
+                      setErrors((prev) => ({ ...prev, cycleId: undefined }));
+                    }}
+                    error={!!errors.cycleId}
+                    helperText={errors.cycleId}
+                  >
+                    {cycles.map((cycle) => (
+                      <MenuItem key={cycle.id} value={cycle.id}>
+                        {`${cycle.identifier}/${cycle.year}`}
+                      </MenuItem>
+                    ))}
+                  </LoadingTextField>
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField

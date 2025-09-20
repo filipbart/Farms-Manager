@@ -49,6 +49,11 @@ export type FallenStockEditableEntry = {
   quantity: string;
 };
 
+export interface UpdateFallenStocksData {
+  cycleId: string;
+  entries: FallenStockEditableEntry[];
+}
+
 export interface IrzSummaryData {
   currentStockSize: number;
   reportedFallenStock: number;

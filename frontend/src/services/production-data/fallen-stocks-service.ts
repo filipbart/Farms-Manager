@@ -2,10 +2,10 @@ import ApiUrl from "../../common/ApiUrl";
 import type {
   IrzSummaryData,
   AddFallenStocksData,
-  FallenStockEditableEntry,
   GetAvailableHenhousesFallenStocks,
   GetAvailableHenhousesFallenStocksResponse,
   GetFallenStockEditData,
+  UpdateFallenStocksData,
 } from "../../models/fallen-stocks/fallen-stocks";
 import type {
   FallenStockFilterModel,
@@ -55,11 +55,11 @@ export class FallenStockService {
 
   public static async updateFallenStocks(
     internalGroupId: string,
-    data: FallenStockEditableEntry[]
+    data: UpdateFallenStocksData
   ) {
     return await AxiosWrapper.patch(
       ApiUrl.UpdateFallenStocks(internalGroupId),
-      { entries: data }
+      data
     );
   }
 
