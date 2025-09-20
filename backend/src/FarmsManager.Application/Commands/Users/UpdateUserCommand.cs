@@ -35,6 +35,8 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, Empty
     {
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
 
+        var currentUser = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
+
         var user = await _userRepository.GetAsync(new UserByIdSpec(request.Id), cancellationToken);
 
         user.ChangeName(request.Data.Name);
@@ -45,8 +47,12 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, Empty
             user.ChangePassword(passwordHash);
         }
 
-        user.ChangeIsAdmin(request.Data.IsAdmin);
+        if (!currentUser.IsAdmin && user.IsAdmin != request.Data.IsAdmin)
+        {
+            throw DomainException.Forbidden();
+        }
 
+        user.ChangeIsAdmin(request.Data.IsAdmin);
         user.SetModified(userId);
 
         await _userRepository.UpdateAsync(user, cancellationToken);
