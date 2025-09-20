@@ -216,7 +216,7 @@ public class IrzplusService : IIrzplusService
 
         var totalQuantity = items.Sum(i => i.Quantity);
         var producerNumber = (isInsertion ? firstItem.DoDzialalnosci : firstItem.ZDzialalnosci).Split('-')[0];
-        var destinationActivity = (type == IrzPlusDispositionType.EndCycle) ? null : firstItem.DoDzialalnosci;
+        var destinationActivity = type == IrzPlusDispositionType.EndCycle ? null : firstItem.DoDzialalnosci;
 
         var reportPositions = items
             .Select((item, index) => new PozycjaZZSSDDTO
@@ -224,7 +224,7 @@ public class IrzplusService : IIrzplusService
                 Lp = index + 1,
                 StatusPozycji = StatusPozycjiZZSSD.Zatwierdzona.GetEnumMemberValue(),
                 NumerIdenPartiiDrobiu = isInsertion ? item.DoDzialalnosci : item.ZDzialalnosci,
-                LiczbaDrobiuUbylo = isInsertion ? 0 : item.Quantity,
+                LiczbaDrobiuUbylo = item.Quantity,
                 KategoriaJajWylegowych = null,
                 Budynek = new KodOpisWartosciDto { Kod = item.HenhouseCode, Opis = item.HenhouseName },
                 ZDzialalnosci = item.ZDzialalnosci
@@ -239,7 +239,7 @@ public class IrzplusService : IIrzplusService
                 TypZdarzenia = eventTypeDto,
                 DataZdarzenia = firstItem.EventDate,
                 DoDzialalnosci = destinationActivity,
-                LiczbaDrobiuPrzybylo = isInsertion ? totalQuantity : 0,
+                LiczbaDrobiuPrzybylo = totalQuantity,
                 LiczbaJajWylegowychPrzybylo = 0,
                 Pozycje = reportPositions
             }
