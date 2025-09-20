@@ -8,7 +8,7 @@ public class ProductionDataFlockLossMeasureEntity : Entity
 {
     public Guid FarmId { get; init; }
     public Guid HenhouseId { get; init; }
-    public Guid CycleId { get; init; }
+    public Guid CycleId { get; protected internal set; }
     public Guid HatcheryId { get; init; }
     public Guid InsertionId { get; init; }
 
@@ -80,5 +80,10 @@ public class ProductionDataFlockLossMeasureEntity : Entity
                 throw new ArgumentOutOfRangeException(nameof(measureNumber),
                     @"Numer pomiaru musi być pomiędzy 1 a 4.");
         }
+    }
+
+    public void SetCycle(Guid cycleId)
+    {
+        CycleId = cycleId;
     }
 }

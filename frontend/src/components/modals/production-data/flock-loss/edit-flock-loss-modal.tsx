@@ -21,6 +21,9 @@ import type {
   UpdateFlockLossData,
 } from "../../../../models/production-data/flock-loss";
 import { ProductionDataFlockLossService } from "../../../../services/production-data/flock-loss-measures-service";
+import type CycleDto from "../../../../models/farms/latest-cycle";
+import { FarmsService } from "../../../../services/farms-service";
+import LoadingTextField from "../../../common/loading-textfield";
 
 interface EditProductionDataFlockLossModalProps {
   open: boolean;
@@ -28,6 +31,8 @@ interface EditProductionDataFlockLossModalProps {
   onSave: () => void;
   flockLoss: ProductionDataFlockLossListModel | null;
 }
+
+type FormDataType = UpdateFlockLossData & { cycleId: string };
 
 const EditProductionDataFlockLossModal: React.FC<
   EditProductionDataFlockLossModalProps
@@ -39,21 +44,39 @@ const EditProductionDataFlockLossModal: React.FC<
     reset,
     watch,
     setValue,
-  } = useForm<UpdateFlockLossData>();
+  } = useForm<FormDataType>();
 
   const [loading, setLoading] = useState(false);
+  const [cycles, setCycles] = useState<CycleDto[]>([]);
+  const [loadingCycles, setLoadingCycles] = useState(false);
 
   const selectedMeasureNumber = watch("measureNumber");
+  const cycleId = watch("cycleId");
 
   useEffect(() => {
-    if (flockLoss) {
+    if (flockLoss && open) {
       reset({
+        cycleId: flockLoss.cycleId,
         measureNumber: undefined,
         day: undefined,
         quantity: undefined,
       });
+
+      const fetchCycles = async () => {
+        if (!flockLoss.farmId) return;
+        setLoadingCycles(true);
+        await handleApiResponse(
+          () => FarmsService.getFarmCycles(flockLoss.farmId),
+          (data) => setCycles(data.responseData ?? []),
+          () => setCycles([]),
+          "Nie udało się pobrać listy cykli."
+        );
+        setLoadingCycles(false);
+      };
+
+      fetchCycles();
     }
-  }, [flockLoss, reset]);
+  }, [flockLoss, open, reset]);
 
   useEffect(() => {
     if (selectedMeasureNumber && flockLoss) {
@@ -70,7 +93,7 @@ const EditProductionDataFlockLossModal: React.FC<
     }
   }, [selectedMeasureNumber, flockLoss, setValue]);
 
-  const handleSave = async (data: UpdateFlockLossData) => {
+  const handleSave = async (data: FormDataType) => {
     if (!flockLoss) return;
     setLoading(true);
     await handleApiResponse(
@@ -78,7 +101,7 @@ const EditProductionDataFlockLossModal: React.FC<
       () => {
         toast.success("Pomyślnie zaktualizowano wpis pomiaru");
         onSave();
-        onClose();
+        close();
       },
       undefined,
       "Wystąpił błąd podczas aktualizacji danych"
@@ -88,6 +111,7 @@ const EditProductionDataFlockLossModal: React.FC<
 
   const close = () => {
     reset();
+    setCycles([]);
     onClose();
   };
 
@@ -109,12 +133,25 @@ const EditProductionDataFlockLossModal: React.FC<
               InputProps={{ readOnly: true }}
               fullWidth
             />
-            <TextField
+            <LoadingTextField
+              loading={loadingCycles}
               label="Cykl"
-              value={flockLoss?.cycleText || ""}
-              InputProps={{ readOnly: true }}
+              select
               fullWidth
-            />
+              disabled={
+                !flockLoss?.farmId || loadingCycles || cycles.length === 0
+              }
+              value={cycleId || ""}
+              error={!!errors.cycleId}
+              helperText={errors.cycleId?.message}
+              {...register("cycleId", { required: "Cykl jest wymagany" })}
+            >
+              {cycles.map((cycle) => (
+                <MenuItem key={cycle.id} value={cycle.id}>
+                  {`${cycle.identifier}/${cycle.year}`}
+                </MenuItem>
+              ))}
+            </LoadingTextField>
 
             <Divider sx={{ my: 1 }} />
             <Typography variant="h6" sx={{ mb: -1 }}>

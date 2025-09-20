@@ -1,6 +1,8 @@
 export interface ProductionDataRemainingFeedListModel {
   id: string;
+  cycleId: string;
   cycleText: string;
+  farmId: string;
   farmName: string;
   henhouseName: string;
   feedName: string;
@@ -19,6 +21,7 @@ export interface AddRemainingFeedData {
 }
 
 export interface UpdateRemainingFeedData {
+  cycleId: string;
   remainingTonnage: number;
   remainingValue: number;
 }

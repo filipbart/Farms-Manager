@@ -2,7 +2,9 @@ export interface ProductionDataFlockLossListModel {
   id: string;
   dateCreatedUtc: string;
 
+  cycleId: string;
   cycleText: string;
+  farmId: string;
   farmName: string;
   henhouseName: string;
   hatcheryName: string;

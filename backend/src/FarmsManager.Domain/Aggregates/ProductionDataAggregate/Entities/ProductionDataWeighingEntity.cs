@@ -8,7 +8,7 @@ public class ProductionDataWeighingEntity : Entity
 {
     public Guid FarmId { get; init; }
     public Guid HenhouseId { get; init; }
-    public Guid CycleId { get; init; }
+    public Guid CycleId { get; protected internal set; }
     public Guid HatcheryId { get; init; }
 
 
@@ -88,5 +88,10 @@ public class ProductionDataWeighingEntity : Entity
                 throw new ArgumentOutOfRangeException(nameof(weighingNumber),
                     @"Numer ważenia musi być pomiędzy 1 a 5.");
         }
+    }
+
+    public void SetCycle(Guid cycleId)
+    {
+        CycleId = cycleId;
     }
 }

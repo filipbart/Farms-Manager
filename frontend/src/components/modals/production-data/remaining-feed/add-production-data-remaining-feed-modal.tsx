@@ -13,13 +13,14 @@ import { MdSave } from "react-icons/md";
 import { toast } from "react-toastify";
 
 import { useFarms } from "../../../../hooks/useFarms";
-import { useLatestCycle } from "../../../../hooks/useLatestCycle";
 import { useFeedsNames } from "../../../../hooks/feeds/useFeedsNames";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import LoadingButton from "../../../common/loading-button";
 import LoadingTextField from "../../../common/loading-textfield";
 import AppDialog from "../../../common/app-dialog";
 import type { HouseRowModel } from "../../../../models/farms/house-row-model";
+import type CycleDto from "../../../../models/farms/latest-cycle";
+import { FarmsService } from "../../../../services/farms-service";
 import { ProductionDataRemainingFeedService } from "../../../../services/production-data/production-data-remaining-feed-service";
 import type { AddRemainingFeedData } from "../../../../models/production-data/remaining-feed";
 import { ProductionDataService } from "../../../../services/production-data/production-data-service";
@@ -42,13 +43,14 @@ const AddProductionDataRemainingFeedModal: React.FC<
     setError,
     clearErrors,
     watch,
-  } = useForm<AddRemainingFeedData & { cycleDisplay: string }>();
+  } = useForm<AddRemainingFeedData>();
 
   const [loading, setLoading] = useState(false);
   const [isCalculatingValue, setIsCalculatingValue] = useState(false);
+  const [cycles, setCycles] = useState<CycleDto[]>([]);
+  const [loadingCycles, setLoadingCycles] = useState(false);
   const { farms, loadingFarms, fetchFarms } = useFarms();
   const { feedsNames, loadingFeedsNames, fetchFeedsNames } = useFeedsNames();
-  const { loadLatestCycle, loadingCycle } = useLatestCycle();
   const [availableHenhouses, setAvailableHenhouses] = useState<HouseRowModel[]>(
     []
   );
@@ -97,27 +99,41 @@ const AddProductionDataRemainingFeedModal: React.FC<
 
   const handleFarmChange = async (farmId: string) => {
     setValue("cycleId", "");
-    setValue("cycleDisplay", "");
     setValue("henhouseId", "");
     clearErrors("cycleId");
     setAvailableHenhouses([]);
+    setCycles([]);
 
     const selectedFarm = farms.find((f) => f.id === farmId);
     if (selectedFarm) {
       setAvailableHenhouses(selectedFarm.henhouses);
     }
 
-    const cycle = await loadLatestCycle(farmId);
-    if (cycle) {
-      setValue("cycleId", cycle.id);
-      setValue("cycleDisplay", `${cycle.identifier}/${cycle.year}`);
-      clearErrors("cycleId");
-    } else {
-      setError("cycleId", {
-        type: "manual",
-        message: "Brak aktywnego cyklu",
-      });
-    }
+    if (!farmId) return;
+
+    setLoadingCycles(true);
+    await handleApiResponse(
+      () => FarmsService.getFarmCycles(farmId),
+      (data) => {
+        const fetchedCycles = data.responseData ?? [];
+        setCycles(fetchedCycles);
+        const activeCycle = selectedFarm?.activeCycle;
+        if (activeCycle && fetchedCycles.some((c) => c.id === activeCycle.id)) {
+          setValue("cycleId", activeCycle.id);
+          clearErrors("cycleId");
+        } else if (fetchedCycles.length === 0) {
+          setError("cycleId", {
+            type: "manual",
+            message: "Brak cykli dla tej fermy",
+          });
+        }
+      },
+      () => {
+        setCycles([]);
+      },
+      "Nie udało się pobrać listy cykli."
+    );
+    setLoadingCycles(false);
   };
 
   const handleSave = async (data: AddRemainingFeedData) => {
@@ -168,14 +184,24 @@ const AddProductionDataRemainingFeedModal: React.FC<
             </LoadingTextField>
 
             <LoadingTextField
-              loading={loadingCycle}
+              loading={loadingCycles}
               label="Cykl"
-              value={watch("cycleDisplay") || ""}
-              slotProps={{ input: { readOnly: true } }}
+              select
+              fullWidth
+              disabled={
+                !watch("farmId") || loadingCycles || cycles.length === 0
+              }
+              value={cycleId || ""}
               error={!!errors.cycleId}
               helperText={errors.cycleId?.message}
-              fullWidth
-            />
+              {...register("cycleId", { required: "Cykl jest wymagany" })}
+            >
+              {cycles.map((cycle) => (
+                <MenuItem key={cycle.id} value={cycle.id}>
+                  {`${cycle.identifier}/${cycle.year}`}
+                </MenuItem>
+              ))}
+            </LoadingTextField>
 
             <TextField
               select

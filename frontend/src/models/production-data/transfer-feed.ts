@@ -1,9 +1,13 @@
 export interface ProductionDataTransferFeedListModel {
   id: string;
+  fromCycleId: string;
   fromCycleText: string;
+  fromFarmId: string;
   fromFarmName: string;
   fromHenhouseName: string;
+  toCycleId: string;
   toCycleText: string;
+  toFarmId: string;
   toFarmName: string;
   toHenhouseName: string;
   feedName: string;
@@ -25,6 +29,8 @@ export interface AddTransferFeedData {
 }
 
 export interface UpdateTransferFeedData {
+  fromCycleId: string;
+  toCycleId: string;
   tonnage: number;
   value: number;
 }

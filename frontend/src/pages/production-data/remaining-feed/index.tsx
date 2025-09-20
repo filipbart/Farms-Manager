@@ -17,7 +17,7 @@ import { ProductionDataRemainingFeedService } from "../../../services/production
 import { getRemainingFeedColumns } from "./remaining-feed-columns";
 import { getProductionDataFiltersConfig } from "../filter-config.production-data";
 import AddProductionDataRemainingFeedModal from "../../../components/modals/production-data/remaining-feed/add-production-data-remaining-feed-modal";
-import EditProductionDataRemainingFeedModal from "../../../components/modals/production-data/remaining-feed/edit-production-data-failure-modal";
+import EditProductionDataRemainingFeedModal from "../../../components/modals/production-data/remaining-feed/edit-production-data-remaining-feed-modal";
 import { ProductionDataService } from "../../../services/production-data/production-data-service";
 import {
   DataGridPremium,

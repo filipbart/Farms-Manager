@@ -21,13 +21,14 @@ import { useEffect, useReducer, useState } from "react";
 import { toast } from "react-toastify";
 import { MdDelete, MdSave } from "react-icons/md";
 import { useFarms } from "../../../../hooks/useFarms";
-import { useLatestCycle } from "../../../../hooks/useLatestCycle";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import LoadingButton from "../../../common/loading-button";
 import LoadingTextField from "../../../common/loading-textfield";
 import AppDialog from "../../../common/app-dialog";
 import type { HouseRowModel } from "../../../../models/farms/house-row-model";
 import { ProductionDataFlockLossService } from "../../../../services/production-data/flock-loss-measures-service";
+import { FarmsService } from "../../../../services/farms-service";
+import type CycleDto from "../../../../models/farms/latest-cycle";
 
 interface AddProductionDataFlockLossModalProps {
   open: boolean;
@@ -43,7 +44,6 @@ interface FlockLossMeasureEntry {
 interface FlockLossMeasureFormState {
   farmId: string;
   cycleId: string;
-  cycleDisplay: string;
   measureNumber: number | "";
   day: number | "";
   entries: FlockLossMeasureEntry[];
@@ -60,7 +60,6 @@ interface FlockLossMeasureFormErrors {
 const initialState: FlockLossMeasureFormState = {
   farmId: "",
   cycleId: "",
-  cycleDisplay: "",
   measureNumber: "",
   day: "",
   entries: [],
@@ -103,7 +102,8 @@ const AddProductionDataFlockLossModal: React.FC<
 > = ({ open, onClose, onSave }) => {
   const [loading, setLoading] = useState(false);
   const { farms, loadingFarms, fetchFarms } = useFarms();
-  const { loadLatestCycle, loadingCycle } = useLatestCycle();
+  const [cycles, setCycles] = useState<CycleDto[]>([]);
+  const [loadingCycles, setLoadingCycles] = useState(false);
   const [availableHenhouses, setAvailableHenhouses] = useState<HouseRowModel[]>(
     []
   );
@@ -125,7 +125,6 @@ const AddProductionDataFlockLossModal: React.FC<
   const handleFarmChange = async (farmId: string) => {
     dispatch({ type: "SET_FIELD", name: "farmId", value: farmId });
     dispatch({ type: "SET_FIELD", name: "cycleId", value: "" });
-    dispatch({ type: "SET_FIELD", name: "cycleDisplay", value: "" });
     dispatch({
       type: "SET_FIELD",
       name: "entries",
@@ -133,20 +132,39 @@ const AddProductionDataFlockLossModal: React.FC<
     });
     setErrors({});
 
+    setCycles([]);
     const selectedFarm = farms.find((f) => f.id === farmId);
     setAvailableHenhouses(selectedFarm?.henhouses ?? []);
 
-    const cycle = await loadLatestCycle(farmId);
-    if (cycle) {
-      dispatch({ type: "SET_FIELD", name: "cycleId", value: cycle.id });
-      dispatch({
-        type: "SET_FIELD",
-        name: "cycleDisplay",
-        value: `${cycle.identifier}/${cycle.year}`,
-      });
-    } else {
-      setErrors((prev) => ({ ...prev, cycleId: "Brak aktywnego cyklu" }));
-    }
+    if (!farmId) return;
+
+    setLoadingCycles(true);
+    await handleApiResponse(
+      () => FarmsService.getFarmCycles(farmId),
+      (data) => {
+        const fetchedCycles = data.responseData ?? [];
+        setCycles(fetchedCycles);
+        const activeCycle = selectedFarm?.activeCycle;
+        if (activeCycle && fetchedCycles.some((c) => c.id === activeCycle.id)) {
+          dispatch({
+            type: "SET_FIELD",
+            name: "cycleId",
+            value: activeCycle.id,
+          });
+        }
+        if (fetchedCycles.length === 0) {
+          setErrors((prev) => ({
+            ...prev,
+            cycleId: "Brak cykli dla tej fermy",
+          }));
+        }
+      },
+      () => {
+        setCycles([]);
+      },
+      "Nie udało się pobrać listy cykli."
+    );
+    setLoadingCycles(false);
   };
 
   const validate = (): boolean => {
@@ -203,6 +221,7 @@ const AddProductionDataFlockLossModal: React.FC<
   const close = () => {
     dispatch({ type: "RESET" });
     setAvailableHenhouses([]);
+    setCycles([]);
     setErrors({});
     onClose();
   };
@@ -233,14 +252,28 @@ const AddProductionDataFlockLossModal: React.FC<
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <LoadingTextField
-                loading={loadingCycle}
+                loading={loadingCycles}
                 label="Cykl"
-                value={form.cycleDisplay}
-                InputProps={{ readOnly: true }}
+                select
+                fullWidth
+                disabled={!form.farmId || loadingCycles || cycles.length === 0}
+                value={form.cycleId}
+                onChange={(e) =>
+                  dispatch({
+                    type: "SET_FIELD",
+                    name: "cycleId",
+                    value: e.target.value,
+                  })
+                }
                 error={!!errors.cycleId}
                 helperText={errors.cycleId}
-                fullWidth
-              />
+              >
+                {cycles.map((cycle) => (
+                  <MenuItem key={cycle.id} value={cycle.id}>
+                    {`${cycle.identifier}/${cycle.year}`}
+                  </MenuItem>
+                ))}
+              </LoadingTextField>
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField

@@ -10,11 +10,11 @@ public class ProductionDataTransferFeedEntity : Entity
     }
 
     public Guid FromFarmId { get; init; }
-    public Guid FromCycleId { get; init; }
+    public Guid FromCycleId { get; protected internal set; }
     public Guid FromHenhouseId { get; init; }
 
     public Guid ToFarmId { get; init; }
-    public Guid ToCycleId { get; init; }
+    public Guid ToCycleId { get; protected internal set; }
     public Guid ToHenhouseId { get; init; }
 
     public string FeedName { get; init; }
@@ -60,5 +60,15 @@ public class ProductionDataTransferFeedEntity : Entity
     {
         Tonnage = tonnage;
         Value = value;
+    }
+
+    public void SetFromCycle(Guid fromCycleId)
+    {
+        FromCycleId = fromCycleId;
+    }
+
+    public void SetToCycleId(Guid toCycleId)
+    {
+        ToCycleId = toCycleId;
     }
 }

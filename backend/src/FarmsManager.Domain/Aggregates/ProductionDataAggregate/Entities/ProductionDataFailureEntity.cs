@@ -10,7 +10,7 @@ public class ProductionDataFailureEntity : Entity
     }
 
     public Guid FarmId { get; init; }
-    public Guid CycleId { get; init; }
+    public Guid CycleId { get; protected internal set; }
     public Guid HenhouseId { get; init; }
     public int DeadCount { get; protected internal set; }
     public int DefectiveCount { get; protected internal set; }
@@ -42,5 +42,10 @@ public class ProductionDataFailureEntity : Entity
     {
         DeadCount = deadCount;
         DefectiveCount = defectiveCount;
+    }
+
+    public void SetCycle(Guid cycleId)
+    {
+        CycleId = cycleId;
     }
 }

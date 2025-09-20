@@ -8,6 +8,7 @@ import {
   Divider,
   DialogActions,
   Button,
+  MenuItem,
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -21,6 +22,9 @@ import { ProductionDataTransferFeedService } from "../../../../services/producti
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import AppDialog from "../../../common/app-dialog";
 import LoadingButton from "../../../common/loading-button";
+import LoadingTextField from "../../../common/loading-textfield";
+import { FarmsService } from "../../../../services/farms-service";
+import type CycleDto from "../../../../models/farms/latest-cycle";
 
 interface EditProductionDataTransferFeedModalProps {
   open: boolean;
@@ -28,6 +32,11 @@ interface EditProductionDataTransferFeedModalProps {
   onSave: () => void;
   feedTransfer: ProductionDataTransferFeedListModel | null;
 }
+
+type FormDataType = UpdateTransferFeedData & {
+  fromCycleId: string;
+  toCycleId: string;
+};
 
 const EditProductionDataTransferFeedModal: React.FC<
   EditProductionDataTransferFeedModalProps
@@ -37,28 +46,67 @@ const EditProductionDataTransferFeedModal: React.FC<
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm<UpdateTransferFeedData>();
+    watch,
+  } = useForm<FormDataType>();
 
   const [loading, setLoading] = useState(false);
+  const [fromCycles, setFromCycles] = useState<CycleDto[]>([]);
+  const [toCycles, setToCycles] = useState<CycleDto[]>([]);
+  const [loadingFromCycles, setLoadingFromCycles] = useState(false);
+  const [loadingToCycles, setLoadingToCycles] = useState(false);
+
+  const fromCycleId = watch("fromCycleId");
+  const toCycleId = watch("toCycleId");
 
   useEffect(() => {
-    if (feedTransfer) {
+    if (feedTransfer && open) {
       reset({
+        fromCycleId: feedTransfer.fromCycleId,
+        toCycleId: feedTransfer.toCycleId,
         tonnage: feedTransfer.tonnage,
         value: feedTransfer.value,
       });
-    }
-  }, [feedTransfer, reset]);
 
-  const handleSave = async (data: UpdateTransferFeedData) => {
+      const fetchFromCycles = async () => {
+        if (!feedTransfer.fromFarmId) return;
+        setLoadingFromCycles(true);
+        await handleApiResponse(
+          () => FarmsService.getFarmCycles(feedTransfer.fromFarmId),
+          (data) => setFromCycles(data.responseData ?? []),
+          () => setFromCycles([]),
+          "Nie udało się pobrać listy cykli."
+        );
+        setLoadingFromCycles(false);
+      };
+
+      const fetchToCycles = async () => {
+        if (!feedTransfer.toFarmId) return;
+        setLoadingToCycles(true);
+        await handleApiResponse(
+          () => FarmsService.getFarmCycles(feedTransfer.toFarmId),
+          (data) => setToCycles(data.responseData ?? []),
+          () => setToCycles([]),
+          "Nie udało się pobrać listy cykli."
+        );
+        setLoadingToCycles(false);
+      };
+
+      fetchFromCycles();
+      fetchToCycles();
+    }
+  }, [feedTransfer, open, reset]);
+
+  const handleSave = async (data: FormDataType) => {
     if (!feedTransfer) return;
     setLoading(true);
     await handleApiResponse(
       () =>
-        ProductionDataTransferFeedService.updateFeedTransfer(
-          feedTransfer.id,
-          data
-        ),
+        ProductionDataTransferFeedService.updateFeedTransfer(feedTransfer.id, {
+          fromCycleId: data.fromCycleId,
+          toCycleId: data.toCycleId,
+          tonnage: data.tonnage,
+          value: data.value,
+        }),
       () => {
         toast.success("Pomyślnie zaktualizowano przeniesienie paszy");
         onSave();
@@ -72,6 +120,8 @@ const EditProductionDataTransferFeedModal: React.FC<
 
   const close = () => {
     reset();
+    setFromCycles([]);
+    setToCycles([]);
     onClose();
   };
 
@@ -91,12 +141,29 @@ const EditProductionDataTransferFeedModal: React.FC<
                   slotProps={{ input: { readOnly: true } }}
                   fullWidth
                 />
-                <TextField
+                <LoadingTextField
+                  loading={loadingFromCycles}
                   label="Cykl"
-                  value={feedTransfer?.fromCycleText || ""}
-                  slotProps={{ input: { readOnly: true } }}
+                  select
                   fullWidth
-                />
+                  disabled={
+                    !feedTransfer?.fromFarmId ||
+                    loadingFromCycles ||
+                    fromCycles.length === 0
+                  }
+                  value={fromCycleId || ""}
+                  error={!!errors.fromCycleId}
+                  helperText={errors.fromCycleId?.message}
+                  {...register("fromCycleId", {
+                    required: "Cykl jest wymagany",
+                  })}
+                >
+                  {fromCycles.map((cycle) => (
+                    <MenuItem key={cycle.id} value={cycle.id}>
+                      {`${cycle.identifier}/${cycle.year}`}
+                    </MenuItem>
+                  ))}
+                </LoadingTextField>
                 <TextField
                   label="Kurnik"
                   value={feedTransfer?.fromHenhouseName || ""}
@@ -116,12 +183,27 @@ const EditProductionDataTransferFeedModal: React.FC<
                   slotProps={{ input: { readOnly: true } }}
                   fullWidth
                 />
-                <TextField
+                <LoadingTextField
+                  loading={loadingToCycles}
                   label="Cykl"
-                  value={feedTransfer?.toCycleText || ""}
-                  slotProps={{ input: { readOnly: true } }}
+                  select
                   fullWidth
-                />
+                  disabled={
+                    !feedTransfer?.toFarmId ||
+                    loadingToCycles ||
+                    toCycles.length === 0
+                  }
+                  value={toCycleId || ""}
+                  error={!!errors.toCycleId}
+                  helperText={errors.toCycleId?.message}
+                  {...register("toCycleId", { required: "Cykl jest wymagany" })}
+                >
+                  {toCycles.map((cycle) => (
+                    <MenuItem key={cycle.id} value={cycle.id}>
+                      {`${cycle.identifier}/${cycle.year}`}
+                    </MenuItem>
+                  ))}
+                </LoadingTextField>
                 <TextField
                   label="Kurnik"
                   value={feedTransfer?.toHenhouseName || ""}
@@ -195,7 +277,7 @@ const EditProductionDataTransferFeedModal: React.FC<
             disabled={loading}
             loading={loading}
           >
-            Zapisz zmiany
+            Zapisz
           </LoadingButton>
         </DialogActions>
       </form>

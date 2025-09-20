@@ -5,9 +5,13 @@ namespace FarmsManager.Application.Queries.ProductionData.TransferFeed;
 public class ProductionDataTransferFeedRowDto
 {
     public Guid Id { get; init; }
+    public Guid FromFarmId { get; init; }
+    public Guid FromCycleId { get; init; }
     public string FromCycleText { get; init; }
     public string FromFarmName { get; init; }
     public string FromHenhouseName { get; init; }
+    public Guid ToFarmId { get; init; }
+    public Guid ToCycleId { get; init; }
     public string ToCycleText { get; init; }
     public string ToFarmName { get; init; }
     public string ToHenhouseName { get; init; }

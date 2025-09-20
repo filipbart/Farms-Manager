@@ -1,6 +1,8 @@
 export interface ProductionDataFailureListModel {
   id: string;
+  cycleId: string;
   cycleText: string;
+  farmId: string;
   farmName: string;
   henhouseName: string;
   deadCount: number;
@@ -21,6 +23,7 @@ export interface ProductionDataFailureEntry {
 }
 
 export interface UpdateProductionDataFailureData {
+  cycleId: string;
   deadCount: number;
   defectiveCount: number;
 }

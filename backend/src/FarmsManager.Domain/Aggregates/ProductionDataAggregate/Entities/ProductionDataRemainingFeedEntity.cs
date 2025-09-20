@@ -10,7 +10,7 @@ public class ProductionDataRemainingFeedEntity : Entity
     }
 
     public Guid FarmId { get; init; }
-    public Guid CycleId { get; init; }
+    public Guid CycleId { get; protected internal set; }
     public Guid HenhouseId { get; init; }
     public string FeedName { get; init; }
     public decimal RemainingTonnage { get; protected internal set; }
@@ -45,5 +45,10 @@ public class ProductionDataRemainingFeedEntity : Entity
     {
         RemainingTonnage = remainingTonnage;
         RemainingValue = remainingValue;
+    }
+
+    public void SetCycle(Guid cycleId)
+    {
+        CycleId = cycleId;
     }
 }
