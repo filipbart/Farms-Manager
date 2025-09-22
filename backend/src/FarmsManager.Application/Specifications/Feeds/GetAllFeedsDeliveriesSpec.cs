@@ -7,22 +7,17 @@ namespace FarmsManager.Application.Specifications.Feeds;
 
 public sealed class GetAllFeedsDeliveriesSpec : BaseSpecification<FeedInvoiceEntity>
 {
-    public GetAllFeedsDeliveriesSpec(GetFeedsDeliveriesQueryFilters filters, bool withPagination,
-        List<Guid> accessibleFarmIds)
+    public GetAllFeedsDeliveriesSpec(GetFeedsDeliveriesQueryFilters filters, List<Guid> accessibleFarmIds)
     {
         EnsureExists();
         DisableTracking();
 
         PopulateFilters(filters);
-        ApplyOrdering(filters);
 
         if (accessibleFarmIds is not null && accessibleFarmIds.Count != 0)
             Query.Where(p => accessibleFarmIds.Contains(p.FarmId));
 
-        if (withPagination)
-        {
-            Paginate(filters);
-        }
+        Query.OrderByDescending(t => t.DateCreatedUtc);
     }
 
     private void PopulateFilters(GetFeedsDeliveriesQueryFilters filters)
@@ -56,92 +51,6 @@ public sealed class GetAllFeedsDeliveriesSpec : BaseSpecification<FeedInvoiceEnt
         if (filters.DateTo is not null)
         {
             Query.Where(t => t.InvoiceDate <= filters.DateTo);
-        }
-    }
-
-    private void ApplyOrdering(GetFeedsDeliveriesQueryFilters filters)
-    {
-        var isDescending = filters.IsDescending;
-        switch (filters.OrderBy)
-        {
-            case FeedsDeliveriesOrderType.Cycle:
-                if (isDescending)
-                {
-                    Query.OrderByDescending(t => t.Cycle.Identifier)
-                        .ThenByDescending(t => t.Cycle.Year)
-                        .ThenByDescending(t => t.DateCreatedUtc);
-                }
-                else
-                {
-                    Query.OrderBy(t => t.Cycle.Year)
-                        .ThenBy(t => t.Cycle.Identifier)
-                        .ThenBy(t => t.DateCreatedUtc);
-                }
-
-                break;
-
-            case FeedsDeliveriesOrderType.Farm:
-                if (isDescending)
-                {
-                    Query.OrderByDescending(t => t.Farm.Name);
-                }
-                else
-                {
-                    Query.OrderBy(t => t.Farm.Name);
-                }
-
-                break;
-
-            case FeedsDeliveriesOrderType.ItemName:
-                if (isDescending)
-                {
-                    Query.OrderByDescending(t => t.ItemName);
-                }
-                else
-                {
-                    Query.OrderBy(t => t.ItemName);
-                }
-
-                break;
-
-            case FeedsDeliveriesOrderType.VendorName:
-                if (isDescending)
-                {
-                    Query.OrderByDescending(t => t.VendorName);
-                }
-                else
-                {
-                    Query.OrderBy(t => t.VendorName);
-                }
-
-                break;
-
-            case FeedsDeliveriesOrderType.UnitPrice:
-                if (isDescending)
-                {
-                    Query.OrderByDescending(t => t.CorrectUnitPrice.HasValue)
-                        .ThenByDescending(t => t.CorrectUnitPrice.Value).ThenByDescending(t => t.UnitPrice);
-                }
-                else
-                {
-                    Query.OrderByDescending(t => t.CorrectUnitPrice.HasValue)
-                        .ThenBy(t => t.CorrectUnitPrice.Value).ThenBy(t => t.UnitPrice);
-                }
-
-                break;
-
-            case FeedsDeliveriesOrderType.DateCreatedUtc:
-            default:
-                if (isDescending)
-                {
-                    Query.OrderByDescending(t => t.DateCreatedUtc);
-                }
-                else
-                {
-                    Query.OrderBy(t => t.DateCreatedUtc);
-                }
-
-                break;
         }
     }
 }

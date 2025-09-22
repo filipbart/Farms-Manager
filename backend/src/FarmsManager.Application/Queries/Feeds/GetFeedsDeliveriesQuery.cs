@@ -107,12 +107,12 @@ public class
         var accessibleFarmIds = user.AccessibleFarmIds;
 
         var feedInvoices = await _feedInvoiceRepository.ListAsync<FeedDeliveryRowDto>(
-            new GetAllFeedsDeliveriesSpec(request.Filters, false, accessibleFarmIds), ct);
+            new GetAllFeedsDeliveriesSpec(request.Filters, accessibleFarmIds), ct);
 
         var feedCorrections = await _feedInvoiceCorrectionRepository.ListAsync<FeedDeliveryRowDto>(
-            new GetAllFeedsCorrectionsSpec(request.Filters, false, accessibleFarmIds), ct);
+            new GetAllFeedsCorrectionsSpec(request.Filters, accessibleFarmIds), ct);
 
-        var combined = feedInvoices.Concat(feedCorrections).ToList();
+        var combined = feedInvoices.Concat(feedCorrections);
 
         var orderedCombined = request.Filters.OrderBy switch
         {
@@ -121,7 +121,8 @@ public class
             FeedsDeliveriesOrderType.HenhouseName => combined.SortBy(x => x.HenhouseName, request.Filters.IsDescending),
             FeedsDeliveriesOrderType.ItemName => combined.SortBy(x => x.ItemName, request.Filters.IsDescending),
             FeedsDeliveriesOrderType.VendorName => combined.SortBy(x => x.VendorName, request.Filters.IsDescending),
-            FeedsDeliveriesOrderType.InvoiceNumber => combined.SortBy(x => x.InvoiceNumber, request.Filters.IsDescending),
+            FeedsDeliveriesOrderType.InvoiceNumber => combined.SortBy(x => x.InvoiceNumber,
+                request.Filters.IsDescending),
             FeedsDeliveriesOrderType.Quantity => combined.SortBy(x => x.Quantity, request.Filters.IsDescending),
             FeedsDeliveriesOrderType.UnitPrice => combined.SortBy(x => x.UnitPrice, request.Filters.IsDescending),
             FeedsDeliveriesOrderType.InvoiceDate => combined.SortBy(x => x.InvoiceDate, request.Filters.IsDescending),
@@ -129,8 +130,10 @@ public class
             FeedsDeliveriesOrderType.InvoiceTotal => combined.SortBy(x => x.InvoiceTotal, request.Filters.IsDescending),
             FeedsDeliveriesOrderType.SubTotal => combined.SortBy(x => x.SubTotal, request.Filters.IsDescending),
             FeedsDeliveriesOrderType.VatAmount => combined.SortBy(x => x.VatAmount, request.Filters.IsDescending),
-            FeedsDeliveriesOrderType.PaymentDateUtc => combined.SortBy(x => x.PaymentDateUtc, request.Filters.IsDescending),
-            FeedsDeliveriesOrderType.DateCreatedUtc => combined.SortBy(x => x.DateCreatedUtc, request.Filters.IsDescending),
+            FeedsDeliveriesOrderType.PaymentDateUtc => combined.SortBy(x => x.PaymentDateUtc,
+                request.Filters.IsDescending),
+            FeedsDeliveriesOrderType.DateCreatedUtc => combined.SortBy(x => x.DateCreatedUtc,
+                request.Filters.IsDescending),
             _ => combined.OrderByDescending(x => x.DateCreatedUtc)
         };
 
@@ -168,7 +171,8 @@ public class FeedsDeliveriesProfile : Profile
 
 public static class LinqExtensions
 {
-    public static IOrderedEnumerable<TSource> SortBy<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector, bool isDescending)
+    public static IOrderedEnumerable<TSource> SortBy<TSource, TKey>(this IEnumerable<TSource> source,
+        Func<TSource, TKey> keySelector, bool isDescending)
     {
         return isDescending ? source.OrderByDescending(keySelector) : source.OrderBy(keySelector);
     }
