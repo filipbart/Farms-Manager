@@ -105,17 +105,17 @@ public class UploadDeliveriesFilesCommandHandler : IRequestHandler<UploadDeliver
                 await _henhouseRepository.FirstOrDefaultAsync(
                     new HenhouseByNameSpec(feedDeliveryInvoiceModel.HenhouseName), cancellationToken);
 
+            var farms = await _farmRepository.ListAsync(new FarmsByNipOrNameSpec(
+                feedDeliveryInvoiceModel.CustomerNip.Replace("-", ""),
+                feedDeliveryInvoiceModel.CustomerName), cancellationToken);
             FarmEntity farm;
             if (henhouse is not null)
             {
-                farm = await _farmRepository.GetAsync(new FarmByIdSpec(henhouse.FarmId), cancellationToken);
+                farm = farms.FirstOrDefault(t => t.Id == henhouse.FarmId) ?? farms.FirstOrDefault();
             }
             else
             {
-                farm = await _farmRepository.FirstOrDefaultAsync(new FarmByNipOrNameSpec(
-                        feedDeliveryInvoiceModel.CustomerNip.Replace("-", ""),
-                        feedDeliveryInvoiceModel.CustomerName),
-                    cancellationToken);
+                farm = farms.FirstOrDefault();
             }
 
             var feedContractor = await _feedContractorRepository.FirstOrDefaultAsync(
