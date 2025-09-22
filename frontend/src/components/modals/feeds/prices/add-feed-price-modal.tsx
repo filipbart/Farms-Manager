@@ -127,8 +127,6 @@ const AddFeedPriceModal: React.FC<AddFeedPriceModalProps> = ({
     onClose();
   };
 
-  const watchedEntries = watch("entries");
-
   return (
     <AppDialog open={open} onClose={close} fullWidth maxWidth="md">
       <DialogTitle>Wprowadź nowe ceny pasz</DialogTitle>
@@ -228,8 +226,6 @@ const AddFeedPriceModal: React.FC<AddFeedPriceModalProps> = ({
               </TableHead>
               <TableBody>
                 {fields.map((item, index) => {
-                  const selectedNameIds =
-                    watchedEntries?.map((e) => e.nameId) ?? [];
                   return (
                     <TableRow key={item.id}>
                       <TableCell>
@@ -249,20 +245,11 @@ const AddFeedPriceModal: React.FC<AddFeedPriceModalProps> = ({
                                 errors.entries?.[index]?.nameId?.message
                               }
                             >
-                              {feedsNames
-                                .filter(
-                                  (feed) =>
-                                    !selectedNameIds.includes(feed.id) ||
-                                    feed.id === watchedEntries[index]?.nameId
-                                )
-                                .map((feedName) => (
-                                  <MenuItem
-                                    key={feedName.id}
-                                    value={feedName.id}
-                                  >
-                                    {feedName.name}
-                                  </MenuItem>
-                                ))}
+                              {feedsNames.map((feedName) => (
+                                <MenuItem key={feedName.id} value={feedName.id}>
+                                  {feedName.name}
+                                </MenuItem>
+                              ))}
                             </LoadingTextField>
                           )}
                         />
