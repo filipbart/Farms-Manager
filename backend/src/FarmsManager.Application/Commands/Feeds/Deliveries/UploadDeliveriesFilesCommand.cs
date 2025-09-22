@@ -9,6 +9,7 @@ using FarmsManager.Application.Specifications;
 using FarmsManager.Application.Specifications.Farms;
 using FarmsManager.Application.Specifications.Feeds;
 using FarmsManager.Application.Specifications.Henhouses;
+using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
@@ -100,14 +101,22 @@ public class UploadDeliveriesFilesCommandHandler : IRequestHandler<UploadDeliver
                 throw new Exception($"Istnieje już dostawa z tym numerem faktury: {existedInvoice.InvoiceNumber}");
             }
 
-
-            var farm = await _farmRepository.FirstOrDefaultAsync(new FarmByNipOrNameSpec(
-                    feedDeliveryInvoiceModel.CustomerNip.Replace("-", ""),
-                    feedDeliveryInvoiceModel.CustomerName),
-                cancellationToken);
             var henhouse =
                 await _henhouseRepository.FirstOrDefaultAsync(
                     new HenhouseByNameSpec(feedDeliveryInvoiceModel.HenhouseName), cancellationToken);
+
+            FarmEntity farm;
+            if (henhouse is not null)
+            {
+                farm = await _farmRepository.GetAsync(new FarmByIdSpec(henhouse.FarmId), cancellationToken);
+            }
+            else
+            {
+                farm = await _farmRepository.FirstOrDefaultAsync(new FarmByNipOrNameSpec(
+                        feedDeliveryInvoiceModel.CustomerNip.Replace("-", ""),
+                        feedDeliveryInvoiceModel.CustomerName),
+                    cancellationToken);
+            }
 
             var feedContractor = await _feedContractorRepository.FirstOrDefaultAsync(
                 new FeedContractorByNipSpec(feedDeliveryInvoiceModel.VendorNip.Replace("-", "")),
