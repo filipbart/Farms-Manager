@@ -13,17 +13,26 @@ using MediatR;
 
 namespace FarmsManager.Application.Queries.Feeds;
 
-public enum FeedsDeliveriesOrderBy
+public enum FeedsDeliveriesOrderType
 {
-    DateCreatedUtc,
     Cycle,
     Farm,
+    HenhouseName,
     ItemName,
     VendorName,
-    UnitPrice
+    InvoiceNumber,
+    Quantity,
+    UnitPrice,
+    InvoiceDate,
+    DueDate,
+    InvoiceTotal,
+    SubTotal,
+    VatAmount,
+    PaymentDateUtc,
+    DateCreatedUtc,
 }
 
-public record GetFeedsDeliveriesQueryFilters : OrderedPaginationParams<FeedsDeliveriesOrderBy>
+public record GetFeedsDeliveriesQueryFilters : OrderedPaginationParams<FeedsDeliveriesOrderType>
 {
     public List<Guid> FarmIds { get; init; }
     public List<string> Cycles { get; init; }
@@ -105,41 +114,32 @@ public class
 
         var combined = feedInvoices.Concat(feedCorrections).ToList();
 
-        combined = request.Filters.OrderBy switch
+        var orderedCombined = request.Filters.OrderBy switch
         {
-            FeedsDeliveriesOrderBy.DateCreatedUtc => request.Filters.IsDescending
-                ? combined.OrderByDescending(x => x.DateCreatedUtc).ToList()
-                : combined.OrderBy(x => x.DateCreatedUtc).ToList(),
-
-            FeedsDeliveriesOrderBy.Cycle => request.Filters.IsDescending
-                ? combined.OrderByDescending(x => x.CycleText).ToList()
-                : combined.OrderBy(x => x.CycleText).ToList(),
-
-            FeedsDeliveriesOrderBy.Farm => request.Filters.IsDescending
-                ? combined.OrderByDescending(x => x.FarmName).ToList()
-                : combined.OrderBy(x => x.FarmName).ToList(),
-
-            FeedsDeliveriesOrderBy.ItemName => request.Filters.IsDescending
-                ? combined.OrderByDescending(x => x.ItemName).ToList()
-                : combined.OrderBy(x => x.ItemName).ToList(),
-
-            FeedsDeliveriesOrderBy.VendorName => request.Filters.IsDescending
-                ? combined.OrderByDescending(x => x.VendorName).ToList()
-                : combined.OrderBy(x => x.VendorName).ToList(),
-
-            FeedsDeliveriesOrderBy.UnitPrice => request.Filters.IsDescending
-                ? combined.OrderByDescending(x => x.UnitPrice).ToList()
-                : combined.OrderBy(x => x.UnitPrice).ToList(),
-
-            _ => combined
+            FeedsDeliveriesOrderType.Cycle => combined.SortBy(x => x.CycleText, request.Filters.IsDescending),
+            FeedsDeliveriesOrderType.Farm => combined.SortBy(x => x.FarmName, request.Filters.IsDescending),
+            FeedsDeliveriesOrderType.HenhouseName => combined.SortBy(x => x.HenhouseName, request.Filters.IsDescending),
+            FeedsDeliveriesOrderType.ItemName => combined.SortBy(x => x.ItemName, request.Filters.IsDescending),
+            FeedsDeliveriesOrderType.VendorName => combined.SortBy(x => x.VendorName, request.Filters.IsDescending),
+            FeedsDeliveriesOrderType.InvoiceNumber => combined.SortBy(x => x.InvoiceNumber, request.Filters.IsDescending),
+            FeedsDeliveriesOrderType.Quantity => combined.SortBy(x => x.Quantity, request.Filters.IsDescending),
+            FeedsDeliveriesOrderType.UnitPrice => combined.SortBy(x => x.UnitPrice, request.Filters.IsDescending),
+            FeedsDeliveriesOrderType.InvoiceDate => combined.SortBy(x => x.InvoiceDate, request.Filters.IsDescending),
+            FeedsDeliveriesOrderType.DueDate => combined.SortBy(x => x.DueDate, request.Filters.IsDescending),
+            FeedsDeliveriesOrderType.InvoiceTotal => combined.SortBy(x => x.InvoiceTotal, request.Filters.IsDescending),
+            FeedsDeliveriesOrderType.SubTotal => combined.SortBy(x => x.SubTotal, request.Filters.IsDescending),
+            FeedsDeliveriesOrderType.VatAmount => combined.SortBy(x => x.VatAmount, request.Filters.IsDescending),
+            FeedsDeliveriesOrderType.PaymentDateUtc => combined.SortBy(x => x.PaymentDateUtc, request.Filters.IsDescending),
+            FeedsDeliveriesOrderType.DateCreatedUtc => combined.SortBy(x => x.DateCreatedUtc, request.Filters.IsDescending),
+            _ => combined.OrderByDescending(x => x.DateCreatedUtc)
         };
 
-        var total = combined.Count;
+        var total = orderedCombined.Count();
         var skip = request.Filters.Page * request.Filters.PageSize;
 
         var pageItems = request.Filters.PageSize == -1
-            ? combined
-            : combined.Skip(skip).Take(request.Filters.PageSize).ToList();
+            ? orderedCombined.ToList()
+            : orderedCombined.Skip(skip).Take(request.Filters.PageSize).ToList();
 
         return BaseResponse.CreateResponse(new GetFeedsDeliveriesQueryResponse
         {
@@ -163,5 +163,13 @@ public class FeedsDeliveriesProfile : Profile
             .ForMember(t => t.CycleText, opt => opt.MapFrom(t => t.Cycle.Identifier + "/" + t.Cycle.Year))
             .ForMember(t => t.FarmName, opt => opt.MapFrom(t => t.Farm.Name))
             .ForMember(t => t.IsCorrection, opt => opt.MapFrom(t => true));
+    }
+}
+
+public static class LinqExtensions
+{
+    public static IOrderedEnumerable<TSource> SortBy<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector, bool isDescending)
+    {
+        return isDescending ? source.OrderByDescending(keySelector) : source.OrderBy(keySelector);
     }
 }

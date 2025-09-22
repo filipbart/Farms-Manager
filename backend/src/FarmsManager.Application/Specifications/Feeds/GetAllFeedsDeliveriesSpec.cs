@@ -64,7 +64,7 @@ public sealed class GetAllFeedsDeliveriesSpec : BaseSpecification<FeedInvoiceEnt
         var isDescending = filters.IsDescending;
         switch (filters.OrderBy)
         {
-            case FeedsDeliveriesOrderBy.Cycle:
+            case FeedsDeliveriesOrderType.Cycle:
                 if (isDescending)
                 {
                     Query.OrderByDescending(t => t.Cycle.Identifier)
@@ -80,7 +80,7 @@ public sealed class GetAllFeedsDeliveriesSpec : BaseSpecification<FeedInvoiceEnt
 
                 break;
 
-            case FeedsDeliveriesOrderBy.Farm:
+            case FeedsDeliveriesOrderType.Farm:
                 if (isDescending)
                 {
                     Query.OrderByDescending(t => t.Farm.Name);
@@ -92,7 +92,7 @@ public sealed class GetAllFeedsDeliveriesSpec : BaseSpecification<FeedInvoiceEnt
 
                 break;
 
-            case FeedsDeliveriesOrderBy.ItemName:
+            case FeedsDeliveriesOrderType.ItemName:
                 if (isDescending)
                 {
                     Query.OrderByDescending(t => t.ItemName);
@@ -104,7 +104,7 @@ public sealed class GetAllFeedsDeliveriesSpec : BaseSpecification<FeedInvoiceEnt
 
                 break;
 
-            case FeedsDeliveriesOrderBy.VendorName:
+            case FeedsDeliveriesOrderType.VendorName:
                 if (isDescending)
                 {
                     Query.OrderByDescending(t => t.VendorName);
@@ -116,7 +116,7 @@ public sealed class GetAllFeedsDeliveriesSpec : BaseSpecification<FeedInvoiceEnt
 
                 break;
 
-            case FeedsDeliveriesOrderBy.UnitPrice:
+            case FeedsDeliveriesOrderType.UnitPrice:
                 if (isDescending)
                 {
                     Query.OrderByDescending(t => t.CorrectUnitPrice.HasValue)
@@ -130,7 +130,7 @@ public sealed class GetAllFeedsDeliveriesSpec : BaseSpecification<FeedInvoiceEnt
 
                 break;
 
-            case FeedsDeliveriesOrderBy.DateCreatedUtc:
+            case FeedsDeliveriesOrderType.DateCreatedUtc:
             default:
                 if (isDescending)
                 {

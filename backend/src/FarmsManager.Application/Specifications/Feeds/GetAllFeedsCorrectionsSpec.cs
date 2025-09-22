@@ -59,7 +59,7 @@ public sealed class GetAllFeedsCorrectionsSpec : BaseSpecification<FeedInvoiceCo
         var isDescending = filters.IsDescending;
         switch (filters.OrderBy)
         {
-            case FeedsDeliveriesOrderBy.Cycle:
+            case FeedsDeliveriesOrderType.Cycle:
                 if (isDescending)
                 {
                     Query.OrderByDescending(t => t.Cycle.Identifier)
@@ -75,7 +75,7 @@ public sealed class GetAllFeedsCorrectionsSpec : BaseSpecification<FeedInvoiceCo
 
                 break;
 
-            case FeedsDeliveriesOrderBy.Farm:
+            case FeedsDeliveriesOrderType.Farm:
                 if (isDescending)
                 {
                     Query.OrderByDescending(t => t.Farm.Name);
@@ -87,7 +87,7 @@ public sealed class GetAllFeedsCorrectionsSpec : BaseSpecification<FeedInvoiceCo
 
                 break;
 
-            case FeedsDeliveriesOrderBy.DateCreatedUtc:
+            case FeedsDeliveriesOrderType.DateCreatedUtc:
             default:
                 if (isDescending)
                 {
