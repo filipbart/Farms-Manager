@@ -36,9 +36,18 @@ export function filterReducer(
 export enum FeedsDeliveriesOrderType {
   Cycle = "Cycle",
   Farm = "Farm",
+  HenhouseName = "HenhouseName",
   ItemName = "ItemName",
   VendorName = "VendorName",
+  InvoiceNumber = "InvoiceNumber",
+  Quantity = "Quantity",
   UnitPrice = "UnitPrice",
+  InvoiceDate = "InvoiceDate",
+  DueDate = "DueDate",
+  InvoiceTotal = "InvoiceTotal",
+  SubTotal = "SubTotal",
+  VatAmount = "VatAmount",
+  PaymentDateUtc = "PaymentDateUtc",
   DateCreatedUtc = "DateCreatedUtc",
 }
 
