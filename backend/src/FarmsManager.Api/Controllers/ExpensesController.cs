@@ -65,9 +65,9 @@ public class ExpensesController(IMediator mediator) : BaseController
     [HasPermission(AppPermissions.Expenses.ContractorsView)]
     [ProducesResponseType(typeof(BaseResponse<GetExpensesContractorsQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetExpensesContractors()
+    public async Task<IActionResult> GetExpensesContractors([FromQuery] GetExpensesContractorsQueryFilters filters)
     {
-        return Ok(await mediator.Send(new GetExpensesContractorsQuery()));
+        return Ok(await mediator.Send(new GetExpensesContractorsQuery(filters)));
     }
 
     /// <summary>

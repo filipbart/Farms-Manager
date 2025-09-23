@@ -44,7 +44,7 @@ const AddExpenseProductionModal: React.FC<AddExpenseProductionModalProps> = ({
     expensesContractors,
     loadingExpensesContractors,
     fetchExpensesContractors,
-  } = useExpensesContractor();
+  } = useExpensesContractor({});
 
   const [selectedFile, setSelectedFile] = useState<File>();
   const [loading, setLoading] = useState(false);

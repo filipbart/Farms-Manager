@@ -47,7 +47,7 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
     expensesContractors,
     loadingExpensesContractors,
     fetchExpensesContractors,
-  } = useExpensesContractor();
+  } = useExpensesContractor({});
 
   const [loading, setLoading] = useState(false);
   const [cycles, setCycles] = useState<CycleDto[]>([]);

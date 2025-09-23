@@ -62,7 +62,7 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
     expensesContractors,
     loadingExpensesContractors,
     fetchExpensesContractors,
-  } = useExpensesContractor();
+  } = useExpensesContractor({});
   const { expensesTypes, loadingExpensesTypes, fetchExpensesTypes } =
     useExpensesTypes();
 
