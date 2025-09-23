@@ -12,7 +12,7 @@ import {
   TextField,
   Autocomplete,
 } from "@mui/material";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { MdSave, MdZoomIn } from "react-icons/md";
 import { Controller, useForm } from "react-hook-form";
 import { DatePicker } from "@mui/x-date-pickers";
@@ -128,13 +128,16 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
     }
   }, [watchedFarmId, farms, setValue]);
 
-  const handleContractorChange = (contractorId: string) => {
-    const selected = expensesContractors.find((c) => c.id === contractorId);
-    setValue("expenseTypeName", selected?.expenseType || "");
-    if (selected?.expenseType) {
-      setValue("expenseTypeId", selected.expenseTypeId || "");
-    }
-  };
+  const handleContractorChange = useCallback(
+    (contractorId: string) => {
+      const selected = expensesContractors.find((c) => c.id === contractorId);
+      setValue("expenseTypeName", selected?.expenseType || "");
+      if (selected?.expenseType) {
+        setValue("expenseTypeId", selected.expenseTypeId || "");
+      }
+    },
+    [expensesContractors, setValue]
+  );
 
   useEffect(() => {
     if (open) {
@@ -146,13 +149,8 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
         fetchExpensesTypes();
       }
     }
-  }, [
-    open,
-    fetchFarms,
-    fetchExpensesContractors,
-    fetchExpensesTypes,
-    draftExpenseInvoices,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, draftExpenseInvoices]);
 
   useEffect(() => {
     const contractorName = draftExpense?.extractedFields.contractorName;
@@ -171,7 +169,7 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
         handleContractorChange(matchedContractor.id);
       }
     }
-  }, [expensesContractors, draftExpense, setValue]);
+  }, [expensesContractors, draftExpense, handleContractorChange]);
 
   useEffect(() => {
     if (draftExpenseInvoices.length === 0 && open) {
