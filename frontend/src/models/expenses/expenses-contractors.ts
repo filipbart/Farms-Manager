@@ -19,3 +19,7 @@ export interface AddExpenseContractorData {
   expenseTypeId: string;
   expenseType: string;
 }
+
+export interface ExpensesContractorsFilterPaginationModel {
+  searchPhrase?: string;
+}

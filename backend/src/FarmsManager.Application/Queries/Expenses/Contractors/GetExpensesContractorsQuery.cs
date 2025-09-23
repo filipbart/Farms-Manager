@@ -1,13 +1,22 @@
-﻿using AutoMapper;
+﻿using Ardalis.Specification;
+using AutoMapper;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
+using FarmsManager.Shared.Extensions;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace FarmsManager.Application.Queries.Expenses.Contractors;
 
-public record GetExpensesContractorsQuery : IRequest<BaseResponse<GetExpensesContractorsQueryResponse>>;
+public class GetExpensesContractorsQueryFilters
+{
+    public string SearchPhrase { get; init; }
+}
+
+public record GetExpensesContractorsQuery(GetExpensesContractorsQueryFilters Filters)
+    : IRequest<BaseResponse<GetExpensesContractorsQueryResponse>>;
 
 public record GetExpensesContractorsQueryResponse
 {
@@ -39,7 +48,7 @@ public class GetExpensesContractorsQueryHandler : IRequestHandler<GetExpensesCon
         CancellationToken cancellationToken)
     {
         var items = await _expenseContractorRepository.ListAsync<ExpenseContractorRow>(
-            new GetAllExpensesContractorsSpec(),
+            new GetAllExpensesContractorsSpec(request.Filters.SearchPhrase),
             cancellationToken);
         return BaseResponse.CreateResponse(new GetExpensesContractorsQueryResponse
         {
@@ -50,9 +59,15 @@ public class GetExpensesContractorsQueryHandler : IRequestHandler<GetExpensesCon
 
 public sealed class GetAllExpensesContractorsSpec : BaseSpecification<ExpenseContractorEntity>
 {
-    public GetAllExpensesContractorsSpec()
+    public GetAllExpensesContractorsSpec(string searchPhrase)
     {
         EnsureExists();
+        DisableTracking();
+        if (searchPhrase.IsNotEmpty())
+        {
+            var phrase = $"%{searchPhrase}%";
+            Query.Where(e => EF.Functions.ILike(e.Name, phrase));
+        }
     }
 }
 

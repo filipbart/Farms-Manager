@@ -2,6 +2,7 @@ using Ardalis.Specification;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.EmployeeAggregate.Entities;
 using FarmsManager.Domain.Aggregates.EmployeeAggregate.Enums;
+using FarmsManager.Shared.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace FarmsManager.Application.Queries.Employees;
@@ -35,7 +36,7 @@ public sealed class GetAllEmployeesSpec : BaseSpecification<EmployeeEntity>
             Query.Where(e => filters.FarmIds.Contains(e.FarmId));
         }
 
-        if (!string.IsNullOrWhiteSpace(filters.SearchPhrase))
+        if (filters.SearchPhrase.IsNotEmpty())
         {
             var phrase = $"%{filters.SearchPhrase}%";
             Query.Where(e => EF.Functions.ILike(e.FullName, phrase));

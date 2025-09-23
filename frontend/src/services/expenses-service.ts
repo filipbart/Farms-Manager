@@ -2,6 +2,7 @@ import ApiUrl from "../common/ApiUrl";
 import type { PaginateModel } from "../common/interfaces/paginate";
 import type {
   AddExpenseContractorData,
+  ExpensesContractorsFilterPaginationModel,
   ExpensesContractorsQueryResponse,
 } from "../models/expenses/expenses-contractors";
 import type { ExpensesTypesQueryResponse } from "../models/expenses/expenses-types";
@@ -37,9 +38,12 @@ export class ExpensesService {
     return await AxiosWrapper.delete(ApiUrl.DeleteExpensesType(id));
   }
 
-  public static async getExpensesContractors() {
+  public static async getExpensesContractors(
+    filters: Partial<ExpensesContractorsFilterPaginationModel>
+  ) {
     return await AxiosWrapper.get<ExpensesContractorsQueryResponse>(
-      ApiUrl.ExpensesContractors
+      ApiUrl.ExpensesContractors,
+      { ...filters }
     );
   }
 

@@ -1,6 +1,6 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
 import { DataGridPro } from "@mui/x-data-grid-pro";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useReducer, useState } from "react";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import { getExpensesContractorsColumns } from "./expenses-contractors-columns";
 import { ExpensesService } from "../../../services/expenses-service";
@@ -10,13 +10,21 @@ import type { ExpenseContractorRow } from "../../../models/expenses/expenses-con
 import AddExpenseContractorModal from "../../../components/modals/expenses/contractors/add-expense-contractor-modal";
 import NoRowsOverlay from "../../../components/datagrid/custom-norows";
 import EditExpenseContractorModal from "../../../components/modals/expenses/contractors/edit-expense-contractor-modal";
+import {
+  filterReducer,
+  initialFilters,
+} from "../../../models/expenses/expenses-contractors-filters";
+import FiltersForm from "../../../components/filters/filters-form";
+import { getExpensesContractorsFiltersConfig } from "./filter-config.contractors";
 
 const ExpensesContractorsPage: React.FC = () => {
+  const [filters, dispatch] = useReducer(filterReducer, initialFilters);
+
   const {
     expensesContractors,
     loadingExpensesContractors,
     fetchExpensesContractors,
-  } = useExpensesContractor();
+  } = useExpensesContractor(filters);
 
   const [openModal, setOpenModal] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -85,6 +93,12 @@ const ExpensesContractorsPage: React.FC = () => {
           </Button>
         </Box>
       </Box>
+
+      <FiltersForm
+        config={getExpensesContractorsFiltersConfig()}
+        filters={filters}
+        dispatch={dispatch}
+      />
 
       <Box
         mt={4}
