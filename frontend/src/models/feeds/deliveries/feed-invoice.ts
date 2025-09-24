@@ -33,6 +33,7 @@ export interface FeedDeliveryListModel {
   cycleText: string;
   farmId: string;
   farmName: string;
+  henhouseId: string;
   henhouseName: string;
   vendorName: string;
   itemName: string;

@@ -21,6 +21,7 @@ import AppDialog from "../../../common/app-dialog";
 import { FarmsService } from "../../../../services/farms-service";
 import type CycleDto from "../../../../models/farms/latest-cycle";
 import LoadingTextField from "../../../common/loading-textfield";
+import type { HouseRowModel } from "../../../../models/farms/house-row-model";
 
 interface EditInvoiceModalProps {
   open: boolean;
@@ -38,6 +39,7 @@ const EditFeedDeliveryModal: React.FC<EditInvoiceModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [cycles, setCycles] = useState<CycleDto[]>([]);
   const [loadingCycles, setLoadingCycles] = useState(false);
+  const [henhouses, setHenhouses] = useState<HouseRowModel[]>([]);
 
   const {
     register,
@@ -57,23 +59,32 @@ const EditFeedDeliveryModal: React.FC<EditInvoiceModalProps> = ({
   }, [feedDelivery, reset]);
 
   useEffect(() => {
-    const fetchCycles = async (farmId: string) => {
+    const fetchCyclesAndHenhouses = async (farmId: string) => {
       if (!farmId) {
         setCycles([]);
+        setHenhouses([]);
         return;
       }
       setLoadingCycles(true);
       await handleApiResponse(
         () => FarmsService.getFarmCycles(farmId),
         (data) => setCycles(data.responseData ?? []),
-        () => setCycles([]),
+        () => {
+          setCycles([]);
+          setHenhouses([]);
+        },
         "Nie udało się pobrać cykli dla wybranej fermy."
+      );
+      await handleApiResponse(
+        () => FarmsService.getFarmHousesAsync(farmId),
+        (data) => setHenhouses(data.responseData?.items ?? []),
+        () => setHenhouses([])
       );
       setLoadingCycles(false);
     };
 
     if (feedDelivery?.farmId) {
-      fetchCycles(feedDelivery.farmId);
+      void fetchCyclesAndHenhouses(feedDelivery.farmId);
     }
   }, [feedDelivery]);
 
@@ -133,6 +144,26 @@ const EditFeedDeliveryModal: React.FC<EditInvoiceModalProps> = ({
                   </MenuItem>
                 ))}
               </LoadingTextField>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                select
+                label="Kurnik"
+                error={!!errors.henhouseId}
+                helperText={errors.henhouseId?.message}
+                value={watch("henhouseId") || ""}
+                {...register("henhouseId", {
+                  required: "Kurnik jest wymagany",
+                })}
+                fullWidth
+                disabled={!feedDelivery?.farmId || henhouses.length === 0}
+              >
+                {henhouses.map((house) => (
+                  <MenuItem key={house.id} value={house.id}>
+                    {house.name}
+                  </MenuItem>
+                ))}
+              </TextField>
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField

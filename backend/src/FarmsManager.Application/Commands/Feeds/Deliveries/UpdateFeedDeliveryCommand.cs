@@ -1,4 +1,5 @@
-﻿using FarmsManager.Application.Common.Responses;
+﻿using FarmsManager.Application.Commands.Farms;
+using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications.Cycle;
 using FarmsManager.Application.Specifications.Feeds;
@@ -14,6 +15,7 @@ namespace FarmsManager.Application.Commands.Feeds.Deliveries;
 public record UpdateFeedDeliveryCommandDto
 {
     public Guid CycleId { get; init; }
+    public Guid HenhouseId { get; init; }
     public string InvoiceNumber { get; init; }
     public string BankAccountNumber { get; init; }
     public string ItemName { get; init; }
@@ -37,16 +39,18 @@ public class UpdateFeedDeliveryCommandHandler : IRequestHandler<UpdateFeedDelive
     private readonly IFeedPriceRepository _feedPriceRepository;
     private readonly IFeedInvoiceRepository _feedInvoiceRepository;
     private readonly ICycleRepository _cycleRepository;
+    private readonly IHenhouseRepository _henhouseRepository;
 
     public UpdateFeedDeliveryCommandHandler(IUserDataResolver userDataResolver, IFeedNameRepository feedNameRepository,
         IFeedInvoiceRepository feedInvoiceRepository, IFeedPriceRepository feedPriceRepository,
-        ICycleRepository cycleRepository)
+        ICycleRepository cycleRepository, IHenhouseRepository henhouseRepository)
     {
         _userDataResolver = userDataResolver;
         _feedNameRepository = feedNameRepository;
         _feedPriceRepository = feedPriceRepository;
         _feedInvoiceRepository = feedInvoiceRepository;
         _cycleRepository = cycleRepository;
+        _henhouseRepository = henhouseRepository;
     }
 
     public async Task<EmptyBaseResponse> Handle(UpdateFeedDeliveryCommand request, CancellationToken cancellationToken)
@@ -57,10 +61,24 @@ public class UpdateFeedDeliveryCommandHandler : IRequestHandler<UpdateFeedDelive
         var feedName =
             await _feedNameRepository.GetAsync(new GetFeedNameByNameSpec(request.Data.ItemName), cancellationToken);
         var cycle = await _cycleRepository.GetAsync(new CycleByIdSpec(request.Data.CycleId), cancellationToken);
+        var henhouse =
+            await _henhouseRepository.GetAsync(new HenhouseByIdSpec(request.Data.HenhouseId), cancellationToken);
+
+        if (cycle.FarmId != feedDelivery.FarmId || henhouse.FarmId != feedDelivery.FarmId)
+        {
+            var response = BaseResponse.EmptyResponse;
+            response.AddError("BadCredentials", "Wprowadzono błędne Id");
+            return response;
+        }
 
         if (feedDelivery.CycleId != cycle.Id)
         {
             feedDelivery.SetCycle(cycle.Id);
+        }
+
+        if (feedDelivery.HenhouseId != henhouse.Id)
+        {
+            feedDelivery.SetHenhouse(henhouse.Id);
         }
 
         feedDelivery.Update(
