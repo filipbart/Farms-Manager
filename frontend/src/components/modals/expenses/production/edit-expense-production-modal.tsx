@@ -1,14 +1,14 @@
 import {
+  Autocomplete,
   Button,
-  DialogTitle,
+  DialogActions,
   DialogContent,
   Grid,
-  DialogActions,
   TextField,
   MenuItem,
-  Autocomplete,
 } from "@mui/material";
-import { useState, useEffect } from "react";
+import DialogTitle from "@mui/material/DialogTitle";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import { MdSave } from "react-icons/md";
@@ -43,11 +43,12 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
   expenseProductionToEdit,
 }) => {
   const { farms, loadingFarms, fetchFarms } = useFarms();
+  const stableFilters = useMemo(() => ({}), []);
   const {
     expensesContractors,
     loadingExpensesContractors,
     fetchExpensesContractors,
-  } = useExpensesContractor({});
+  } = useExpensesContractor(stableFilters);
 
   const [loading, setLoading] = useState(false);
   const [cycles, setCycles] = useState<CycleDto[]>([]);
@@ -80,43 +81,49 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
 
   useEffect(() => {
     if (open) {
-      fetchFarms();
-      fetchExpensesContractors();
+      void fetchFarms();
+      void fetchExpensesContractors();
     }
   }, [open, fetchFarms, fetchExpensesContractors]);
 
+  const fetchCyclesForFarm = useCallback(async () => {
+    const farmId = watch("farmId");
+    if (!farmId) {
+      setCycles([]);
+      return;
+    }
+    setLoadingCycles(true);
+    await handleApiResponse(
+      () => FarmsService.getFarmCycles(farmId),
+      (data) => {
+        const fetchedCycles = data.responseData ?? [];
+        setCycles(fetchedCycles);
+
+        const currentCycleId = watch("cycleId");
+        const isCurrentCycleValid = fetchedCycles.some(
+          (c) => c.id === currentCycleId
+        );
+
+        if (!isCurrentCycleValid) {
+          const activeCycle = farms.find((f) => f.id === farmId)?.activeCycle;
+          setValue("cycleId", activeCycle?.id || "", { shouldDirty: true });
+        }
+      },
+      () => setCycles([]),
+      "Nie udało się pobrać cykli dla wybranej fermy."
+    );
+    setLoadingCycles(false);
+  }, [watch, farms, setValue]);
+
   useEffect(() => {
-    const fetchCyclesForFarm = async () => {
-      if (!watchedFarmId) {
-        setCycles([]);
-        return;
-      }
-      setLoadingCycles(true);
-      await handleApiResponse(
-        () => FarmsService.getFarmCycles(watchedFarmId),
-        (data) => {
-          const fetchedCycles = data.responseData ?? [];
-          setCycles(fetchedCycles);
+    void fetchCyclesForFarm();
+  }, [watchedFarmId, fetchCyclesForFarm]);
 
-          const currentCycleId = watch("cycleId");
-          const isCurrentCycleValid = fetchedCycles.some(
-            (c) => c.id === currentCycleId
-          );
-
-          if (!isCurrentCycleValid) {
-            const activeCycle = farms.find(
-              (f) => f.id === watchedFarmId
-            )?.activeCycle;
-            setValue("cycleId", activeCycle?.id || "");
-          }
-        },
-        () => setCycles([]),
-        "Nie udało się pobrać cykli dla wybranej fermy."
-      );
-      setLoadingCycles(false);
-    };
-    fetchCyclesForFarm();
-  }, [watchedFarmId, farms, setValue, watch]);
+  useEffect(() => {
+    if (expenseProductionToEdit) {
+      reset(expenseProductionToEdit);
+    }
+  }, [expenseProductionToEdit, reset]);
 
   useEffect(() => {
     if (
@@ -124,20 +131,18 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
       farms.length > 0 &&
       expensesContractors.length > 0
     ) {
-      reset({
-        farmId: expenseProductionToEdit.farmId,
-        cycleId: expenseProductionToEdit.cycleId,
-        expenseContractorId: expenseProductionToEdit.expenseContractorId,
-        expenseTypeNameDisplay: expenseProductionToEdit.expenseTypeName,
-        invoiceNumber: expenseProductionToEdit.invoiceNumber,
-        invoiceTotal: expenseProductionToEdit.invoiceTotal,
-        subTotal: expenseProductionToEdit.subTotal,
-        vatAmount: expenseProductionToEdit.vatAmount,
-        invoiceDate: expenseProductionToEdit.invoiceDate,
-        comment: expenseProductionToEdit.comment,
-      });
+      setValue("farmId", expenseProductionToEdit.farmId);
+      setValue("cycleId", expenseProductionToEdit.cycleId);
+      setValue(
+        "expenseContractorId",
+        expenseProductionToEdit.expenseContractorId
+      );
+      setValue(
+        "expenseTypeNameDisplay",
+        expenseProductionToEdit.expenseTypeName
+      );
     }
-  }, [expenseProductionToEdit, reset, farms, expensesContractors, open]);
+  }, [expenseProductionToEdit, farms, expensesContractors, setValue]);
 
   const handleContractorChange = (contractorId: string | null) => {
     const selected = expensesContractors.find((c) => c.id === contractorId);

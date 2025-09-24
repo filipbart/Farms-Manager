@@ -10,7 +10,7 @@ import {
   Box,
   Autocomplete,
 } from "@mui/material";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import { MdSave, MdAttachFile } from "react-icons/md";
@@ -40,11 +40,12 @@ const AddExpenseProductionModal: React.FC<AddExpenseProductionModalProps> = ({
   onSave,
 }) => {
   const { farms, loadingFarms, fetchFarms } = useFarms();
+  const stableFilters = useMemo(() => ({}), []);
   const {
     expensesContractors,
     loadingExpensesContractors,
     fetchExpensesContractors,
-  } = useExpensesContractor({});
+  } = useExpensesContractor(stableFilters);
 
   const [selectedFile, setSelectedFile] = useState<File>();
   const [loading, setLoading] = useState(false);

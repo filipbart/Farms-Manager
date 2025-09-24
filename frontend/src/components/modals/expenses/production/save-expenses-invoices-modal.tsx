@@ -12,7 +12,7 @@ import {
   TextField,
   Autocomplete,
 } from "@mui/material";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { MdSave, MdZoomIn } from "react-icons/md";
 import { Controller, useForm } from "react-hook-form";
 import { DatePicker } from "@mui/x-date-pickers";
@@ -58,11 +58,12 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
   const { farms, loadingFarms, fetchFarms } = useFarms();
   const [cycles, setCycles] = useState<CycleDto[]>([]);
   const [loadingCycles, setLoadingCycles] = useState(false);
+  const stableFilters = useMemo(() => ({}), []);
   const {
     expensesContractors,
     loadingExpensesContractors,
     fetchExpensesContractors,
-  } = useExpensesContractor({});
+  } = useExpensesContractor(stableFilters);
   const { expensesTypes, loadingExpensesTypes, fetchExpensesTypes } =
     useExpensesTypes();
 
