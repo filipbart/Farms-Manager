@@ -38,6 +38,7 @@ import {
   getSortOptionsFromGridModel,
   initializeFiltersFromLocalStorage,
 } from "../../../utils/grid-state-helper";
+import { useFeedsNames } from "../../../hooks/feeds/useFeedsNames";
 
 const FeedsDeliveriesPage: React.FC = () => {
   const [filters, dispatch] = useReducer(
@@ -54,6 +55,7 @@ const FeedsDeliveriesPage: React.FC = () => {
   );
   const [dictionary, setDictionary] = useState<FeedsDictionary>();
   const { fetchNotifications } = useContext(NotificationContext);
+  const { feedsNames, fetchFeedsNames } = useFeedsNames();
 
   const [loading, setLoading] = useState(false);
   const [feedsDeliveries, setFeedsDeliveries] = useState<
@@ -256,7 +258,8 @@ const FeedsDeliveriesPage: React.FC = () => {
 
   useEffect(() => {
     fetchDictionaries();
-  }, []);
+    fetchFeedsNames();
+  }, [fetchFeedsNames]);
 
   useEffect(() => {
     fetchFeedsDeliveries();
@@ -336,7 +339,12 @@ const FeedsDeliveriesPage: React.FC = () => {
       </Box>
 
       <FiltersForm
-        config={getFeedsDeliveriesFiltersConfig(dictionary, uniqueCycles)}
+        config={getFeedsDeliveriesFiltersConfig(
+          dictionary,
+          uniqueCycles,
+          filters,
+          feedsNames
+        )}
         filters={filters}
         dispatch={dispatch}
       />

@@ -31,6 +31,11 @@ public sealed class GetAllFeedsPricesSpec : BaseSpecification<FeedPriceEntity>
             Query.Where(t => filters.FarmIds.Contains(t.FarmId));
         }
 
+        if (filters.FeedNames is not null && filters.FeedNames.Count != 0)
+        {
+            Query.Where(t => filters.FeedNames.Contains(t.Name));
+        }
+
         if (filters.CyclesDict is not null && filters.CyclesDict.Count != 0)
         {
             var predicate = PredicateBuilder.New<FeedPriceEntity>();

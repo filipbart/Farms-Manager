@@ -3,6 +3,9 @@ import type { OrderedPaginationParams } from "../../common/pagination-params";
 
 export const initialFilters: FeedsDeliveriesFilterPaginationModel = {
   farmIds: [],
+  henhouseIds: [],
+  feedNames: [],
+  invoiceNumber: "",
   cycles: [],
   dateSince: "",
   dateTo: "",
@@ -53,6 +56,9 @@ export enum FeedsDeliveriesOrderType {
 
 export default interface FeedsDeliveriesFilter {
   farmIds: string[];
+  henhouseIds: string[];
+  feedNames: string[];
+  invoiceNumber: string;
   cycles: CycleDictModel[];
   incorrectPrices?: boolean;
   dateSince: string;

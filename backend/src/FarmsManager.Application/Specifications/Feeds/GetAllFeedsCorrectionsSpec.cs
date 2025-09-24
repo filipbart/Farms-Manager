@@ -1,6 +1,7 @@
 ﻿using Ardalis.Specification;
 using FarmsManager.Application.Queries.Feeds;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
+using FarmsManager.Shared.Extensions;
 using LinqKit;
 
 namespace FarmsManager.Application.Specifications.Feeds;
@@ -47,6 +48,11 @@ public sealed class GetAllFeedsCorrectionsSpec : BaseSpecification<FeedInvoiceCo
         if (filters.DateTo is not null)
         {
             Query.Where(t => t.InvoiceDate <= filters.DateTo);
+        }
+
+        if (filters.InvoiceNumber.IsNotEmpty())
+        {
+            Query.Where(t => t.InvoiceNumber.Contains(filters.InvoiceNumber));
         }
     }
 }

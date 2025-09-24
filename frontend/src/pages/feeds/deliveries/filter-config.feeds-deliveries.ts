@@ -2,10 +2,13 @@ import type { FilterConfig } from "../../../components/filters/filter-types";
 import type { CycleDictModel } from "../../../models/common/dictionaries";
 import type { FeedsDeliveriesFilterPaginationModel } from "../../../models/feeds/deliveries/deliveries-filters";
 import type { FeedsDictionary } from "../../../models/feeds/feeds-dictionary";
+import type { FeedsNamesRow } from "../../../models/feeds/feeds-names";
 
 export const getFeedsDeliveriesFiltersConfig = (
   dictionary: FeedsDictionary | undefined,
-  uniqueCycles: CycleDictModel[]
+  uniqueCycles: CycleDictModel[],
+  filters: FeedsDeliveriesFilterPaginationModel,
+  feedsNames: FeedsNamesRow[]
 ): FilterConfig<keyof FeedsDeliveriesFilterPaginationModel>[] => [
   {
     key: "farmIds",
@@ -17,6 +20,37 @@ export const getFeedsDeliveriesFiltersConfig = (
         label: farm.name,
       })) || [],
     disabled: !dictionary,
+  },
+  {
+    key: "henhouseIds",
+    label: "Kurnik",
+    type: "multiSelect",
+    options:
+      dictionary?.farms
+        .filter((farm) => filters.farmIds.includes(farm.id))
+        .flatMap((farm) =>
+          farm.henhouses.map((henhouse) => ({
+            value: henhouse.id,
+            label: henhouse.name,
+          }))
+        ) || [],
+    disabled: !dictionary || filters.farmIds.length === 0,
+  },
+  {
+    key: "feedNames",
+    label: "Nazwa paszy",
+    type: "multiSelect",
+    options:
+      feedsNames.map((feed) => ({
+        value: feed.name,
+        label: feed.name,
+      })) || [],
+    disabled: feedsNames.length === 0,
+  },
+  {
+    key: "invoiceNumber",
+    label: "Numer faktury",
+    type: "text",
   },
   {
     key: "cycles",

@@ -35,6 +35,9 @@ public enum FeedsDeliveriesOrderType
 public record GetFeedsDeliveriesQueryFilters : OrderedPaginationParams<FeedsDeliveriesOrderType>
 {
     public List<Guid> FarmIds { get; init; }
+    public List<Guid> HenhouseIds { get; init; }
+    public List<string> FeedNames { get; init; }
+    public string InvoiceNumber { get; init; }
     public List<string> Cycles { get; init; }
 
     public List<CycleDictModel> CyclesDict => Cycles?.Select(c => new CycleDictModel

@@ -3,6 +3,7 @@ import type { OrderedPaginationParams } from "../../common/pagination-params";
 
 export const initialFilters: FeedsPricesFilterPaginationModel = {
   farmIds: [],
+  feedNames: [],
   cycles: [],
   dateSince: "",
   dateTo: "",
@@ -40,6 +41,7 @@ export enum FeedsPricesOrderType {
 
 export default interface FeedsPricesFilter {
   farmIds: string[];
+  feedNames: string[];
   cycles: CycleDictModel[];
   dateSince: string;
   dateTo: string;

@@ -26,6 +26,7 @@ public enum FeedsPricesOrderBy
 public record GetFeedsPricesQueryFilters : OrderedPaginationParams<FeedsPricesOrderBy>
 {
     public List<Guid> FarmIds { get; init; }
+    public List<string> FeedNames { get; init; }
     public List<string> Cycles { get; init; }
 
     public List<CycleDictModel> CyclesDict => Cycles?.Select(c => new CycleDictModel

@@ -1,6 +1,7 @@
 ﻿using Ardalis.Specification;
 using FarmsManager.Application.Queries.Feeds;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
+using FarmsManager.Shared.Extensions;
 using LinqKit;
 
 namespace FarmsManager.Application.Specifications.Feeds;
@@ -51,6 +52,21 @@ public sealed class GetAllFeedsDeliveriesSpec : BaseSpecification<FeedInvoiceEnt
         if (filters.DateTo is not null)
         {
             Query.Where(t => t.InvoiceDate <= filters.DateTo);
+        }
+
+        if (filters.HenhouseIds is not null && filters.HenhouseIds.Count != 0)
+        {
+            Query.Where(t => filters.HenhouseIds.Contains(t.HenhouseId));
+        }
+
+        if (filters.FeedNames is not null && filters.FeedNames.Count != 0)
+        {
+            Query.Where(t => filters.FeedNames.Contains(t.ItemName));
+        }
+
+        if (filters.InvoiceNumber.IsNotEmpty())
+        {
+            Query.Where(t => t.InvoiceNumber.Contains(filters.InvoiceNumber));
         }
     }
 }
