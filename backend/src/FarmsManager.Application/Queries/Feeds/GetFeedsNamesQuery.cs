@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using Ardalis.Specification;
+using AutoMapper;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
@@ -46,6 +47,8 @@ public sealed class GetAllFeedsNamesSpec : BaseSpecification<FeedNameEntity>
     public GetAllFeedsNamesSpec()
     {
         EnsureExists();
+        DisableTracking();
+        Query.OrderBy(t => t.Name);
     }
 }
 
