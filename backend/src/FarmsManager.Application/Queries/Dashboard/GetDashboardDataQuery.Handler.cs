@@ -36,7 +36,6 @@ public class
     private readonly IEmployeeRepository _employeeRepository;
     private readonly IInsertionRepository _insertionRepository;
     private readonly IFeedInvoiceRepository _feedInvoiceRepository;
-    private readonly IGasDeliveryRepository _gasDeliveryRepository;
     private readonly ISaleInvoiceRepository _saleInvoiceRepository;
     private readonly IGasConsumptionRepository _gasConsumptionRepository;
     private readonly IEmployeeReminderRepository _employeeReminderRepository;
@@ -46,8 +45,8 @@ public class
     public GetDashboardDataQueryHandler(IUserRepository userRepository, IUserDataResolver userDataResolver,
         IFarmRepository farmRepository, ISaleRepository saleRepository, ICycleRepository cycleRepository,
         IEmployeeRepository employeeRepository, IInsertionRepository insertionRepository,
-        IFeedInvoiceRepository feedInvoiceRepository, IGasDeliveryRepository gasDeliveryRepository,
-        ISaleInvoiceRepository saleInvoiceRepository, IGasConsumptionRepository gasConsumptionRepository,
+        IFeedInvoiceRepository feedInvoiceRepository, ISaleInvoiceRepository saleInvoiceRepository,
+        IGasConsumptionRepository gasConsumptionRepository,
         IEmployeeReminderRepository employeeReminderRepository,
         IExpenseProductionRepository expenseProductionRepository,
         IProductionDataFailureRepository productionDataFailureRepository)
@@ -60,7 +59,6 @@ public class
         _employeeRepository = employeeRepository;
         _insertionRepository = insertionRepository;
         _feedInvoiceRepository = feedInvoiceRepository;
-        _gasDeliveryRepository = gasDeliveryRepository;
         _saleInvoiceRepository = saleInvoiceRepository;
         _gasConsumptionRepository = gasConsumptionRepository;
         _employeeReminderRepository = employeeReminderRepository;
@@ -107,8 +105,23 @@ public class
         var filteredExpenses = await _expenseProductionRepository.ListAsync(
             new GetProductionExpensesForDashboardSpec(farmIds, cycleIdsForFilter, request.Filters.DateSince,
                 request.Filters.DateTo), ct);
-        var gasCostForStats = await GetGasCostAsync(farmIds, cycleIdsForFilter, request.Filters.DateSince,
-            request.Filters.DateTo, ct);
+
+        decimal gasCostForStats;
+        IReadOnlyList<ExpenseProductionEntity> otherExpenses;
+
+        if (string.Equals(request.Filters.DateCategory, "cycle", StringComparison.OrdinalIgnoreCase))
+        {
+            // Dla widoku cyklu, gaz liczymy ze zużycia, a koszty produkcyjne to wszystkie pobrane koszty
+            gasCostForStats = await GetGasCostFromConsumptionsAsync(farmIds, cycleIdsForFilter, ct);
+            otherExpenses = filteredExpenses;
+        }
+        else
+        {
+            // Dla pozostałych widoków, gaz i jego koszt bierzemy z kosztów produkcyjnych
+            var (gasExpenses, otherProdExpenses) = SplitGasExpenses(filteredExpenses);
+            gasCostForStats = gasExpenses.Sum(e => e.SubTotal);
+            otherExpenses = otherProdExpenses;
+        }
 
         // 2. WYZNACZ I POBIERZ DANE SPECJALNIE DLA WSKAŹNIKÓW KPI (Dochód na kg/m²)
         decimal incomePerKg, incomePerSqm;
@@ -130,9 +143,11 @@ public class
                 var expensesForYear =
                     await _expenseProductionRepository.ListAsync(
                         new GetProductionExpensesForDashboardSpec(farmIds, null, yearStart, yearEnd), ct);
-                var gasCostForYear = await GetGasCostAsync(farmIds, null, yearStart, yearEnd, ct);
+                // Dla widoku rocznego gaz bierzemy z kosztów produkcyjnych
+                var (gasExpensesForYear, otherExpensesForYear) = SplitGasExpenses(expensesForYear);
+                var gasCostForYear = gasExpensesForYear.Sum(e => e.SubTotal);
                 (incomePerKg, incomePerSqm) =
-                    CalculateIncomeKpis(salesForYear, feedsForYear, expensesForYear, gasCostForYear, farms);
+                    CalculateIncomeKpis(salesForYear, feedsForYear, otherExpensesForYear, gasCostForYear, farms);
                 break;
 
             case "month":
@@ -149,9 +164,11 @@ public class
                     var expensesForActive =
                         await _expenseProductionRepository.ListAsync(
                             new GetProductionExpensesForDashboardSpec(farmIds, activeCycleIds), ct);
-                    var gasCostForActive = await GetGasCostAsync(farmIds, activeCycleIds, null, null, ct);
+                    // Dla widoku miesięcznego gaz bierzemy z kosztów produkcyjnych (jeśli są w aktywnym cyklu)
+                    var (gasExpensesForActive, otherExpensesForActive) = SplitGasExpenses(expensesForActive);
+                    var gasCostForActive = gasExpensesForActive.Sum(e => e.SubTotal);
                     (incomePerKg, incomePerSqm) = CalculateIncomeKpis(salesForActive, feedsForActive, expensesForActive,
-                        gasCostForActive, farms);
+                        gasCostForActive, farms); // UWAGA: tu przekazujemy wszystkie, bo KPI dla miesiąca jest per cykl
                 }
                 else
                 {
@@ -164,7 +181,7 @@ public class
             case "range":
             default:
                 // Dla cyklu i zakresu dat: użyj tych samych danych co dla głównych statystyk
-                (incomePerKg, incomePerSqm) = CalculateIncomeKpis(filteredSales, filteredFeedInvoices, filteredExpenses,
+                (incomePerKg, incomePerSqm) = CalculateIncomeKpis(filteredSales, filteredFeedInvoices, otherExpenses,
                     gasCostForStats, farms);
                 break;
         }
@@ -186,7 +203,7 @@ public class
         var gasCostForCharts = allGasConsumptions.Sum(g => g.Cost);
 
         // 4. Budowanie komponentów odpowiedzi
-        var stats = BuildDashboardStats(filteredSales, filteredFeedInvoices, filteredExpenses, gasCostForStats,
+        var stats = BuildDashboardStats(filteredSales, filteredFeedInvoices, otherExpenses, gasCostForStats,
             incomePerKg, incomePerSqm);
         var chickenHousesStatus = BuildChickenHousesStatus(farms, allInsertions, historicalSales, allFailures);
         var fcrChart = BuildFcrChart(farms, historicalSales, historicalFeedInvoices);
@@ -229,19 +246,23 @@ public class
         return cycleIds;
     }
 
-    private async Task<decimal> GetGasCostAsync(List<Guid> farmIds, List<Guid> cycleIds, DateOnly? dateSince,
-        DateOnly? dateTo, CancellationToken ct)
+    private async Task<decimal> GetGasCostFromConsumptionsAsync(List<Guid> farmIds, List<Guid> cycleIds,
+        CancellationToken ct)
     {
-        if (cycleIds != null && cycleIds.Count != 0)
-        {
-            var gasConsumptions =
-                await _gasConsumptionRepository.ListAsync(new GasConsumptionsForDashboardSpec(farmIds, cycleIds), ct);
-            return gasConsumptions.Sum(t => t.Cost);
-        }
+        if (cycleIds == null || cycleIds.Count == 0) return 0;
 
-        var gasDeliveries =
-            await _gasDeliveryRepository.ListAsync(new GasDeliveriesForDashboardSpec(farmIds, dateSince, dateTo), ct);
-        return gasDeliveries.Sum(d => d.UnitPrice * d.Quantity);
+        var gasConsumptions =
+            await _gasConsumptionRepository.ListAsync(new GasConsumptionsForDashboardSpec(farmIds, cycleIds), ct);
+        return gasConsumptions.Sum(t => t.Cost);
+    }
+
+    private static (IReadOnlyList<ExpenseProductionEntity> gasExpenses, IReadOnlyList<ExpenseProductionEntity>
+        otherExpenses) SplitGasExpenses(IReadOnlyList<ExpenseProductionEntity> allExpenses)
+    {
+        var gasExpenses = allExpenses.Where(e =>
+            string.Equals(e.ExpenseContractor?.ExpenseType?.Name, "Gaz", StringComparison.OrdinalIgnoreCase)).ToList();
+        var otherExpenses = allExpenses.Except(gasExpenses).ToList();
+        return (gasExpenses, otherExpenses);
     }
 
     // Funkcja pomocnicza do obliczania wskaźników KPI
@@ -264,17 +285,18 @@ public class
     }
 
     private static DashboardStats BuildDashboardStats(IReadOnlyList<SaleEntity> sales,
-        IReadOnlyList<FeedInvoiceEntity> feedInvoices, IReadOnlyList<ExpenseProductionEntity> expenses, decimal gasCost,
+        IReadOnlyList<FeedInvoiceEntity> feedInvoices, IReadOnlyList<ExpenseProductionEntity> otherExpenses,
+        decimal gasCost,
         decimal incomePerKg, decimal incomePerSqm)
     {
         var feedCosts = feedInvoices.Sum(t => t.SubTotal);
-        var expensesCost = expenses.Sum(t => t.SubTotal);
+        var expensesCost = otherExpenses.Sum(t => t.SubTotal);
         var totalRevenue = sales.Sum(s => (s.Weight - s.DeadWeight - s.ConfiscatedWeight) * s.PriceWithExtras);
         var sumExpenses = feedCosts + gasCost + expensesCost;
 
         var feedVat = feedInvoices.Sum(t => t.VatAmount);
-        var expensesVat = expenses.Sum(e => e.VatAmount);
-        var gasVat = gasCost * 0.23m;
+        var expensesVat = otherExpenses.Sum(e => e.VatAmount);
+        var gasVat = gasCost * 0.23m; // VAT od gazu jest teraz zawsze liczony od `gasCost`
         var sumVat = feedVat + gasVat + expensesVat;
 
         var totalFeedQuantity = feedInvoices.Sum(t => t.Quantity);
