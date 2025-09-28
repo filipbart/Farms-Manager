@@ -10,6 +10,10 @@ export const mapFeedsPricesOrderTypeToField = (
       return "farmName";
     case FeedsPricesOrderType.PriceDate:
       return "priceDate";
+    case FeedsPricesOrderType.Price:
+      return "price";
+    case FeedsPricesOrderType.Name:
+      return "name";
     case FeedsPricesOrderType.DateCreatedUtc:
       return "dateCreatedUtc";
     default:
