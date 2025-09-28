@@ -4,7 +4,6 @@ using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications.Cycle;
 using FarmsManager.Application.Specifications.Insertions;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
-using FarmsManager.Domain.Aggregates.ProductionDataAggregate.Entities;
 using FarmsManager.Domain.Aggregates.ProductionDataAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
 using MediatR;

@@ -1,6 +1,5 @@
 ﻿using FarmsManager.Application.Common.Responses;
 using FarmsManager.Domain.Aggregates.HatcheryAggregate.Interfaces;
-using FarmsManager.Domain.Exceptions;
 using FluentValidation;
 using MediatR;
 

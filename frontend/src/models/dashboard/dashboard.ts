@@ -6,6 +6,75 @@ export type NotificationType =
   | "EmployeeContract"
   | "EmployeeReminder";
 
+export interface DashboardNotificationItem {
+  description: string;
+  dueDate: string;
+  priority: NotificationPriority;
+  type: NotificationType;
+  sourceId: string;
+}
+
+export interface FarmDictModel {
+  id: string;
+  name: string;
+}
+
+export interface CycleDictModel {
+  identifier: number;
+  year: number;
+}
+
+export interface DashboardDictionary {
+  farms: FarmDictModel[];
+  cycles: CycleDictModel[];
+}
+
+export interface DashboardFilters {
+  farmId?: string;
+  cycle?: string;
+  dateSince?: string;
+  dateTo?: string;
+  dateCategory?: string;
+}
+
+// --- Odpowiedzi z poszczególnych endpointów ---
+
+// /stats
+export interface DashboardStatsResponse {
+  stats: DashboardStats;
+  chickenHousesStatus: DashboardChickenHousesStatus;
+}
+
+// /notifications
+export type DashboardNotificationsResponse = DashboardNotificationItem[];
+
+// /fcr-chart
+export interface DashboardFcrChart {
+  series: ChartSeries[];
+}
+
+// /eww-chart
+export interface DashboardEwwChart {
+  series: ChartSeries[];
+}
+
+// /flock-loss-chart
+export interface DashboardFlockLossChart {
+  series: ChartSeries[];
+}
+
+// /gas-consumption-chart
+export interface DashboardGasConsumptionChart {
+  series: ChartSeries[];
+}
+
+// /expenses-pie-chart
+export interface DashboardExpensesPieChart {
+  data: ExpensesPieChartDataPoint[];
+}
+
+// --- Współdzielone modele ---
+
 export interface DashboardStats {
   revenue: number;
   expenses: number;
@@ -34,58 +103,19 @@ export interface DashboardChickenHousesStatus {
   totalChickenCount: number;
 }
 
-export interface ChartDataPoint {
-  x: string;
-  y: number | null;
-}
-
 export interface ChartSeries {
   farmId: string;
   farmName: string;
   data: ChartDataPoint[];
 }
 
-export interface DashboardFcrChart {
-  series: ChartSeries[];
-}
-
-export interface DashboardGasConsumptionChart {
-  series: ChartSeries[];
-}
-
-export interface DashboardEwwChart {
-  series: ChartSeries[];
-}
-
-export interface DashboardFlockLossChart {
-  series: ChartSeries[];
+export interface ChartDataPoint {
+  x: string;
+  y: number | null;
 }
 
 export interface ExpensesPieChartDataPoint {
   id: string;
   label: string;
   value: number;
-}
-
-export interface DashboardExpensesPieChart {
-  data: ExpensesPieChartDataPoint[];
-}
-
-export interface DashboardNotificationItem {
-  description: string;
-  dueDate: string;
-  priority: NotificationPriority;
-  type: NotificationType;
-  sourceId: string;
-}
-
-export interface GetDashboardDataQueryResponse {
-  stats?: DashboardStats;
-  fcrChart?: DashboardFcrChart;
-  gasConsumptionChart?: DashboardGasConsumptionChart;
-  ewwChart?: DashboardEwwChart;
-  flockLossChart?: DashboardFlockLossChart;
-  chickenHousesStatus?: DashboardChickenHousesStatus;
-  expensesPieChart?: DashboardExpensesPieChart;
-  notifications?: DashboardNotificationItem[];
 }

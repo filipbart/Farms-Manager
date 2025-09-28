@@ -2,8 +2,6 @@ import { useEffect, useMemo, useReducer, useState } from "react";
 import {
   filterReducer,
   initialFilters,
-  type DashboardDictionary,
-  type DashboardFilters,
 } from "../../models/dashboard/dashboard-filters";
 import {
   Typography,
@@ -32,41 +30,49 @@ import { toast } from "react-toastify";
 import { handleApiResponse } from "../../utils/axios/handle-api-response";
 import { DashboardService } from "../../services/dashboard-service";
 import { DashboardNotifications } from "../../components/dashboard/dashboard-notifications";
-import type { GetDashboardDataQueryResponse } from "../../models/dashboard/dashboard";
 import { ExpensesPieChart } from "../../components/dashboard/expenses-pie-chart";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import type { Dayjs } from "dayjs";
 import { ProductionResultsChart } from "../../components/dashboard/production-results-charts";
 import dayjs from "dayjs";
-
-const emptyDashboardData: GetDashboardDataQueryResponse = {
-  stats: {
-    revenue: 0,
-    expenses: 0,
-    income: 0,
-    vatFromExpenses: 0,
-    incomePerKg: 0,
-    incomePerSqm: 0,
-    avgFeedPrice: 0,
-  },
-  fcrChart: { series: [] },
-  gasConsumptionChart: { series: [] },
-  ewwChart: { series: [] },
-  flockLossChart: { series: [] },
-  chickenHousesStatus: {
-    farms: [],
-    totalHenhousesCount: 0,
-    totalChickenCount: 0,
-  },
-  expensesPieChart: { data: [] },
-  notifications: [],
-};
+import type {
+  DashboardChickenHousesStatus,
+  DashboardDictionary,
+  DashboardEwwChart,
+  DashboardExpensesPieChart,
+  DashboardFcrChart,
+  DashboardFilters,
+  DashboardFlockLossChart,
+  DashboardGasConsumptionChart,
+  DashboardNotificationsResponse,
+  DashboardStats,
+} from "../../models/dashboard/dashboard";
 
 const DashboardPage: React.FC = () => {
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
   const [dictionary, setDictionary] = useState<DashboardDictionary>();
-  const [data, setData] = useState<GetDashboardDataQueryResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+
+  // Data states
+  const [stats, setStats] = useState<DashboardStats>();
+  const [chickenHousesStatus, setChickenHousesStatus] =
+    useState<DashboardChickenHousesStatus>();
+  const [notifications, setNotifications] =
+    useState<DashboardNotificationsResponse>();
+  const [ewwChart, setEwwChart] = useState<DashboardEwwChart>();
+  const [fcrChart, setFcrChart] = useState<DashboardFcrChart>();
+  const [flockLossChart, setFlockLossChart] =
+    useState<DashboardFlockLossChart>();
+  const [expensesPieChart, setExpensesPieChart] =
+    useState<DashboardExpensesPieChart>();
+  const [gasConsumptionChart, setGasConsumptionChart] =
+    useState<DashboardGasConsumptionChart>();
+
+  // Loading states
+  const [isLoadingDictionary, setIsLoadingDictionary] = useState(true);
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
+  const [isLoadingNotifications, setIsLoadingNotifications] = useState(true);
+  const [isLoadingCharts, setIsLoadingCharts] = useState(true);
+  const [isLoadingExpenses, setIsLoadingExpenses] = useState(true);
 
   const [dateCategory, setDateCategory] = useState("month");
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
@@ -79,6 +85,7 @@ const DashboardPage: React.FC = () => {
 
   useEffect(() => {
     const fetchDictionary = async () => {
+      setIsLoadingDictionary(true);
       try {
         await handleApiResponse(
           () => DashboardService.getDictionaries(),
@@ -86,6 +93,8 @@ const DashboardPage: React.FC = () => {
         );
       } catch (error) {
         toast.error(`Wystąpił błąd podczas pobierania słowników: ${error}`);
+      } finally {
+        setIsLoadingDictionary(false);
       }
     };
     fetchDictionary();
@@ -94,7 +103,7 @@ const DashboardPage: React.FC = () => {
   const uniqueCycles = useMemo(() => {
     if (!dictionary) return [];
     const map = new Map<string, CycleDictModel>();
-    dictionary.cycles.forEach((cycle) => {
+    (dictionary.cycles as CycleDictModel[]).forEach((cycle) => {
       const key = `${cycle.identifier}-${cycle.year}`;
       if (!map.has(key)) map.set(key, cycle);
     });
@@ -108,11 +117,11 @@ const DashboardPage: React.FC = () => {
 
     if (dateCategory === "cycle") {
       payload.cycle = selectedCycle;
-      payload.dateSince = null;
-      payload.dateTo = null;
+      payload.dateSince = undefined;
+      payload.dateTo = undefined;
     } else {
-      let dateSince: string | null = null;
-      let dateTo: string | null = null;
+      let dateSince: string | undefined = undefined;
+      let dateTo: string | undefined = undefined;
 
       if (dateCategory === "month") {
         const from = dayjs()
@@ -131,8 +140,8 @@ const DashboardPage: React.FC = () => {
         dateSince = from.toISOString().split("T")[0];
         dateTo = to.toISOString().split("T")[0];
       } else if (dateCategory === "range") {
-        dateSince = dateRange.from?.format("YYYY-MM-DD") ?? null;
-        dateTo = dateRange.to?.format("YYYY-MM-DD") ?? null;
+        dateSince = dateRange.from?.format("YYYY-MM-DD") ?? undefined;
+        dateTo = dateRange.to?.format("YYYY-MM-DD") ?? undefined;
       }
 
       payload.cycle = undefined;
@@ -141,39 +150,103 @@ const DashboardPage: React.FC = () => {
     }
 
     dispatch({ type: "setMultiple", payload });
-  }, [
-    dateCategory,
-    selectedMonth,
-    selectedYear,
-    dateRange,
-    selectedCycle,
-    uniqueCycles,
-  ]);
+  }, [dateCategory, selectedMonth, selectedYear, dateRange, selectedCycle]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (!dictionary) return;
-      if (!filters || Object.keys(filters).length === 0) return;
+    if (!filters || Object.keys(filters).length === 0) return;
 
-      setIsLoading(true);
+    const fetchStats = async () => {
+      setIsLoadingStats(true);
       try {
         await handleApiResponse(
-          () => DashboardService.getDashboardData(filters),
+          () => DashboardService.getStats(filters),
           (apiData) => {
-            setData(apiData.responseData ?? null);
+            setStats(apiData.responseData?.stats);
+            setChickenHousesStatus(apiData.responseData?.chickenHousesStatus);
           }
         );
       } catch (error) {
-        toast.error(`Wystąpił błąd podczas ładowania danych: ${error}`);
-        setData(null);
+        toast.error(`Wystąpił błąd podczas ładowania statystyk: ${error}`);
       } finally {
-        setIsLoading(false);
+        setIsLoadingStats(false);
       }
     };
-    fetchData();
-  }, [filters, dictionary]);
 
-  const displayData = data ?? emptyDashboardData;
+    const fetchNotifications = async () => {
+      setIsLoadingNotifications(true);
+      try {
+        await handleApiResponse(
+          () => DashboardService.getNotifications(filters),
+          (apiData) => {
+            setNotifications(apiData.responseData ?? []);
+          }
+        );
+      } catch (error) {
+        toast.error(`Wystąpił błąd podczas ładowania powiadomień: ${error}`);
+      } finally {
+        setIsLoadingNotifications(false);
+      }
+    };
+
+    const fetchCharts = async () => {
+      setIsLoadingCharts(true);
+      try {
+        await Promise.all([
+          handleApiResponse(
+            () => DashboardService.getEwwChart(filters),
+            (data) => setEwwChart(data.responseData)
+          ),
+          handleApiResponse(
+            () => DashboardService.getFcrChart(filters),
+            (data) => setFcrChart(data.responseData)
+          ),
+          handleApiResponse(
+            () => DashboardService.getFlockLossChart(filters),
+            (data) => setFlockLossChart(data.responseData)
+          ),
+          handleApiResponse(
+            () => DashboardService.getGasConsumptionChart(filters),
+            (data) => setGasConsumptionChart(data.responseData)
+          ),
+        ]);
+      } catch (error) {
+        toast.error(`Wystąpił błąd podczas ładowania wykresów: ${error}`);
+      } finally {
+        setIsLoadingCharts(false);
+      }
+    };
+
+    const fetchExpenses = async () => {
+      setIsLoadingExpenses(true);
+      try {
+        await handleApiResponse(
+          () => DashboardService.getExpensesPieChart(filters),
+          (apiData) => {
+            setExpensesPieChart(apiData.responseData);
+          }
+        );
+      } catch (error) {
+        toast.error(
+          `Wystąpił błąd podczas ładowania struktury wydatków: ${error}`
+        );
+      } finally {
+        setIsLoadingExpenses(false);
+      }
+    };
+
+    fetchStats();
+    fetchNotifications();
+    fetchCharts();
+    fetchExpenses();
+  }, [filters]);
+
+  const isLoading =
+    isLoadingDictionary ||
+    isLoadingStats ||
+    isLoadingNotifications ||
+    isLoadingCharts ||
+    isLoadingExpenses;
+
   const months = [
     "Styczeń",
     "Luty",
@@ -189,7 +262,7 @@ const DashboardPage: React.FC = () => {
     "Grudzień",
   ];
 
-  if (!dictionary) {
+  if (isLoadingDictionary) {
     return (
       <Box display="flex" justifyContent="center" p={5}>
         <CircularProgress />
@@ -252,7 +325,7 @@ const DashboardPage: React.FC = () => {
               >
                 {uniqueCycles.map((cycle) => (
                   <MenuItem
-                    key={cycle.id}
+                    key={`${cycle.identifier}-${cycle.year}`}
                     value={`${cycle.identifier}-${cycle.year}`}
                   >{`${cycle.identifier}/${cycle.year}`}</MenuItem>
                 ))}
@@ -325,7 +398,7 @@ const DashboardPage: React.FC = () => {
                 <StatCard
                   title="Przychody"
                   value={
-                    displayData.stats?.revenue?.toLocaleString("pl-PL", {
+                    stats?.revenue?.toLocaleString("pl-PL", {
                       style: "currency",
                       currency: "PLN",
                     }) ?? "-"
@@ -342,7 +415,7 @@ const DashboardPage: React.FC = () => {
                 <StatCard
                   title="Wydatki"
                   value={
-                    displayData.stats?.expenses?.toLocaleString("pl-PL", {
+                    stats?.expenses?.toLocaleString("pl-PL", {
                       style: "currency",
                       currency: "PLN",
                     }) ?? "-"
@@ -359,7 +432,7 @@ const DashboardPage: React.FC = () => {
                 <StatCard
                   title="Dochód"
                   value={
-                    displayData.stats?.income?.toLocaleString("pl-PL", {
+                    stats?.income?.toLocaleString("pl-PL", {
                       style: "currency",
                       currency: "PLN",
                     }) ?? "-"
@@ -378,7 +451,7 @@ const DashboardPage: React.FC = () => {
             <StatCard
               title="VAT z wydatków"
               value={
-                displayData.stats?.vatFromExpenses?.toLocaleString("pl-PL", {
+                stats?.vatFromExpenses?.toLocaleString("pl-PL", {
                   style: "currency",
                   currency: "PLN",
                 }) ?? "-"
@@ -394,10 +467,10 @@ const DashboardPage: React.FC = () => {
             <Skeleton variant="rounded" height={400} />
           ) : (
             <ProductionResultsChart
-              fcrData={displayData.fcrChart}
-              ewwData={displayData.ewwChart}
-              gasData={displayData.gasConsumptionChart}
-              lossData={displayData.flockLossChart}
+              fcrData={fcrChart}
+              ewwData={ewwChart}
+              gasData={gasConsumptionChart}
+              lossData={flockLossChart}
             />
           )}
         </Grid>
@@ -410,12 +483,12 @@ const DashboardPage: React.FC = () => {
                 <StatCard
                   title="Dochód z kg żywca"
                   value={
-                    !displayData.stats?.incomePerKg
+                    !stats?.incomePerKg
                       ? "-"
-                      : `${displayData.stats?.incomePerKg?.toLocaleString(
-                          "pl-PL",
-                          { minimumFractionDigits: 2, maximumFractionDigits: 2 }
-                        )} zł`
+                      : `${stats?.incomePerKg?.toLocaleString("pl-PL", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })} zł`
                   }
                   icon={<FaPiggyBank />}
                   color="success"
@@ -429,12 +502,12 @@ const DashboardPage: React.FC = () => {
                 <StatCard
                   title="Dochód z m²"
                   value={
-                    !displayData.stats?.incomePerSqm
+                    !stats?.incomePerSqm
                       ? "-"
-                      : `${displayData.stats?.incomePerSqm?.toLocaleString(
-                          "pl-PL",
-                          { minimumFractionDigits: 2, maximumFractionDigits: 2 }
-                        )} zł`
+                      : `${stats?.incomePerSqm?.toLocaleString("pl-PL", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })} zł`
                   }
                   icon={<FaChartArea />}
                   color="primary"
@@ -448,11 +521,9 @@ const DashboardPage: React.FC = () => {
                 <StatCard
                   title="Średnia cena paszy"
                   value={
-                    !displayData.stats?.avgFeedPrice
+                    !stats?.avgFeedPrice
                       ? "-"
-                      : `${displayData.stats?.avgFeedPrice?.toLocaleString(
-                          "pl-PL"
-                        )} zł/t`
+                      : `${stats?.avgFeedPrice?.toLocaleString("pl-PL")} zł/t`
                   }
                   icon={<MdOutlineShoppingCart />}
                   color="info"
@@ -478,11 +549,11 @@ const DashboardPage: React.FC = () => {
                 Kurniki w obsadzie
               </Typography>
               <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
-                {displayData.chickenHousesStatus?.farms.map((farm) => {
+                {chickenHousesStatus?.farms.map((farm) => {
                   const activeHenhouses = farm.henhouses.filter(
                     (h) => h.chickenCount > 0
                   );
-                  if (activeHenhouses.length === 0) return null;
+                  if (activeHenhouses.length === 0) return;
                   return (
                     <Box key={farm.name} mb={2}>
                       <Typography
@@ -514,7 +585,7 @@ const DashboardPage: React.FC = () => {
               <Typography variant="h6">
                 Łącznie sztuk w obsadzie:{" "}
                 <strong>
-                  {displayData.chickenHousesStatus?.totalChickenCount.toLocaleString(
+                  {chickenHousesStatus?.totalChickenCount.toLocaleString(
                     "pl-PL"
                   )}
                 </strong>
@@ -527,7 +598,7 @@ const DashboardPage: React.FC = () => {
           {isLoading ? (
             <Skeleton variant="rounded" height="100%" />
           ) : (
-            <ExpensesPieChart data={displayData.expensesPieChart?.data} />
+            <ExpensesPieChart data={expensesPieChart?.data} />
           )}
         </Grid>
 
@@ -535,7 +606,7 @@ const DashboardPage: React.FC = () => {
           {isLoading ? (
             <Skeleton variant="rounded" height="100%" />
           ) : (
-            <DashboardNotifications notifications={displayData.notifications} />
+            <DashboardNotifications notifications={notifications} />
           )}
         </Grid>
       </Grid>

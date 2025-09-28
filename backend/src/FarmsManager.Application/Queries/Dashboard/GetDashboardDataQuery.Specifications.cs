@@ -8,6 +8,9 @@ using FarmsManager.Domain.Aggregates.GasAggregate.Entities;
 using FarmsManager.Domain.Aggregates.GasAggregate.Enum;
 using FarmsManager.Domain.Aggregates.ProductionDataAggregate.Entities;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
+using System.Collections.Generic;
+using System.Linq;
+using System;
 
 namespace FarmsManager.Application.Queries.Dashboard;
 
@@ -164,7 +167,7 @@ public sealed class GasConsumptionsForFarmsSpec : BaseSpecification<GasConsumpti
 
 public sealed class InsertionsForFarmsSpec : BaseSpecification<InsertionEntity>
 {
-    public InsertionsForFarmsSpec(List<Guid> farmIds)
+    public InsertionsForFarmsSpec(List<Guid> farmIds, List<Guid> cycleIds = null)
     {
         EnsureExists();
         DisableTracking();
@@ -173,12 +176,17 @@ public sealed class InsertionsForFarmsSpec : BaseSpecification<InsertionEntity>
         Query.Include(t => t.Cycle);
 
         Query.Where(t => farmIds.Contains(t.FarmId));
+
+        if (cycleIds is not null && cycleIds.Any())
+        {
+            Query.Where(t => cycleIds.Contains(t.CycleId));
+        }
     }
 }
 
 public class ProductionDataFailuresForFarmsSpec : BaseSpecification<ProductionDataFailureEntity>
 {
-    public ProductionDataFailuresForFarmsSpec(List<Guid> farmIds)
+    public ProductionDataFailuresForFarmsSpec(List<Guid> farmIds, List<Guid> cycleIds = null)
     {
         EnsureExists();
         DisableTracking();
@@ -187,6 +195,11 @@ public class ProductionDataFailuresForFarmsSpec : BaseSpecification<ProductionDa
         Query.Include(t => t.Cycle);
 
         Query.Where(f => farmIds.Contains(f.FarmId));
+
+        if (cycleIds is not null && cycleIds.Any())
+        {
+            Query.Where(t => cycleIds.Contains(t.CycleId));
+        }
     }
 }
 
