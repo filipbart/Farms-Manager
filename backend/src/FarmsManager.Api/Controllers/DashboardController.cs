@@ -50,44 +50,18 @@ public class DashboardController(IMediator mediator) : BaseController
     }
 
     /// <summary>
-    /// Zwraca dane do wykresu EWW
+    /// Zwraca dane do wszystkich wykresów liniowych (FCR, EWW, Zużycie gazu, Straty)
     /// </summary>
     /// <param name="filters"></param>
     /// <returns></returns>
-    [HttpGet("eww-chart")]
-    [ProducesResponseType(typeof(BaseResponse<DashboardEwwChart>), StatusCodes.Status200OK)]
+    [HttpGet("charts")]
+    [ProducesResponseType(typeof(BaseResponse<GetDashboardChartsQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetEwwChart([FromQuery] GetDashboardDataQueryFilters filters)
+    public async Task<IActionResult> GetCharts([FromQuery] GetDashboardDataQueryFilters filters)
     {
-        return Ok(await mediator.Send(new GetEwwChartQuery(filters)));
+        return Ok(await mediator.Send(new GetDashboardChartsQuery(filters)));
     }
-
-    /// <summary>
-    /// Zwraca dane do wykresu FCR
-    /// </summary>
-    /// <param name="filters"></param>
-    /// <returns></returns>
-    [HttpGet("fcr-chart")]
-    [ProducesResponseType(typeof(BaseResponse<DashboardFcrChart>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetFcrChart([FromQuery] GetDashboardDataQueryFilters filters)
-    {
-        return Ok(await mediator.Send(new GetFcrChartQuery(filters)));
-    }
-
-    /// <summary>
-    /// Zwraca dane do wykresu śmiertelności
-    /// </summary>
-    /// <param name="filters"></param>
-    /// <returns></returns>
-    [HttpGet("flock-loss-chart")]
-    [ProducesResponseType(typeof(BaseResponse<DashboardFlockLossChart>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetFlockLossChart([FromQuery] GetDashboardDataQueryFilters filters)
-    {
-        return Ok(await mediator.Send(new GetFlockLossChartQuery(filters)));
-    }
-
+    
     /// <summary>
     /// Zwraca dane do wykresu kołowego wydatków
     /// </summary>
@@ -99,18 +73,5 @@ public class DashboardController(IMediator mediator) : BaseController
     public async Task<IActionResult> GetExpensesPieChart([FromQuery] GetDashboardDataQueryFilters filters)
     {
         return Ok(await mediator.Send(new GetExpensesPieChartQuery(filters)));
-    }
-
-    /// <summary>
-    /// Zwraca dane do wykresu zużycia gazu
-    /// </summary>
-    /// <param name="filters"></param>
-    /// <returns></returns>
-    [HttpGet("gas-consumption-chart")]
-    [ProducesResponseType(typeof(BaseResponse<DashboardGasConsumptionChart>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetGasConsumptionChart([FromQuery] GetDashboardDataQueryFilters filters)
-    {
-        return Ok(await mediator.Send(new GetGasConsumptionChartQuery(filters)));
     }
 }

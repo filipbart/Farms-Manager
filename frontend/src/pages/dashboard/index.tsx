@@ -191,24 +191,17 @@ const DashboardPage: React.FC = () => {
     const fetchCharts = async () => {
       setIsLoadingCharts(true);
       try {
-        await Promise.all([
-          handleApiResponse(
-            () => DashboardService.getEwwChart(filters),
-            (data) => setEwwChart(data.responseData)
-          ),
-          handleApiResponse(
-            () => DashboardService.getFcrChart(filters),
-            (data) => setFcrChart(data.responseData)
-          ),
-          handleApiResponse(
-            () => DashboardService.getFlockLossChart(filters),
-            (data) => setFlockLossChart(data.responseData)
-          ),
-          handleApiResponse(
-            () => DashboardService.getGasConsumptionChart(filters),
-            (data) => setGasConsumptionChart(data.responseData)
-          ),
-        ]);
+        await handleApiResponse(
+          () => DashboardService.getCharts(filters),
+          (apiData) => {
+            if (apiData.responseData) {
+              setEwwChart(apiData.responseData.ewwChart);
+              setFcrChart(apiData.responseData.fcrChart);
+              setFlockLossChart(apiData.responseData.flockLossChart);
+              setGasConsumptionChart(apiData.responseData.gasConsumptionChart);
+            }
+          }
+        );
       } catch (error) {
         toast.error(`Wystąpił błąd podczas ładowania wykresów: ${error}`);
       } finally {

@@ -45,6 +45,14 @@ export interface DashboardStatsResponse {
   chickenHousesStatus: DashboardChickenHousesStatus;
 }
 
+// /charts
+export interface DashboardChartsResponse {
+  fcrChart: DashboardFcrChart;
+  ewwChart: DashboardEwwChart;
+  gasConsumptionChart: DashboardGasConsumptionChart;
+  flockLossChart: DashboardFlockLossChart;
+}
+
 // /notifications
 export type DashboardNotificationsResponse = DashboardNotificationItem[];
 

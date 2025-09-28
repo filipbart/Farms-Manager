@@ -17,13 +17,9 @@ export default class ApiUrl {
   public static DashboardDictionary = this.Dashboard + "/dictionary";
   public static DashboardStats = this.Dashboard + "/stats";
   public static DashboardNotifications = this.Dashboard + "/notifications";
-  public static DashboardEwwChart = this.Dashboard + "/eww-chart";
-  public static DashboardFcrChart = this.Dashboard + "/fcr-chart";
-  public static DashboardFlockLossChart = this.Dashboard + "/flock-loss-chart";
+  public static DashboardCharts = this.Dashboard + "/charts";
   public static DashboardExpensesPieChart =
     this.Dashboard + "/expenses-pie-chart";
-  public static DashboardGasConsumptionChart =
-    this.Dashboard + "/gas-consumption-chart";
 
   public static Files = this.BaseUrl + "files";
   public static GetFile = `${this.Files}/file`;
