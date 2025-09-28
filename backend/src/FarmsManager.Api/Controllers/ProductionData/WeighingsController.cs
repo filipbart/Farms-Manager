@@ -23,7 +23,7 @@ public class WeighingsController(IMediator mediator) : BaseController
     {
         return Ok(await mediator.Send(new GetProductionDataWeighingsQuery(filters)));
     }
-    
+
     /// <summary>
     /// Zwraca słownik filtrów dla Upadki i wybrakowania
     /// </summary>
@@ -72,16 +72,5 @@ public class WeighingsController(IMediator mediator) : BaseController
         [FromBody] UpdateProductionDataWeighingCommandDto payload)
     {
         return Ok(await mediator.Send(new UpdateProductionDataWeighingCommand(id, payload)));
-    }
-
-    /// <summary>
-    /// Usuwa wpis
-    /// </summary>
-    [HttpDelete("delete/{id:guid}")]
-    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> DeleteWeighing([FromRoute] Guid id)
-    {
-        return Ok(await mediator.Send(new DeleteProductionDataWeighingCommand(id)));
     }
 }

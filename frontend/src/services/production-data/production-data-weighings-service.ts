@@ -63,13 +63,6 @@ export class ProductionDataWeighingsService {
   }
 
   /**
-   * Usuwa istniejący wpis
-   */
-  public static async deleteWeighing(id: string) {
-    return await AxiosWrapper.delete(ApiUrl.DeleteProductionDataWeighing(id));
-  }
-
-  /**
    * Pobiera listę norm wagowych
    */
   public static async getStandards() {

@@ -6,7 +6,6 @@ import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
 
 interface GetWeighingsColumnsProps {
   setSelectedWeighing: (row: ProductionDataWeighingListModel) => void;
-  deleteWeighing: (id: string) => void;
   setIsEditModalOpen: (isOpen: boolean) => void;
 }
 
@@ -41,7 +40,6 @@ const renderWeightCell = (
 
 export const getWeighingsColumns = ({
   setSelectedWeighing,
-  deleteWeighing,
   setIsEditModalOpen,
 }: GetWeighingsColumnsProps): GridColDef<ProductionDataWeighingListModel>[] => {
   return [
@@ -154,7 +152,6 @@ export const getWeighingsColumns = ({
               setSelectedWeighing(row);
               setIsEditModalOpen(true);
             }}
-            onDelete={deleteWeighing}
           />,
         ];
       },

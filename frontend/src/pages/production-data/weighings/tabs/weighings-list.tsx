@@ -94,25 +94,6 @@ const ProductionDataWeighingsTab: React.FC = () => {
     fetchDictionaries();
   }, []);
 
-  const deleteWeighing = async (id: string) => {
-    try {
-      setLoading(true);
-      await handleApiResponse(
-        () => ProductionDataWeighingsService.deleteWeighing(id),
-        async () => {
-          toast.success("Wpis został poprawnie usunięty");
-          dispatch({ type: "setMultiple", payload: { page: filters.page } });
-        },
-        undefined,
-        "Błąd podczas usuwania wpisu"
-      );
-    } catch {
-      toast.error("Błąd podczas usuwania wpisu");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
     const fetchWeighings = async () => {
       setLoading(true);
@@ -139,7 +120,6 @@ const ProductionDataWeighingsTab: React.FC = () => {
     () =>
       getWeighingsColumns({
         setSelectedWeighing,
-        deleteWeighing,
         setIsEditModalOpen,
       }),
     []
