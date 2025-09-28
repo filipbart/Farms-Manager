@@ -193,99 +193,74 @@ public class
         string dateCategory,
         CancellationToken ct)
     {
-        // Przygotuj listę tasków
-        var tasks = new List<Task>();
-
         // Dane główne (dla statystyk)
-        var mainSalesTask = _saleRepository.ListAsync(
+        var mainSales = await _saleRepository.ListAsync(
             new GetSalesForDashboardSpec(farmIds, cycleIdsForFilter, mainRange.Since, mainRange.To), ct);
-        tasks.Add(mainSalesTask);
 
-        var mainFeedsTask = _feedInvoiceRepository.ListAsync(
+        var mainFeeds = await _feedInvoiceRepository.ListAsync(
             new GetFeedsInvoicesForDashboardSpec(farmIds, cycleIdsForFilter, mainRange.Since, mainRange.To), ct);
-        tasks.Add(mainFeedsTask);
 
-        var mainExpensesTask = _expenseProductionRepository.ListAsync(
+        var mainExpenses = await _expenseProductionRepository.ListAsync(
             new GetProductionExpensesForDashboardSpec(farmIds, cycleIdsForFilter, mainRange.Since, mainRange.To), ct);
-        tasks.Add(mainExpensesTask);
 
         // Gas consumptions (tylko dla cycle)
-        Task<List<GasConsumptionEntity>> gasConsumptionsTask = null;
+        List<GasConsumptionEntity> gasConsumptions = [];
         if (string.Equals(dateCategory, "cycle", StringComparison.OrdinalIgnoreCase) && cycleIdsForFilter.Count != 0)
         {
-            gasConsumptionsTask = _gasConsumptionRepository.ListAsync(
+            gasConsumptions = await _gasConsumptionRepository.ListAsync(
                 new GasConsumptionsForDashboardSpec(farmIds, cycleIdsForFilter), ct);
-            tasks.Add(gasConsumptionsTask);
         }
 
         // Dane dla KPI (mogą być te same co główne lub inne)
-        Task<List<SaleEntity>> kpiSalesTask = null;
-        Task<List<FeedInvoiceEntity>> kpiFeedsTask = null;
-        Task<List<ExpenseProductionEntity>> kpiExpensesTask = null;
+        List<SaleEntity> kpiSales;
+        List<FeedInvoiceEntity> kpiFeeds;
+        List<ExpenseProductionEntity> kpiExpenses;
 
         if (!kpiRange.IsEmpty && kpiRange != mainRange)
         {
-            kpiSalesTask = _saleRepository.ListAsync(
+            kpiSales = await _saleRepository.ListAsync(
                 new GetSalesForDashboardSpec(farmIds, null, kpiRange.Since, kpiRange.To), ct);
-            tasks.Add(kpiSalesTask);
 
-            kpiFeedsTask = _feedInvoiceRepository.ListAsync(
+            kpiFeeds = await _feedInvoiceRepository.ListAsync(
                 new GetFeedsInvoicesForDashboardSpec(farmIds, null, kpiRange.Since, kpiRange.To), ct);
-            tasks.Add(kpiFeedsTask);
 
-            kpiExpensesTask = _expenseProductionRepository.ListAsync(
+            kpiExpenses = await _expenseProductionRepository.ListAsync(
                 new GetProductionExpensesForDashboardSpec(farmIds, null, kpiRange.Since, kpiRange.To), ct);
-            tasks.Add(kpiExpensesTask);
         }
         else if (kpiCycleIds?.Any() == true)
         {
-            kpiSalesTask = _saleRepository.ListAsync(
+            kpiSales = await _saleRepository.ListAsync(
                 new GetSalesForDashboardSpec(farmIds, kpiCycleIds), ct);
-            tasks.Add(kpiSalesTask);
 
-            kpiFeedsTask = _feedInvoiceRepository.ListAsync(
+            kpiFeeds = await _feedInvoiceRepository.ListAsync(
                 new GetFeedsInvoicesForDashboardSpec(farmIds, kpiCycleIds), ct);
-            tasks.Add(kpiFeedsTask);
 
-            kpiExpensesTask = _expenseProductionRepository.ListAsync(
+            kpiExpenses = await _expenseProductionRepository.ListAsync(
                 new GetProductionExpensesForDashboardSpec(farmIds, kpiCycleIds), ct);
-            tasks.Add(kpiExpensesTask);
+        }
+        else
+        {
+            kpiSales = mainSales;
+            kpiFeeds = mainFeeds;
+            kpiExpenses = mainExpenses;
         }
 
         // Dane dla statusu kurników (tylko aktywne cykle)
-        Task<List<InsertionEntity>> insertionsTask = null;
-        Task<List<SaleEntity>> statusSalesTask = null;
-        Task<List<ProductionDataFailureEntity>> failuresTask = null;
+        List<InsertionEntity> insertions = [];
+        List<SaleEntity> statusSales = [];
+        List<ProductionDataFailureEntity> failures = [];
 
         if (activeCycleIds.Count != 0)
         {
-            insertionsTask = _insertionRepository.ListAsync(
+            insertions = await _insertionRepository.ListAsync(
                 new InsertionsForFarmsSpec(farmIds, activeCycleIds), ct);
-            tasks.Add(insertionsTask);
 
-            statusSalesTask = _saleRepository.ListAsync(
+            statusSales = await _saleRepository.ListAsync(
                 new GetSalesForDashboardSpec(farmIds, activeCycleIds), ct);
-            tasks.Add(statusSalesTask);
 
-            failuresTask = _productionDataFailureRepository.ListAsync(
+            failures = await _productionDataFailureRepository.ListAsync(
                 new ProductionDataFailuresForFarmsSpec(farmIds, activeCycleIds), ct);
-            tasks.Add(failuresTask);
         }
-
-        // Wykonaj wszystkie zapytania równolegle
-        await Task.WhenAll(tasks);
-
-        // Zbierz wyniki
-        var mainSales = await mainSalesTask;
-        var mainFeeds = await mainFeedsTask;
-        var mainExpenses = await mainExpensesTask;
-        var gasConsumptions =
-            gasConsumptionsTask != null ? await gasConsumptionsTask : [];
-
-        // KPI data - użyj głównych danych jeśli nie ma osobnych
-        var kpiSales = kpiSalesTask != null ? await kpiSalesTask : mainSales;
-        var kpiFeeds = kpiFeedsTask != null ? await kpiFeedsTask : mainFeeds;
-        var kpiExpenses = kpiExpensesTask != null ? await kpiExpensesTask : mainExpenses;
 
         // Przetwórz koszty gazu dla KPI
         var (kpiGasExpenses, kpiOtherExpenses) = SplitGasExpenses(kpiExpenses);
@@ -301,9 +276,9 @@ public class
             KpiFeedInvoices = kpiFeeds,
             KpiOtherExpenses = kpiOtherExpenses,
             KpiGasCost = kpiGasCost,
-            Insertions = insertionsTask != null ? await insertionsTask : [],
-            StatusSales = statusSalesTask != null ? await statusSalesTask : [],
-            Failures = failuresTask != null ? await failuresTask : []
+            Insertions = insertions,
+            StatusSales = statusSales,
+            Failures = failures
         };
     }
 

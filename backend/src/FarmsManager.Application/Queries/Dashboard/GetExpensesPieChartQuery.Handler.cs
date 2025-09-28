@@ -154,43 +154,23 @@ public class
         bool useGasConsumptions,
         CancellationToken ct)
     {
-        // Przygotuj zadania
-        var feedInvoicesTask = _feedInvoiceRepository.ListAsync(
+        // Wykonuj zapytania sekwencyjnie, aby uniknąć problemów ze współbieżnością DbContext
+        var feedInvoices = await _feedInvoiceRepository.ListAsync(
             new GetFeedsInvoicesForDashboardSpec(farmIds, cycleIds, dateSince, dateTo), ct);
 
-        var expensesTask = _expenseProductionRepository.ListAsync(
+        var expenses = await _expenseProductionRepository.ListAsync(
             new GetProductionExpensesForDashboardSpec(farmIds, cycleIds, dateSince, dateTo), ct);
 
-        Task<List<GasConsumptionEntity>> gasConsumptionsTask = null;
+        decimal gasCost;
         if (useGasConsumptions)
         {
             // Użyj specyfikacji z filtrami cyklu jeśli są dostępne
-            gasConsumptionsTask = cycleIds?.Any() == true
-                ? _gasConsumptionRepository.ListAsync(
+            var gasConsumptions = cycleIds?.Any() == true
+                ? await _gasConsumptionRepository.ListAsync(
                     new GasConsumptionsForDashboardSpec(farmIds, cycleIds), ct)
-                : _gasConsumptionRepository.ListAsync(
+                : await _gasConsumptionRepository.ListAsync(
                     new GasConsumptionsForFarmsSpec(farmIds), ct);
-        }
 
-        // Wykonaj wszystkie zapytania równolegle
-        var tasks = new List<Task>
-        {
-            feedInvoicesTask,
-            expensesTask
-        };
-        if (gasConsumptionsTask != null)
-            tasks.Add(gasConsumptionsTask);
-
-        await Task.WhenAll(tasks);
-
-        // Zbierz wyniki
-        var feedInvoices = await feedInvoicesTask;
-        var expenses = await expensesTask;
-
-        decimal gasCost;
-        if (gasConsumptionsTask != null)
-        {
-            var gasConsumptions = await gasConsumptionsTask;
             gasCost = gasConsumptions.Sum(g => g.Cost);
         }
         else
@@ -228,7 +208,7 @@ public class
 
         if (totalExpenses == 0)
         {
-            return new DashboardExpensesPieChart { Data = new List<ExpensesPieChartDataPoint>() };
+            return new DashboardExpensesPieChart { Data = [] };
         }
 
         // Buduj punkty wykresu
