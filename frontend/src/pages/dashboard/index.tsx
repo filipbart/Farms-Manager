@@ -153,7 +153,7 @@ const DashboardPage: React.FC = () => {
   }, [dateCategory, selectedMonth, selectedYear, dateRange, selectedCycle]);
 
   useEffect(() => {
-    if (!filters || Object.keys(filters).length === 0) return;
+    if (!filters || !filters.dateCategory) return;
 
     const fetchStats = async () => {
       setIsLoadingStats(true);
