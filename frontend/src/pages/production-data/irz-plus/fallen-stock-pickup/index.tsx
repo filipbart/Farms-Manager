@@ -142,6 +142,7 @@ const FallenStocksPickupPage: React.FC<FallenStocksPickupPageProps> = ({
               filter: newState.filter,
               aggregation: newState.aggregation,
               pinnedColumns: newState.pinnedColumns,
+              rowGrouping: newState.rowGrouping,
             };
             localStorage.setItem(
               "productionDataFallenStockPickupGridState",

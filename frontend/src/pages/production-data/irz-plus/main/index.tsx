@@ -232,6 +232,7 @@ const MainFallenStockPage: React.FC<MainFallenStockPagePropse> = ({
               filter: newState.filter,
               aggregation: newState.aggregation,
               pinnedColumns: newState.pinnedColumns,
+              rowGrouping: newState.rowGrouping,
             };
             localStorage.setItem(
               "productionDataFallenStockGridState",

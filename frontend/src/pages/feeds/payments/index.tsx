@@ -191,6 +191,7 @@ const FeedsPaymentsPage: React.FC = () => {
               filter: newState.filter,
               aggregation: newState.aggregation,
               pinnedColumns: newState.pinnedColumns,
+              rowGrouping: newState.rowGrouping,
             };
             localStorage.setItem(
               "feedPaymentsGridState",

@@ -113,6 +113,7 @@ const UsersPage: React.FC = () => {
               filter: newState.filter,
               aggregation: newState.aggregation,
               pinnedColumns: newState.pinnedColumns,
+              rowGrouping: newState.rowGrouping,
             };
             localStorage.setItem(
               "settingsUsersGridState",
