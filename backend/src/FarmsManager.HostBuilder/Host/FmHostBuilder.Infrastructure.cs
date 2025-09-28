@@ -6,7 +6,6 @@ namespace FarmsManager.HostBuilder.Host;
 
 public partial class FmHostBuilder
 {
-
     public FmHostBuilder AddInfrastructure()
     {
         CheckAutofacConfiguration();
@@ -17,7 +16,6 @@ public partial class FmHostBuilder
                 .AsImplementedInterfaces().AsSelf();
         });
 
-        
 
         return this;
     }

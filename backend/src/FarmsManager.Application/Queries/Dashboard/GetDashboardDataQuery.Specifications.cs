@@ -8,6 +8,7 @@ using FarmsManager.Domain.Aggregates.GasAggregate.Entities;
 using FarmsManager.Domain.Aggregates.GasAggregate.Enum;
 using FarmsManager.Domain.Aggregates.ProductionDataAggregate.Entities;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace FarmsManager.Application.Queries.Dashboard;
 
@@ -80,14 +81,16 @@ public sealed class GetFeedsInvoicesForDashboardSpec : BaseSpecification<FeedInv
 public sealed class GetProductionExpensesForDashboardSpec : BaseSpecification<ExpenseProductionEntity>
 {
     public GetProductionExpensesForDashboardSpec(List<Guid> farmIds = null, List<Guid> cycles = null,
-        DateOnly? dateSince = null,
-        DateOnly? dateTo = null)
+        DateOnly? dateSince = null, DateOnly? dateTo = null, bool? isGas = null)
     {
         EnsureExists();
         DisableTracking();
 
         Query.Include(t => t.Farm);
         Query.Include(t => t.Cycle);
+        // Dołączamy powiązane encje, aby móc filtrować po nazwie typu wydatku
+        Query.Include(t => t.ExpenseContractor)
+            .ThenInclude(ec => ec.ExpenseType);
 
         if (farmIds is not null && farmIds.Count != 0)
         {
@@ -107,6 +110,20 @@ public sealed class GetProductionExpensesForDashboardSpec : BaseSpecification<Ex
         if (dateTo is not null)
         {
             Query.Where(t => t.InvoiceDate <= dateTo);
+        }
+
+        if (isGas.HasValue)
+        {
+            // Używamy ToLower() do porównania bez uwzględniania wielkości liter, co jest tłumaczone na odpowiednie zapytanie SQL
+            const string gasTypeName = "gaz";
+            if (isGas.Value)
+            {
+                Query.Where(e => EF.Functions.ILike(e.ExpenseContractor.ExpenseType.Name, gasTypeName));
+            }
+            else
+            {
+                Query.Where(e => !EF.Functions.ILike(e.ExpenseContractor.ExpenseType.Name, gasTypeName));
+            }
         }
     }
 }
