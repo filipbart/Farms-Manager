@@ -240,7 +240,7 @@ const DashboardPage: React.FC = () => {
     fetchExpenses();
   }, [filters]);
 
-  const isLoading =
+  const isAnythingLoading =
     isLoadingDictionary ||
     isLoadingStats ||
     isLoadingNotifications ||
@@ -281,7 +281,7 @@ const DashboardPage: React.FC = () => {
       >
         <Typography variant="h4">Dashboard</Typography>
         <Box display="flex" gap={2} alignItems="center" flexWrap="wrap">
-          <FormControl sx={{ minWidth: 200 }} size="small" disabled={isLoading}>
+          <FormControl sx={{ minWidth: 200 }} size="small" disabled={isAnythingLoading}>
             <InputLabel>Ferma</InputLabel>
             <Select
               label="Ferma"
@@ -298,7 +298,7 @@ const DashboardPage: React.FC = () => {
               ))}
             </Select>
           </FormControl>
-          <FormControl sx={{ minWidth: 120 }} size="small" disabled={isLoading}>
+          <FormControl sx={{ minWidth: 120 }} size="small" disabled={isAnythingLoading}>
             <InputLabel>Okres</InputLabel>
             <Select
               label="Okres"
@@ -315,7 +315,7 @@ const DashboardPage: React.FC = () => {
             <FormControl
               sx={{ minWidth: 150 }}
               size="small"
-              disabled={isLoading}
+              disabled={isAnythingLoading}
             >
               <InputLabel>Wybierz Cykl</InputLabel>
               <Select
@@ -336,7 +336,7 @@ const DashboardPage: React.FC = () => {
             <FormControl
               sx={{ minWidth: 120 }}
               size="small"
-              disabled={isLoading}
+              disabled={isAnythingLoading}
             >
               <InputLabel>Miesiąc</InputLabel>
               <Select
@@ -360,7 +360,7 @@ const DashboardPage: React.FC = () => {
               sx={{ width: 100 }}
               value={selectedYear}
               onChange={(e) => setSelectedYear(Number(e.target.value))}
-              disabled={isLoading}
+              disabled={isAnythingLoading}
             />
           )}
           {dateCategory === "range" && (
@@ -371,7 +371,7 @@ const DashboardPage: React.FC = () => {
                 onChange={(newValue) =>
                   setDateRange((prev) => ({ ...prev, from: newValue }))
                 }
-                disabled={isLoading}
+                disabled={isAnythingLoading}
                 slotProps={{ textField: { size: "small" } }}
               />
               <DatePicker
@@ -380,7 +380,7 @@ const DashboardPage: React.FC = () => {
                 onChange={(newValue) =>
                   setDateRange((prev) => ({ ...prev, to: newValue }))
                 }
-                disabled={isLoading}
+                disabled={isAnythingLoading}
                 slotProps={{ textField: { size: "small" } }}
               />
             </>
@@ -392,7 +392,7 @@ const DashboardPage: React.FC = () => {
         <Grid size={{ xs: 12, lg: 8 }}>
           <Grid container spacing={3}>
             <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-              {isLoading ? (
+              {isLoadingStats ? (
                 <Skeleton variant="rounded" height={120} />
               ) : (
                 <StatCard
@@ -409,7 +409,7 @@ const DashboardPage: React.FC = () => {
               )}
             </Grid>
             <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-              {isLoading ? (
+              {isLoadingStats ? (
                 <Skeleton variant="rounded" height={120} />
               ) : (
                 <StatCard
@@ -426,7 +426,7 @@ const DashboardPage: React.FC = () => {
               )}
             </Grid>
             <Grid size={{ xs: 12, sm: 12, md: 4 }}>
-              {isLoading ? (
+              {isLoadingStats ? (
                 <Skeleton variant="rounded" height={120} />
               ) : (
                 <StatCard
@@ -445,7 +445,7 @@ const DashboardPage: React.FC = () => {
           </Grid>
         </Grid>
         <Grid size={{ xs: 12, sm: 12, lg: 4 }}>
-          {isLoading ? (
+          {isLoadingStats ? (
             <Skeleton variant="rounded" height={120} />
           ) : (
             <StatCard
@@ -463,7 +463,7 @@ const DashboardPage: React.FC = () => {
         </Grid>
 
         <Grid size={{ xs: 12, lg: 8 }}>
-          {isLoading ? (
+          {isLoadingCharts ? (
             <Skeleton variant="rounded" height={400} />
           ) : (
             <ProductionResultsChart
@@ -477,7 +477,7 @@ const DashboardPage: React.FC = () => {
         <Grid size={{ xs: 12, lg: 4 }}>
           <Grid container spacing={{ xs: 3, lg: 2 }}>
             <Grid size={{ xs: 12, sm: 4, lg: 12 }}>
-              {isLoading ? (
+              {isLoadingStats ? (
                 <Skeleton variant="rounded" height={125} />
               ) : (
                 <StatCard
@@ -496,7 +496,7 @@ const DashboardPage: React.FC = () => {
               )}
             </Grid>
             <Grid size={{ xs: 12, sm: 4, lg: 12 }}>
-              {isLoading ? (
+              {isLoadingStats ? (
                 <Skeleton variant="rounded" height={125} />
               ) : (
                 <StatCard
@@ -515,7 +515,7 @@ const DashboardPage: React.FC = () => {
               )}
             </Grid>
             <Grid size={{ xs: 12, sm: 4, lg: 12 }}>
-              {isLoading ? (
+              {isLoadingStats ? (
                 <Skeleton variant="rounded" height={125} />
               ) : (
                 <StatCard
@@ -534,7 +534,7 @@ const DashboardPage: React.FC = () => {
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 6, lg: 8 }}>
-          {isLoading ? (
+          {isLoadingStats ? (
             <Skeleton variant="rounded" height="100%" />
           ) : (
             <Paper
@@ -595,7 +595,7 @@ const DashboardPage: React.FC = () => {
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
-          {isLoading ? (
+          {isLoadingExpenses ? (
             <Skeleton variant="rounded" height="100%" />
           ) : (
             <ExpensesPieChart data={expensesPieChart?.data} />
@@ -603,7 +603,7 @@ const DashboardPage: React.FC = () => {
         </Grid>
 
         <Grid size={{ xs: 12 }} sx={{ height: 380 }}>
-          {isLoading ? (
+          {isLoadingNotifications ? (
             <Skeleton variant="rounded" height="100%" />
           ) : (
             <DashboardNotifications notifications={notifications} />

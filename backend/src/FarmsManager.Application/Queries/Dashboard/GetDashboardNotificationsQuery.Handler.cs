@@ -2,7 +2,6 @@
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models.Notifications;
-using FarmsManager.Application.Queries.Farms;
 using FarmsManager.Application.Queries.User;
 using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.EmployeeAggregate.Entities;

@@ -8,9 +8,6 @@ using FarmsManager.Domain.Aggregates.GasAggregate.Entities;
 using FarmsManager.Domain.Aggregates.GasAggregate.Enum;
 using FarmsManager.Domain.Aggregates.ProductionDataAggregate.Entities;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
-using System.Collections.Generic;
-using System.Linq;
-using System;
 
 namespace FarmsManager.Application.Queries.Dashboard;
 
