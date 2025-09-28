@@ -281,7 +281,11 @@ const DashboardPage: React.FC = () => {
       >
         <Typography variant="h4">Dashboard</Typography>
         <Box display="flex" gap={2} alignItems="center" flexWrap="wrap">
-          <FormControl sx={{ minWidth: 200 }} size="small" disabled={isAnythingLoading}>
+          <FormControl
+            sx={{ minWidth: 200 }}
+            size="small"
+            disabled={isAnythingLoading}
+          >
             <InputLabel>Ferma</InputLabel>
             <Select
               label="Ferma"
@@ -298,7 +302,11 @@ const DashboardPage: React.FC = () => {
               ))}
             </Select>
           </FormControl>
-          <FormControl sx={{ minWidth: 120 }} size="small" disabled={isAnythingLoading}>
+          <FormControl
+            sx={{ minWidth: 120 }}
+            size="small"
+            disabled={isAnythingLoading}
+          >
             <InputLabel>Okres</InputLabel>
             <Select
               label="Okres"

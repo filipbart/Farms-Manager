@@ -203,10 +203,12 @@ public class
 
         // Zoptymalizowane pobieranie wydatków - rozdzielone na gaz i resztę (sekwencyjnie)
         var mainGasExpenses = await _expenseProductionRepository.ListAsync(
-            new GetProductionExpensesForDashboardSpec(farmIds, cycleIdsForFilter, mainRange.Since, mainRange.To, isGas: true), ct);
+            new GetProductionExpensesForDashboardSpec(farmIds, cycleIdsForFilter, mainRange.Since, mainRange.To,
+                isGas: true), ct);
 
         var mainOtherExpenses = await _expenseProductionRepository.ListAsync(
-            new GetProductionExpensesForDashboardSpec(farmIds, cycleIdsForFilter, mainRange.Since, mainRange.To, isGas: false), ct);
+            new GetProductionExpensesForDashboardSpec(farmIds, cycleIdsForFilter, mainRange.Since, mainRange.To,
+                isGas: false), ct);
 
         // Gas consumptions (tylko dla cycle)
         List<GasConsumptionEntity> gasConsumptions = [];
@@ -233,7 +235,8 @@ public class
             kpiGasExpenses = await _expenseProductionRepository.ListAsync(
                 new GetProductionExpensesForDashboardSpec(farmIds, null, kpiRange.Since, kpiRange.To, isGas: true), ct);
             kpiOtherExpenses = await _expenseProductionRepository.ListAsync(
-                new GetProductionExpensesForDashboardSpec(farmIds, null, kpiRange.Since, kpiRange.To, isGas: false), ct);
+                new GetProductionExpensesForDashboardSpec(farmIds, null, kpiRange.Since, kpiRange.To, isGas: false),
+                ct);
         }
         else if (kpiCycleIds?.Any() == true)
         {
@@ -292,7 +295,7 @@ public class
         };
     }
 
-    private (decimal gasCost, IReadOnlyList<ExpenseProductionEntity> otherExpenses) CalculateMainStatsExpenses(
+    private static (decimal gasCost, IReadOnlyList<ExpenseProductionEntity> otherExpenses) CalculateMainStatsExpenses(
         IReadOnlyList<ExpenseProductionEntity> gasExpenses,
         IReadOnlyList<ExpenseProductionEntity> otherExpenses,
         IReadOnlyList<GasConsumptionEntity> gasConsumptions,
@@ -316,18 +319,16 @@ public class
         if (request.Filters.CycleDict == null)
             return [];
 
-        // Wykonaj zapytania równolegle dla wszystkich farm
-        var tasks = farms.Select(farm =>
-            _cycleRepository.FirstOrDefaultAsync(
-                new GetCycleByYearIdentifierAndFarmSpec(
-                    farm.Id,
-                    request.Filters.CycleDict.Year,
-                    request.Filters.CycleDict.Identifier),
-                ct)
-        ).ToList();
+        // Optymalizacja: Zamiast N zapytań w pętli, wykonujemy jedno zbiorcze zapytanie.
+        var farmIds = farms.Select(f => f.Id).ToList();
+        var cycles = await _cycleRepository.ListAsync(
+            new GetCyclesByFarmAndFilterSpec(
+                farmIds,
+                request.Filters.CycleDict.Year,
+                request.Filters.CycleDict.Identifier),
+            ct);
 
-        var cycles = await Task.WhenAll(tasks);
-        return cycles.Where(c => c != null).Select(c => c!.Id).ToList();
+        return cycles.Select(c => c.Id).ToList();
     }
 
     private static (decimal incomePerKg, decimal incomePerSqm) CalculateIncomeKpis(
@@ -466,8 +467,10 @@ public class
     {
         public IReadOnlyList<SaleEntity> FilteredSales { get; init; } = new List<SaleEntity>();
         public IReadOnlyList<FeedInvoiceEntity> FilteredFeedInvoices { get; init; } = new List<FeedInvoiceEntity>();
+
         public IReadOnlyList<ExpenseProductionEntity> FilteredGasExpenses { get; init; } =
             new List<ExpenseProductionEntity>();
+
         public IReadOnlyList<ExpenseProductionEntity> FilteredOtherExpenses { get; init; } =
             new List<ExpenseProductionEntity>();
 

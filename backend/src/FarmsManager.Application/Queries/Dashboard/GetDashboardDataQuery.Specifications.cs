@@ -128,6 +128,17 @@ public sealed class GetProductionExpensesForDashboardSpec : BaseSpecification<Ex
     }
 }
 
+public sealed class GetCyclesByFarmAndFilterSpec : BaseSpecification<CycleEntity>
+{
+    public GetCyclesByFarmAndFilterSpec(List<Guid> farmIds, int year, int identifier)
+    {
+        EnsureExists();
+        DisableTracking();
+
+        Query.Where(c => farmIds.Contains(c.FarmId) && c.Year == year && c.Identifier == identifier);
+    }
+}
+
 public sealed class GasConsumptionsForDashboardSpec : BaseSpecification<GasConsumptionEntity>
 {
     public GasConsumptionsForDashboardSpec(List<Guid> farmIds, List<Guid> cycles)
