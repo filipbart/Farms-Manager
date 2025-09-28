@@ -148,7 +148,7 @@ public class SummaryProductionAnalysisQueryHandler : IRequestHandler<SummaryProd
                 feedRemainingLookup[insertionKey], feedRemainingByHenhouseCycleLookup,
                 feedTransfersFromLookup[insertionKey], feedTransfersToLookup[insertionKey]);
 
-            var gasConsumed = CalculateGasConsumption(insertion, farms, gasLookup);
+            var gasConsumed = CalculateGasConsumption(insertion, gasLookup, allInsertions);
 
 
             _ = allWeightStandards.TryGetValue(partSalesAgg.AgeInDays ?? 0, out var partSaleWeightStandard);
@@ -262,14 +262,11 @@ public class SummaryProductionAnalysisQueryHandler : IRequestHandler<SummaryProd
 
 
     private static decimal? CalculateGasConsumption(InsertionEntity insertion,
-        Dictionary<Guid, FarmEntity> farms,
-        ILookup<(Guid, Guid), GasConsumptionEntity> gasLookup)
+        ILookup<(Guid, Guid), GasConsumptionEntity> gasLookup, IEnumerable<InsertionEntity> allInsertions)
     {
-        if (!farms.TryGetValue(insertion.FarmId, out var farm)) return null;
-
-        var farmHenhousesArea = farm.Henhouses
-            .Where(h => !h.DateDeletedUtc.HasValue)
-            .Sum(h => h.Area);
+        var farmHenhousesArea = allInsertions
+            .Where(i => i.FarmId == insertion.FarmId && i.CycleId == insertion.CycleId)
+            .Sum(i => i.Henhouse.Area);
 
         if (farmHenhousesArea == 0) return null;
 
