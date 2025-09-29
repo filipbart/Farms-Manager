@@ -22,7 +22,6 @@ export function ExpensesPieChart({ data }: ExpensesPieChartProps) {
           series={[
             {
               data: data,
-              arcLabel: (item) => `${item.value}%`,
               valueFormatter: (item) => `${item.value}%`,
               innerRadius: 30,
               outerRadius: 100,
@@ -33,6 +32,9 @@ export function ExpensesPieChart({ data }: ExpensesPieChartProps) {
             },
           ]}
           slotProps={{
+            tooltip: {
+              trigger: "item",
+            },
             legend: {
               direction: "vertical",
               position: { vertical: "middle", horizontal: "end" },
