@@ -93,11 +93,10 @@ public class AddFeedPriceCommandHandler : IRequestHandler<AddFeedPriceCommand, E
             {
                 foreach (var feedInvoiceEntity in feedsInvoices)
                 {
-                    var feedPrices = await _feedPriceRepository.ListAsync(
-                        new GetFeedPriceForFeedInvoiceSpec(feedInvoiceEntity.FarmId, feedInvoiceEntity.CycleId,
-                            feedInvoiceEntity.ItemName,
-                            feedInvoiceEntity.InvoiceDate),
-                        ct);
+                    var feedPrices = await _feedPriceRepository.GetFeedPricesForInvoiceDateAsync(
+                        feedInvoiceEntity.FarmId, feedInvoiceEntity.CycleId,
+                        feedInvoiceEntity.ItemName,
+                        feedInvoiceEntity.InvoiceDate);
 
                     feedInvoiceEntity.CheckUnitPrice(feedPrices);
                     await _feedInvoiceRepository.UpdateAsync(feedInvoiceEntity, ct);

@@ -42,9 +42,13 @@ public class FeedInvoiceEntity : Entity
 
     public void SetAsNullCorrectUnitPrice() => CorrectUnitPrice = null;
 
-    public void CheckUnitPrice(List<FeedPriceEntity> feedPrices)
+    public void CheckUnitPrice(IEnumerable<FeedPriceEntity> feedPrices)
     {
-        if (feedPrices.Count == 0) return;
+        if (feedPrices is null) return;
+        feedPrices = feedPrices.ToList();
+
+        if (!feedPrices.Any()) return;
+
 
         var feedPrice = feedPrices.FirstOrDefault(f => f.Price == UnitPrice);
 
@@ -58,8 +62,8 @@ public class FeedInvoiceEntity : Entity
             return;
         }
 
-        if (feedPrices.Count == 1)
-            CorrectUnitPrice = feedPrices[0].Price;
+        if (feedPrices.Count() == 1)
+            CorrectUnitPrice = feedPrices.First().Price;
         else
             CorrectUnitPrice = -1;
     }

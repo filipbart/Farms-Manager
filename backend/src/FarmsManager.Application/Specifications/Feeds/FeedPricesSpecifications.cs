@@ -18,19 +18,6 @@ public sealed class GetFeedsInvoicesByDateRangeAndNameSpec : BaseSpecification<F
     }
 }
 
-public sealed class GetFeedPriceForFeedInvoiceSpec : BaseSpecification<FeedPriceEntity>
-{
-    public GetFeedPriceForFeedInvoiceSpec(Guid farmId, Guid cycleId, string feedName, DateOnly invoiceDate)
-    {
-        EnsureExists();
-        Query
-            .Where(p => p.FarmId == farmId)
-            .Where(p => p.CycleId == cycleId)
-            .Where(p => p.Name == feedName)
-            .Where(p => p.PriceDate <= invoiceDate);
-    }
-}
-
 public sealed class GetNextFeedPriceSpec : BaseSpecification<FeedPriceEntity>,
     ISingleResultSpecification<FeedPriceEntity>
 {

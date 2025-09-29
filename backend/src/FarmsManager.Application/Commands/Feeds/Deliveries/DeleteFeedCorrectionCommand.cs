@@ -61,10 +61,8 @@ public class DeleteFeedCorrectionCommandHandler : IRequestHandler<DeleteFeedCorr
     private async Task CheckFeedInvoiceUnitPrice(FeedInvoiceEntity feedInvoice, CancellationToken ct)
     {
         var feedPrices =
-            await _feedPriceRepository.ListAsync(
-                new GetFeedPriceForFeedInvoiceSpec(feedInvoice.FarmId, feedInvoice.CycleId, feedInvoice.ItemName,
-                    feedInvoice.InvoiceDate),
-                ct);
+            await _feedPriceRepository.GetFeedPricesForInvoiceDateAsync(feedInvoice.FarmId, feedInvoice.CycleId, feedInvoice.ItemName,
+                    feedInvoice.InvoiceDate);
 
         feedInvoice.CheckUnitPrice(feedPrices);
     }
