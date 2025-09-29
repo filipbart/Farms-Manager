@@ -15,6 +15,7 @@ public sealed class GasConsumptionsByFarmsSpec : BaseSpecification<GasConsumptio
         EnsureExists();
         DisableTracking();
         Query.Where(t => t.CancelledAtUtc.HasValue == false);
+        Query.Where(t => t.CorrectionForId.HasValue == false);
         Query.Where(t => farmIds.Contains(t.FarmId));
     }
 }
