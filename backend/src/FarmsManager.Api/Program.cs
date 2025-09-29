@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using Dapper;
 using FarmsManager.Api.Controllers;
 using FarmsManager.Api.Middleware;
 using FarmsManager.Application.Commands.Dev;
@@ -12,6 +13,7 @@ using FarmsManager.HostBuilder.Extensions;
 using FarmsManager.HostBuilder.Host;
 using FarmsManager.Infrastructure;
 using FarmsManager.Infrastructure.Autofac;
+using FarmsManager.Infrastructure.TypeHandlers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
@@ -22,6 +24,8 @@ var webAppBuilder = WebApplication.CreateBuilder(args);
 webAppBuilder.Host.GetBuilder()
     .AddAutofac(builder =>
     {
+        SqlMapper.AddTypeHandler(new DapperSqlDateOnlyTypeHandler());
+
         builder.RegisterAssemblyTypes(typeof(DomainExceptionMiddleware).Assembly)
             .Where(t => t.IsAssignableTo<IMiddleware>()).AsSelf();
         builder.RegisterModule<InfrastructureModule>();
