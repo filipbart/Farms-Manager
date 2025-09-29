@@ -1,12 +1,11 @@
 ﻿using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models.Summary;
-using FarmsManager.Application.Queries.Farms;
 using FarmsManager.Application.Queries.Insertions;
 using FarmsManager.Application.Queries.Sales;
+using FarmsManager.Application.Queries.Summary.ProductionAnalysis;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
-using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.GasAggregate.Entities;
@@ -16,11 +15,11 @@ using FarmsManager.Domain.Aggregates.ProductionDataAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Enums;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Interfaces;
 using MediatR;
-using FarmsManager.Application.Queries.Summary.ProductionAnalysis;
 using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.EmployeeAggregate.Entities;
 using FarmsManager.Domain.Aggregates.EmployeeAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
 using FarmsManager.Domain.Aggregates.UserAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
@@ -39,7 +38,6 @@ internal record SaleMetrics(
 public class SummaryFinancialAnalysisQueryHandler : IRequestHandler<SummaryFinancialAnalysisQuery,
     BaseResponse<SummaryFinancialAnalysisQueryResponse>>
 {
-    private readonly IFarmRepository _farmRepository;
     private readonly ISaleRepository _saleRepository;
     private readonly IInsertionRepository _insertionRepository;
     private readonly IFeedInvoiceRepository _feedInvoiceRepository;
@@ -52,7 +50,7 @@ public class SummaryFinancialAnalysisQueryHandler : IRequestHandler<SummaryFinan
     private readonly IUserDataResolver _userDataResolver;
     private readonly IUserRepository _userRepository;
 
-    public SummaryFinancialAnalysisQueryHandler(IFarmRepository farmRepository, ISaleRepository saleRepository,
+    public SummaryFinancialAnalysisQueryHandler(ISaleRepository saleRepository,
         IInsertionRepository insertionRepository, IFeedInvoiceRepository feedInvoiceRepository,
         IGasConsumptionRepository gasConsumptionRepository,
         IEmployeePayslipRepository employeePayslipRepository,
@@ -61,7 +59,6 @@ public class SummaryFinancialAnalysisQueryHandler : IRequestHandler<SummaryFinan
         IProductionDataTransferFeedRepository productionDataTransferFeedRepository, IUserDataResolver userDataResolver,
         IUserRepository userRepository)
     {
-        _farmRepository = farmRepository;
         _saleRepository = saleRepository;
         _insertionRepository = insertionRepository;
         _feedInvoiceRepository = feedInvoiceRepository;
@@ -92,7 +89,6 @@ public class SummaryFinancialAnalysisQueryHandler : IRequestHandler<SummaryFinan
         var henhouseIds = allInsertions.Select(i => i.HenhouseId).Distinct().ToList();
         var farmIds = allInsertions.Select(i => i.FarmId).Distinct().ToList();
 
-        var farms = (await _farmRepository.ListAsync(new GetAllFarmsSpec(null), ct)).ToDictionary(f => f.Id);
         var allSales =
             await _saleRepository.ListAsync(
                 new GetAllSalesSpec(new GetSalesQueryFilters { HenhouseIds = henhouseIds }, false, accessibleFarmIds),
@@ -137,17 +133,17 @@ public class SummaryFinancialAnalysisQueryHandler : IRequestHandler<SummaryFinan
                 feedRemainingLookup[insertionKey], feedRemainingByHenhouseCycleLookup,
                 feedTransfersFromLookup[insertionKey], feedTransfersToLookup[insertionKey]);
 
-            var farm = farms.GetValueOrDefault(insertion.FarmId);
             var expenseKey = (insertion.FarmId, insertion.CycleId);
             var cycleExpenses = expensesLookup[expenseKey]?.ToList();
 
-            var chicksCost = CalculateExpenses(insertion, farm, cycleExpenses, "Zakup piskląt");
-            var vetCareCost = CalculateExpenses(insertion, farm, cycleExpenses, "Usługa weterynaryjna");
-            var otherCosts = CalculateOtherExpenses(insertion, farm, cycleExpenses, [
+            var chicksCost = CalculateExpenses(insertion, allInsertions, cycleExpenses, "Zakup piskląt");
+            var vetCareCost = CalculateExpenses(insertion, allInsertions, cycleExpenses, "Usługa weterynaryjna");
+            var otherCosts = CalculateOtherExpenses(insertion, allInsertions, cycleExpenses, new[]
+            {
                 "Zakup piskląt", "Usługa weterynaryjna"
-            ]);
-            var gasCost = CalculateGasCost(insertion, farm, gasLookup[expenseKey]);
-            var employeePayslipsCost = CalculateEmployeePayslipsCost(insertion, farm,
+            });
+            var gasCost = CalculateGasCost(insertion, gasLookup[expenseKey], allInsertions);
+            var employeePayslipsCost = CalculateEmployeePayslipsCost(insertion, allInsertions,
                 employeesPayslipsLookup[expenseKey]);
             otherCosts += employeePayslipsCost;
 
@@ -225,53 +221,61 @@ public class SummaryFinancialAnalysisQueryHandler : IRequestHandler<SummaryFinan
         );
     }
 
-    private static decimal? AllocateProportionalCost(InsertionEntity insertion, FarmEntity farm,
+    private static decimal? AllocateProportionalCost(InsertionEntity insertion,
+        IEnumerable<InsertionEntity> allInsertions,
         decimal totalCostForFarm)
     {
-        if (farm == null) return null;
-
-        var farmHenhousesArea = farm.Henhouses
-            .Where(h => !h.DateDeletedUtc.HasValue)
-            .Sum(h => h.Area);
+        var farmHenhousesArea = allInsertions
+            .Where(i => i.FarmId == insertion.FarmId && i.CycleId == insertion.CycleId)
+            .Sum(i => i.Henhouse.Area);
 
         if (farmHenhousesArea == 0) return null;
 
         return totalCostForFarm / farmHenhousesArea * insertion.Henhouse.Area;
     }
 
-    private static decimal? CalculateGasCost(InsertionEntity insertion, FarmEntity farm,
-        IEnumerable<GasConsumptionEntity> gasConsumptions)
+    private static decimal? CalculateGasCost(InsertionEntity insertion,
+        IEnumerable<GasConsumptionEntity> gasConsumptions, IEnumerable<InsertionEntity> allInsertions)
     {
+        var farmHenhousesArea = allInsertions
+            .Where(i => i.FarmId == insertion.FarmId && i.CycleId == insertion.CycleId)
+            .Sum(i => i.Henhouse.Area);
+
+        if (farmHenhousesArea == 0) return null;
+
         var totalCost = gasConsumptions.Sum(g => g.Cost);
-        return AllocateProportionalCost(insertion, farm, totalCost);
+
+        return totalCost / farmHenhousesArea * insertion.Henhouse.Area;
     }
 
-    private static decimal? CalculateEmployeePayslipsCost(InsertionEntity insertion, FarmEntity farm,
+    private static decimal? CalculateEmployeePayslipsCost(InsertionEntity insertion,
+        IEnumerable<InsertionEntity> allInsertions,
         IEnumerable<EmployeePayslipEntity> payslips)
     {
         var totalCost = payslips.Sum(p =>
             p.BankTransferAmount + p.BonusAmount + p.OvertimePay - p.Deductions + p.OtherAllowances);
-        return AllocateProportionalCost(insertion, farm, totalCost);
+        return AllocateProportionalCost(insertion, allInsertions, totalCost);
     }
 
-    private static decimal? CalculateExpenses(InsertionEntity insertion, FarmEntity farm,
+    private static decimal? CalculateExpenses(InsertionEntity insertion, IEnumerable<InsertionEntity> allInsertions,
         IEnumerable<ExpenseProductionEntity> expenses, string expenseType)
     {
         var totalCost = expenses
             .Where(e => string.Equals(e.ExpenseContractor.ExpenseType.Name, expenseType,
                 StringComparison.OrdinalIgnoreCase))
             .Sum(e => e.SubTotal);
-        return AllocateProportionalCost(insertion, farm, totalCost);
+        return AllocateProportionalCost(insertion, allInsertions, totalCost);
     }
 
-    private static decimal? CalculateOtherExpenses(InsertionEntity insertion, FarmEntity farm,
+    private static decimal? CalculateOtherExpenses(InsertionEntity insertion,
+        IEnumerable<InsertionEntity> allInsertions,
         IEnumerable<ExpenseProductionEntity> expenses, string[] excludeExpenseTypes)
     {
         var totalCost = expenses
             .Where(e => !excludeExpenseTypes.Contains(e.ExpenseContractor.ExpenseType.Name,
                 StringComparer.OrdinalIgnoreCase))
             .Sum(e => e.SubTotal);
-        return AllocateProportionalCost(insertion, farm, totalCost);
+        return AllocateProportionalCost(insertion, allInsertions, totalCost);
     }
 
     private static decimal CalculateFeedCost(InsertionEntity insertion,

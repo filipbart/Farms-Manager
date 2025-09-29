@@ -2,7 +2,6 @@
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications;
-using FarmsManager.Application.Specifications.Feeds;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;

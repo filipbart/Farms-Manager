@@ -2,7 +2,6 @@
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models.ProductionData;
 using FarmsManager.Application.Models.Summary;
-using FarmsManager.Application.Queries.Farms;
 using FarmsManager.Application.Queries.Insertions;
 using FarmsManager.Application.Queries.ProductionData.Failures;
 using FarmsManager.Application.Queries.ProductionData.Weighings;
@@ -40,7 +39,6 @@ internal record SaleAggregate(
 public class SummaryProductionAnalysisQueryHandler : IRequestHandler<SummaryProductionAnalysisQuery,
     BaseResponse<SummaryProductionAnalysisQueryResponse>>
 {
-    private readonly IFarmRepository _farmRepository;
     private readonly ISaleRepository _saleRepository;
     private readonly IInsertionRepository _insertionRepository;
     private readonly IFeedInvoiceRepository _feedInvoiceRepository;
@@ -53,7 +51,7 @@ public class SummaryProductionAnalysisQueryHandler : IRequestHandler<SummaryProd
     private readonly IUserDataResolver _userDataResolver;
     private readonly IUserRepository _userRepository;
 
-    public SummaryProductionAnalysisQueryHandler(IFarmRepository farmRepository, ISaleRepository saleRepository,
+    public SummaryProductionAnalysisQueryHandler(ISaleRepository saleRepository,
         IInsertionRepository insertionRepository, IFeedInvoiceRepository feedInvoiceRepository,
         IGasConsumptionRepository gasConsumptionRepository,
         IProductionDataFailureRepository productionDataFailureRepository,
@@ -62,7 +60,6 @@ public class SummaryProductionAnalysisQueryHandler : IRequestHandler<SummaryProd
         IProductionDataTransferFeedRepository productionDataTransferFeedRepository, IUserDataResolver userDataResolver,
         IUserRepository userRepository)
     {
-        _farmRepository = farmRepository;
         _saleRepository = saleRepository;
         _insertionRepository = insertionRepository;
         _feedInvoiceRepository = feedInvoiceRepository;
@@ -93,7 +90,6 @@ public class SummaryProductionAnalysisQueryHandler : IRequestHandler<SummaryProd
         var henhouseIds = allInsertions.Select(i => i.HenhouseId).Distinct().ToList();
         var farmIds = allInsertions.Select(i => i.FarmId).Distinct().ToList();
 
-        var farms = (await _farmRepository.ListAsync(new GetAllFarmsSpec(null), ct)).ToDictionary(f => f.Id);
         var allWeightStandards =
             (await _productionDataWeightStandardRepository.ListAsync(new GetAllWeightStandardsSpec(), ct))
             .ToDictionary(ws => ws.Day);
