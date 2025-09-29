@@ -209,6 +209,12 @@ const DashboardPage: React.FC = () => {
       }
     };
 
+    fetchStats();
+    fetchNotifications();
+    fetchCharts();
+  }, [filters]);
+
+  useEffect(() => {
     const fetchExpenses = async () => {
       setIsLoadingExpenses(true);
       try {
@@ -226,10 +232,6 @@ const DashboardPage: React.FC = () => {
         setIsLoadingExpenses(false);
       }
     };
-
-    fetchStats();
-    fetchNotifications();
-    fetchCharts();
     fetchExpenses();
   }, [filters]);
 

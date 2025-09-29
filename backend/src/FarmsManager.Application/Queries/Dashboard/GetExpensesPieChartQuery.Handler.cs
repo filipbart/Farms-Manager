@@ -1,8 +1,9 @@
-﻿using FarmsManager.Application.Common.Responses;
+﻿using Ardalis.Specification;
+using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models;
-using FarmsManager.Application.Queries.FallenStock;
 using FarmsManager.Application.Queries.Farms;
+using FarmsManager.Application.Specifications;
 using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
@@ -74,21 +75,23 @@ public class
 
         var farmIds = farms.Select(f => f.Id).ToList();
 
-        // 2. Obsługa filtrów cyklu
-        List<Guid> cycleIds = null;
-        if (request.Filters.CycleDict != null)
+        // 2. Obsługa filtrów cyklu - wykres reaguje tylko na zmianę cyklu
+        if (request.Filters.CycleDict == null)
         {
-            cycleIds = await GetCycleIdsForFilter(request.Filters.CycleDict, farms, ct);
-            if (cycleIds.Count == 0)
-            {
-                return BaseResponse.CreateResponse(new DashboardExpensesPieChart());
-            }
+            return BaseResponse.CreateResponse(new DashboardExpensesPieChart());
         }
+
+        var cycleIds = await GetCycleIdsForFilter(request.Filters.CycleDict, farms, ct);
+        if (cycleIds.Count == 0)
+        {
+            return BaseResponse.CreateResponse(new DashboardExpensesPieChart());
+        }
+
 
         // 3. Określ strategię pobierania kosztów gazu
         var useGasConsumptions = ShouldUseGasConsumptions(request.Filters.DateCategory, cycleIds);
 
-        // 4. Wykonaj wszystkie zapytania równolegle
+        // 4. Pobierz dane o kosztach
         var expenseData = await FetchExpenseDataAsync(
             farmIds,
             cycleIds,
@@ -124,18 +127,17 @@ public class
         List<FarmEntity> farms,
         CancellationToken ct)
     {
-        // Wykonaj zapytania równolegle dla wszystkich farm
-        var tasks = farms.Select(farm =>
-            _cycleRepository.FirstOrDefaultAsync(
-                new GetCycleByYearIdentifierAndFarmSpec(
-                    farm.Id,
-                    cycleDict.Year,
-                    cycleDict.Identifier),
-                ct)
-        ).ToList();
+        var farmIds = farms?.Select(f => f.Id).ToList();
+        if (farmIds is null || farmIds.Count == 0)
+        {
+            return [];
+        }
 
-        var cycles = await Task.WhenAll(tasks);
-        return cycles.Where(c => c != null).Select(c => c!.Id).ToList();
+        var cycleIds =
+            await _cycleRepository.ListAsync(
+                new GetCyclesByYearIdentifierAndFarmsSpec(farmIds, cycleDict.Year, cycleDict.Identifier), ct);
+
+        return cycleIds;
     }
 
     private static bool ShouldUseGasConsumptions(string dateCategory, List<Guid> cycleIds)
@@ -288,5 +290,18 @@ public class
         public decimal ChicksCost { get; set; }
         public decimal VetCareCost { get; set; }
         public decimal OtherCosts { get; set; }
+    }
+}
+
+public sealed class GetCyclesByYearIdentifierAndFarmsSpec : BaseSpecification<CycleEntity, Guid>
+{
+    public GetCyclesByYearIdentifierAndFarmsSpec(List<Guid> farmIds, int year, int identifier)
+    {
+        EnsureExists();
+        DisableTracking();
+        Query.Where(t => farmIds.Contains(t.FarmId));
+        Query.Where(t => t.Year == year);
+        Query.Where(t => t.Identifier == identifier);
+        Query.Select(t => t.Id);
     }
 }
