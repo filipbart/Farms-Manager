@@ -1,6 +1,7 @@
 ﻿using Ardalis.Specification;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.EmployeeAggregate.Entities;
+using LinqKit;
 using Microsoft.EntityFrameworkCore;
 
 namespace FarmsManager.Application.Queries.Employees.Payslips;
@@ -38,7 +39,13 @@ public sealed class GetAllEmployeePayslipsSpec : BaseSpecification<EmployeePaysl
 
         if (filters.CyclesDict is not null && filters.CyclesDict.Count != 0)
         {
-            Query.Where(p => filters.Cycles.Contains(p.Cycle.Identifier + "/" + p.Cycle.Year));
+            var predicate = PredicateBuilder.New<EmployeePayslipEntity>();
+
+            predicate = filters.CyclesDict.Aggregate(predicate,
+                (current, cycleFilter) => current.Or(t =>
+                    t.Cycle.Identifier == cycleFilter.Identifier && t.Cycle.Year == cycleFilter.Year));
+
+            Query.Where(predicate);
         }
 
         if (!string.IsNullOrWhiteSpace(filters.SearchPhrase))

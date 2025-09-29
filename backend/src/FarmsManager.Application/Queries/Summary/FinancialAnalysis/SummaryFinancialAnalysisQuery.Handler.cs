@@ -138,10 +138,9 @@ public class SummaryFinancialAnalysisQueryHandler : IRequestHandler<SummaryFinan
 
             var chicksCost = CalculateExpenses(insertion, allInsertions, cycleExpenses, "Zakup piskląt");
             var vetCareCost = CalculateExpenses(insertion, allInsertions, cycleExpenses, "Usługa weterynaryjna");
-            var otherCosts = CalculateOtherExpenses(insertion, allInsertions, cycleExpenses, new[]
-            {
+            var otherCosts = CalculateOtherExpenses(insertion, allInsertions, cycleExpenses, [
                 "Zakup piskląt", "Usługa weterynaryjna"
-            });
+            ]);
             var gasCost = CalculateGasCost(insertion, gasLookup[expenseKey], allInsertions);
             var employeePayslipsCost = CalculateEmployeePayslipsCost(insertion, allInsertions,
                 employeesPayslipsLookup[expenseKey]);

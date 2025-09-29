@@ -1,6 +1,7 @@
 using Ardalis.Specification;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities;
+using LinqKit;
 
 namespace FarmsManager.Application.Queries.Expenses.Productions;
 
@@ -47,6 +48,13 @@ public sealed class GetAllExpenseProductionsSpec : BaseSpecification<ExpenseProd
 
         if (filters.CyclesDict is not null && filters.CyclesDict.Count != 0)
         {
+            var predicate = PredicateBuilder.New<ExpenseProductionEntity>();
+
+            predicate = filters.CyclesDict.Aggregate(predicate,
+                (current, cycleFilter) => current.Or(t =>
+                    t.Cycle.Identifier == cycleFilter.Identifier && t.Cycle.Year == cycleFilter.Year));
+
+            Query.Where(predicate);
         }
 
         if (filters.DateSince is not null)
