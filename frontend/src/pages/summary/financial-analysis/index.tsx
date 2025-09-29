@@ -7,6 +7,7 @@ import { SummaryService } from "../../../services/summary-service";
 import {
   DataGridPremium,
   GRID_AGGREGATION_ROOT_FOOTER_ROW_ID,
+  type GridState,
   type GridToolbarProps,
   useGridApiRef,
 } from "@mui/x-data-grid-premium";
@@ -50,16 +51,20 @@ const SummaryFinancialAnalysisPage: React.FC = () => {
   );
   const [totalRows, setTotalRows] = useState(0);
 
+  const [initialGridState] = useState(() => {
+    const savedState = localStorage.getItem("financialAnalysisGridState");
+    return savedState
+      ? JSON.parse(savedState)
+      : {
+          pinnedColumns: {
+            left: ["cycleText", "farmName"],
+          },
+        };
+  });
+
   const apiRef = useGridApiRef();
   const [savedViews, setSavedViews] = useState<ColumnViewRow[]>([]);
   const [selectedView, setSelectedView] = useState<string>("");
-
-  const [visibilityModel, setVisibilityModel] = useState(() => {
-    const saved = localStorage.getItem(
-      "columnVisibilityModelFinancialAnalysis"
-    );
-    return saved ? JSON.parse(saved) : {};
-  });
 
   const uniqueCycles = useMemo(() => {
     if (!dictionary) return [];
@@ -90,19 +95,17 @@ const SummaryFinancialAnalysisPage: React.FC = () => {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        await Promise.all([
-          handleApiResponse(
-            () => SummaryService.getDictionaries(),
-            (data) => setDictionary(data.responseData),
-            undefined,
-            "Błąd podczas pobierania słowników filtrów"
-          ),
-          loadViews(),
-        ]);
+        await handleApiResponse(
+          () => SummaryService.getDictionaries(),
+          (data) => setDictionary(data.responseData),
+          undefined,
+          "Błąd podczas pobierania słowników filtrów"
+        );
       } catch {
         toast.error("Błąd podczas pobierania danych inicjalizujących.");
       }
     };
+    loadViews();
     fetchInitialData();
   }, []);
 
@@ -211,19 +214,21 @@ const SummaryFinancialAnalysisPage: React.FC = () => {
           loading={loading}
           rows={analysisData}
           columns={columns}
-          columnVisibilityModel={visibilityModel}
-          onColumnVisibilityModelChange={(model) => {
-            setVisibilityModel(model);
-            localStorage.setItem(
-              "columnVisibilityModelFinancialAnalysis",
-              JSON.stringify(model)
-            );
-          }}
           scrollbarSize={17}
-          initialState={{
-            pinnedColumns: {
-              left: ["cycleText", "farmName"],
-            },
+          initialState={initialGridState}
+          onStateChange={(newState: GridState) => {
+            const stateToSave = {
+              columns: newState.columns,
+              sorting: newState.sorting,
+              filter: newState.filter,
+              aggregation: newState.aggregation,
+              pinnedColumns: newState.pinnedColumns,
+              rowGrouping: newState.rowGrouping,
+            };
+            localStorage.setItem(
+              "financialAnalysisGridState",
+              JSON.stringify(stateToSave)
+            );
           }}
           paginationMode="server"
           pagination

@@ -13,8 +13,9 @@ import { SummaryService } from "../../../services/summary-service";
 import {
   DataGridPremium,
   GRID_AGGREGATION_ROOT_FOOTER_ROW_ID,
-  type GridToolbarProps,
   useGridApiRef,
+  type GridState,
+  type GridToolbarProps,
 } from "@mui/x-data-grid-premium";
 import { getProductionAnalysisColumns } from "./production-analysis-columns";
 import FiltersForm from "../../../components/filters/filters-form";
@@ -22,8 +23,8 @@ import { getSummaryAnalysisFiltersConfig } from "../filter-config.summary-analys
 import NoRowsOverlay from "../../../components/datagrid/custom-norows";
 import CustomToolbarAnalysis from "../../../components/datagrid/custom-toolbar-analysis";
 import {
-  ColumnViewType,
   ColumnsViewsService,
+  ColumnViewType,
   type ColumnViewRow,
 } from "../../../services/columns-views-service";
 
@@ -54,11 +55,15 @@ const SummaryProductionAnalysisPage: React.FC = () => {
   const [savedViews, setSavedViews] = useState<ColumnViewRow[]>([]);
   const [selectedView, setSelectedView] = useState<string>("");
 
-  const [visibilityModel, setVisibilityModel] = useState(() => {
-    const saved = localStorage.getItem(
-      "columnVisibilityModelProductionAnalysis"
-    );
-    return saved ? JSON.parse(saved) : {};
+  const [initialGridState] = useState(() => {
+    const savedState = localStorage.getItem("productionAnalysisGridState");
+    return savedState
+      ? JSON.parse(savedState)
+      : {
+          pinnedColumns: {
+            left: ["cycleText", "farmName", "henhouseName", "hatcheryName"],
+          },
+        };
   });
 
   const uniqueCycles = useMemo(() => {
@@ -90,19 +95,17 @@ const SummaryProductionAnalysisPage: React.FC = () => {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        await Promise.all([
-          handleApiResponse(
-            () => SummaryService.getDictionaries(),
-            (data) => setDictionary(data.responseData),
-            undefined,
-            "Błąd podczas pobierania słowników filtrów"
-          ),
-          loadViews(),
-        ]);
+        await handleApiResponse(
+          () => SummaryService.getDictionaries(),
+          (data) => setDictionary(data.responseData),
+          undefined,
+          "Błąd podczas pobierania słowników filtrów"
+        );
       } catch {
         toast.error("Błąd podczas pobierania danych inicjalizujących.");
       }
     };
+    loadViews();
     fetchInitialData();
   }, []);
 
@@ -211,19 +214,21 @@ const SummaryProductionAnalysisPage: React.FC = () => {
           loading={loading}
           rows={analysisData}
           columns={columns}
-          columnVisibilityModel={visibilityModel}
-          onColumnVisibilityModelChange={(model) => {
-            setVisibilityModel(model);
-            localStorage.setItem(
-              "columnVisibilityModelProductionAnalysis",
-              JSON.stringify(model)
-            );
-          }}
           scrollbarSize={17}
-          initialState={{
-            pinnedColumns: {
-              left: ["cycleText", "farmName", "henhouseName", "hatcheryName"],
-            },
+          initialState={initialGridState}
+          onStateChange={(newState: GridState) => {
+            const stateToSave = {
+              columns: newState.columns,
+              sorting: newState.sorting,
+              filter: newState.filter,
+              aggregation: newState.aggregation,
+              pinnedColumns: newState.pinnedColumns,
+              rowGrouping: newState.rowGrouping,
+            };
+            localStorage.setItem(
+              "productionAnalysisGridState",
+              JSON.stringify(stateToSave)
+            );
           }}
           paginationMode="server"
           pagination
