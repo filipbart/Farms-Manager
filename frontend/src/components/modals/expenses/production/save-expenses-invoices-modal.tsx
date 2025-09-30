@@ -455,15 +455,10 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
                       label="Netto [zł]"
                       type="number"
                       value={watch("subTotal") ?? ""}
-                      slotProps={{ htmlInput: { step: "0.01", min: 0 } }}
+                      slotProps={{ htmlInput: { step: "0.01" } }}
                       {...register("subTotal", {
                         required: "Wartość netto jest wymagana",
                         valueAsNumber: true,
-                        validate: (value) =>
-                          value === undefined ||
-                          value === undefined ||
-                          value >= 0 ||
-                          "Wartość netto nie może być ujemna",
                       })}
                       error={!!errors.subTotal}
                       helperText={errors.subTotal?.message}
@@ -475,14 +470,10 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
                       label="VAT [zł]"
                       type="number"
                       value={watch("vatAmount") ?? ""}
-                      slotProps={{ htmlInput: { step: "0.01", min: 0 } }}
+                      slotProps={{ htmlInput: { step: "0.01" } }}
                       {...register("vatAmount", {
                         required: "VAT jest wymagany",
                         valueAsNumber: true,
-                        validate: (value) =>
-                          value === undefined ||
-                          value >= 0 ||
-                          "Wartość VAT nie może być ujemna",
                       })}
                       error={!!errors.vatAmount}
                       helperText={errors.vatAmount?.message}
@@ -494,14 +485,10 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
                       label="Brutto [zł]"
                       type="number"
                       value={watch("invoiceTotal") ?? ""}
-                      slotProps={{ htmlInput: { step: "0.01", min: 0 } }}
+                      slotProps={{ htmlInput: { step: "0.01" } }}
                       {...register("invoiceTotal", {
                         required: "Wartość brutto jest wymagana",
                         valueAsNumber: true,
-                        validate: (value) =>
-                          value === undefined ||
-                          value >= 0 ||
-                          "Wartość brutto nie może być ujemna",
                       })}
                       error={!!errors.invoiceTotal}
                       helperText={errors.invoiceTotal?.message}

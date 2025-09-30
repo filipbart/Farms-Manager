@@ -320,12 +320,10 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
               <TextField
                 label="Netto [zł]"
                 type="number"
-                slotProps={{ htmlInput: { step: "0.01", min: 0 } }}
+                slotProps={{ htmlInput: { step: "0.01" } }}
                 {...register("subTotal", {
                   required: "Wartość netto jest wymagana",
                   valueAsNumber: true,
-                  validate: (value) =>
-                    value >= 0 || "Wartość netto nie może być ujemna",
                 })}
                 error={!!errors.subTotal}
                 helperText={errors.subTotal?.message}
@@ -336,12 +334,10 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
               <TextField
                 label="VAT [zł]"
                 type="number"
-                slotProps={{ htmlInput: { step: "0.01", min: 0 } }}
+                slotProps={{ htmlInput: { step: "0.01" } }}
                 {...register("vatAmount", {
                   required: "VAT jest wymagany",
                   valueAsNumber: true,
-                  validate: (value) =>
-                    value >= 0 || "Wartość VAT nie może być ujemna",
                 })}
                 error={!!errors.vatAmount}
                 helperText={errors.vatAmount?.message}
@@ -352,12 +348,10 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
               <TextField
                 label="Brutto [zł]"
                 type="number"
-                slotProps={{ htmlInput: { step: "0.01", min: 0 } }}
+                slotProps={{ htmlInput: { step: "0.01" } }}
                 {...register("invoiceTotal", {
                   required: "Wartość brutto jest wymagana",
                   valueAsNumber: true,
-                  validate: (value) =>
-                    value >= 0 || "Wartość brutto nie może być ujemna",
                 })}
                 error={!!errors.invoiceTotal}
                 helperText={errors.invoiceTotal?.message}

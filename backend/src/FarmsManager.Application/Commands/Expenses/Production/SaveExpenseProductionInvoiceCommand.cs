@@ -113,9 +113,6 @@ public class SaveExpenseProductionInvoiceCommandValidator : AbstractValidator<Sa
         RuleFor(x => x.Data.ExpenseTypeId).NotEmpty();
         RuleFor(x => x.Data.InvoiceNumber).NotEmpty();
         RuleFor(x => x.Data.InvoiceDate).NotEmpty();
-        RuleFor(x => x.Data.InvoiceTotal).GreaterThanOrEqualTo(0);
-        RuleFor(x => x.Data.SubTotal).GreaterThanOrEqualTo(0);
-        RuleFor(x => x.Data.VatAmount).GreaterThanOrEqualTo(0);
         RuleFor(t => t.Data.Comment).MaximumLength(500);
     }
 }

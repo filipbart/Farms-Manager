@@ -92,9 +92,6 @@ public class AddExpenseProductionCommandValidator : AbstractValidator<AddExpense
         RuleFor(t => t.Data.CycleId).NotEmpty();
         RuleFor(t => t.Data.ExpenseContractorId).NotEmpty();
         RuleFor(t => t.Data.InvoiceNumber).NotEmpty();
-        RuleFor(t => t.Data.InvoiceTotal).GreaterThanOrEqualTo(0);
-        RuleFor(t => t.Data.SubTotal).GreaterThanOrEqualTo(0);
-        RuleFor(t => t.Data.VatAmount).GreaterThanOrEqualTo(0);
         RuleFor(t => t.Data.Comment).MaximumLength(500);
     }
 }
