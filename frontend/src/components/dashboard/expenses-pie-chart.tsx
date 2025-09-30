@@ -7,7 +7,7 @@ interface ExpensesPieChartProps {
 }
 
 export function ExpensesPieChart({ data }: ExpensesPieChartProps) {
-  const hasData = data && data.length > 0;
+  const hasData = !!(data && data.length);
 
   return (
     <Paper
@@ -27,21 +27,15 @@ export function ExpensesPieChart({ data }: ExpensesPieChartProps) {
               outerRadius: 100,
               paddingAngle: 2,
               cornerRadius: 5,
-              highlightScope: { fade: "global", highlight: "item" },
-              faded: { innerRadius: 30, additionalRadius: -10, color: "gray" },
             },
           ]}
           slotProps={{
-            tooltip: {
-              trigger: "item",
-            },
+            tooltip: { trigger: "item" },
             legend: {
               direction: "vertical",
               position: { vertical: "middle", horizontal: "end" },
               sx: {
-                "& .MuiChartsLegend-label": {
-                  fontSize: "0.9rem",
-                },
+                "& .MuiChartsLegend-label": { fontSize: "0.9rem" },
               },
             },
           }}
