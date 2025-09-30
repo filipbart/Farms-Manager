@@ -75,21 +75,12 @@ public class
 
         var farmIds = farms.Select(f => f.Id).ToList();
 
-        // 2. Obsługa filtrów cyklu - wykres reaguje tylko na zmianę cyklu
-        if (request.Filters.CycleDict == null)
+        List<Guid> cycleIds = null;
+        if (request.Filters.CycleDict != null)
         {
-            return BaseResponse.CreateResponse(new DashboardExpensesPieChart());
+            cycleIds = await GetCycleIdsForFilter(request.Filters.CycleDict, farms, ct);
+            if (cycleIds.Count == 0) return BaseResponse.CreateResponse(new DashboardExpensesPieChart());
         }
-
-        var cycleIds = await GetCycleIdsForFilter(request.Filters.CycleDict, farms, ct);
-        if (cycleIds.Count == 0)
-        {
-            return BaseResponse.CreateResponse(new DashboardExpensesPieChart());
-        }
-
-
-        // 3. Określ strategię pobierania kosztów gazu
-        var useGasConsumptions = ShouldUseGasConsumptions(request.Filters.DateCategory, cycleIds);
 
         // 4. Pobierz dane o kosztach
         var expenseData = await FetchExpenseDataAsync(
@@ -97,15 +88,13 @@ public class
             cycleIds,
             request.Filters.DateSince,
             request.Filters.DateTo,
-            useGasConsumptions,
             ct);
 
         // 5. Zbuduj wykres
         var expensesPieChart = BuildExpensesPieChart(
             expenseData.FeedInvoices,
             expenseData.Expenses,
-            expenseData.GasCost,
-            useGasConsumptions);
+            expenseData.GasCost);
 
         return BaseResponse.CreateResponse(expensesPieChart);
     }
@@ -140,19 +129,11 @@ public class
         return cycleIds;
     }
 
-    private static bool ShouldUseGasConsumptions(string dateCategory, List<Guid> cycleIds)
-    {
-        // Używamy GasConsumptions tylko gdy filtrujemy po cyklach
-        return string.Equals(dateCategory, "cycle", StringComparison.OrdinalIgnoreCase)
-               && cycleIds?.Any() == true;
-    }
-
     private async Task<ExpenseData> FetchExpenseDataAsync(
         List<Guid> farmIds,
         List<Guid> cycleIds,
         DateOnly? dateSince,
         DateOnly? dateTo,
-        bool useGasConsumptions,
         CancellationToken ct)
     {
         // Wykonuj zapytania sekwencyjnie, aby uniknąć problemów ze współbieżnością DbContext
@@ -162,26 +143,9 @@ public class
         var expenses = await _expenseProductionRepository.ListAsync(
             new GetProductionExpensesForDashboardSpec(farmIds, cycleIds, dateSince, dateTo), ct);
 
-        decimal gasCost;
-        if (useGasConsumptions)
-        {
-            // Użyj specyfikacji z filtrami cyklu jeśli są dostępne
-            var gasConsumptions = cycleIds?.Any() == true
-                ? await _gasConsumptionRepository.ListAsync(
-                    new GasConsumptionsForDashboardSpec(farmIds, cycleIds), ct)
-                : await _gasConsumptionRepository.ListAsync(
-                    new GasConsumptionsForFarmsSpec(farmIds), ct);
-
-            gasCost = gasConsumptions.Sum(g => g.Cost);
-        }
-        else
-        {
-            // Jeśli nie używamy GasConsumptions, wyciągnij koszty gazu z expenses
-            gasCost = expenses
-                .Where(e => string.Equals(e.ExpenseContractor?.ExpenseType?.Name, ExpenseTypeGas,
-                    StringComparison.OrdinalIgnoreCase))
-                .Sum(e => e.SubTotal);
-        }
+        var gasConsumptions = await _gasConsumptionRepository.ListAsync(
+            new GasConsumptionsForDashboardSpec(farmIds, cycleIds), ct);
+        var gasCost = gasConsumptions.Sum(g => g.Cost);
 
         return new ExpenseData
         {
@@ -194,14 +158,13 @@ public class
     private static DashboardExpensesPieChart BuildExpensesPieChart(
         IReadOnlyList<FeedInvoiceEntity> allFeedInvoices,
         IReadOnlyList<ExpenseProductionEntity> allExpenses,
-        decimal gasCost,
-        bool gasFromConsumptions)
+        decimal gasCost)
     {
         // Oblicz koszty paszy
         var feedCost = allFeedInvoices.Sum(f => f.SubTotal);
 
         // Kategoryzuj wydatki w jednej iteracji
-        var expensesByCategory = CategorizeExpenses(allExpenses, gasFromConsumptions);
+        var expensesByCategory = CategorizeExpenses(allExpenses);
 
         // Oblicz sumę całkowitą
         var totalExpenses = feedCost + gasCost + expensesByCategory.ChicksCost +
@@ -227,9 +190,7 @@ public class
         };
     }
 
-    private static ExpenseCategories CategorizeExpenses(
-        IReadOnlyList<ExpenseProductionEntity> expenses,
-        bool excludeGas)
+    private static ExpenseCategories CategorizeExpenses(IReadOnlyList<ExpenseProductionEntity> expenses)
     {
         var result = new ExpenseCategories();
 
@@ -238,7 +199,7 @@ public class
             var expenseType = expense.ExpenseContractor?.ExpenseType?.Name ?? string.Empty;
             var amount = expense.SubTotal;
 
-            if (excludeGas && string.Equals(expenseType, ExpenseTypeGas, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(expenseType, ExpenseTypeGas, StringComparison.OrdinalIgnoreCase))
             {
                 // Pomijamy gaz jeśli jest liczony z GasConsumptions
             }
@@ -250,7 +211,7 @@ public class
             {
                 result.VetCareCost += amount;
             }
-            else if (!excludeGas || !string.Equals(expenseType, ExpenseTypeGas, StringComparison.OrdinalIgnoreCase))
+            else if (!string.Equals(expenseType, ExpenseTypeGas, StringComparison.OrdinalIgnoreCase))
             {
                 result.OtherCosts += amount;
             }

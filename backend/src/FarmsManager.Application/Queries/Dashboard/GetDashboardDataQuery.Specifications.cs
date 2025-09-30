@@ -14,7 +14,8 @@ namespace FarmsManager.Application.Queries.Dashboard;
 
 public sealed class GetSalesForDashboardSpec : BaseSpecification<SaleEntity>
 {
-    public GetSalesForDashboardSpec(List<Guid> farmIds = null, List<Guid> cycles = null, DateOnly? dateSince = null,
+    public GetSalesForDashboardSpec(IReadOnlyCollection<Guid>? farmIds = null, IReadOnlyCollection<Guid>? cycles = null,
+        DateOnly? dateSince = null,
         DateOnly? dateTo = null)
     {
         EnsureExists();
@@ -22,12 +23,12 @@ public sealed class GetSalesForDashboardSpec : BaseSpecification<SaleEntity>
         Query.Include(t => t.Farm);
         Query.Include(t => t.Cycle);
 
-        if (farmIds is not null && farmIds.Count != 0)
+        if (farmIds?.Any() == true)
         {
             Query.Where(t => farmIds.Contains(t.FarmId));
         }
 
-        if (cycles is not null && cycles.Count != 0)
+        if (cycles?.Any() == true)
         {
             Query.Where(t => cycles.Contains(t.CycleId));
         }
@@ -46,7 +47,8 @@ public sealed class GetSalesForDashboardSpec : BaseSpecification<SaleEntity>
 
 public sealed class GetFeedsInvoicesForDashboardSpec : BaseSpecification<FeedInvoiceEntity>
 {
-    public GetFeedsInvoicesForDashboardSpec(List<Guid> farmIds = null, List<Guid> cycles = null,
+    public GetFeedsInvoicesForDashboardSpec(IReadOnlyCollection<Guid>? farmIds = null,
+        IReadOnlyCollection<Guid>? cycles = null,
         DateOnly? dateSince = null,
         DateOnly? dateTo = null)
     {
@@ -56,12 +58,12 @@ public sealed class GetFeedsInvoicesForDashboardSpec : BaseSpecification<FeedInv
         Query.Include(t => t.Farm);
         Query.Include(t => t.Cycle);
 
-        if (farmIds is not null && farmIds.Count != 0)
+        if (farmIds?.Any() == true)
         {
             Query.Where(t => farmIds.Contains(t.FarmId));
         }
 
-        if (cycles is not null && cycles.Count != 0)
+        if (cycles?.Any() == true)
         {
             Query.Where(t => cycles.Contains(t.CycleId));
         }
@@ -80,7 +82,8 @@ public sealed class GetFeedsInvoicesForDashboardSpec : BaseSpecification<FeedInv
 
 public sealed class GetProductionExpensesForDashboardSpec : BaseSpecification<ExpenseProductionEntity>
 {
-    public GetProductionExpensesForDashboardSpec(List<Guid> farmIds = null, List<Guid> cycles = null,
+    public GetProductionExpensesForDashboardSpec(IReadOnlyCollection<Guid>? farmIds = null,
+        IReadOnlyCollection<Guid>? cycles = null,
         DateOnly? dateSince = null, DateOnly? dateTo = null, bool? isGas = null)
     {
         EnsureExists();
@@ -92,12 +95,12 @@ public sealed class GetProductionExpensesForDashboardSpec : BaseSpecification<Ex
         Query.Include(t => t.ExpenseContractor)
             .ThenInclude(ec => ec.ExpenseType);
 
-        if (farmIds is not null && farmIds.Count != 0)
+        if (farmIds?.Any() == true)
         {
             Query.Where(t => farmIds.Contains(t.FarmId));
         }
 
-        if (cycles is not null && cycles.Count != 0)
+        if (cycles?.Any() == true)
         {
             Query.Where(t => cycles.Contains(t.CycleId));
         }
@@ -152,7 +155,11 @@ public sealed class GasConsumptionsForDashboardSpec : BaseSpecification<GasConsu
         Query.Where(gc => gc.Status == GasConsumptionStatus.Active && gc.CorrectionForId == null);
         Query.Where(t => t.CancelledAtUtc.HasValue == false);
         Query.Where(t => farmIds.Contains(t.FarmId));
-        Query.Where(t => cycles.Contains(t.CycleId));
+
+        if (cycles?.Any() == true)
+        {
+            Query.Where(t => cycles.Contains(t.CycleId));
+        }
     }
 }
 
@@ -202,7 +209,7 @@ public sealed class InsertionsForFarmsSpec : BaseSpecification<InsertionEntity>
 
         Query.Where(t => farmIds.Contains(t.FarmId));
 
-        if (cycleIds is not null && cycleIds.Any())
+        if (cycleIds is not null && cycleIds.Count != 0)
         {
             Query.Where(t => cycleIds.Contains(t.CycleId));
         }
@@ -221,7 +228,7 @@ public class ProductionDataFailuresForFarmsSpec : BaseSpecification<ProductionDa
 
         Query.Where(f => farmIds.Contains(f.FarmId));
 
-        if (cycleIds is not null && cycleIds.Any())
+        if (cycleIds is not null && cycleIds.Count != 0)
         {
             Query.Where(t => cycleIds.Contains(t.CycleId));
         }
