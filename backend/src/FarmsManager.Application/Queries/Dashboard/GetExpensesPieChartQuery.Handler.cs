@@ -86,8 +86,8 @@ public class
         var expenseData = await FetchExpenseDataAsync(
             farmIds,
             cycleIds,
-            request.Filters.DateSince,
-            request.Filters.DateTo,
+            null,
+            null,
             ct);
 
         // 5. Zbuduj wykres
