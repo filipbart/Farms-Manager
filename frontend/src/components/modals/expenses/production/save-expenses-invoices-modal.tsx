@@ -453,12 +453,15 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
                   <Grid size={{ xs: 12, sm: 4 }}>
                     <TextField
                       label="Netto [zł]"
-                      type="number"
-                      value={watch("subTotal") ?? ""}
+                      type="text"
+                      inputMode="decimal"
                       slotProps={{ htmlInput: { step: "0.01" } }}
                       {...register("subTotal", {
                         required: "Wartość netto jest wymagana",
                         valueAsNumber: true,
+                        validate: (value) =>
+                          !Number.isNaN(parseFloat(String(value))) ||
+                          "Wartość musi być liczbą",
                       })}
                       error={!!errors.subTotal}
                       helperText={errors.subTotal?.message}
@@ -468,12 +471,15 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
                   <Grid size={{ xs: 12, sm: 4 }}>
                     <TextField
                       label="VAT [zł]"
-                      type="number"
-                      value={watch("vatAmount") ?? ""}
+                      type="text"
+                      inputMode="decimal"
                       slotProps={{ htmlInput: { step: "0.01" } }}
                       {...register("vatAmount", {
                         required: "VAT jest wymagany",
                         valueAsNumber: true,
+                        validate: (value) =>
+                          !Number.isNaN(parseFloat(String(value))) ||
+                          "Wartość musi być liczbą",
                       })}
                       error={!!errors.vatAmount}
                       helperText={errors.vatAmount?.message}
@@ -483,12 +489,15 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
                   <Grid size={{ xs: 12, sm: 4 }}>
                     <TextField
                       label="Brutto [zł]"
-                      type="number"
-                      value={watch("invoiceTotal") ?? ""}
+                      type="text"
+                      inputMode="decimal"
                       slotProps={{ htmlInput: { step: "0.01" } }}
                       {...register("invoiceTotal", {
                         required: "Wartość brutto jest wymagana",
                         valueAsNumber: true,
+                        validate: (value) =>
+                          !Number.isNaN(parseFloat(String(value))) ||
+                          "Wartość musi być liczbą",
                       })}
                       error={!!errors.invoiceTotal}
                       helperText={errors.invoiceTotal?.message}

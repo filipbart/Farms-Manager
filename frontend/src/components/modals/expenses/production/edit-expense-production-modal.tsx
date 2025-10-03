@@ -319,10 +319,14 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
             <Grid size={{ xs: 12, sm: 4 }}>
               <TextField
                 label="Netto [zł]"
-                type="number"
+                type="text"
+                inputMode="decimal"
                 slotProps={{ htmlInput: { step: "0.01" } }}
                 {...register("subTotal", {
                   required: "Wartość netto jest wymagana",
+                  validate: (value) =>
+                    !Number.isNaN(parseFloat(String(value))) ||
+                    "Wartość musi być liczbą",
                   valueAsNumber: true,
                 })}
                 error={!!errors.subTotal}
@@ -333,10 +337,14 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
             <Grid size={{ xs: 12, sm: 4 }}>
               <TextField
                 label="VAT [zł]"
-                type="number"
+                type="text"
+                inputMode="decimal"
                 slotProps={{ htmlInput: { step: "0.01" } }}
                 {...register("vatAmount", {
                   required: "VAT jest wymagany",
+                  validate: (value) =>
+                    !Number.isNaN(parseFloat(String(value))) ||
+                    "Wartość musi być liczbą",
                   valueAsNumber: true,
                 })}
                 error={!!errors.vatAmount}
@@ -347,10 +355,14 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
             <Grid size={{ xs: 12, sm: 4 }}>
               <TextField
                 label="Brutto [zł]"
-                type="number"
+                type="text"
+                inputMode="decimal"
                 slotProps={{ htmlInput: { step: "0.01" } }}
                 {...register("invoiceTotal", {
                   required: "Wartość brutto jest wymagana",
+                  validate: (value) =>
+                    !Number.isNaN(parseFloat(String(value))) ||
+                    "Wartość musi być liczbą",
                   valueAsNumber: true,
                 })}
                 error={!!errors.invoiceTotal}
