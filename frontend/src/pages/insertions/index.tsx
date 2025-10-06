@@ -223,7 +223,8 @@ const InsertionsPage: React.FC = () => {
         dispatch,
         filters,
       }),
-    [dispatch, filters]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
   );
 
   return (
