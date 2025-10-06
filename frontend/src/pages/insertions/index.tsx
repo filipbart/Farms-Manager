@@ -34,12 +34,12 @@ import {
   DataGridPremium,
   GRID_AGGREGATION_ROOT_FOOTER_ROW_ID,
   type GridRowSelectionModel,
+  type GridState,
 } from "@mui/x-data-grid-premium";
 import LoadingButton from "../../components/common/loading-button";
 import {
   getSortOptionsFromGridModel,
   initializeFiltersFromLocalStorage,
-  usePersistentGridState,
 } from "../../utils/grid-state-helper";
 
 const InsertionsPage: React.FC = () => {
@@ -74,10 +74,16 @@ const InsertionsPage: React.FC = () => {
   const [isIrzModalOpen, setIsIrzModalOpen] = useState(false);
   const [irzComment, setIrzComment] = useState("");
 
-  const { initialGridState, handleStateChange } = usePersistentGridState(
-    "insertions",
-    { columns: { columnVisibilityModel: { dateCreatedUtc: false } } }
-  );
+  const [initialGridState] = useState(() => {
+    const savedState = localStorage.getItem("insertionsGridState");
+    return savedState
+      ? JSON.parse(savedState)
+      : {
+          columns: {
+            columnVisibilityModel: { dateCreatedUtc: false },
+          },
+        };
+  });
 
   const uniqueCycles = useMemo(() => {
     if (!dictionary) return [];
@@ -281,7 +287,20 @@ const InsertionsPage: React.FC = () => {
           rows={insertions}
           columns={columns}
           initialState={initialGridState}
-          onStateChange={handleStateChange}
+          onStateChange={(newState: GridState) => {
+            const stateToSave = {
+              columns: newState.columns,
+              sorting: newState.sorting,
+              filter: newState.filter,
+              aggregation: newState.aggregation,
+              pinnedColumns: newState.pinnedColumns,
+              rowGrouping: newState.rowGrouping,
+            };
+            localStorage.setItem(
+              "insertionsGridState",
+              JSON.stringify(stateToSave)
+            );
+          }}
           scrollbarSize={17}
           paginationMode="server"
           pagination

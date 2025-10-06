@@ -1,38 +1,9 @@
-import type { GridSortModel, GridState } from "@mui/x-data-grid-premium";
-import { useCallback, useState } from "react";
+import type { GridSortModel } from "@mui/x-data-grid-premium";
 
 export interface SortOptions<T> {
   orderBy?: T;
   isDescending?: boolean;
 }
-
-export const usePersistentGridState = (
-  gridId: string,
-  defaultState: object
-) => {
-  const stateKey = `${gridId}GridState`;
-
-  const [initialGridState] = useState(() => {
-    const savedState = localStorage.getItem(stateKey);
-    if (savedState) {
-      const parsedState = JSON.parse(savedState);
-
-      return parsedState;
-    }
-    return defaultState;
-  });
-
-  const handleStateChange = useCallback(
-    (newState: GridState) => {
-      const currentState = JSON.parse(localStorage.getItem(stateKey) || "{}");
-      const mergedState = { ...currentState, ...newState };
-      localStorage.setItem(stateKey, JSON.stringify(mergedState));
-    },
-    [stateKey]
-  );
-
-  return { initialGridState, handleStateChange };
-};
 
 /**
  * Konwertuje model sortowania DataGrid na opcje sortowania specyficzne dla aplikacji.
