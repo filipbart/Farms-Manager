@@ -458,10 +458,14 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
                       slotProps={{ htmlInput: { step: "0.01" } }}
                       {...register("subTotal", {
                         required: "Wartość netto jest wymagana",
-                        valueAsNumber: true,
                         validate: (value) =>
-                          !Number.isNaN(parseFloat(String(value))) ||
-                          "Wartość musi być liczbą",
+                          !Number.isNaN(
+                            parseFloat(String(value).replace(",", "."))
+                          ) || "Wartość musi być liczbą",
+                        setValueAs: (v) =>
+                          v === ""
+                            ? null
+                            : parseFloat(String(v).replace(",", ".")),
                       })}
                       error={!!errors.subTotal}
                       helperText={errors.subTotal?.message}
@@ -476,10 +480,14 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
                       slotProps={{ htmlInput: { step: "0.01" } }}
                       {...register("vatAmount", {
                         required: "VAT jest wymagany",
-                        valueAsNumber: true,
                         validate: (value) =>
-                          !Number.isNaN(parseFloat(String(value))) ||
-                          "Wartość musi być liczbą",
+                          !Number.isNaN(
+                            parseFloat(String(value).replace(",", "."))
+                          ) || "Wartość musi być liczbą",
+                        setValueAs: (v) =>
+                          v === ""
+                            ? null
+                            : parseFloat(String(v).replace(",", ".")),
                       })}
                       error={!!errors.vatAmount}
                       helperText={errors.vatAmount?.message}
@@ -494,10 +502,14 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
                       slotProps={{ htmlInput: { step: "0.01" } }}
                       {...register("invoiceTotal", {
                         required: "Wartość brutto jest wymagana",
-                        valueAsNumber: true,
                         validate: (value) =>
-                          !Number.isNaN(parseFloat(String(value))) ||
-                          "Wartość musi być liczbą",
+                          !Number.isNaN(
+                            parseFloat(String(value).replace(",", "."))
+                          ) || "Wartość musi być liczbą",
+                        setValueAs: (v) =>
+                          v === ""
+                            ? null
+                            : parseFloat(String(v).replace(",", ".")),
                       })}
                       error={!!errors.invoiceTotal}
                       helperText={errors.invoiceTotal?.message}

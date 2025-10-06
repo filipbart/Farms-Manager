@@ -340,9 +340,13 @@ const AddExpenseProductionModal: React.FC<AddExpenseProductionModalProps> = ({
                     {...register("subTotal", {
                       required: "Wartość netto jest wymagana",
                       validate: (value) =>
-                        !Number.isNaN(parseFloat(String(value))) ||
-                        "Wartość musi być liczbą",
-                      valueAsNumber: true,
+                        !Number.isNaN(
+                          parseFloat(String(value).replace(",", "."))
+                        ) || "Wartość musi być liczbą",
+                      setValueAs: (v) =>
+                        v === ""
+                          ? null
+                          : parseFloat(String(v).replace(",", ".")),
                     })}
                     error={!!errors.subTotal}
                     helperText={errors.subTotal?.message}
@@ -359,9 +363,13 @@ const AddExpenseProductionModal: React.FC<AddExpenseProductionModalProps> = ({
                     {...register("vatAmount", {
                       required: "VAT jest wymagany",
                       validate: (value) =>
-                        !Number.isNaN(parseFloat(String(value))) ||
-                        "Wartość musi być liczbą",
-                      valueAsNumber: true,
+                        !Number.isNaN(
+                          parseFloat(String(value).replace(",", "."))
+                        ) || "Wartość musi być liczbą",
+                      setValueAs: (v) =>
+                        v === ""
+                          ? null
+                          : parseFloat(String(v).replace(",", ".")),
                     })}
                     error={!!errors.vatAmount}
                     helperText={errors.vatAmount?.message}
@@ -378,9 +386,13 @@ const AddExpenseProductionModal: React.FC<AddExpenseProductionModalProps> = ({
                     {...register("invoiceTotal", {
                       required: "Wartość brutto jest wymagana",
                       validate: (value) =>
-                        !Number.isNaN(parseFloat(String(value))) ||
-                        "Wartość musi być liczbą",
-                      valueAsNumber: true,
+                        !Number.isNaN(
+                          parseFloat(String(value).replace(",", "."))
+                        ) || "Wartość musi być liczbą",
+                      setValueAs: (v) =>
+                        v === ""
+                          ? null
+                          : parseFloat(String(v).replace(",", ".")),
                     })}
                     error={!!errors.invoiceTotal}
                     helperText={errors.invoiceTotal?.message}
