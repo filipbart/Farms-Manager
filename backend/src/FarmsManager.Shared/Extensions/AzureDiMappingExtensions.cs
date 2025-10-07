@@ -87,7 +87,7 @@ public static class AzureDiMappingExtensions
         }
         else if (fieldValue.FieldType == DocumentFieldType.Currency)
         {
-            var doubleValue = fieldValue.ValueCurrency.Amount;
+            var doubleValue = fieldValue.ValueCurrency?.Amount;
 
             if (propType == typeof(decimal) || propType == typeof(decimal?))
             {
