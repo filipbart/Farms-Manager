@@ -28,6 +28,12 @@ public class S3Service : IS3Service
     {
         _s3Client = s3Client;
         _bucketName = configuration.GetValue<string>("S3:BucketName");
+
+        if (string.IsNullOrEmpty(_bucketName))
+        {
+            throw new InvalidOperationException("S3 bucket name is not configured. Please check 'S3:BucketName' in your configuration.");
+        }
+
         _protocol = Enum.TryParse<Protocol>(configuration.GetValue<string>("S3:Protocol"), out var protocol)
             ? protocol
             : Protocol.HTTP;
