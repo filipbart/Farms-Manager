@@ -1,15 +1,53 @@
 import type { CycleDictModel } from "../../common/dictionaries";
 import type { OrderedPaginationParams } from "../../common/pagination-params";
 
-export const initialFilters: FeedsPricesFilterPaginationModel = {
-  farmIds: [],
-  feedNames: [],
-  cycles: [],
-  dateSince: "",
-  dateTo: "",
-  page: 0,
-  pageSize: 10,
+const LOCAL_STORAGE_KEY = "feedsPricesFilters";
+
+const saveFiltersToLocalStorage = (filters: FeedsPricesFilterPaginationModel) => {
+  try {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(filters));
+  } catch (error) {
+    console.error("Failed to save filters to localStorage", error);
+  }
 };
+
+export const loadFiltersFromLocalStorage =
+  (): Partial<FeedsPricesFilterPaginationModel> | null => {
+    try {
+      const savedFilters = localStorage.getItem(LOCAL_STORAGE_KEY);
+      return savedFilters ? JSON.parse(savedFilters) : null;
+    } catch (error) {
+      console.error("Failed to load filters from localStorage", error);
+      return null;
+    }
+  };
+
+const getInitialFilters = (): FeedsPricesFilterPaginationModel => {
+  const defaultFilters: FeedsPricesFilterPaginationModel = {
+    farmIds: [],
+    feedNames: [],
+    cycles: [],
+    dateSince: "",
+    dateTo: "",
+    page: 0,
+    pageSize: 10,
+  };
+
+  const savedFilters = loadFiltersFromLocalStorage();
+
+  if (savedFilters) {
+    return {
+      ...defaultFilters,
+      ...savedFilters,
+
+      page: 0,
+    };
+  }
+
+  return defaultFilters;
+};
+
+export const initialFilters = getInitialFilters();
 
 export function filterReducer(
   state: FeedsPricesFilterPaginationModel,
@@ -20,14 +58,21 @@ export function filterReducer(
         payload: Partial<FeedsPricesFilterPaginationModel>;
       }
 ): FeedsPricesFilterPaginationModel {
+  let newState: FeedsPricesFilterPaginationModel;
+
   switch (action.type) {
     case "set":
-      return { ...state, [action.key]: action.value };
+      newState = { ...state, [action.key]: action.value };
+      break;
     case "setMultiple":
-      return { ...state, ...action.payload };
+      newState = { ...state, ...action.payload };
+      break;
     default:
       return state;
   }
+
+  saveFiltersToLocalStorage(newState);
+  return newState;
 }
 
 export enum FeedsPricesOrderType {

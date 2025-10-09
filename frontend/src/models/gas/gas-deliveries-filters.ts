@@ -1,13 +1,51 @@
 import type { OrderedPaginationParams } from "../common/pagination-params";
 
-export const initialFilters: GasDeliveriesFilterPaginationModel = {
-  farmIds: [],
-  contractorIds: [],
-  dateSince: "",
-  dateTo: "",
-  page: 0,
-  pageSize: 10,
+const LOCAL_STORAGE_KEY = "gasDeliveriesFilters";
+
+const saveFiltersToLocalStorage = (filters: GasDeliveriesFilterPaginationModel) => {
+  try {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(filters));
+  } catch (error) {
+    console.error("Failed to save filters to localStorage", error);
+  }
 };
+
+export const loadFiltersFromLocalStorage =
+  (): Partial<GasDeliveriesFilterPaginationModel> | null => {
+    try {
+      const savedFilters = localStorage.getItem(LOCAL_STORAGE_KEY);
+      return savedFilters ? JSON.parse(savedFilters) : null;
+    } catch (error) {
+      console.error("Failed to load filters from localStorage", error);
+      return null;
+    }
+  };
+
+const getInitialFilters = (): GasDeliveriesFilterPaginationModel => {
+  const defaultFilters: GasDeliveriesFilterPaginationModel = {
+    farmIds: [],
+    contractorIds: [],
+    dateSince: "",
+    dateTo: "",
+    page: 0,
+    pageSize: 10,
+  };
+
+  const savedFilters = loadFiltersFromLocalStorage();
+
+  if (savedFilters) {
+    return {
+      ...defaultFilters,
+      ...savedFilters,
+
+      page: 0,
+    };
+  }
+
+  return defaultFilters;
+};
+
+export const initialFilters = getInitialFilters();
 
 export function filterReducer(
   state: GasDeliveriesFilterPaginationModel,
@@ -22,14 +60,21 @@ export function filterReducer(
         payload: Partial<GasDeliveriesFilterPaginationModel>;
       }
 ): GasDeliveriesFilterPaginationModel {
+  let newState: GasDeliveriesFilterPaginationModel;
+
   switch (action.type) {
     case "set":
-      return { ...state, [action.key]: action.value };
+      newState = { ...state, [action.key]: action.value };
+      break;
     case "setMultiple":
-      return { ...state, ...action.payload };
+      newState = { ...state, ...action.payload };
+      break;
     default:
       return state;
   }
+
+  saveFiltersToLocalStorage(newState);
+  return newState;
 }
 
 export enum GasDeliveriesOrderType {

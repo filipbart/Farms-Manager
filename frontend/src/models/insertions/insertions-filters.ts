@@ -1,16 +1,56 @@
 import type { CycleDictModel } from "../common/dictionaries";
 import type { OrderedPaginationParams } from "../common/pagination-params";
 
-export const initialFilters: InsertionsFilterPaginationModel = {
-  farmIds: [],
-  cycles: [],
-  henhouseIds: [],
-  hatcheryIds: [],
-  dateSince: "",
-  dateTo: "",
-  page: 0,
-  pageSize: 10,
+const LOCAL_STORAGE_KEY = "insertionsFilters";
+
+const saveFiltersToLocalStorage = (
+  filters: InsertionsFilterPaginationModel
+) => {
+  try {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(filters));
+  } catch (error) {
+    console.error("Failed to save filters to localStorage", error);
+  }
 };
+
+export const loadFiltersFromLocalStorage =
+  (): Partial<InsertionsFilterPaginationModel> | null => {
+    try {
+      const savedFilters = localStorage.getItem(LOCAL_STORAGE_KEY);
+      return savedFilters ? JSON.parse(savedFilters) : null;
+    } catch (error) {
+      console.error("Failed to load filters from localStorage", error);
+      return null;
+    }
+  };
+
+const getInitialFilters = (): InsertionsFilterPaginationModel => {
+  const defaultFilters: InsertionsFilterPaginationModel = {
+    farmIds: [],
+    cycles: [],
+    henhouseIds: [],
+    hatcheryIds: [],
+    dateSince: "",
+    dateTo: "",
+    page: 0,
+    pageSize: 10,
+  };
+
+  const savedFilters = loadFiltersFromLocalStorage();
+
+  if (savedFilters) {
+    return {
+      ...defaultFilters,
+      ...savedFilters,
+
+      page: 0,
+    };
+  }
+
+  return defaultFilters;
+};
+
+export const initialFilters = getInitialFilters();
 
 export function filterReducer(
   state: InsertionsFilterPaginationModel,
@@ -18,14 +58,21 @@ export function filterReducer(
     | { type: "set"; key: keyof InsertionsFilterPaginationModel; value: any }
     | { type: "setMultiple"; payload: Partial<InsertionsFilterPaginationModel> }
 ): InsertionsFilterPaginationModel {
+  let newState: InsertionsFilterPaginationModel;
+
   switch (action.type) {
     case "set":
-      return { ...state, [action.key]: action.value };
+      newState = { ...state, [action.key]: action.value };
+      break;
     case "setMultiple":
-      return { ...state, ...action.payload };
+      newState = { ...state, ...action.payload };
+      break;
     default:
       return state;
   }
+
+  saveFiltersToLocalStorage(newState);
+  return newState;
 }
 
 export enum InsertionOrderType {

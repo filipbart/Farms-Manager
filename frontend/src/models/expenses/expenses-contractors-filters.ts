@@ -1,10 +1,42 @@
-export interface ExpensesContractorsFilters {
-  searchPhrase: string;
-}
+const LOCAL_STORAGE_KEY = "expensesContractorsFilters";
 
-export const initialFilters: ExpensesContractorsFilters = {
-  searchPhrase: "",
+const saveFiltersToLocalStorage = (filters: ExpensesContractorsFilters) => {
+  try {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(filters));
+  } catch (error) {
+    console.error("Failed to save filters to localStorage", error);
+  }
 };
+
+export const loadFiltersFromLocalStorage =
+  (): Partial<ExpensesContractorsFilters> | null => {
+    try {
+      const savedFilters = localStorage.getItem(LOCAL_STORAGE_KEY);
+      return savedFilters ? JSON.parse(savedFilters) : null;
+    } catch (error) {
+      console.error("Failed to load filters from localStorage", error);
+      return null;
+    }
+  };
+
+const getInitialFilters = (): ExpensesContractorsFilters => {
+  const defaultFilters: ExpensesContractorsFilters = {
+    searchPhrase: "",
+  };
+
+  const savedFilters = loadFiltersFromLocalStorage();
+
+  if (savedFilters) {
+    return {
+      ...defaultFilters,
+      ...savedFilters,
+    };
+  }
+
+  return defaultFilters;
+};
+
+export const initialFilters = getInitialFilters();
 
 export function filterReducer(
   state: ExpensesContractorsFilters,
@@ -19,12 +51,23 @@ export function filterReducer(
         payload: Partial<ExpensesContractorsFilters>;
       }
 ): ExpensesContractorsFilters {
+  let newState: ExpensesContractorsFilters;
+
   switch (action.type) {
     case "set":
-      return { ...state, [action.key]: action.value };
+      newState = { ...state, [action.key]: action.value };
+      break;
     case "setMultiple":
-      return { ...state, ...action.payload };
+      newState = { ...state, ...action.payload };
+      break;
     default:
       return state;
   }
+
+  saveFiltersToLocalStorage(newState);
+  return newState;
+}
+
+export interface ExpensesContractorsFilters {
+  searchPhrase: string;
 }
