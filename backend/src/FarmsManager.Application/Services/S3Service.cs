@@ -31,7 +31,8 @@ public class S3Service : IS3Service
 
         if (string.IsNullOrEmpty(_bucketName))
         {
-            throw new InvalidOperationException("S3 bucket name is not configured. Please check 'S3:BucketName' in your configuration.");
+            throw new InvalidOperationException(
+                "S3 bucket name is not configured. Please check 'S3:BucketName' in your configuration.");
         }
 
         _protocol = Enum.TryParse<Protocol>(configuration.GetValue<string>("S3:Protocol"), out var protocol)
@@ -455,7 +456,7 @@ public class S3Service : IS3Service
         var response = await _s3Client.ListObjectsV2Async(request);
 
 
-        return response.S3Objects.Count != 0;
+        return response.S3Objects != null && response.S3Objects.Count != 0;
     }
 
 
