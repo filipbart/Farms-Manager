@@ -31,6 +31,12 @@ public class FeedInvoiceCorrectionEntity : Entity
         PaymentDateUtc = DateTime.UtcNow;
     }
 
+    public void MarkAsUnpaid()
+    {
+        PaymentId = null;
+        PaymentDateUtc = null;
+    }
+
     public static FeedInvoiceCorrectionEntity CreateNew(
         Guid farmId,
         Guid cycleId,

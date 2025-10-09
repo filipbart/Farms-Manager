@@ -1,4 +1,4 @@
-﻿using Ardalis.Specification;
+using Ardalis.Specification;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications;
@@ -16,13 +16,16 @@ public class DeleteFeedPaymentCommandHandler : IRequestHandler<DeleteFeedPayment
     private readonly IUserDataResolver _userDataResolver;
     private readonly IFeedPaymentRepository _feedPaymentRepository;
     private readonly IFeedInvoiceRepository _feedInvoiceRepository;
+    private readonly IFeedInvoiceCorrectionRepository _feedInvoiceCorrectionRepository;
 
     public DeleteFeedPaymentCommandHandler(IUserDataResolver userDataResolver,
-        IFeedPaymentRepository feedPaymentRepository, IFeedInvoiceRepository feedInvoiceRepository)
+        IFeedPaymentRepository feedPaymentRepository, IFeedInvoiceRepository feedInvoiceRepository,
+        IFeedInvoiceCorrectionRepository feedInvoiceCorrectionRepository)
     {
         _userDataResolver = userDataResolver;
         _feedPaymentRepository = feedPaymentRepository;
         _feedInvoiceRepository = feedInvoiceRepository;
+        _feedInvoiceCorrectionRepository = feedInvoiceCorrectionRepository;
     }
 
     public async Task<EmptyBaseResponse> Handle(DeleteFeedPaymentCommand request, CancellationToken cancellationToken)
@@ -44,10 +47,33 @@ public class DeleteFeedPaymentCommandHandler : IRequestHandler<DeleteFeedPayment
             await _feedInvoiceRepository.UpdateRangeAsync(feedInvoices, cancellationToken);
         }
 
+        var feedCorrections =
+            await _feedInvoiceCorrectionRepository.ListAsync(new GetFeedCorrectionsByPaymentIdSpec(request.Id),
+                cancellationToken);
+
+        if (feedCorrections.Count != 0)
+        {
+            foreach (var feedCorrectionEntity in feedCorrections)
+            {
+                feedCorrectionEntity.MarkAsUnpaid();
+            }
+
+            await _feedInvoiceCorrectionRepository.UpdateRangeAsync(feedCorrections, cancellationToken);
+        }
+
         feedPayment.Delete(userId);
         await _feedPaymentRepository.UpdateAsync(feedPayment, cancellationToken);
 
         return new EmptyBaseResponse();
+    }
+}
+
+public sealed class GetFeedCorrectionsByPaymentIdSpec : BaseSpecification<FeedInvoiceCorrectionEntity>
+{
+    public GetFeedCorrectionsByPaymentIdSpec(Guid feedPaymentId)
+    {
+        EnsureExists();
+        Query.Where(t => t.PaymentId == feedPaymentId);
     }
 }
 
