@@ -116,13 +116,51 @@ const ProductionDataWeighingsTab: React.FC = () => {
     fetchWeighings();
   }, [filters]);
 
+  const columnStats = useMemo(() => {
+    if (weighings.length === 0) return {};
+
+    const stats: {
+      [key in keyof ProductionDataWeighingListModel]?: {
+        min: number;
+        max: number;
+        avg: number;
+      };
+    } = {};
+    const keys: (keyof ProductionDataWeighingListModel)[] = [
+      "weighing1Day",
+      "weighing1Weight",
+      "weighing2Day",
+      "weighing2Weight",
+      "weighing3Day",
+      "weighing3Weight",
+      "weighing4Day",
+      "weighing4Weight",
+      "weighing5Day",
+      "weighing5Weight",
+    ];
+
+    for (const key of keys) {
+      const values = weighings
+        .map((row) => row[key] as number)
+        .filter((v) => v !== null && !isNaN(v));
+      if (values.length > 0) {
+        const min = Math.min(...values);
+        const max = Math.max(...values);
+        const avg = values.reduce((a, b) => a + b, 0) / values.length;
+        stats[key] = { min, max, avg };
+      }
+    }
+    return stats;
+  }, [weighings]);
+
   const columns = useMemo(
     () =>
       getWeighingsColumns({
         setSelectedWeighing,
         setIsEditModalOpen,
+        columnStats,
       }),
-    []
+    [columnStats]
   );
 
   return (
@@ -206,6 +244,15 @@ const ProductionDataWeighingsTab: React.FC = () => {
             return "";
           }}
           sx={{
+            "& .cell-good": {
+              backgroundColor: "rgba(0, 255, 0, 0.1)",
+            },
+            "& .cell-bad": {
+              backgroundColor: "rgba(255, 0, 0, 0.1)",
+            },
+            "& .cell-neutral": {
+              backgroundColor: "rgba(255, 255, 0, 0.1)",
+            },
             [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },
             [`& .${tablePaginationClasses.input}`]: { display: "inline-flex" },
             "& .aggregated-row": {

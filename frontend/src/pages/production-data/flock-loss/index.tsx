@@ -136,14 +136,46 @@ const ProductionDataFlockLossPage: React.FC = () => {
     fetchFlockLosses();
   }, [filters]);
 
+  const columnStats = useMemo(() => {
+    if (flockLosses.length === 0) return {};
+
+    const stats: {
+      [key in keyof ProductionDataFlockLossListModel]?: {
+        min: number;
+        max: number;
+        avg: number;
+      };
+    } = {};
+    const keys: (keyof ProductionDataFlockLossListModel)[] = [
+      "flockLoss1Percentage",
+      "flockLoss2Percentage",
+      "flockLoss3Percentage",
+      "flockLoss4Percentage",
+    ];
+
+    for (const key of keys) {
+      const values = flockLosses
+        .map((row) => row[key] as number)
+        .filter((v) => v !== null && !isNaN(v));
+      if (values.length > 0) {
+        const min = Math.min(...values);
+        const max = Math.max(...values);
+        const avg = values.reduce((a, b) => a + b, 0) / values.length;
+        stats[key] = { min, max, avg };
+      }
+    }
+    return stats;
+  }, [flockLosses]);
+
   const columns = useMemo(
     () =>
       getFlockLossColumns({
         setSelectedFlockLoss,
         deleteFlockLoss,
         setIsEditModalOpen,
+        columnStats,
       }),
-    []
+    [columnStats]
   );
 
   return (

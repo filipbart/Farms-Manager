@@ -176,7 +176,46 @@ const SummaryProductionAnalysisPage: React.FC = () => {
     );
   };
 
-  const columns = useMemo(() => getProductionAnalysisColumns(), []);
+  const columnStats = useMemo(() => {
+    if (analysisData.length === 0) return {};
+
+    const stats: {
+      [key in keyof ProductionAnalysisRowModel]?: {
+        min: number;
+        max: number;
+        avg: number;
+      };
+    } = {};
+    const keys: (keyof ProductionAnalysisRowModel)[] = [
+      "combinedAvgWeight",
+      "totalSaleAvgWeightDeviation",
+      "partSaleAvgWeightDeviation",
+      "deadPctCycle",
+      "defectivePctCycle",
+      "deadAndDefectivePctCycle",
+      "fcrWithLosses",
+      "fcrWithoutLosses",
+      "eww",
+    ];
+
+    for (const key of keys) {
+      const values = analysisData
+        .map((row) => row[key] as number)
+        .filter((v) => v !== null && !isNaN(v));
+      if (values.length > 0) {
+        const min = Math.min(...values);
+        const max = Math.max(...values);
+        const avg = values.reduce((a, b) => a + b, 0) / values.length;
+        stats[key] = { min, max, avg };
+      }
+    }
+    return stats;
+  }, [analysisData]);
+
+  const columns = useMemo(
+    () => getProductionAnalysisColumns(columnStats),
+    [columnStats]
+  );
 
   // Pass the state and handlers down to the toolbar component
   const SummaryProductionToolbar = (props: GridToolbarProps) => {
@@ -262,6 +301,15 @@ const SummaryProductionAnalysisPage: React.FC = () => {
             return "";
           }}
           sx={{
+            "& .cell-good": {
+              backgroundColor: "rgba(0, 255, 0, 0.1)",
+            },
+            "& .cell-bad": {
+              backgroundColor: "rgba(255, 0, 0, 0.1)",
+            },
+            "& .cell-neutral": {
+              backgroundColor: "rgba(255, 255, 0, 0.1)",
+            },
             [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },
             [`& .${tablePaginationClasses.input}`]: { display: "inline-flex" },
             "& .aggregated-row": {

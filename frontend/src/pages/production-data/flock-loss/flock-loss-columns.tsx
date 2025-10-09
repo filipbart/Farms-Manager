@@ -1,18 +1,40 @@
-import type { GridColDef } from "@mui/x-data-grid";
+import type { GridCellParams, GridColDef } from "@mui/x-data-grid";
 import ActionsCell from "../../../components/datagrid/actions-cell";
 import type { ProductionDataFlockLossListModel } from "../../../models/production-data/flock-loss";
 import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
+
+const getCellClassName = (
+  params: GridCellParams,
+  stats: { min: number; max: number; avg: number } | undefined,
+  isLowerBetter: boolean
+) => {
+  if (!stats || params.value === null || params.value === undefined) return "";
+  const value = params.value as number;
+  const { avg } = stats;
+
+  if (isLowerBetter) {
+    if (value < avg * 0.95) return "cell-good";
+    if (value > avg * 1.05) return "cell-bad";
+  } else {
+    if (value > avg * 1.05) return "cell-good";
+    if (value < avg * 0.95) return "cell-bad";
+  }
+
+  return "cell-neutral";
+};
 
 interface GetFlockLossColumnsProps {
   setSelectedFlockLoss: (row: ProductionDataFlockLossListModel) => void;
   deleteFlockLoss: (id: string) => void;
   setIsEditModalOpen: (isOpen: boolean) => void;
+  columnStats: any;
 }
 
 export const getFlockLossColumns = ({
   setSelectedFlockLoss,
   deleteFlockLoss,
   setIsEditModalOpen,
+  columnStats,
 }: GetFlockLossColumnsProps): GridColDef<ProductionDataFlockLossListModel>[] => {
   return [
     { field: "cycleText", headerName: "Identyfikator", width: 120 },
@@ -52,6 +74,8 @@ export const getFlockLossColumns = ({
       headerAlign: "left",
       align: "left",
       width: 120,
+      cellClassName: (params) =>
+        getCellClassName(params, columnStats.flockLoss1Percentage, true),
     },
 
     // --- Pomiar II ---
@@ -78,6 +102,8 @@ export const getFlockLossColumns = ({
       headerAlign: "left",
       align: "left",
       width: 120,
+      cellClassName: (params) =>
+        getCellClassName(params, columnStats.flockLoss2Percentage, true),
     },
 
     // --- Pomiar III ---
@@ -104,6 +130,8 @@ export const getFlockLossColumns = ({
       headerAlign: "left",
       align: "left",
       width: 120,
+      cellClassName: (params) =>
+        getCellClassName(params, columnStats.flockLoss3Percentage, true),
     },
 
     // --- Pomiar IV ---
@@ -130,6 +158,8 @@ export const getFlockLossColumns = ({
       headerAlign: "left",
       align: "left",
       width: 120,
+      cellClassName: (params) =>
+        getCellClassName(params, columnStats.flockLoss4Percentage, true),
     },
 
     {
