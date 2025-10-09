@@ -8,6 +8,7 @@
 ## Get latest from https://github.com/github/gitignore/blob/main/Dotnet.gitignore
 
 backend/src/FarmsManager.Api/config.toml
+backend/src/FarmsManager.sln.DotSettings.user
 minio-data/
 
 # Build results
@@ -146,7 +147,3 @@ fabric.properties
 # Android studio 3.1+ serialized cache file
 .idea/caches/build_file_checksums.ser
 frontend/.env
-
-# JetBrains Rider
-*.sln.DotSettings.user
-*.DotSettings.user
