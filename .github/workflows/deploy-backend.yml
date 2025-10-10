@@ -80,6 +80,9 @@ jobs:
         username: ${{ secrets.VPS_SSH_USERNAME }}
         key: ${{ secrets.VPS_SSH_KEY }}
         script: |
+          # Zatrzymaj skrypt przy pierwszym błędzie
+          set -e 
+          
           # Przejdź do folderu z aplikacją na serwerze
           cd /opt/farms-manager
 
