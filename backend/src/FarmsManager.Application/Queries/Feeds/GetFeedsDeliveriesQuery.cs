@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using FarmsManager.Application.Common;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
@@ -113,8 +113,10 @@ public class
         var feedInvoices = await _feedInvoiceRepository.ListAsync<FeedDeliveryRowDto>(
             new GetAllFeedsDeliveriesSpec(request.Filters, accessibleFarmIds), ct);
 
-        var feedCorrections = await _feedInvoiceCorrectionRepository.ListAsync<FeedDeliveryRowDto>(
-            new GetAllFeedsCorrectionsSpec(request.Filters, accessibleFarmIds), ct);
+        var feedCorrections = request.Filters.IncorrectPrices == true 
+            ? [] 
+            : await _feedInvoiceCorrectionRepository.ListAsync<FeedDeliveryRowDto>(
+                new GetAllFeedsCorrectionsSpec(request.Filters, accessibleFarmIds), ct);
 
         var combined = feedInvoices.Concat(feedCorrections);
 

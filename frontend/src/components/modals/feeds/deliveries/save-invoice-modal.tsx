@@ -12,13 +12,14 @@ import {
   TextField,
 } from "@mui/material";
 import { useState, useEffect } from "react";
-import { MdSave, MdZoomIn } from "react-icons/md";
+import { MdSave } from "react-icons/md";
 import { useFarms } from "../../../../hooks/useFarms";
 import type { HouseRowModel } from "../../../../models/farms/house-row-model";
 import type { DraftFeedInvoice } from "../../../../models/feeds/deliveries/draft-feed-invoice";
 import type { FeedInvoiceData } from "../../../../models/feeds/deliveries/feed-invoice";
 import { getFileTypeFromUrl } from "../../../../utils/fileUtils";
 import LoadingTextField from "../../../common/loading-textfield";
+import FilePreview from "../../../common/file-preview";
 import { Controller, useForm } from "react-hook-form";
 import LoadingButton from "../../../common/loading-button";
 import { DatePicker } from "@mui/x-date-pickers";
@@ -211,49 +212,13 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
   const renderPreview = () => {
     if (!draftFeed?.fileUrl) return <Typography>Brak podglądu</Typography>;
 
-    if (fileType === "pdf") {
-      return (
-        <>
-          <iframe
-            src={draftFeed.fileUrl}
-            title="PDF Preview"
-            width="100%"
-            height={isLg ? "900px" : isMd ? "700px" : "500px"}
-            style={{ border: "1px solid #ccc" }}
-          />
-          <Button
-            startIcon={<MdZoomIn />}
-            onClick={() => setPreviewOpen(true)}
-            sx={{ mt: 1 }}
-          >
-            Powiększ
-          </Button>
-        </>
-      );
-    } else if (fileType === "image") {
-      return (
-        <>
-          <img
-            src={draftFeed.fileUrl}
-            alt="Image Preview"
-            style={{
-              maxWidth: "100%",
-              maxHeight: "900px",
-              border: "1px solid #ccc",
-            }}
-          />
-          <Button
-            startIcon={<MdZoomIn />}
-            onClick={() => setPreviewOpen(true)}
-            sx={{ mt: 1 }}
-          >
-            Powiększ
-          </Button>
-        </>
-      );
-    } else {
-      return <Typography>Nieobsługiwany format pliku</Typography>;
-    }
+    return (
+      <FilePreview
+        file={draftFeed.fileUrl}
+        maxHeight={isLg ? 900 : isMd ? 700 : 500}
+        showPreviewButton={true}
+      />
+    );
   };
 
   if (!draftFeed) {

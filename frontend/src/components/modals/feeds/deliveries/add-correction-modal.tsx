@@ -179,7 +179,7 @@ const AddCorrectionModal: React.FC<AddCorrectionModalProps> = ({
                     </Grid>
                     <Grid size={{ xs: 12 }}>
                       <Box mt={1}>
-                        <FilePreview file={selectedFile} maxHeight={500} />
+                        <FilePreview file={selectedFile} maxHeight={700} />
                       </Box>
                     </Grid>
                   </>

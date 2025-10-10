@@ -13,7 +13,7 @@ import {
   Autocomplete,
 } from "@mui/material";
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { MdSave, MdZoomIn } from "react-icons/md";
+import { MdSave } from "react-icons/md";
 import { Controller, useForm } from "react-hook-form";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
@@ -21,7 +21,6 @@ import { toast } from "react-toastify";
 import { useFarms } from "../../../../hooks/useFarms";
 import { useExpensesContractor } from "../../../../hooks/expenses/useExpensesContractors";
 import { useExpensesTypes } from "../../../../hooks/expenses/useExpensesTypes";
-import { getFileTypeFromUrl } from "../../../../utils/fileUtils";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import { ExpensesService } from "../../../../services/expenses-service";
 import LoadingTextField from "../../../common/loading-textfield";
@@ -33,6 +32,7 @@ import type {
 import AppDialog from "../../../common/app-dialog";
 import { FarmsService } from "../../../../services/farms-service";
 import type CycleDto from "../../../../models/farms/latest-cycle";
+import FilePreview from "../../../common/file-preview";
 
 interface SaveExpensesInvoicesModalProps {
   open: boolean;
@@ -215,54 +215,18 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
     setLoading(false);
   };
 
-  const fileType = getFileTypeFromUrl(draftExpense?.fileUrl ?? "");
-
   const renderPreview = () => {
     if (!draftExpense?.fileUrl) return <Typography>Brak podglądu</Typography>;
 
-    if (fileType === "pdf") {
-      return (
-        <>
-          <iframe
-            src={draftExpense.fileUrl}
-            title="PDF Preview"
-            width="100%"
-            height={isLg ? "900px" : isMd ? "700px" : "500px"}
-            style={{ border: "1px solid #ccc" }}
-          />
-          <Button
-            startIcon={<MdZoomIn />}
-            onClick={() => setPreviewOpen(true)}
-            sx={{ mt: 1 }}
-          >
-            Powiększ
-          </Button>
-        </>
-      );
-    } else if (fileType === "image") {
-      return (
-        <>
-          <img
-            src={draftExpense.fileUrl}
-            alt="Image Preview"
-            style={{
-              maxWidth: "100%",
-              maxHeight: "900px",
-              border: "1px solid #ccc",
-            }}
-          />
-          <Button
-            startIcon={<MdZoomIn />}
-            onClick={() => setPreviewOpen(true)}
-            sx={{ mt: 1 }}
-          >
-            Powiększ
-          </Button>
-        </>
-      );
-    } else {
-      return <Typography>Nieobsługiwany format pliku</Typography>;
-    }
+    return (
+      <>
+        <FilePreview
+          file={draftExpense.fileUrl}
+          maxHeight={isLg ? 900 : isMd ? 700 : 500}
+          showPreviewButton={true}
+        />
+      </>
+    );
   };
 
   if (!draftExpense) return null;
@@ -559,29 +523,11 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
         maxWidth="xl"
         fullWidth
       >
-        <DialogContent sx={{ p: 0 }}>
-          {fileType === "pdf" ? (
-            <iframe
-              src={`${draftExpense.fileUrl ?? ""}#zoom=FitH`}
-              title="PDF Fullscreen"
-              width="100%"
-              height="1000vh"
-              style={{ border: "none" }}
-            />
-          ) : fileType === "image" ? (
-            <img
-              src={draftExpense.fileUrl ?? ""}
-              alt="Image Fullscreen"
-              style={{
-                width: "100%",
-                height: "auto",
-                maxHeight: "90vh",
-                objectFit: "contain",
-              }}
-            />
-          ) : (
-            <Typography sx={{ p: 2 }}>Nieobsługiwany format pliku</Typography>
-          )}
+        <DialogContent sx={{ p: 0, height: "90vh" }}>
+          <FilePreview
+            file={draftExpense?.fileUrl ?? ""}
+            showPreviewButton={false}
+          />
         </DialogContent>
       </AppDialog>
     </>
