@@ -1,4 +1,4 @@
-﻿using FarmsManager.Api.Attributes;
+using FarmsManager.Api.Attributes;
 using FarmsManager.Api.Controllers.Base;
 using FarmsManager.Application.Commands.Farms;
 using FarmsManager.Application.Common.Responses;
@@ -36,7 +36,7 @@ public class FarmsController(IMediator mediator) : BaseController
     {
         return Ok(await mediator.Send(new GetFarmLatestCycleQuery(farmId)));
     }
-    
+
     /// <summary>
     /// Zwraca cykle fermy
     /// </summary>
@@ -152,7 +152,6 @@ public class FarmsController(IMediator mediator) : BaseController
     /// <summary>
     /// Aktualizuje cykl dla danej fermy
     /// </summary>
-    /// <param name="command"></param>
     /// <returns></returns>
     [HttpPost("update-cycle")]
     [HasPermission(AppPermissions.Settings.Cycles.Manage)]
@@ -161,5 +160,18 @@ public class FarmsController(IMediator mediator) : BaseController
     public async Task<IActionResult> UpdateFarmCycle(UpdateFarmCycleCommand command)
     {
         return Ok(await mediator.Send(command));
+    }
+
+    /// <summary>
+    /// Pobiera listę kurników z wstawieniami dla danej fermy i cyklu
+    /// </summary>
+    /// <param name="query">Identyfikatory</param>
+    /// <returns>Lista kurników z wstawieniami</returns>
+    [HttpGet("inserted-henhouses")]
+    [ProducesResponseType(typeof(BaseResponse<List<HenhouseRowDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetInsertedHenhouses([FromQuery] GetInsertedHenhousesQuery query)
+    {
+        return Ok(await mediator.Send(query));
     }
 }

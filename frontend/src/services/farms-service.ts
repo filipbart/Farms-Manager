@@ -56,6 +56,16 @@ export class FarmsService {
     );
   }
 
+  public static async getInsertedHenhouses(farmId: string, cycleId: string) {
+    return await AxiosWrapper.get<HouseRowModel[]>(
+      ApiUrl.GetInsertedHenhouses,
+      {
+        farmId,
+        cycleId,
+      }
+    );
+  }
+
   public static async addHenhouseAsync(data: AddHenhouseFormData) {
     return await AxiosWrapper.post(
       ApiUrl.Farms + "/" + data.farmId + "/add-henhouse",

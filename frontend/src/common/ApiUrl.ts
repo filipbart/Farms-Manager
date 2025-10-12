@@ -34,6 +34,7 @@ export default class ApiUrl {
     this.Farms + "/henhouse/update/" + id;
   public static DeleteHenhouse = (id: string) =>
     this.Farms + "/henhouse/delete/" + id;
+  public static GetInsertedHenhouses = this.Farms + "/inserted-henhouses";
 
   public static Hatcheries = this.BaseUrl + "hatcheries";
   public static AddHatchery = this.Hatcheries + "/add";

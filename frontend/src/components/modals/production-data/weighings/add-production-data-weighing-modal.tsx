@@ -30,6 +30,7 @@ import AppDialog from "../../../common/app-dialog";
 import type { HouseRowModel } from "../../../../models/farms/house-row-model";
 import { ProductionDataWeighingsService } from "../../../../services/production-data/production-data-weighings-service";
 import type { WeighingDataEntry } from "../../../../models/production-data/weighings";
+import { FarmsService } from "../../../../services/farms-service";
 
 interface AddProductionDataWeighingModalProps {
   open: boolean;
@@ -128,9 +129,7 @@ const AddProductionDataWeighingModal: React.FC<
       value: [{ henhouseId: "", hatcheryId: "", day: 0, weight: 0 }],
     });
     setErrors({});
-
-    const selectedFarm = farms.find((f) => f.id === farmId);
-    setAvailableHenhouses(selectedFarm?.henhouses ?? []);
+    setAvailableHenhouses([]);
 
     const cycle = await loadLatestCycle(farmId);
     if (cycle) {
@@ -140,6 +139,15 @@ const AddProductionDataWeighingModal: React.FC<
         name: "cycleDisplay",
         value: `${cycle.identifier}/${cycle.year}`,
       });
+
+      await handleApiResponse(
+        () => FarmsService.getInsertedHenhouses(farmId, cycle.id),
+        (data) => {
+          setAvailableHenhouses(data.responseData ?? []);
+        },
+        undefined,
+        "Błąd podczas pobierania kurników"
+      );
     } else {
       setErrors((prev) => ({ ...prev, cycleId: "Brak aktywnego cyklu" }));
     }

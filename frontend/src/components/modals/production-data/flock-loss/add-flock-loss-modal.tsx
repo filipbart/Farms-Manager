@@ -122,6 +122,23 @@ const AddProductionDataFlockLossModal: React.FC<
     }
   }, [open, form.entries.length]);
 
+  useEffect(() => {
+    const fetchHenhouses = async () => {
+      if (form.farmId && form.cycleId) {
+        setAvailableHenhouses([]);
+        await handleApiResponse(
+          () => FarmsService.getInsertedHenhouses(form.farmId, form.cycleId),
+          (data) => {
+            setAvailableHenhouses(data.responseData ?? []);
+          },
+          undefined,
+          "Błąd podczas pobierania kurników"
+        );
+      }
+    };
+    fetchHenhouses();
+  }, [form.farmId, form.cycleId]);
+
   const handleFarmChange = async (farmId: string) => {
     dispatch({ type: "SET_FIELD", name: "farmId", value: farmId });
     dispatch({ type: "SET_FIELD", name: "cycleId", value: "" });
@@ -133,10 +150,11 @@ const AddProductionDataFlockLossModal: React.FC<
     setErrors({});
 
     setCycles([]);
-    const selectedFarm = farms.find((f) => f.id === farmId);
-    setAvailableHenhouses(selectedFarm?.henhouses ?? []);
+    setAvailableHenhouses([]);
 
     if (!farmId) return;
+
+    const selectedFarm = farms.find((f) => f.id === farmId);
 
     setLoadingCycles(true);
     await handleApiResponse(
@@ -258,13 +276,18 @@ const AddProductionDataFlockLossModal: React.FC<
                 fullWidth
                 disabled={!form.farmId || loadingCycles || cycles.length === 0}
                 value={form.cycleId}
-                onChange={(e) =>
+                onChange={(e) => {
                   dispatch({
                     type: "SET_FIELD",
                     name: "cycleId",
                     value: e.target.value,
-                  })
-                }
+                  });
+                  dispatch({
+                    type: "SET_FIELD",
+                    name: "entries",
+                    value: [{ henhouseId: "", quantity: "" }],
+                  });
+                }}
                 error={!!errors.cycleId}
                 helperText={errors.cycleId}
               >
