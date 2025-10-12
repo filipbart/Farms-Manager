@@ -140,7 +140,7 @@ const EditProductionDataWeighingModal: React.FC<
             >
               {[1, 2, 3, 4, 5].map((num) => (
                 <MenuItem key={num} value={num}>
-                  Ważenie {num}
+                  Ważenie {num} ({num === 1 ? '0' : (num - 1) * 7} doba)
                 </MenuItem>
               ))}
             </TextField>

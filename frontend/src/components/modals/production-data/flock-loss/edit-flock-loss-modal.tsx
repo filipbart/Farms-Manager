@@ -171,7 +171,7 @@ const EditProductionDataFlockLossModal: React.FC<
             >
               {[1, 2, 3, 4].map((num) => (
                 <MenuItem key={num} value={num}>
-                  Pomiar {num}
+                  Pomiar {num} ({num * 7} doba)
                 </MenuItem>
               ))}
             </TextField>
