@@ -113,8 +113,8 @@ public class
         var feedInvoices = await _feedInvoiceRepository.ListAsync<FeedDeliveryRowDto>(
             new GetAllFeedsDeliveriesSpec(request.Filters, accessibleFarmIds), ct);
 
-        var feedCorrections = request.Filters.IncorrectPrices == true 
-            ? [] 
+        var feedCorrections = request.Filters.IncorrectPrices == true || request.Filters.HenhouseIds.Count != 0
+            ? []
             : await _feedInvoiceCorrectionRepository.ListAsync<FeedDeliveryRowDto>(
                 new GetAllFeedsCorrectionsSpec(request.Filters, accessibleFarmIds), ct);
 
