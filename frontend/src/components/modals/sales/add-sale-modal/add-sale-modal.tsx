@@ -249,7 +249,7 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
                 Podgląd pliku
               </Typography>
 
-              <FilePreview file={activePreviewFile} maxHeight={700} />
+              <FilePreview file={activePreviewFile} maxHeight={900} />
             </Grid>
           )}
 
