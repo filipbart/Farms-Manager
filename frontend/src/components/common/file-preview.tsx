@@ -157,7 +157,7 @@ const FilePreview: React.FC<FilePreviewProps> = ({
     if (fileType === "pdf") {
       return (
         <iframe
-          src={fileUrl + "#toolbar=0"}
+          src={fileUrl + "#zoom=FitH"}
           style={{
             width: "100%",
             border: "1px solid #ccc",
