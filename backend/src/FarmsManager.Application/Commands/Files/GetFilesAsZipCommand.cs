@@ -3,20 +3,24 @@ using FarmsManager.Application.Interfaces;
 using MediatR;
 using System.IO.Compression;
 
-namespace FarmsManager.Application.Queries.Files;
+namespace FarmsManager.Application.Commands.Files;
 
-public record GetFilesAsZipQuery(List<string> FilePaths, FileType? FileType) : IRequest<byte[]>;
+public record GetFilesAsZipDto(
+    List<string> FilePaths,
+    FileType? FileType);
 
-public class GetFilesAsZipQueryHandler : IRequestHandler<GetFilesAsZipQuery, byte[]>
+public record GetFilesAsZipCommand(List<string> FilePaths, FileType? FileType) : IRequest<byte[]>;
+
+public class GetFilesAsZipCommandHandler : IRequestHandler<GetFilesAsZipCommand, byte[]>
 {
     private readonly IS3Service _s3Service;
 
-    public GetFilesAsZipQueryHandler(IS3Service s3Service)
+    public GetFilesAsZipCommandHandler(IS3Service s3Service)
     {
         _s3Service = s3Service;
     }
 
-    public async Task<byte[]> Handle(GetFilesAsZipQuery request, CancellationToken cancellationToken)
+    public async Task<byte[]> Handle(GetFilesAsZipCommand request, CancellationToken cancellationToken)
     {
         using var memoryStream = new MemoryStream();
         using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))

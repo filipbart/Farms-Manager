@@ -10,6 +10,7 @@ interface DownloadFileParams {
   successMessage?: string;
   errorMessage: string;
   fileExtension?: string;
+  usePost?: boolean;
 }
 
 export const downloadFile = async ({
@@ -20,16 +21,21 @@ export const downloadFile = async ({
   successMessage,
   errorMessage,
   fileExtension = "pdf",
+  usePost = false,
 }: DownloadFileParams) => {
   try {
     setLoading(true);
 
-    const response = await axios.get(url, {
-      responseType: "blob",
-      params,
-      paramsSerializer: (params) =>
-        qs.stringify(params, { arrayFormat: "repeat" }),
-    });
+    const response = usePost
+      ? await axios.post(url, params, {
+          responseType: "blob",
+        })
+      : await axios.get(url, {
+          responseType: "blob",
+          params,
+          paramsSerializer: (params) =>
+            qs.stringify(params, { arrayFormat: "repeat" }),
+        });
 
     const blob = new Blob([response.data]);
 

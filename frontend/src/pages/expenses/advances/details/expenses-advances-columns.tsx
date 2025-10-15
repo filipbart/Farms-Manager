@@ -110,5 +110,12 @@ export const getAdvancesColumns = ({
         ];
       },
     },
+    {
+      field: "dateCreatedUtc",
+      headerName: "Data utworzenia wpisu",
+      width: 180,
+      valueGetter: (value: string) =>
+        value ? dayjs(value).format("YYYY-MM-DD HH:mm") : "",
+    },
   ];
 };

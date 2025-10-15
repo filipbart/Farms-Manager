@@ -1,5 +1,6 @@
 using FarmsManager.Api.Attributes;
 using FarmsManager.Api.Controllers.Base;
+using FarmsManager.Application.Commands.Feeds;
 using FarmsManager.Application.Commands.Feeds.Deliveries;
 using FarmsManager.Application.Commands.Feeds.Names;
 using FarmsManager.Application.Commands.Feeds.Prices;
@@ -316,25 +317,23 @@ public class FeedsController(IMediator mediator) : BaseController
     /// <summary>
     /// Pobiera wiele faktur pasz jako archiwum ZIP
     /// </summary>
-    /// <param name="deliveryIds">Lista ID zwykłych dostaw pasz</param>
-    /// <param name="correctionFilePaths">Lista ścieżek do plików faktur korygujących</param>
+    /// <param name="request">Żądanie zawierające listy ID dostaw i ścieżek do faktur korygujących</param>
     /// <returns></returns>
-    [HttpGet("download-invoices-zip")]
+    [HttpPost("download-invoices-zip")]
     [HasPermission(AppPermissions.Feeds.DeliveriesView)]
     [ProducesResponseType(typeof(File), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> DownloadInvoicesAsZip(
-        [FromQuery] List<Guid>? deliveryIds,
-        [FromQuery] List<string>? correctionFilePaths)
+        [FromBody] DownloadInvoicesZipDto request)
     {
-        if ((deliveryIds is null || deliveryIds.Count == 0) &&
-            (correctionFilePaths is null || correctionFilePaths.Count == 0))
+        if ((request.DeliveryIds is null || request.DeliveryIds.Count == 0) &&
+            (request.CorrectionFilePaths is null || request.CorrectionFilePaths.Count == 0))
         {
             return BadRequest("Brak danych do pobrania");
         }
 
-        var zipData = await mediator.Send(new DownloadFeedInvoicesAsZipQuery(deliveryIds, correctionFilePaths));
+        var zipData = await mediator.Send(new DownloadFeedInvoicesAsZipCommand(request.DeliveryIds ?? [], request.CorrectionFilePaths ?? []));
         var timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
         return File(zipData, "application/zip", $"faktury_pasz_{timestamp}.zip");
     }

@@ -2,7 +2,10 @@ import type { FilterConfig } from "../../../components/filters/filter-types";
 import type { CycleDictModel } from "../../../models/common/dictionaries";
 import type { FeedsDictionary } from "../../../models/feeds/feeds-dictionary";
 import type { FeedsPaymentsFilterPaginationModel } from "../../../models/feeds/payments/payments-filters";
-import { FeedPaymentStatus, FeedPaymentStatusLabels } from "../../../models/feeds/payments/payment";
+import {
+  FeedPaymentStatus,
+  FeedPaymentStatusLabels,
+} from "../../../models/feeds/payments/payment";
 
 export const getFeedsPaymentsFiltersConfig = (
   dictionary: FeedsDictionary | undefined,
@@ -30,7 +33,7 @@ export const getFeedsPaymentsFiltersConfig = (
     disabled: !dictionary,
   },
   {
-    key: "statuses",
+    key: "status",
     label: "Status",
     type: "select",
     options: Object.values(FeedPaymentStatus).map((status) => ({

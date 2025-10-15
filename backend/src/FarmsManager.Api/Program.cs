@@ -128,6 +128,9 @@ using (var lifetimeScope = app.Services.GetAutofacRoot().BeginLifetimeScope())
     }
 }
 
+// Security middleware - musi być na początku
+app.UseMiddleware<PathTraversalProtectionMiddleware>();
+
 app.UseCors(builder =>
 {
     var allowedOrigins = app.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();

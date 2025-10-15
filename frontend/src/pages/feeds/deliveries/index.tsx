@@ -221,16 +221,17 @@ const FeedsDeliveriesPage: React.FC = () => {
 
     await downloadFile({
       url: ApiUrl.DownloadFeedsInvoicesZip,
-      params: { 
+      params: {
         deliveryIds: regularDeliveryIds,
-        correctionFilePaths: correctionFilePaths 
+        correctionFilePaths: correctionFilePaths,
       },
       defaultFilename: "faktury_pasz",
       setLoading: setLoadingZipFile,
       errorMessage: "Błąd podczas pobierania faktur",
       fileExtension: "zip",
+      usePost: true,
     });
-    
+
     handleCancelDownloadMode();
   };
 

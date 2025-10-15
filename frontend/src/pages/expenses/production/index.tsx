@@ -204,6 +204,7 @@ const ExpenseProductionPage: React.FC = () => {
       setLoading: setLoadingZipFile,
       errorMessage: "Błąd podczas pobierania faktur",
       fileExtension: "zip",
+      usePost: true,
     });
 
     handleCancelDownloadMode();

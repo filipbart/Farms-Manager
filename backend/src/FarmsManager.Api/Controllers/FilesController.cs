@@ -1,4 +1,5 @@
 using FarmsManager.Api.Controllers.Base;
+using FarmsManager.Application.Commands.Files;
 using FarmsManager.Application.Common;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.FileSystem;
@@ -46,21 +47,20 @@ public class FilesController(IMediator mediator, IS3Service s3Service) : BaseCon
     /// <summary>
     /// Zwraca wiele plików jako archiwum ZIP
     /// </summary>
-    /// <param name="filePaths">Lista ścieżek do plików</param>
-    /// <param name="fileType">Opcjonalny typ pliku</param>
+    /// <param name="request">Żądanie zawierające listę ścieżek do plików i opcjonalny typ pliku</param>
     /// <returns></returns>
-    [HttpGet("files-zip")]
+    [HttpPost("files-zip")]
     [ProducesResponseType(typeof(File), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetFilesAsZip([FromQuery] List<string>? filePaths, [FromQuery] FileType? fileType)
+    public async Task<IActionResult> GetFilesAsZip([FromBody] GetFilesAsZipDto request)
     {
-        if (filePaths == null || filePaths.Count == 0)
+        if (request.FilePaths == null || request.FilePaths.Count == 0)
         {
             return BadRequest("Lista filePaths nie może być pusta.");
         }
 
-        var zipData = await mediator.Send(new GetFilesAsZipQuery(filePaths, fileType));
+        var zipData = await mediator.Send(new GetFilesAsZipCommand(request.FilePaths, request.FileType));
         var zipFileName = $"pliki_{DateTime.UtcNow:yyyyMMddHHmmss}.zip";
         return File(zipData, "application/zip", zipFileName);
     }

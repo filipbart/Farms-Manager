@@ -4,18 +4,22 @@ using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
 using MediatR;
 using System.IO.Compression;
 
-namespace FarmsManager.Application.Queries.Feeds;
+namespace FarmsManager.Application.Commands.Feeds;
 
-public record DownloadFeedInvoicesAsZipQuery(
+public record DownloadInvoicesZipDto(
+    List<Guid> DeliveryIds,
+    List<string> CorrectionFilePaths);
+
+public record DownloadFeedInvoicesAsZipCommand(
     List<Guid> DeliveryIds,
     List<string> CorrectionFilePaths) : IRequest<byte[]>;
 
-public class DownloadFeedInvoicesAsZipQueryHandler : IRequestHandler<DownloadFeedInvoicesAsZipQuery, byte[]>
+public class DownloadFeedInvoicesAsZipCommandHandler : IRequestHandler<DownloadFeedInvoicesAsZipCommand, byte[]>
 {
     private readonly IFeedInvoiceRepository _feedInvoiceRepository;
     private readonly IS3Service _s3Service;
 
-    public DownloadFeedInvoicesAsZipQueryHandler(
+    public DownloadFeedInvoicesAsZipCommandHandler(
         IFeedInvoiceRepository feedInvoiceRepository,
         IS3Service s3Service)
     {
@@ -23,7 +27,7 @@ public class DownloadFeedInvoicesAsZipQueryHandler : IRequestHandler<DownloadFee
         _s3Service = s3Service;
     }
 
-    public async Task<byte[]> Handle(DownloadFeedInvoicesAsZipQuery request, CancellationToken cancellationToken)
+    public async Task<byte[]> Handle(DownloadFeedInvoicesAsZipCommand request, CancellationToken cancellationToken)
     {
         using var memoryStream = new MemoryStream();
         using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
