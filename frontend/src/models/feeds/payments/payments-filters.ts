@@ -26,6 +26,7 @@ const getInitialFilters = (): FeedsPaymentsFilterPaginationModel => {
   const defaultFilters: FeedsPaymentsFilterPaginationModel = {
     farmIds: [],
     cycles: [],
+    statuses: undefined,
     page: 0,
     pageSize: 10,
   };
@@ -83,6 +84,7 @@ export enum FeedsPaymentsOrderType {
 export default interface FeedsPaymentsFilter {
   farmIds: string[];
   cycles: CycleDictModel[];
+  statuses?: string;
 }
 
 export interface FeedsPaymentsFilterPaginationModel

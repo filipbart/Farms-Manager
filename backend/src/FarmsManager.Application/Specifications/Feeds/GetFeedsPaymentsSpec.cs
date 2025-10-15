@@ -1,4 +1,4 @@
-﻿using Ardalis.Specification;
+using Ardalis.Specification;
 using FarmsManager.Application.Queries.Feeds;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
 using LinqKit;
@@ -27,6 +27,11 @@ public sealed class GetAllFeedsPaymentsSpec : BaseSpecification<FeedPaymentEntit
 
     private void PopulateFilters(GetFeedsPaymentsQueryFilters filters)
     {
+        if (filters.Status.HasValue)
+        {
+            Query.Where(t => t.Status == filters.Status.Value);
+        }
+
         if (filters.FarmIds is not null && filters.FarmIds.Count != 0)
         {
             Query.Where(t => filters.FarmIds.Contains(t.FarmId));

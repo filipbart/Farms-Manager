@@ -98,6 +98,15 @@ const ExpenseProductionPage: React.FC = () => {
     setSelectedRows({ type: "include", ids: new Set() });
   };
 
+  const hasSelectedRows = () => {
+    if (selectedRows.type === "include") {
+      return selectedRows.ids.size > 0;
+    } else {
+      // type === "exclude" means all rows are selected except those in the Set
+      return expenseProductions.length > selectedRows.ids.size;
+    }
+  };
+
   const uploadFiles = async (draftFiles: DraftExpenseInvoice[]) => {
     if (draftFiles.length === 0) {
       toast.error("Brak plików do przetworzenia");
@@ -170,9 +179,14 @@ const ExpenseProductionPage: React.FC = () => {
   };
 
   const downloadMultipleInvoices = async () => {
-    const selectedExpenses = expenseProductions.filter((expense) =>
-      selectedRows.ids.has(expense.id)
-    );
+    const selectedExpenses = expenseProductions.filter((expense) => {
+      if (selectedRows.type === "include") {
+        return selectedRows.ids.has(expense.id);
+      } else {
+        // type === "exclude" means all rows are selected except those in the Set
+        return !selectedRows.ids.has(expense.id);
+      }
+    });
 
     const filePaths = selectedExpenses
       .map((expense) => expense.filePath)
@@ -246,7 +260,7 @@ const ExpenseProductionPage: React.FC = () => {
                 variant="contained"
                 color="primary"
                 onClick={downloadMultipleInvoices}
-                disabled={selectedRows.ids.size === 0}
+                disabled={!hasSelectedRows()}
               >
                 Pobierz faktury
               </LoadingButton>

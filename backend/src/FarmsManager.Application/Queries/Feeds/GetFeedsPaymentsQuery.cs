@@ -7,6 +7,7 @@ using FarmsManager.Application.Models;
 using FarmsManager.Application.Specifications.Feeds;
 using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
+using FarmsManager.Domain.Aggregates.FeedAggregate.Enums;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.UserAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
@@ -21,6 +22,7 @@ public enum FeedsPaymentsOrderBy
 
 public record GetFeedsPaymentsQueryFilters : OrderedPaginationParams<FeedsPaymentsOrderBy>
 {
+    public FeedPaymentStatus? Status { get; init; }
     public List<Guid> FarmIds { get; init; }
     public List<string> Cycles { get; init; }
 

@@ -108,6 +108,15 @@ const FeedsDeliveriesPage: React.FC = () => {
     setSelectedRows({ type: "include", ids: new Set() });
   };
 
+  const hasSelectedRows = () => {
+    if (selectedRows.type === "include") {
+      return selectedRows.ids.size > 0;
+    } else {
+      // type === "exclude" means all rows are selected except those in the Set
+      return feedsDeliveries.length > selectedRows.ids.size;
+    }
+  };
+
   const uploadFiles = async (draftFiles: DraftFeedInvoice[]) => {
     if (draftFiles.length === 0) {
       toast.error("Brak plików do przetworzenia");
@@ -181,9 +190,14 @@ const FeedsDeliveriesPage: React.FC = () => {
   };
 
   const downloadMultipleInvoices = async () => {
-    const selectedDeliveries = feedsDeliveries.filter((delivery) =>
-      selectedRows.ids.has(delivery.id)
-    );
+    const selectedDeliveries = feedsDeliveries.filter((delivery) => {
+      if (selectedRows.type === "include") {
+        return selectedRows.ids.has(delivery.id);
+      } else {
+        // type === "exclude" means all rows are selected except those in the Set
+        return !selectedRows.ids.has(delivery.id);
+      }
+    });
 
     if (selectedDeliveries.length === 0) {
       toast.warning("Nie wybrano żadnych dostaw");
@@ -342,7 +356,7 @@ const FeedsDeliveriesPage: React.FC = () => {
                 variant="contained"
                 color="primary"
                 onClick={() => setOpenCorrectionModal(true)}
-                disabled={selectedRows.ids.size === 0}
+                disabled={!hasSelectedRows()}
               >
                 Wprowadź fakturę korygującą
               </Button>
@@ -361,7 +375,7 @@ const FeedsDeliveriesPage: React.FC = () => {
                 variant="contained"
                 color="primary"
                 onClick={downloadMultipleInvoices}
-                disabled={selectedRows.ids.size === 0}
+                disabled={!hasSelectedRows()}
               >
                 Pobierz faktury
               </LoadingButton>

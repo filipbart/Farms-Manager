@@ -44,9 +44,10 @@ public class DownloadFeedInvoicesAsZipQueryHandler : IRequestHandler<DownloadFee
                         continue;
 
                     var extension = Path.GetExtension(feedInvoice.FilePath);
-                    var fileName = !string.IsNullOrEmpty(feedInvoice.InvoiceNumber)
-                        ? $"faktura_dostawa_{feedInvoice.InvoiceNumber}{extension}"
-                        : $"faktura_dostawa_{deliveryId}{extension}";
+                    var invoiceNumberSafe = !string.IsNullOrEmpty(feedInvoice.InvoiceNumber)
+                        ? feedInvoice.InvoiceNumber.Replace("/", "_").Replace("\\", "_")
+                        : deliveryId.ToString();
+                    var fileName = $"faktura_dostawa_{invoiceNumberSafe}{extension}";
 
                     var zipEntry = archive.CreateEntry(fileName, CompressionLevel.Optimal);
                     await using var zipEntryStream = zipEntry.Open();
@@ -69,7 +70,8 @@ public class DownloadFeedInvoicesAsZipQueryHandler : IRequestHandler<DownloadFee
                         continue;
 
                     var originalFileName = Path.GetFileName(decodedPath);
-                    var fileName = $"faktura_korekta_{originalFileName}";
+                    var fileNameSafe = originalFileName.Replace("/", "_").Replace("\\", "_");
+                    var fileName = $"faktura_korekta_{fileNameSafe}";
 
                     var zipEntry = archive.CreateEntry(fileName, CompressionLevel.Optimal);
                     await using var zipEntryStream = zipEntry.Open();
