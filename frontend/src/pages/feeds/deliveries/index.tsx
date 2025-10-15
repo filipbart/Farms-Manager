@@ -185,19 +185,33 @@ const FeedsDeliveriesPage: React.FC = () => {
       selectedRows.ids.has(delivery.id)
     );
 
-    const filePaths = selectedDeliveries
-      .map((delivery) => delivery.filePath)
-      .filter((path): path is string => path !== undefined && path !== null);
+    if (selectedDeliveries.length === 0) {
+      toast.warning("Nie wybrano żadnych dostaw");
+      return;
+    }
 
-    if (filePaths.length === 0) {
+    // Pobierz faktury zwykłych dostaw (używając ID)
+    const regularDeliveryIds = selectedDeliveries
+      .filter((delivery) => !delivery.isCorrection)
+      .map((delivery) => delivery.id);
+
+    // Pobierz faktury korekt (używając filePath)
+    const correctionFilePaths = selectedDeliveries
+      .filter((delivery) => delivery.isCorrection && delivery.filePath)
+      .map((delivery) => delivery.filePath as string);
+
+    if (regularDeliveryIds.length === 0 && correctionFilePaths.length === 0) {
       toast.warning("Wybrane dostawy nie mają przypisanych faktur");
       return;
     }
 
     await downloadFile({
-      url: ApiUrl.FilesZip,
-      params: { filePaths },
-      defaultFilename: "faktury",
+      url: ApiUrl.DownloadFeedsInvoicesZip,
+      params: { 
+        deliveryIds: regularDeliveryIds,
+        correctionFilePaths: correctionFilePaths 
+      },
+      defaultFilename: "faktury_pasz",
       setLoading: setLoadingZipFile,
       errorMessage: "Błąd podczas pobierania faktur",
       fileExtension: "zip",

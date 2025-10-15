@@ -312,4 +312,30 @@ public class FeedsController(IMediator mediator) : BaseController
     {
         return Ok(await mediator.Send(new UpdateFeedCorrectionCommand(dto)));
     }
+
+    /// <summary>
+    /// Pobiera wiele faktur pasz jako archiwum ZIP
+    /// </summary>
+    /// <param name="deliveryIds">Lista ID zwykłych dostaw pasz</param>
+    /// <param name="correctionFilePaths">Lista ścieżek do plików faktur korygujących</param>
+    /// <returns></returns>
+    [HttpGet("download-invoices-zip")]
+    [HasPermission(AppPermissions.Feeds.DeliveriesView)]
+    [ProducesResponseType(typeof(File), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> DownloadInvoicesAsZip(
+        [FromQuery] List<Guid>? deliveryIds,
+        [FromQuery] List<string>? correctionFilePaths)
+    {
+        if ((deliveryIds is null || deliveryIds.Count == 0) &&
+            (correctionFilePaths is null || correctionFilePaths.Count == 0))
+        {
+            return BadRequest("Brak danych do pobrania");
+        }
+
+        var zipData = await mediator.Send(new DownloadFeedInvoicesAsZipQuery(deliveryIds, correctionFilePaths));
+        var timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
+        return File(zipData, "application/zip", $"faktury_pasz_{timestamp}.zip");
+    }
 }

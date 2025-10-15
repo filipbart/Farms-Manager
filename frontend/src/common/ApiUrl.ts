@@ -137,6 +137,7 @@ export default class ApiUrl {
   public static AddFeedCorrection = this.Feeds + "/add-correction";
   public static DeleteFeedCorrection = this.Feeds + "/delete-correction";
   public static UpdateFeedCorrection = this.Feeds + "/update-correction";
+  public static DownloadFeedsInvoicesZip = this.Feeds + "/download-invoices-zip";
 
   public static Expenses = this.BaseUrl + "expenses";
   public static ExpensesTypes = this.Expenses + "/types";
