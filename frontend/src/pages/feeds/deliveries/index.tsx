@@ -92,12 +92,19 @@ const FeedsDeliveriesPage: React.FC = () => {
 
   const [openPaymentModal, setOpenPaymentModal] = useState(false);
   const [loadingPaymentFile, setLoadingPaymentFile] = useState(false);
+  const [loadingZipFile, setLoadingZipFile] = useState(false);
 
   const [openCorrectionModal, setOpenCorrectionModal] = useState(false);
   const [isCorrectionMode, setIsCorrectionMode] = useState(false);
+  const [isDownloadMode, setIsDownloadMode] = useState(false);
 
   const handleCancelCorrectionMode = () => {
     setIsCorrectionMode(false);
+    setSelectedRows({ type: "include", ids: new Set() });
+  };
+
+  const handleCancelDownloadMode = () => {
+    setIsDownloadMode(false);
     setSelectedRows({ type: "include", ids: new Set() });
   };
 
@@ -171,6 +178,32 @@ const FeedsDeliveriesPage: React.FC = () => {
       errorMessage: "Błąd podczas pobierania faktury korekty",
       fileExtension: fileExtension,
     });
+  };
+
+  const downloadMultipleInvoices = async () => {
+    const selectedDeliveries = feedsDeliveries.filter((delivery) =>
+      selectedRows.ids.has(delivery.id)
+    );
+
+    const filePaths = selectedDeliveries
+      .map((delivery) => delivery.filePath)
+      .filter((path): path is string => path !== undefined && path !== null);
+
+    if (filePaths.length === 0) {
+      toast.warning("Wybrane dostawy nie mają przypisanych faktur");
+      return;
+    }
+
+    await downloadFile({
+      url: ApiUrl.FilesZip,
+      params: { filePaths },
+      defaultFilename: "faktury",
+      setLoading: setLoadingZipFile,
+      errorMessage: "Błąd podczas pobierania faktur",
+      fileExtension: "zip",
+    });
+    
+    handleCancelDownloadMode();
   };
 
   const generatePaymentWithComment = async (comment: string) => {
@@ -307,6 +340,25 @@ const FeedsDeliveriesPage: React.FC = () => {
                 Anuluj
               </Button>
             </>
+          ) : isDownloadMode ? (
+            <>
+              <LoadingButton
+                loading={loadingZipFile}
+                variant="contained"
+                color="primary"
+                onClick={downloadMultipleInvoices}
+                disabled={selectedRows.ids.size === 0}
+              >
+                Pobierz faktury
+              </LoadingButton>
+              <Button
+                variant="outlined"
+                color="inherit"
+                onClick={handleCancelDownloadMode}
+              >
+                Anuluj
+              </Button>
+            </>
           ) : (
             <>
               <Button
@@ -315,6 +367,13 @@ const FeedsDeliveriesPage: React.FC = () => {
                 onClick={() => setIsCorrectionMode(true)}
               >
                 Utwórz korektę
+              </Button>
+              <Button
+                variant="outlined"
+                color="primary"
+                onClick={() => setIsDownloadMode(true)}
+              >
+                Pobierz faktury
               </Button>
               {selectedRows.ids.size > 0 && (
                 <LoadingButton
@@ -372,7 +431,7 @@ const FeedsDeliveriesPage: React.FC = () => {
           checkboxSelection
           disableRowSelectionOnClick
           isRowSelectable={(params) =>
-            isCorrectionMode || !params.row.paymentDateUtc
+            isCorrectionMode || isDownloadMode || !params.row.paymentDateUtc
           }
           onRowSelectionModelChange={(newSelection) => {
             setSelectedRows(newSelection);

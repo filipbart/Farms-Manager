@@ -150,7 +150,7 @@ export const getFeedsDeliveriesColumns = ({
     },
     {
       field: "paymentDateUtc",
-      headerName: "Data opłacenia",
+      headerName: "Data wygenerowania przelewu",
       flex: 1,
       renderCell: (params) => {
         if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
@@ -158,8 +158,8 @@ export const getFeedsDeliveriesColumns = ({
         }
         const date = params.row.paymentDateUtc;
         return date
-          ? `Opłacono dnia: ${new Date(date).toLocaleString()}`
-          : "Nie opłacono";
+          ? `Wygenerowano dnia: ${new Date(date).toLocaleString()}`
+          : "Nie wygenerowano";
       },
     },
 

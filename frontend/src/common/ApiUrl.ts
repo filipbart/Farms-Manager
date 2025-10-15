@@ -23,6 +23,7 @@ export default class ApiUrl {
 
   public static Files = this.BaseUrl + "files";
   public static GetFile = `${this.Files}/file`;
+  public static FilesZip = `${this.Files}/files-zip`;
 
   public static Farms = this.BaseUrl + "farms";
   public static UpdateFarmCycle = this.Farms + "/update-cycle";
@@ -132,6 +133,7 @@ export default class ApiUrl {
   public static UpdateFeedDelivery = this.Feeds + "/update-delivery";
   public static FeedsPayments = this.Feeds + "/payments";
   public static DeleteFeedPayment = this.Feeds + "/delete-payment";
+  public static MarkPaymentAsCompleted = this.Feeds + "/mark-payment-completed";
   public static AddFeedCorrection = this.Feeds + "/add-correction";
   public static DeleteFeedCorrection = this.Feeds + "/delete-correction";
   public static UpdateFeedCorrection = this.Feeds + "/update-correction";

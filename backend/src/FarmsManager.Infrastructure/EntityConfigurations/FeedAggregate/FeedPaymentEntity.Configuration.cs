@@ -1,4 +1,6 @@
-﻿using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
+using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
+using FarmsManager.Domain.Aggregates.FeedAggregate.Enums;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace FarmsManager.Infrastructure.EntityConfigurations.FeedAggregate;
@@ -9,6 +11,8 @@ public class FeedPaymentEntityConfiguration : BaseConfiguration<FeedPaymentEntit
     {
         base.Configure(builder);
         builder.HasKey(t => t.Id);
+
+        builder.Property(t => t.Status).IsRequired().HasDefaultValue(FeedPaymentStatus.Unrealized);
 
         builder.HasOne(t => t.Farm).WithMany().HasForeignKey(t => t.FarmId);
         builder.HasOne(t => t.Cycle).WithMany().HasForeignKey(t => t.CycleId);

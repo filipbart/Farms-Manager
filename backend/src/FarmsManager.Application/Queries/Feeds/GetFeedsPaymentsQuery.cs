@@ -1,6 +1,7 @@
-﻿using AutoMapper;
+using AutoMapper;
 using FarmsManager.Application.Common;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Extensions;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models;
 using FarmsManager.Application.Specifications.Feeds;
@@ -38,7 +39,10 @@ public record FeedPaymentRowDto
     public Guid Id { get; init; }
     public string FarmName { get; init; }
     public string CycleText { get; init; }
+    public string FileName { get; init; }
     public string FilePath { get; init; }
+    public string Status { get; init; }
+    public string Comment { get; init; }
     public DateTime DateCreatedUtc { get; init; }
 }
 
@@ -86,6 +90,7 @@ public class FeedsPaymentsProfile : Profile
     {
         CreateMap<FeedPaymentEntity, FeedPaymentRowDto>()
             .ForMember(t => t.FarmName, opt => opt.MapFrom(t => t.Farm.Name))
-            .ForMember(t => t.CycleText, opt => opt.MapFrom(t => t.Cycle.Identifier + "/" + t.Cycle.Year));
+            .ForMember(t => t.CycleText, opt => opt.MapFrom(t => t.Cycle.Identifier + "/" + t.Cycle.Year))
+            .ForMember(t => t.Status, opt => opt.MapFrom(t => t.Status.GetDescription()));
     }
 }

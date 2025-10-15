@@ -1,4 +1,4 @@
-﻿using FarmsManager.Api.Attributes;
+using FarmsManager.Api.Attributes;
 using FarmsManager.Api.Controllers.Base;
 using FarmsManager.Application.Commands.Feeds.Deliveries;
 using FarmsManager.Application.Commands.Feeds.Names;
@@ -250,9 +250,25 @@ public class FeedsController(IMediator mediator) : BaseController
     [HasPermission(AppPermissions.Feeds.PaymentsView)]
     [ProducesResponseType(typeof(BaseResponse<GetFeedsPaymentsQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetFeedsPrices([FromQuery] GetFeedsPaymentsQueryFilters filters)
+    public async Task<IActionResult> GetFeedsPayments([FromQuery] GetFeedsPaymentsQueryFilters filters)
     {
         return Ok(await mediator.Send(new GetFeedsPaymentsQuery(filters)));
+    }
+
+    /// <summary>
+    /// Oznacza przelew jako zrealizowany
+    /// </summary>
+    /// <param name="id"></param>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    [HttpPatch("mark-payment-completed/{id:guid}")]
+    [HasPermission(AppPermissions.Feeds.PaymentsView)]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> MarkPaymentAsCompleted([FromRoute] Guid id,
+        [FromBody] MarkPaymentAsCompletedCommandDto data)
+    {
+        return Ok(await mediator.Send(new MarkPaymentAsCompletedCommand(id, data)));
     }
 
     /// <summary>

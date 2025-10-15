@@ -1,4 +1,5 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
+import { type GridRowSelectionModel } from "@mui/x-data-grid";
 import { useReducer, useState, useMemo, useEffect } from "react";
 import { toast } from "react-toastify";
 import FiltersForm from "../../../components/filters/filters-form";
@@ -20,6 +21,7 @@ import { downloadFile } from "../../../utils/download-file";
 import ApiUrl from "../../../common/ApiUrl";
 import { getExpenseProductionColumns } from "./expenses-production-columns";
 import NoRowsOverlay from "../../../components/datagrid/custom-norows";
+import LoadingButton from "../../../components/common/loading-button";
 import { mapExpenseProductionOrderTypeToField } from "../../../common/helpers/expenses-productions-order-type-helper";
 import { getExpensesProductionsFiltersConfig } from "./filter-config.expenses-production";
 import AddExpenseProductionModal from "../../../components/modals/expenses/production/add-expense-production-modal";
@@ -83,6 +85,18 @@ const ExpenseProductionPage: React.FC = () => {
   const [downloadingFilePath, setDownloadFilePath] = useState<string | null>(
     null
   );
+
+  const [selectedRows, setSelectedRows] = useState<GridRowSelectionModel>({
+    type: "include",
+    ids: new Set(),
+  });
+  const [isDownloadMode, setIsDownloadMode] = useState(false);
+  const [loadingZipFile, setLoadingZipFile] = useState(false);
+
+  const handleCancelDownloadMode = () => {
+    setIsDownloadMode(false);
+    setSelectedRows({ type: "include", ids: new Set() });
+  };
 
   const uploadFiles = async (draftFiles: DraftExpenseInvoice[]) => {
     if (draftFiles.length === 0) {
@@ -155,6 +169,32 @@ const ExpenseProductionPage: React.FC = () => {
     });
   };
 
+  const downloadMultipleInvoices = async () => {
+    const selectedExpenses = expenseProductions.filter((expense) =>
+      selectedRows.ids.has(expense.id)
+    );
+
+    const filePaths = selectedExpenses
+      .map((expense) => expense.filePath)
+      .filter((path): path is string => path !== undefined && path !== null);
+
+    if (filePaths.length === 0) {
+      toast.warning("Wybrane koszty nie mają przypisanych faktur");
+      return;
+    }
+
+    await downloadFile({
+      url: ApiUrl.FilesZip,
+      params: { filePaths },
+      defaultFilename: "faktury_kosztow",
+      setLoading: setLoadingZipFile,
+      errorMessage: "Błąd podczas pobierania faktur",
+      fileExtension: "zip",
+    });
+
+    handleCancelDownloadMode();
+  };
+
   const columns = useMemo(
     () =>
       getExpenseProductionColumns({
@@ -198,21 +238,51 @@ const ExpenseProductionPage: React.FC = () => {
         gap={2}
       >
         <Typography variant="h4">Koszty produkcyjne</Typography>
-        <Box display="flex" gap={2}>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => setOpenAddExpenseProductionModal(true)}
-          >
-            Dodaj fakturę ręcznie
-          </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => setOpenAddInvoicesModal(true)}
-          >
-            Dodaj faktury automatycznie
-          </Button>
+        <Box display="flex" gap={2} alignItems="center">
+          {isDownloadMode ? (
+            <>
+              <LoadingButton
+                loading={loadingZipFile}
+                variant="contained"
+                color="primary"
+                onClick={downloadMultipleInvoices}
+                disabled={selectedRows.ids.size === 0}
+              >
+                Pobierz faktury
+              </LoadingButton>
+              <Button
+                variant="outlined"
+                color="inherit"
+                onClick={handleCancelDownloadMode}
+              >
+                Anuluj
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="outlined"
+                color="primary"
+                onClick={() => setIsDownloadMode(true)}
+              >
+                Pobierz faktury
+              </Button>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => setOpenAddExpenseProductionModal(true)}
+              >
+                Dodaj fakturę ręcznie
+              </Button>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => setOpenAddInvoicesModal(true)}
+              >
+                Dodaj faktury automatycznie
+              </Button>
+            </>
+          )}
         </Box>
       </Box>
 
@@ -261,7 +331,13 @@ const ExpenseProductionPage: React.FC = () => {
             });
           }}
           rowCount={totalRows}
-          rowSelection={false}
+          checkboxSelection={isDownloadMode}
+          disableRowSelectionOnClick
+          onRowSelectionModelChange={(newSelection) => {
+            setSelectedRows(newSelection);
+          }}
+          rowSelectionModel={selectedRows}
+          rowSelection={isDownloadMode}
           pageSizeOptions={[5, 10, 25, { value: -1, label: "Wszystkie" }]}
           slots={{ noRowsOverlay: NoRowsOverlay }}
           showToolbar

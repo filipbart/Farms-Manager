@@ -121,6 +121,16 @@ export class FeedsService {
     return await AxiosWrapper.delete(ApiUrl.DeleteFeedPayment + "/" + id);
   }
 
+  public static async markPaymentAsCompleted(
+    id: string,
+    data: { comment?: string }
+  ) {
+    return await AxiosWrapper.patch(
+      ApiUrl.MarkPaymentAsCompleted + "/" + id,
+      data
+    );
+  }
+
   public static async getFeedsDeliveries(
     filters: FeedsDeliveriesFilterPaginationModel
   ) {

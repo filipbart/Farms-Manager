@@ -9,6 +9,7 @@ import { downloadFile } from "../../../utils/download-file";
 import ApiUrl from "../../../common/ApiUrl";
 import type { FeedPaymentListModel } from "../../../models/feeds/payments/payment";
 import { getFeedsPaymentsColumns } from "./payments-columns";
+import MarkPaymentCompletedModal from "../../../components/modals/feeds/payments/mark-payment-completed-modal";
 import {
   FeedsPaymentsOrderType,
   filterReducer,
@@ -51,6 +52,8 @@ const FeedsPaymentsPage: React.FC = () => {
   const [totalRows, setTotalRows] = useState(0);
 
   const [downloadFilePath, setDownloadFilePath] = useState<string | null>(null);
+  const [selectedPaymentId, setSelectedPaymentId] = useState<string | null>(null);
+  const [isMarkCompletedModalOpen, setIsMarkCompletedModalOpen] = useState(false);
 
   const [initialGridState] = useState(() => {
     const savedState = localStorage.getItem("feedPaymentsGridState");
@@ -116,6 +119,34 @@ const FeedsPaymentsPage: React.FC = () => {
       fileExtension: fileExtension,
     });
   };
+
+  const handleMarkAsCompleted = (id: string) => {
+    setSelectedPaymentId(id);
+    setIsMarkCompletedModalOpen(true);
+  };
+
+  const handleConfirmMarkAsCompleted = async (comment: string) => {
+    if (!selectedPaymentId) return;
+
+    try {
+      setLoading(true);
+      await handleApiResponse(
+        () => FeedsService.markPaymentAsCompleted(selectedPaymentId, { comment }),
+        async () => {
+          toast.success("Przelew został oznaczony jako zrealizowany");
+          setIsMarkCompletedModalOpen(false);
+          setSelectedPaymentId(null);
+          await fetchFeedsPayments();
+        },
+        undefined,
+        "Błąd podczas oznaczania przelewu jako zrealizowany"
+      );
+    } catch {
+      toast.error("Błąd podczas oznaczania przelewu jako zrealizowany");
+    } finally {
+      setLoading(false);
+    }
+  };
   const fetchDictionaries = async () => {
     try {
       await handleApiResponse(
@@ -135,6 +166,7 @@ const FeedsPaymentsPage: React.FC = () => {
         deleteFeedPayment,
         downloadPaymentFile,
         downloadFilePath,
+        onMarkAsCompleted: handleMarkAsCompleted,
       }),
     [downloadFilePath]
   );
@@ -255,6 +287,15 @@ const FeedsPaymentsPage: React.FC = () => {
           }}
         />
       </Box>
+
+      <MarkPaymentCompletedModal
+        open={isMarkCompletedModalOpen}
+        onClose={() => {
+          setIsMarkCompletedModalOpen(false);
+          setSelectedPaymentId(null);
+        }}
+        onConfirm={handleConfirmMarkAsCompleted}
+      />
     </Box>
   );
 };

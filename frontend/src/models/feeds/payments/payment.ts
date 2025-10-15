@@ -3,5 +3,12 @@ export interface FeedPaymentListModel {
   cycleText: string;
   farmName: string;
   filePath: string;
+  fileName: string;
   dateCreatedUtc: string;
+  status: "Niezrealizowany" | "Zrealizowany";
+  comment?: string;
+}
+
+export interface MarkPaymentAsCompletedDto {
+  comment?: string;
 }
