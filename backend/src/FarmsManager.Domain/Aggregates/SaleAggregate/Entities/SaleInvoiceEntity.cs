@@ -1,4 +1,5 @@
-﻿using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
+using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
+using FarmsManager.Domain.Aggregates.SaleAggregate.Enums;
 using FarmsManager.Domain.Aggregates.SlaughterhouseAggregate.Entities;
 using FarmsManager.Domain.SeedWork;
 
@@ -17,6 +18,8 @@ public class SaleInvoiceEntity : Entity
     public decimal VatAmount { get; protected internal set; }
     public string FilePath { get; protected internal set; }
     public DateOnly? PaymentDate { get; protected internal set; }
+    public SaleInvoiceStatus Status { get; protected internal set; }
+    public string Comment { get; protected internal set; }
 
     public virtual FarmEntity Farm { get; init; }
     public virtual CycleEntity Cycle { get; init; }
@@ -49,6 +52,7 @@ public class SaleInvoiceEntity : Entity
             InvoiceTotal = invoiceTotal,
             SubTotal = subTotal,
             VatAmount = vatAmount,
+            Status = SaleInvoiceStatus.Unrealized,
             CreatedBy = userId
         };
     }
@@ -84,5 +88,19 @@ public class SaleInvoiceEntity : Entity
     public void BookPayment(DateOnly paymentDate)
     {
         PaymentDate = paymentDate;
+    }
+
+    public void MarkAsCompleted(DateOnly paymentDate, string comment = null)
+    {
+        Status = SaleInvoiceStatus.Realized;
+        PaymentDate = paymentDate;
+        Comment = comment;
+    }
+
+    public void MarkAsUnrealized()
+    {
+        Status = SaleInvoiceStatus.Unrealized;
+        PaymentDate = null;
+        Comment = null;
     }
 }

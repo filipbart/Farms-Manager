@@ -1,4 +1,6 @@
-﻿using FarmsManager.Application.Common;
+using FarmsManager.Application.Common;
+using FarmsManager.Application.Helpers;
+using FarmsManager.Application.Models.Notifications;
 
 namespace FarmsManager.Application.Queries.Sales.Invoices;
 
@@ -19,6 +21,7 @@ public class SalesInvoiceRowDto
     public DateTime DateCreatedUtc { get; init; }
     public string FilePath { get; init; }
     public DateOnly? PaymentDate { get; init; }
+    public NotificationPriority? Priority => PriorityCalculator.CalculatePriority(DueDate, PaymentDate);
 }
 
 public class GetSalesInvoicesQueryResponse : PaginationModel<SalesInvoiceRowDto>;

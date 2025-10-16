@@ -54,4 +54,5 @@ export interface FeedDeliveryListModel {
   paymentDateUtc?: string;
   filePath?: string;
   isCorrection: boolean;
+  priority?: "Low" | "Medium" | "High";
 }

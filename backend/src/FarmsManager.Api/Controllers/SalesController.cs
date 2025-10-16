@@ -1,4 +1,4 @@
-﻿using FarmsManager.Api.Attributes;
+using FarmsManager.Api.Attributes;
 using FarmsManager.Api.Controllers.Base;
 using FarmsManager.Application.Commands.Sales;
 using FarmsManager.Application.Commands.Sales.Invoices;
@@ -224,5 +224,35 @@ public class SalesController(IMediator mediator, IS3Service s3Service) : BaseCon
     public async Task<IActionResult> SaleInvoicesBookPayment(SalesInvoicesBookPaymentCommand command)
     {
         return Ok(await mediator.Send(command));
+    }
+
+    /// <summary>
+    /// Oznacza fakturę jako zrealizowaną
+    /// </summary>
+    /// <param name="id"></param>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    [HttpPost("invoices/mark-as-completed/{id:guid}")]
+    [HasPermission(AppPermissions.Sales.InvoicesView)]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> MarkSaleInvoiceAsCompleted([FromRoute] Guid id,
+        [FromBody] MarkSaleInvoiceAsCompletedCommandDto data)
+    {
+        return Ok(await mediator.Send(new MarkSaleInvoiceAsCompletedCommand(id, data)));
+    }
+
+    /// <summary>
+    /// Oznacza fakturę jako niezrealizowaną
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    [HttpPost("invoices/mark-as-unrealized/{id:guid}")]
+    [HasPermission(AppPermissions.Sales.InvoicesView)]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> MarkSaleInvoiceAsUnrealized([FromRoute] Guid id)
+    {
+        return Ok(await mediator.Send(new MarkSaleInvoiceAsUnrealizedCommand(id)));
     }
 }

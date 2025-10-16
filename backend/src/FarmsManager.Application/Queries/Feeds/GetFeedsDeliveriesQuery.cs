@@ -1,8 +1,10 @@
 using AutoMapper;
 using FarmsManager.Application.Common;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Helpers;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models;
+using FarmsManager.Application.Models.Notifications;
 using FarmsManager.Application.Specifications.Feeds;
 using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
@@ -82,6 +84,7 @@ public record FeedDeliveryRowDto
     public DateTime? PaymentDateUtc { get; init; }
     public string FilePath { get; init; }
     public bool IsCorrection { get; init; }
+    public NotificationPriority? Priority => PriorityCalculator.CalculatePriority(DueDate, PaymentDateUtc);
 }
 
 public class

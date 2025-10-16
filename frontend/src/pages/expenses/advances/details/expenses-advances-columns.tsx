@@ -6,6 +6,7 @@ import FileDownloadCell from "../../../../components/datagrid/file-download-cell
 import type { ExpenseAdvanceListModel } from "../../../../models/expenses/advances/expenses-advances";
 import { AdvanceType } from "../../../../models/expenses/advances/categories";
 import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
+import { Button, Chip } from "@mui/material";
 
 interface GetAdvancesColumnsProps {
   setSelectedAdvance: (row: ExpenseAdvanceListModel) => void;
@@ -13,6 +14,8 @@ interface GetAdvancesColumnsProps {
   setIsEditModalOpen: (isOpen: boolean) => void;
   downloadAdvanceFile: (path: string) => void;
   downloadingFilePath: string | null;
+  onMarkAsCompleted: (id: string) => void;
+  onMarkAsUnrealized: (id: string) => void;
 }
 
 export const getAdvancesColumns = ({
@@ -21,6 +24,8 @@ export const getAdvancesColumns = ({
   setIsEditModalOpen,
   downloadAdvanceFile,
   downloadingFilePath,
+  onMarkAsCompleted,
+  onMarkAsUnrealized,
 }: GetAdvancesColumnsProps): GridColDef<ExpenseAdvanceListModel>[] => {
   return [
     {
@@ -61,12 +66,46 @@ export const getAdvancesColumns = ({
       flex: 1,
     },
     {
+      field: "status",
+      headerName: "Status",
+      width: 150,
+      renderCell: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return null;
+        }
+        const isCompleted = params.row.status === "Zrealizowany";
+        return (
+          <Chip
+            label={params.row.status}
+            color={isCompleted ? "success" : "error"}
+            size="small"
+          />
+        );
+      },
+    },
+    {
+      field: "paymentDate",
+      headerName: "Data płatności",
+      width: 150,
+      valueGetter: (value: string) =>
+        value ? dayjs(value).format("YYYY-MM-DD") : "-",
+    },
+    {
       field: "comment",
       headerName: "Komentarz",
       flex: 1,
       sortable: false,
       aggregable: false,
-      renderCell: (params) => <CommentCell value={params.value} />,
+      renderCell: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return null;
+        }
+        return params.row.comment ? (
+          <CommentCell value={params.row.comment} />
+        ) : (
+          <span>-</span>
+        );
+      },
     },
     {
       field: "filePath",
@@ -92,12 +131,41 @@ export const getAdvancesColumns = ({
       field: "actions",
       type: "actions",
       headerName: "Akcje",
-      width: 200,
+      width: 250,
       getActions: (params) => {
         if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
           return [];
         }
-        return [
+        const isCompleted = params.row.status === "Zrealizowany";
+        const actions = [];
+
+        if (isCompleted) {
+          actions.push(
+            <Button
+              key="unrealized"
+              size="small"
+              variant="outlined"
+              color="error"
+              onClick={() => onMarkAsUnrealized(params.row.id)}
+            >
+              Niezrealizowany
+            </Button>
+          );
+        } else {
+          actions.push(
+            <Button
+              key="complete"
+              size="small"
+              variant="outlined"
+              color="success"
+              onClick={() => onMarkAsCompleted(params.row.id)}
+            >
+              Zrealizowany
+            </Button>
+          );
+        }
+
+        actions.push(
           <ActionsCell
             key="actions"
             params={params}
@@ -106,8 +174,10 @@ export const getAdvancesColumns = ({
               setIsEditModalOpen(true);
             }}
             onDelete={deleteAdvance}
-          />,
-        ];
+          />
+        );
+
+        return actions;
       },
     },
     {

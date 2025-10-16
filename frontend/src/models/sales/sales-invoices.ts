@@ -14,6 +14,7 @@ export interface SalesInvoiceListModel {
   dateCreatedUtc: string;
   filePath?: string;
   paymentDate?: string;
+  priority?: "Low" | "Medium" | "High";
 }
 
 export interface UpdateSalesInvoiceData {

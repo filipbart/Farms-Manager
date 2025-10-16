@@ -7,6 +7,7 @@ import type {
   AddExpenseAdvance,
   GetExpensesAdvancesResponse,
   UpdateExpenseAdvance,
+  MarkAdvanceAsCompletedDto,
 } from "../models/expenses/advances/expenses-advances";
 import type { ExpensesAdvancesFilterPaginationModel } from "../models/expenses/advances/expenses-advances-filters";
 import AxiosWrapper from "../utils/axios/wrapper";
@@ -93,5 +94,22 @@ export class ExpensesAdvancesService {
 
   public static async deleteAdvanceCategory(id: string) {
     return await AxiosWrapper.delete(ApiUrl.DeleteAdvanceCategory(id));
+  }
+
+  public static async markAdvanceAsCompleted(
+    advanceId: string,
+    data: MarkAdvanceAsCompletedDto
+  ) {
+    return await AxiosWrapper.patch(
+      ApiUrl.MarkAdvanceAsCompleted(advanceId),
+      data
+    );
+  }
+
+  public static async markAdvanceAsUnrealized(advanceId: string) {
+    return await AxiosWrapper.patch(
+      ApiUrl.MarkAdvanceAsUnrealized(advanceId),
+      {}
+    );
   }
 }

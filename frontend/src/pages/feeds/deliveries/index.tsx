@@ -39,6 +39,7 @@ import {
   initializeFiltersFromLocalStorage,
 } from "../../../utils/grid-state-helper";
 import { useFeedsNames } from "../../../hooks/feeds/useFeedsNames";
+import { getPriorityClassName } from "../../../utils/priority-helper";
 
 const FeedsDeliveriesPage: React.FC = () => {
   const [filters, dispatch] = useReducer(
@@ -492,7 +493,7 @@ const FeedsDeliveriesPage: React.FC = () => {
             if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
               return "aggregated-row";
             }
-            return "";
+            return getPriorityClassName(params.row.priority);
           }}
           sx={{
             [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },
@@ -503,6 +504,24 @@ const FeedsDeliveriesPage: React.FC = () => {
               "& .MuiDataGrid-cell": {
                 borderTop: "1px solid rgba(224, 224, 224, 1)",
                 backgroundColor: "rgba(240, 240, 240, 0.7)",
+              },
+            },
+            "& .payment-overdue": {
+              backgroundColor: "rgba(244, 67, 54, 0.1)",
+              "&:hover": {
+                backgroundColor: "rgba(244, 67, 54, 0.15)",
+              },
+            },
+            "& .payment-due-soon": {
+              backgroundColor: "rgba(255, 193, 7, 0.15)",
+              "&:hover": {
+                backgroundColor: "rgba(255, 193, 7, 0.2)",
+              },
+            },
+            "& .payment-due-warning": {
+              backgroundColor: "rgba(33, 150, 243, 0.1)",
+              "&:hover": {
+                backgroundColor: "rgba(33, 150, 243, 0.15)",
               },
             },
           }}

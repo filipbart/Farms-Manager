@@ -1,5 +1,7 @@
-﻿using FarmsManager.Application.Common;
+using FarmsManager.Application.Common;
 using FarmsManager.Application.Extensions;
+using FarmsManager.Application.Helpers;
+using FarmsManager.Application.Models.Notifications;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Enums;
 
 namespace FarmsManager.Application.Queries.Expenses.Advances;
@@ -16,6 +18,14 @@ public class ExpenseAdvanceRowDto
     public string Comment { get; init; }
     public string FilePath { get; init; }
     public DateTime DateCreatedUtc { get; init; }
+    
+    /// <summary>
+    /// Priorytet obliczany tylko dla wydatków (Expense).
+    /// Dla przychodów (Income) zawsze null, bo to wpłaty od pracownika, nie zobowiązania.
+    /// </summary>
+    public NotificationPriority? Priority => Type == ExpenseAdvanceCategoryType.Expense 
+        ? PriorityCalculator.CalculatePriority(Date, (DateOnly?)null) 
+        : null;
 }
 
 public class GetExpensesAdvancesQueryResponse
