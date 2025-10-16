@@ -1,13 +1,9 @@
-import { useState } from "react";
 import {
   Paper,
   Typography,
   Box,
-  Collapse,
-  IconButton,
   Divider,
 } from "@mui/material";
-import { MdExpandMore, MdExpandLess } from "react-icons/md";
 import type { DashboardChickenHousesStatus } from "../../models/dashboard/dashboard";
 import dayjs from "dayjs";
 
@@ -18,7 +14,6 @@ interface ChickenHousesStatusProps {
 export const ChickenHousesStatus: React.FC<ChickenHousesStatusProps> = ({
   data,
 }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
 
   const calculateDaysSinceInsertion = (insertionDate?: string): number | null => {
     if (!insertionDate) return null;
@@ -40,34 +35,21 @@ export const ChickenHousesStatus: React.FC<ChickenHousesStatusProps> = ({
         flexDirection: "column",
       }}
     >
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          cursor: "pointer",
-        }}
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
-        <Box>
-          <Typography variant="h6">
-            Aktualnie masz {activeHenhousesCount} kurników w obsadzie
-          </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mt: 0.5 }}>
-            Łącznie sztuk w obsadzie:{" "}
-            <strong>
-              {data?.totalChickenCount.toLocaleString("pl-PL") ?? 0}
-            </strong>
-          </Typography>
-        </Box>
-        <IconButton>
-          {isExpanded ? <MdExpandLess /> : <MdExpandMore />}
-        </IconButton>
+      <Box>
+        <Typography variant="h6">
+          Aktualnie masz {activeHenhousesCount} kurników w obsadzie
+        </Typography>
+        <Typography variant="body1" color="text.secondary" sx={{ mt: 0.5 }}>
+          Łącznie sztuk w obsadzie:{" "}
+          <strong>
+            {data?.totalChickenCount.toLocaleString("pl-PL") ?? 0}
+          </strong>
+        </Typography>
       </Box>
 
-      <Collapse in={isExpanded}>
-        <Divider sx={{ my: 2 }} />
-        <Box sx={{ flexGrow: 1, overflowY: "auto", maxHeight: 400 }}>
+      <Divider sx={{ my: 2 }} />
+      
+      <Box sx={{ overflowY: "auto", maxHeight: 400 }}>
           {data?.farms.map((farm) => {
             const activeHenhouses = farm.henhouses.filter(
               (h) => h.chickenCount > 0
@@ -109,8 +91,7 @@ export const ChickenHousesStatus: React.FC<ChickenHousesStatusProps> = ({
               </Box>
             );
           })}
-        </Box>
-      </Collapse>
+      </Box>
     </Paper>
   );
 };
