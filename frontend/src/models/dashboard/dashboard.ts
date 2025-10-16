@@ -96,6 +96,7 @@ export interface DashboardStats {
 export interface DashboardHenhouseStatus {
   name: string;
   chickenCount: number;
+  insertionDate?: string;
 }
 
 export interface DashboardFarmStatus {

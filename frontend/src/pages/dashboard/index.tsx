@@ -14,8 +14,6 @@ import {
   TextField,
   Grid,
   Skeleton,
-  Paper,
-  Divider,
 } from "@mui/material";
 import { FaPercentage, FaPiggyBank, FaChartArea } from "react-icons/fa";
 import {
@@ -31,6 +29,7 @@ import { handleApiResponse } from "../../utils/axios/handle-api-response";
 import { DashboardService } from "../../services/dashboard-service";
 import { DashboardNotifications } from "../../components/dashboard/dashboard-notifications";
 import { ExpensesPieChart } from "../../components/dashboard/expenses-pie-chart";
+import { ChickenHousesStatus } from "../../components/dashboard/chicken-houses-status";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import type { Dayjs } from "dayjs";
 import { ProductionResultsChart } from "../../components/dashboard/production-results-charts";
@@ -540,60 +539,7 @@ const DashboardPage: React.FC = () => {
           {isLoadingStats ? (
             <Skeleton variant="rounded" height="100%" />
           ) : (
-            <Paper
-              sx={{
-                p: 2,
-                height: "100%",
-                display: "flex",
-                flexDirection: "column",
-              }}
-            >
-              <Typography variant="h6" mb={1}>
-                Kurniki w obsadzie
-              </Typography>
-              <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
-                {chickenHousesStatus?.farms.map((farm) => {
-                  const activeHenhouses = farm.henhouses.filter(
-                    (h) => h.chickenCount > 0
-                  );
-                  if (activeHenhouses.length === 0) return;
-                  return (
-                    <Box key={farm.name} mb={2}>
-                      <Typography
-                        variant="subtitle1"
-                        sx={{ fontWeight: "bold" }}
-                      >
-                        {farm.name}
-                      </Typography>
-                      <Box sx={{ pl: 2 }}>
-                        {activeHenhouses.map((henhouse) => (
-                          <Typography
-                            key={henhouse.name}
-                            variant="body2"
-                            color="text.secondary"
-                          >
-                            {henhouse.name}:{" "}
-                            <strong>
-                              {henhouse.chickenCount.toLocaleString("pl-PL")}{" "}
-                              szt.
-                            </strong>
-                          </Typography>
-                        ))}
-                      </Box>
-                    </Box>
-                  );
-                })}
-              </Box>
-              <Divider sx={{ my: 1 }} />
-              <Typography variant="h6">
-                Łącznie sztuk w obsadzie:{" "}
-                <strong>
-                  {chickenHousesStatus?.totalChickenCount.toLocaleString(
-                    "pl-PL"
-                  )}
-                </strong>
-              </Typography>
-            </Paper>
+            <ChickenHousesStatus data={chickenHousesStatus} />
           )}
         </Grid>
 
