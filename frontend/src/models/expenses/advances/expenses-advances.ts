@@ -1,16 +1,6 @@
 import type { PaginateModel } from "../../../common/interfaces/paginate";
 import type { AdvanceType } from "./categories";
 
-export enum ExpenseAdvanceStatus {
-  Unrealized = "Unrealized",
-  Realized = "Realized",
-}
-
-export const ExpenseAdvanceStatusLabels: Record<ExpenseAdvanceStatus, string> = {
-  [ExpenseAdvanceStatus.Unrealized]: "Niezrealizowany",
-  [ExpenseAdvanceStatus.Realized]: "Zrealizowany",
-};
-
 export interface ExpenseAdvanceListModel {
   id: string;
   date: string;
@@ -22,8 +12,6 @@ export interface ExpenseAdvanceListModel {
   comment?: string;
   filePath?: string;
   dateCreatedUtc: string;
-  status: "Niezrealizowany" | "Zrealizowany";
-  paymentDate?: string;
   priority?: "Low" | "Medium" | "High";
 }
 
@@ -59,9 +47,4 @@ export interface UpdateExpenseAdvance {
   categoryName: string;
   comment?: string;
   file?: File;
-}
-
-export interface MarkAdvanceAsCompletedDto {
-  paymentDate: string;
-  comment?: string;
 }

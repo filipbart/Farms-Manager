@@ -177,10 +177,6 @@ export default class ApiUrl {
   public static AddAdvanceCategory = this.ExpensesAdvancesCategories + "/add";
   public static DeleteAdvanceCategory = (id: string) =>
     this.ExpensesAdvancesCategories + "/delete/" + id;
-  public static MarkAdvanceAsCompleted = (advanceId: string) =>
-    this.ExpensesAdvances + "/" + advanceId + "/mark-completed";
-  public static MarkAdvanceAsUnrealized = (advanceId: string) =>
-    this.ExpensesAdvances + "/" + advanceId + "/mark-unrealized";
 
   public static ProductionData = this.BaseUrl + "production-data";
   public static ProductionDataDictionary = this.ProductionData + "/dictionary";
