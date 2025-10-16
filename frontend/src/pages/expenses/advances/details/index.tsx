@@ -28,6 +28,7 @@ import { toast } from "react-toastify";
 import { ExpensesAdvancesService } from "../../../../services/expenses-advances-service";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import EditExpenseAdvanceModal from "../../../../components/modals/expenses/advances/edit-expense-advance-modal";
+import MarkAdvanceCompletedModal from "../../../../components/modals/expenses/advances/mark-advance-completed-modal";
 import {
   DataGridPremium,
   GRID_AGGREGATION_ROOT_FOOTER_ROW_ID,
@@ -81,6 +82,8 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
   const [downloadingFilePath, setDownloadFilePath] = useState<string | null>(
     null
   );
+  const [selectedAdvanceId, setSelectedAdvanceId] = useState<string | null>(null);
+  const [isMarkCompletedModalOpen, setIsMarkCompletedModalOpen] = useState(false);
   const nav = useNavigate();
 
   const [initialGridState] = useState(() => {
@@ -173,6 +176,47 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
     );
   };
 
+  const handleMarkAsCompleted = (id: string) => {
+    setSelectedAdvanceId(id);
+    setIsMarkCompletedModalOpen(true);
+  };
+
+  const handleConfirmMarkAsCompleted = async (paymentDate: string, comment: string) => {
+    if (!selectedAdvanceId) return;
+
+    try {
+      await handleApiResponse(
+        () => ExpensesAdvancesService.markAdvanceAsCompleted(selectedAdvanceId, { paymentDate, comment }),
+        async () => {
+          toast.success("Zaliczka została oznaczona jako zrealizowana");
+          setIsMarkCompletedModalOpen(false);
+          setSelectedAdvanceId(null);
+          await fetchExpenseAdvances();
+        },
+        undefined,
+        "Błąd podczas oznaczania zaliczki jako zrealizowana"
+      );
+    } catch {
+      toast.error("Błąd podczas oznaczania zaliczki jako zrealizowana");
+    }
+  };
+
+  const handleMarkAsUnrealized = async (id: string) => {
+    try {
+      await handleApiResponse(
+        () => ExpensesAdvancesService.markAdvanceAsUnrealized(id),
+        async () => {
+          toast.success("Zaliczka została oznaczona jako niezrealizowana");
+          await fetchExpenseAdvances();
+        },
+        undefined,
+        "Błąd podczas oznaczania zaliczki jako niezrealizowana"
+      );
+    } catch {
+      toast.error("Błąd podczas oznaczania zaliczki jako niezrealizowana");
+    }
+  };
+
   const columns = useMemo(
     () =>
       getAdvancesColumns({
@@ -181,6 +225,8 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
         setIsEditModalOpen: setOpenEditModal,
         downloadAdvanceFile: downloadExpenseAdvanceFile,
         downloadingFilePath,
+        onMarkAsCompleted: handleMarkAsCompleted,
+        onMarkAsUnrealized: handleMarkAsUnrealized,
       }),
     [downloadingFilePath]
   );
@@ -451,6 +497,14 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
           fetchExpenseAdvances();
         }}
         advance={selectedAdvance}
+      />
+      <MarkAdvanceCompletedModal
+        open={isMarkCompletedModalOpen}
+        onClose={() => {
+          setIsMarkCompletedModalOpen(false);
+          setSelectedAdvanceId(null);
+        }}
+        onConfirm={handleConfirmMarkAsCompleted}
       />
     </Box>
   );
