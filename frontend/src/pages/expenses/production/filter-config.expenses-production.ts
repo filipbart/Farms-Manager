@@ -60,4 +60,9 @@ export const getExpensesProductionsFiltersConfig = (
     label: "Data do",
     type: "date",
   },
+  {
+    key: "invoiceNumber",
+    label: "Numer faktury",
+    type: "text",
+  },
 ];

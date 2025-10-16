@@ -2,6 +2,7 @@ using Ardalis.Specification;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities;
 using LinqKit;
+using Microsoft.EntityFrameworkCore;
 
 namespace FarmsManager.Application.Queries.Expenses.Productions;
 
@@ -56,7 +57,6 @@ public sealed class GetAllExpenseProductionsSpec : BaseSpecification<ExpenseProd
 
             Query.Where(predicate);
         }
-
         if (filters.DateSince is not null)
         {
             Query.Where(ep => ep.InvoiceDate >= filters.DateSince.Value);
@@ -65,6 +65,12 @@ public sealed class GetAllExpenseProductionsSpec : BaseSpecification<ExpenseProd
         if (filters.DateTo is not null)
         {
             Query.Where(ep => ep.InvoiceDate <= filters.DateTo.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(filters.InvoiceNumber))
+        {
+            var phrase = $"%{filters.InvoiceNumber}%";
+            Query.Where(ep => EF.Functions.ILike(ep.InvoiceNumber, phrase));
         }
     }
 

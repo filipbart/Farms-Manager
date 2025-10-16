@@ -1,4 +1,4 @@
-﻿using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Queries.Farms;
 using FarmsManager.Application.Specifications.Users;
@@ -403,12 +403,18 @@ public class
             foreach (var henhouse in farm.Henhouses.Where(h => !h.DateDeletedUtc.HasValue).OrderBy(h => h.Name))
             {
                 var chickenCount = 0;
+                DateOnly? insertionDate = null;
 
                 if (activeCycleId.HasValue)
                 {
-                    var insertedCount = insertionsLookup[henhouse.Id]
+                    var insertions = insertionsLookup[henhouse.Id]
                         .Where(i => i.CycleId == activeCycleId)
-                        .Sum(i => i.Quantity);
+                        .ToList();
+
+                    var insertedCount = insertions.Sum(i => i.Quantity);
+
+                    // Pobierz datę wstawienia (jest tylko jedno wstawienie na kurnik w cyklu)
+                    insertionDate = insertions.FirstOrDefault()?.InsertionDate;
 
                     var lossesCount = failuresLookup[henhouse.Id]
                         .Where(f => f.CycleId == activeCycleId)
@@ -430,7 +436,8 @@ public class
                 farmStatus.Henhouses.Add(new DashboardHenhouseStatus
                 {
                     Name = henhouse.Name,
-                    ChickenCount = Math.Max(0, chickenCount)
+                    ChickenCount = Math.Max(0, chickenCount),
+                    InsertionDate = insertionDate
                 });
             }
 

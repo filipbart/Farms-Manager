@@ -1,4 +1,4 @@
-﻿using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models.Notifications;
 using FarmsManager.Application.Queries.FallenStock;
@@ -566,13 +566,21 @@ public class
             foreach (var henhouse in farm.Henhouses.Where(h => !h.DateDeletedUtc.HasValue).OrderBy(h => h.Name))
             {
                 var chickenCount = 0;
+                DateOnly? insertionDate = null;
+                
                 if (activeCycleId.HasValue)
                 {
-                    var henhouseInsertions = insertionsLookup[henhouse.Id].Where(i => i.CycleId == activeCycleId);
+                    var henhouseInsertions = insertionsLookup[henhouse.Id]
+                        .Where(i => i.CycleId == activeCycleId)
+                        .ToList();
                     var henhouseSales = salesLookup[henhouse.Id].Where(s => s.CycleId == activeCycleId);
                     var henhouseFailures = failuresLookup[henhouse.Id].Where(f => f.CycleId == activeCycleId);
 
                     var insertedCount = henhouseInsertions.Sum(i => i.Quantity);
+                    
+                    // Pobierz datę wstawienia (jest tylko jedno wstawienie na kurnik w cyklu)
+                    insertionDate = henhouseInsertions.FirstOrDefault()?.InsertionDate;
+                    
                     var lossesCount = henhouseFailures.Sum(f => f.DeadCount + f.DefectiveCount);
                     var soldCount = henhouseSales.Sum(s => s.Quantity);
 
@@ -587,7 +595,8 @@ public class
                 farmStatus.Henhouses.Add(new DashboardHenhouseStatus
                 {
                     Name = henhouse.Name,
-                    ChickenCount = chickenCount < 0 ? 0 : chickenCount
+                    ChickenCount = chickenCount < 0 ? 0 : chickenCount,
+                    InsertionDate = insertionDate
                 });
             }
 

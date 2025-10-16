@@ -1,4 +1,4 @@
-﻿using FarmsManager.Application.Models.Notifications;
+using FarmsManager.Application.Models.Notifications;
 
 namespace FarmsManager.Application.Queries.Dashboard;
 
@@ -38,6 +38,7 @@ public record DashboardHenhouseStatus
 {
     public string Name { get; set; }
     public int ChickenCount { get; set; } //EndCycleBirdBalance
+    public DateOnly? InsertionDate { get; set; }
 }
 
 public record DashboardFarmStatus

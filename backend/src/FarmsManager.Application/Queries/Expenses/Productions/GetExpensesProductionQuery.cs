@@ -33,6 +33,7 @@ public record GetExpensesProductionsFilters : OrderedPaginationParams<ExpensesPr
     public List<Guid> ExpensesTypesIds { get; init; }
     public DateOnly? DateSince { get; init; }
     public DateOnly? DateTo { get; init; }
+    public string InvoiceNumber { get; init; }
 }
 
 public record GetExpensesProductionQuery(GetExpensesProductionsFilters Filters)
