@@ -129,7 +129,7 @@ using (var lifetimeScope = app.Services.GetAutofacRoot().BeginLifetimeScope())
 }
 
 // Security middleware - musi być na początku
-app.UseMiddleware<PathTraversalProtectionMiddleware>();
+//app.UseMiddleware<PathTraversalProtectionMiddleware>();
 
 app.UseCors(builder =>
 {
