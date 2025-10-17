@@ -1,7 +1,8 @@
-﻿using Ardalis.Specification;
+using Ardalis.Specification;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.FileSystem;
 using FarmsManager.Application.Interfaces;
+using FarmsManager.Application.Services;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Application.Specifications.Employees;
 using FarmsManager.Domain.Aggregates.EmployeeAggregate.Interfaces;
@@ -40,24 +41,37 @@ public class AddExpenseAdvanceCommandHandler : IRequestHandler<AddExpenseAdvance
     private readonly IExpenseAdvanceCategoryRepository _categoryRepository;
     private readonly IExpenseAdvanceRepository _advanceRepository;
     private readonly IS3Service _s3Service;
+    private readonly IExpenseAdvancePermissionService _permissionService;
 
     public AddExpenseAdvanceCommandHandler(
         IUserDataResolver userDataResolver,
         IEmployeeRepository employeeRepository,
         IExpenseAdvanceCategoryRepository categoryRepository,
         IExpenseAdvanceRepository advanceRepository,
-        IS3Service s3Service)
+        IS3Service s3Service,
+        IExpenseAdvancePermissionService permissionService)
     {
         _userDataResolver = userDataResolver;
         _employeeRepository = employeeRepository;
         _categoryRepository = categoryRepository;
         _advanceRepository = advanceRepository;
         _s3Service = s3Service;
+        _permissionService = permissionService;
     }
 
     public async Task<EmptyBaseResponse> Handle(AddExpenseAdvanceCommand request, CancellationToken ct)
     {
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
+
+        // Sprawdź uprawnienia do edycji ewidencji tego pracownika
+        var hasPermission = await _permissionService.HasPermissionAsync(
+            userId, 
+            request.EmployeeId, 
+            ExpenseAdvancePermissionType.Edit,
+            ct);
+
+        if (!hasPermission)
+            throw DomainException.Forbidden();
 
         var employee = await _employeeRepository.GetAsync(new EmployeeByIdSpec(request.EmployeeId), ct);
 

@@ -77,13 +77,11 @@ const ExpenseAdvancesTab: React.FC<ExpenseAdvancesTabProps> = ({
       ]);
 
       if (advancesResponse.success) {
-        const data = advancesResponse.responseData;
-        console.log("Backend zwrócił dane pracowników:", data);
-        console.log("Czy to tablica?", Array.isArray(data));
-        console.log("Typ danych:", typeof data);
-        setExpenseAdvances(Array.isArray(data) ? data : []);
+        const data = advancesResponse.responseData as any;
+        // Backend zwraca obiekt {expenseAdvances: [...]} zamiast bezpośrednio tablicy
+        const employees = data?.expenseAdvances || data;
+        setExpenseAdvances(Array.isArray(employees) ? employees : []);
       } else {
-        console.error("Backend nie zwrócił sukcesu:", advancesResponse);
         setExpenseAdvances([]);
       }
 

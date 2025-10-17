@@ -1,11 +1,14 @@
-﻿using AutoMapper;
+using AutoMapper;
 using FarmsManager.Application.Common;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Interfaces;
+using FarmsManager.Application.Services;
 using FarmsManager.Application.Specifications.Employees;
 using FarmsManager.Domain.Aggregates.EmployeeAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Enums;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
+using FarmsManager.Domain.Exceptions;
 using MediatR;
 
 namespace FarmsManager.Application.Queries.Expenses.Advances;
@@ -15,18 +18,37 @@ public class GetExpensesAdvancesQueryHandler : IRequestHandler<GetExpensesAdvanc
 {
     private readonly IEmployeeRepository _employeeRepository;
     private readonly IExpenseAdvanceRepository _expenseAdvanceRepository;
+    private readonly IExpenseAdvancePermissionService _permissionService;
+    private readonly IUserDataResolver _userDataResolver;
 
-    public GetExpensesAdvancesQueryHandler(IEmployeeRepository employeeRepository,
-        IExpenseAdvanceRepository expenseAdvanceRepository)
+    public GetExpensesAdvancesQueryHandler(
+        IEmployeeRepository employeeRepository,
+        IExpenseAdvanceRepository expenseAdvanceRepository,
+        IExpenseAdvancePermissionService permissionService,
+        IUserDataResolver userDataResolver)
     {
         _employeeRepository = employeeRepository;
         _expenseAdvanceRepository = expenseAdvanceRepository;
+        _permissionService = permissionService;
+        _userDataResolver = userDataResolver;
     }
 
 
     public async Task<BaseResponse<GetExpensesAdvancesQueryResponse>> Handle(GetExpensesAdvancesQuery request,
         CancellationToken cancellationToken)
     {
+        var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
+        
+        // Sprawdź uprawnienia do przeglądania ewidencji tego pracownika
+        var hasPermission = await _permissionService.HasPermissionAsync(
+            userId, 
+            request.EmployeeId, 
+            ExpenseAdvancePermissionType.View,
+            cancellationToken);
+
+        if (!hasPermission)
+            throw DomainException.Forbidden();
+
         var employee = await _employeeRepository.GetAsync(new EmployeeByIdSpec(request.EmployeeId), cancellationToken);
         var data = await _expenseAdvanceRepository.ListAsync<ExpenseAdvanceRowDto>(
             new GetAllExpensesAdvancesSpec(request.EmployeeId, request.Filters, true, true), cancellationToken);

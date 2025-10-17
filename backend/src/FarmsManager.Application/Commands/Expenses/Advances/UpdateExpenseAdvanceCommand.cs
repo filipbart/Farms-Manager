@@ -1,6 +1,7 @@
-﻿using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.FileSystem;
 using FarmsManager.Application.Interfaces;
+using FarmsManager.Application.Services;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Enums;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
@@ -30,17 +31,20 @@ public class UpdateExpenseAdvanceCommandHandler : IRequestHandler<UpdateExpenseA
     private readonly IExpenseAdvanceRepository _advanceRepository;
     private readonly IExpenseAdvanceCategoryRepository _categoryRepository;
     private readonly IS3Service _s3Service;
+    private readonly IExpenseAdvancePermissionService _permissionService;
 
     public UpdateExpenseAdvanceCommandHandler(
         IUserDataResolver userDataResolver,
         IExpenseAdvanceRepository advanceRepository,
         IExpenseAdvanceCategoryRepository categoryRepository,
-        IS3Service s3Service)
+        IS3Service s3Service,
+        IExpenseAdvancePermissionService permissionService)
     {
         _userDataResolver = userDataResolver;
         _advanceRepository = advanceRepository;
         _categoryRepository = categoryRepository;
         _s3Service = s3Service;
+        _permissionService = permissionService;
     }
 
     public async Task<EmptyBaseResponse> Handle(UpdateExpenseAdvanceCommand request,
@@ -48,6 +52,16 @@ public class UpdateExpenseAdvanceCommandHandler : IRequestHandler<UpdateExpenseA
     {
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var entity = await _advanceRepository.GetAsync(new GetExpenseAdvanceByIdSpec(request.Id), cancellationToken);
+
+        // Sprawdź uprawnienia do edycji ewidencji tego pracownika
+        var hasPermission = await _permissionService.HasPermissionAsync(
+            userId, 
+            entity.EmployeeId, 
+            ExpenseAdvancePermissionType.Edit,
+            cancellationToken);
+
+        if (!hasPermission)
+            throw DomainException.Forbidden();
 
         var category = await _categoryRepository.FirstOrDefaultAsync(
                            new GetAdvanceCategoryByNameAndTypeSpec(request.Data.CategoryName, request.Data.Type),
