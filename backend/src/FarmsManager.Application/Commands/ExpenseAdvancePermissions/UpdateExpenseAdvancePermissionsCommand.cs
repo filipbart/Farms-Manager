@@ -1,6 +1,8 @@
+using FarmsManager.Application.Commands.ExpenseAdvancePermissions;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models.ExpenseAdvancePermissions;
+using FarmsManager.Domain.Aggregates.EmployeeAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Enums;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
@@ -24,16 +26,16 @@ public class UpdateExpenseAdvancePermissionsCommandHandler : IRequestHandler<Upd
 {
     private readonly IUserDataResolver _userDataResolver;
     private readonly IExpenseAdvancePermissionRepository _permissionRepository;
-    private readonly IExpenseAdvanceRegistryRepository _registryRepository;
+    private readonly IEmployeeRepository _employeeRepository;
 
     public UpdateExpenseAdvancePermissionsCommandHandler(
         IUserDataResolver userDataResolver,
         IExpenseAdvancePermissionRepository permissionRepository,
-        IExpenseAdvanceRegistryRepository registryRepository)
+        IEmployeeRepository employeeRepository)
     {
         _userDataResolver = userDataResolver;
         _permissionRepository = permissionRepository;
-        _registryRepository = registryRepository;
+        _employeeRepository = employeeRepository;
     }
 
     public async Task<BaseResponse<List<ExpenseAdvancePermissionDto>>> Handle(
@@ -50,18 +52,18 @@ public class UpdateExpenseAdvancePermissionsCommandHandler : IRequestHandler<Upd
         }
 
         var userId = existingPermission.UserId;
-        var registryId = existingPermission.ExpenseAdvanceRegistryId;
+        var employeeId = existingPermission.EmployeeId;
 
-        // Pobierz ewidencję
-        var registry = await _registryRepository.GetByIdAsync(registryId, cancellationToken);
-        if (registry == null)
+        // Pobierz pracownika
+        var employee = await _employeeRepository.GetByIdAsync(employeeId, cancellationToken);
+        if (employee == null)
         {
-            throw DomainException.RecordNotFound("Ewidencja zaliczek nie istnieje.");
+            throw DomainException.RecordNotFound("Pracownik nie istnieje.");
         }
 
-        // Usuń wszystkie stare uprawnienia dla tej kombinacji użytkownik-ewidencja
+        // Usuń wszystkie stare uprawnienia dla tej kombinacji użytkownik-pracownik
         var allUserPermissions = await _permissionRepository.ListAsync(
-            new GetUserRegistryPermissionsSpec(userId, registryId),
+            new GetUserEmployeePermissionsSpec(userId, employeeId),
             cancellationToken);
 
         foreach (var permission in allUserPermissions)
@@ -75,7 +77,7 @@ public class UpdateExpenseAdvancePermissionsCommandHandler : IRequestHandler<Upd
         {
             var permission = ExpenseAdvancePermissionEntity.CreateNew(
                 userId,
-                registryId,
+                employeeId,
                 permissionType,
                 currentUserId);
 
@@ -87,8 +89,8 @@ public class UpdateExpenseAdvancePermissionsCommandHandler : IRequestHandler<Upd
         {
             Id = p.Id,
             UserId = p.UserId,
-            ExpenseAdvanceRegistryId = p.ExpenseAdvanceRegistryId,
-            ExpenseAdvanceRegistryName = registry.Name,
+            ExpenseAdvanceId = p.EmployeeId,
+            EmployeeName = employee.FullName,
             PermissionType = p.PermissionType,
             DateCreatedUtc = p.DateCreatedUtc,
             DateModifiedUtc = p.DateModifiedUtc

@@ -3,6 +3,7 @@ using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models.ExpenseAdvancePermissions;
 using FarmsManager.Application.Specifications;
+using FarmsManager.Domain.Aggregates.EmployeeAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Enums;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
@@ -16,7 +17,7 @@ namespace FarmsManager.Application.Commands.ExpenseAdvancePermissions;
 public record AssignExpenseAdvancePermissionsData
 {
     public Guid UserId { get; init; }
-    public Guid ExpenseAdvanceRegistryId { get; init; }
+    public Guid ExpenseAdvanceId { get; init; }  // To jest EmployeeId
     public List<ExpenseAdvancePermissionType> PermissionTypes { get; init; }
 }
 
@@ -28,18 +29,18 @@ public class AssignExpenseAdvancePermissionsCommandHandler : IRequestHandler<Ass
 {
     private readonly IUserDataResolver _userDataResolver;
     private readonly IUserRepository _userRepository;
-    private readonly IExpenseAdvanceRegistryRepository _registryRepository;
+    private readonly IEmployeeRepository _employeeRepository;
     private readonly IExpenseAdvancePermissionRepository _permissionRepository;
 
     public AssignExpenseAdvancePermissionsCommandHandler(
         IUserDataResolver userDataResolver,
         IUserRepository userRepository,
-        IExpenseAdvanceRegistryRepository registryRepository,
+        IEmployeeRepository employeeRepository,
         IExpenseAdvancePermissionRepository permissionRepository)
     {
         _userDataResolver = userDataResolver;
         _userRepository = userRepository;
-        _registryRepository = registryRepository;
+        _employeeRepository = employeeRepository;
         _permissionRepository = permissionRepository;
     }
 
@@ -56,21 +57,16 @@ public class AssignExpenseAdvancePermissionsCommandHandler : IRequestHandler<Ass
             throw DomainException.RecordNotFound("Użytkownik nie istnieje.");
         }
 
-        // Sprawdź czy ewidencja istnieje
-        var registry = await _registryRepository.GetByIdAsync(request.Data.ExpenseAdvanceRegistryId, cancellationToken);
-        if (registry == null)
+        // Sprawdź czy pracownik istnieje
+        var employee = await _employeeRepository.GetByIdAsync(request.Data.ExpenseAdvanceId, cancellationToken);
+        if (employee == null)
         {
-            throw DomainException.RecordNotFound("Ewidencja zaliczek nie istnieje.");
-        }
-
-        if (!registry.IsActive)
-        {
-            throw new Exception("Ewidencja zaliczek jest nieaktywna.");
+            throw DomainException.RecordNotFound("Pracownik nie istnieje.");
         }
 
         // Pobierz istniejące uprawnienia
         var existingPermissions = await _permissionRepository.ListAsync(
-            new GetUserRegistryPermissionsSpec(request.Data.UserId, request.Data.ExpenseAdvanceRegistryId),
+            new GetUserEmployeePermissionsSpec(request.Data.UserId, request.Data.ExpenseAdvanceId),
             cancellationToken);
 
         var createdPermissions = new List<ExpenseAdvancePermissionEntity>();
@@ -85,7 +81,7 @@ public class AssignExpenseAdvancePermissionsCommandHandler : IRequestHandler<Ass
 
             var permission = ExpenseAdvancePermissionEntity.CreateNew(
                 request.Data.UserId,
-                request.Data.ExpenseAdvanceRegistryId,
+                request.Data.ExpenseAdvanceId,
                 permissionType,
                 currentUserId);
 
@@ -97,8 +93,8 @@ public class AssignExpenseAdvancePermissionsCommandHandler : IRequestHandler<Ass
         {
             Id = p.Id,
             UserId = p.UserId,
-            ExpenseAdvanceRegistryId = p.ExpenseAdvanceRegistryId,
-            ExpenseAdvanceRegistryName = registry.Name,
+            ExpenseAdvanceId = p.EmployeeId,
+            EmployeeName = employee.FullName,
             PermissionType = p.PermissionType,
             DateCreatedUtc = p.DateCreatedUtc,
             DateModifiedUtc = p.DateModifiedUtc
@@ -116,9 +112,9 @@ public class AssignExpenseAdvancePermissionsCommandValidator : AbstractValidator
             .NotEmpty()
             .WithMessage("UserId jest wymagane.");
 
-        RuleFor(x => x.Data.ExpenseAdvanceRegistryId)
+        RuleFor(x => x.Data.ExpenseAdvanceId)
             .NotEmpty()
-            .WithMessage("ExpenseAdvanceRegistryId jest wymagane.");
+            .WithMessage("ExpenseAdvanceId jest wymagane.");
 
         RuleFor(x => x.Data.PermissionTypes)
             .NotEmpty()
@@ -130,11 +126,11 @@ public class AssignExpenseAdvancePermissionsCommandValidator : AbstractValidator
     }
 }
 
-public sealed class GetUserRegistryPermissionsSpec : BaseSpecification<ExpenseAdvancePermissionEntity>
+public sealed class GetUserEmployeePermissionsSpec : BaseSpecification<ExpenseAdvancePermissionEntity>
 {
-    public GetUserRegistryPermissionsSpec(Guid userId, Guid registryId)
+    public GetUserEmployeePermissionsSpec(Guid userId, Guid employeeId)
     {
         EnsureExists();
-        Query.Where(p => p.UserId == userId && p.ExpenseAdvanceRegistryId == registryId);
+        Query.Where(p => p.UserId == userId && p.EmployeeId == employeeId);
     }
 }

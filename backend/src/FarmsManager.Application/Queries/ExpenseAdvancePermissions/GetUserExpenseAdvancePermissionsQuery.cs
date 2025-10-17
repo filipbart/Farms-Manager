@@ -45,8 +45,8 @@ public class GetUserExpenseAdvancePermissionsQueryHandler : IRequestHandler<GetU
         {
             Id = p.Id,
             UserId = p.UserId,
-            ExpenseAdvanceRegistryId = p.ExpenseAdvanceRegistryId,
-            ExpenseAdvanceRegistryName = p.ExpenseAdvanceRegistry?.Name ?? string.Empty,
+            ExpenseAdvanceId = p.EmployeeId,
+            EmployeeName = p.Employee?.FullName ?? string.Empty,
             PermissionType = p.PermissionType,
             DateCreatedUtc = p.DateCreatedUtc,
             DateModifiedUtc = p.DateModifiedUtc
@@ -66,7 +66,7 @@ public sealed class GetUserExpenseAdvancePermissionsSpec : BaseSpecification<Exp
     {
         EnsureExists();
         Query.Where(p => p.UserId == userId);
-        Query.Include(p => p.ExpenseAdvanceRegistry);
-        Query.OrderBy(p => p.ExpenseAdvanceRegistry.Name);
+        Query.Include(p => p.Employee);
+        Query.OrderBy(p => p.Employee.FullName);
     }
 }

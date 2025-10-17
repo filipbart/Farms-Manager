@@ -15,7 +15,7 @@ public class ExpenseAdvancePermissionEntityConfiguration : BaseConfiguration<Exp
         builder.Property(t => t.UserId)
             .IsRequired();
 
-        builder.Property(t => t.ExpenseAdvanceRegistryId)
+        builder.Property(t => t.EmployeeId)
             .IsRequired();
 
         builder.Property(t => t.PermissionType)
@@ -26,19 +26,19 @@ public class ExpenseAdvancePermissionEntityConfiguration : BaseConfiguration<Exp
             .HasForeignKey(t => t.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasOne(t => t.ExpenseAdvanceRegistry)
-            .WithMany(r => r.Permissions)
-            .HasForeignKey(t => t.ExpenseAdvanceRegistryId)
+        builder.HasOne(t => t.Employee)
+            .WithMany()
+            .HasForeignKey(t => t.EmployeeId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasIndex(t => new { t.UserId, t.ExpenseAdvanceRegistryId, t.PermissionType })
+        builder.HasIndex(t => new { t.UserId, t.EmployeeId, t.PermissionType })
             .IsUnique()
-            .HasDatabaseName("IX_ExpenseAdvancePermissions_UserRegistryType");
+            .HasDatabaseName("IX_ExpenseAdvancePermissions_UserEmployeeType");
 
         builder.HasIndex(t => t.UserId)
             .HasDatabaseName("IX_ExpenseAdvancePermissions_UserId");
 
-        builder.HasIndex(t => t.ExpenseAdvanceRegistryId)
-            .HasDatabaseName("IX_ExpenseAdvancePermissions_RegistryId");
+        builder.HasIndex(t => t.EmployeeId)
+            .HasDatabaseName("IX_ExpenseAdvancePermissions_EmployeeId");
     }
 }

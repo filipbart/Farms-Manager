@@ -2,57 +2,59 @@ using Ardalis.Specification;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Models.ExpenseAdvancePermissions;
 using FarmsManager.Application.Specifications;
-using FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities;
-using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.EmployeeAggregate.Entities;
+using FarmsManager.Domain.Aggregates.EmployeeAggregate.Enums;
+using FarmsManager.Domain.Aggregates.EmployeeAggregate.Interfaces;
 using MediatR;
 
 namespace FarmsManager.Application.Queries.ExpenseAdvancePermissions;
 
-public record GetExpenseAdvanceRegistriesQuery : IRequest<BaseResponse<GetExpenseAdvanceRegistriesQueryResponse>>;
+public record GetExpenseAdvancesListQuery : IRequest<BaseResponse<GetExpenseAdvancesListQueryResponse>>;
 
-public record GetExpenseAdvanceRegistriesQueryResponse
+public record GetExpenseAdvancesListQueryResponse
 {
-    public List<ExpenseAdvanceRegistryDto> Registries { get; init; }
+    public List<ExpenseAdvanceEntityDto> ExpenseAdvances { get; init; }
 }
 
-public class GetExpenseAdvanceRegistriesQueryHandler : IRequestHandler<GetExpenseAdvanceRegistriesQuery,
-    BaseResponse<GetExpenseAdvanceRegistriesQueryResponse>>
+public class GetExpenseAdvancesListQueryHandler : IRequestHandler<GetExpenseAdvancesListQuery,
+    BaseResponse<GetExpenseAdvancesListQueryResponse>>
 {
-    private readonly IExpenseAdvanceRegistryRepository _registryRepository;
+    private readonly IEmployeeRepository _employeeRepository;
 
-    public GetExpenseAdvanceRegistriesQueryHandler(IExpenseAdvanceRegistryRepository registryRepository)
+    public GetExpenseAdvancesListQueryHandler(IEmployeeRepository employeeRepository)
     {
-        _registryRepository = registryRepository;
+        _employeeRepository = employeeRepository;
     }
 
-    public async Task<BaseResponse<GetExpenseAdvanceRegistriesQueryResponse>> Handle(
-        GetExpenseAdvanceRegistriesQuery request,
+    public async Task<BaseResponse<GetExpenseAdvancesListQueryResponse>> Handle(
+        GetExpenseAdvancesListQuery request,
         CancellationToken cancellationToken)
     {
-        var registries = await _registryRepository.ListAsync(
-            new GetActiveExpenseAdvanceRegistriesSpec(),
+        var employees = await _employeeRepository.ListAsync(
+            new GetActiveEmployeesWithAdvancesSpec(),
             cancellationToken);
 
-        var dtos = registries.Select(r => new ExpenseAdvanceRegistryDto
+        var dtos = employees.Select(e => new ExpenseAdvanceEntityDto
         {
-            Id = r.Id,
-            Name = r.Name,
-            Description = r.Description
+            Id = e.Id,
+            EmployeeId = e.Id.ToString(),
+            EmployeeName = e.FullName,
+            Description = e.Position
         }).ToList();
 
-        return BaseResponse.CreateResponse(new GetExpenseAdvanceRegistriesQueryResponse
+        return BaseResponse.CreateResponse(new GetExpenseAdvancesListQueryResponse
         {
-            Registries = dtos
+            ExpenseAdvances = dtos
         });
     }
 }
 
-public sealed class GetActiveExpenseAdvanceRegistriesSpec : BaseSpecification<ExpenseAdvanceRegistryEntity>
+public sealed class GetActiveEmployeesWithAdvancesSpec : BaseSpecification<EmployeeEntity>
 {
-    public GetActiveExpenseAdvanceRegistriesSpec()
+    public GetActiveEmployeesWithAdvancesSpec()
     {
         EnsureExists();
-        Query.Where(r => r.IsActive);
-        Query.OrderBy(r => r.Name);
+        Query.Where(e => e.Status == EmployeeStatus.Active && e.AddToAdvances);
+        Query.OrderBy(e => e.FullName);
     }
 }

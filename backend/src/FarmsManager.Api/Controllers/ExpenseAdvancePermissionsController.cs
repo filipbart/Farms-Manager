@@ -11,15 +11,15 @@ namespace FarmsManager.Api.Controllers;
 public class ExpenseAdvancePermissionsController(IMediator mediator) : BaseController
 {
     /// <summary>
-    /// Zwraca listę wszystkich aktywnych ewidencji zaliczek
+    /// Zwraca listę wszystkich pracowników z ewidencjami zaliczek
     /// </summary>
     /// <returns></returns>
-    [HttpGet("registries")]
-    [ProducesResponseType(typeof(BaseResponse<GetExpenseAdvanceRegistriesQueryResponse>), StatusCodes.Status200OK)]
+    [HttpGet("list")]
+    [ProducesResponseType(typeof(BaseResponse<GetExpenseAdvancesListQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetRegistries()
+    public async Task<IActionResult> GetExpenseAdvancesList()
     {
-        return Ok(await mediator.Send(new GetExpenseAdvanceRegistriesQuery()));
+        return Ok(await mediator.Send(new GetExpenseAdvancesListQuery()));
     }
 
     /// <summary>

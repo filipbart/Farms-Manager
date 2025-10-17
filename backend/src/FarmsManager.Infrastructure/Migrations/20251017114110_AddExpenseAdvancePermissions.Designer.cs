@@ -14,8 +14,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FarmsManager.Infrastructure.Migrations
 {
     [DbContext(typeof(FarmsManagerContext))]
-    [Migration("20251017112601_AddExpenseAdvancePermissionEntities")]
-    partial class AddExpenseAdvancePermissionEntities
+    [Migration("20251017114110_AddExpenseAdvancePermissions")]
+    partial class AddExpenseAdvancePermissions
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -479,9 +479,9 @@ namespace FarmsManager.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("deleted_by");
 
-                    b.Property<Guid>("ExpenseAdvanceRegistryId")
+                    b.Property<Guid>("EmployeeId")
                         .HasColumnType("uuid")
-                        .HasColumnName("expense_advance_registry_id");
+                        .HasColumnName("employee_id");
 
                     b.Property<Guid?>("ModifiedBy")
                         .HasColumnType("uuid")
@@ -500,69 +500,17 @@ namespace FarmsManager.Infrastructure.Migrations
                     b.HasKey("Id")
                         .HasName("pk_expense_advance_permission");
 
-                    b.HasIndex("ExpenseAdvanceRegistryId")
-                        .HasDatabaseName("IX_ExpenseAdvancePermissions_RegistryId");
+                    b.HasIndex("EmployeeId")
+                        .HasDatabaseName("IX_ExpenseAdvancePermissions_EmployeeId");
 
                     b.HasIndex("UserId")
                         .HasDatabaseName("IX_ExpenseAdvancePermissions_UserId");
 
-                    b.HasIndex("UserId", "ExpenseAdvanceRegistryId", "PermissionType")
+                    b.HasIndex("UserId", "EmployeeId", "PermissionType")
                         .IsUnique()
-                        .HasDatabaseName("IX_ExpenseAdvancePermissions_UserRegistryType");
+                        .HasDatabaseName("IX_ExpenseAdvancePermissions_UserEmployeeType");
 
                     b.ToTable("expense_advance_permission", "farms_manager");
-                });
-
-            modelBuilder.Entity("FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities.ExpenseAdvanceRegistryEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTime>("DateCreatedUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("date_created_utc");
-
-                    b.Property<DateTime?>("DateDeletedUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("date_deleted_utc");
-
-                    b.Property<DateTime?>("DateModifiedUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("date_modified_utc");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("deleted_by");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text")
-                        .HasColumnName("description");
-
-                    b.Property<bool>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(true)
-                        .HasColumnName("is_active");
-
-                    b.Property<Guid?>("ModifiedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("modified_by");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("name");
-
-                    b.HasKey("Id")
-                        .HasName("pk_expense_advance_registry");
-
-                    b.ToTable("expense_advance_registry", "farms_manager");
                 });
 
             modelBuilder.Entity("FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities.ExpenseContractorEntity", b =>
@@ -3287,12 +3235,12 @@ namespace FarmsManager.Infrastructure.Migrations
 
             modelBuilder.Entity("FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities.ExpenseAdvancePermissionEntity", b =>
                 {
-                    b.HasOne("FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities.ExpenseAdvanceRegistryEntity", "ExpenseAdvanceRegistry")
-                        .WithMany("Permissions")
-                        .HasForeignKey("ExpenseAdvanceRegistryId")
+                    b.HasOne("FarmsManager.Domain.Aggregates.EmployeeAggregate.Entities.EmployeeEntity", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_expense_advance_permission_expense_advance_registry_entity_");
+                        .HasConstraintName("fk_expense_advance_permission_employee_employee_id");
 
                     b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "User")
                         .WithMany()
@@ -3301,7 +3249,7 @@ namespace FarmsManager.Infrastructure.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_expense_advance_permission_user_entity_user_id");
 
-                    b.Navigation("ExpenseAdvanceRegistry");
+                    b.Navigation("Employee");
 
                     b.Navigation("User");
                 });
@@ -3960,11 +3908,6 @@ namespace FarmsManager.Infrastructure.Migrations
                     b.Navigation("Files");
 
                     b.Navigation("Reminders");
-                });
-
-            modelBuilder.Entity("FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities.ExpenseAdvanceRegistryEntity", b =>
-                {
-                    b.Navigation("Permissions");
                 });
 
             modelBuilder.Entity("FarmsManager.Domain.Aggregates.FarmAggregate.Entities.FarmEntity", b =>
