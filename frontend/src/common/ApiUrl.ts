@@ -178,6 +178,17 @@ export default class ApiUrl {
   public static DeleteAdvanceCategory = (id: string) =>
     this.ExpensesAdvancesCategories + "/delete/" + id;
 
+  // Expense Advance Permissions
+  public static ExpenseAdvancesList = this.ExpensesAdvances + "/list";
+  public static UserExpenseAdvancePermissions = (userId: string) =>
+    this.ExpensesAdvances + "/permissions/user/" + userId;
+  public static AssignExpenseAdvancePermission =
+    this.ExpensesAdvances + "/permissions/assign";
+  public static UpdateExpenseAdvancePermission =
+    this.ExpensesAdvances + "/permissions/update";
+  public static RemoveExpenseAdvancePermission = (permissionId: string) =>
+    this.ExpensesAdvances + "/permissions/" + permissionId;
+
   public static ProductionData = this.BaseUrl + "production-data";
   public static ProductionDataDictionary = this.ProductionData + "/dictionary";
   public static CalculateRemainingFeedValue =

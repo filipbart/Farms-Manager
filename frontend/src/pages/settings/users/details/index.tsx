@@ -13,6 +13,7 @@ import type { UserDetailsModel } from "../../../../models/users/users";
 import UserInfoTab from "./tabs/info-tab";
 import PermissionsTab from "./tabs/permissions-tab";
 import FarmsTab from "./tabs/farms-tab";
+import ExpenseAdvancesTab from "./tabs/expense-advances-tab";
 
 const UserDetailsPage: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -91,6 +92,7 @@ const UserDetailsPage: React.FC = () => {
           <Tab label="Informacje o użytkowniku" />
           <Tab label="Dostęp do ferm" />
           <Tab label="Uprawnienia" />
+          <Tab label="Ewidencje zaliczek" />
         </Tabs>
       </Box>
 
@@ -98,6 +100,7 @@ const UserDetailsPage: React.FC = () => {
         {activeTab === 0 && <UserInfoTab user={user} refetch={fetchUser} />}
         {activeTab === 1 && <FarmsTab user={user} refetch={fetchUser} />}
         {activeTab === 2 && <PermissionsTab user={user} refetch={fetchUser} />}
+        {activeTab === 3 && <ExpenseAdvancesTab user={user} refetch={fetchUser} />}
       </Box>
     </Box>
   );
