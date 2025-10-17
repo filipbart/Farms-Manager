@@ -77,7 +77,6 @@ const ExpenseAdvancesTab: React.FC<ExpenseAdvancesTabProps> = ({
       ]);
 
       if (advancesResponse.success) {
-        console.log(advancesResponse);
         setExpenseAdvances(advancesResponse.responseData || []);
       }
 
@@ -335,7 +334,7 @@ const ExpenseAdvancesTab: React.FC<ExpenseAdvancesTabProps> = ({
                 <MenuItem value="" disabled>
                   Wybierz pracownika...
                 </MenuItem>
-                {expenseAdvances.map((ea) => (
+                {Array.isArray(expenseAdvances) && expenseAdvances.map((ea) => (
                   <MenuItem key={ea.id} value={ea.id}>
                     {ea.employeeName}
                   </MenuItem>
