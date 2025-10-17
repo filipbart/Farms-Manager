@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FarmsManager.Api.Controllers;
 
+[Route("api/expenses/advances")]
 public class ExpenseAdvancePermissionsController(IMediator mediator) : BaseController
 {
     /// <summary>
@@ -27,7 +28,7 @@ public class ExpenseAdvancePermissionsController(IMediator mediator) : BaseContr
     /// </summary>
     /// <param name="userId">ID użytkownika</param>
     /// <returns></returns>
-    [HttpGet("user/{userId:guid}")]
+    [HttpGet("permissions/user/{userId:guid}")]
     [ProducesResponseType(typeof(BaseResponse<UserExpenseAdvancePermissionsDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -41,7 +42,7 @@ public class ExpenseAdvancePermissionsController(IMediator mediator) : BaseContr
     /// </summary>
     /// <param name="data">Dane przypisania uprawnień</param>
     /// <returns></returns>
-    [HttpPost("assign")]
+    [HttpPost("permissions/assign")]
     [ProducesResponseType(typeof(BaseResponse<List<ExpenseAdvancePermissionDto>>), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -58,7 +59,7 @@ public class ExpenseAdvancePermissionsController(IMediator mediator) : BaseContr
     /// </summary>
     /// <param name="data">Dane aktualizacji uprawnień</param>
     /// <returns></returns>
-    [HttpPut("update")]
+    [HttpPut("permissions/update")]
     [ProducesResponseType(typeof(BaseResponse<List<ExpenseAdvancePermissionDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -73,7 +74,7 @@ public class ExpenseAdvancePermissionsController(IMediator mediator) : BaseContr
     /// </summary>
     /// <param name="permissionId">ID uprawnienia do usunięcia</param>
     /// <returns></returns>
-    [HttpDelete("{permissionId:guid}")]
+    [HttpDelete("permissions/{permissionId:guid}")]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
