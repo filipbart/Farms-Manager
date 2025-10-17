@@ -77,6 +77,7 @@ const ExpenseAdvancesTab: React.FC<ExpenseAdvancesTabProps> = ({
       ]);
 
       if (advancesResponse.success) {
+        console.log(advancesResponse);
         setExpenseAdvances(advancesResponse.responseData || []);
       }
 
