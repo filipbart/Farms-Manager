@@ -77,7 +77,14 @@ const ExpenseAdvancesTab: React.FC<ExpenseAdvancesTabProps> = ({
       ]);
 
       if (advancesResponse.success) {
-        setExpenseAdvances(advancesResponse.responseData || []);
+        const data = advancesResponse.responseData;
+        console.log("Backend zwrócił dane pracowników:", data);
+        console.log("Czy to tablica?", Array.isArray(data));
+        console.log("Typ danych:", typeof data);
+        setExpenseAdvances(Array.isArray(data) ? data : []);
+      } else {
+        console.error("Backend nie zwrócił sukcesu:", advancesResponse);
+        setExpenseAdvances([]);
       }
 
       if (permissionsResponse.success) {

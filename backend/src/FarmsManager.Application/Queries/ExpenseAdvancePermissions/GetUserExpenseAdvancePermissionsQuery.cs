@@ -8,7 +8,6 @@ using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.UserAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 namespace FarmsManager.Application.Queries.ExpenseAdvancePermissions;
 

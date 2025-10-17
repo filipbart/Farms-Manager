@@ -1,5 +1,4 @@
 using AutoMapper;
-using FarmsManager.Application.Commands.ExpenseAdvancePermissions;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models.ExpenseAdvancePermissions;
