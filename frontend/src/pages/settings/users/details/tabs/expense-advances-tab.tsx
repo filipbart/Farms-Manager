@@ -81,9 +81,7 @@ const ExpenseAdvancesTab: React.FC<ExpenseAdvancesTabProps> = ({
       }
 
       if (permissionsResponse.success) {
-        setPermissions(
-          permissionsResponse.responseData?.permissions || []
-        );
+        setPermissions(permissionsResponse.responseData?.permissions || []);
       }
     } catch (err) {
       console.error("Błąd podczas pobierania danych", err);
@@ -229,7 +227,12 @@ const ExpenseAdvancesTab: React.FC<ExpenseAdvancesTabProps> = ({
 
   return (
     <Box mt={2}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={2}
+      >
         <Typography variant="h6">
           Uprawnienia do ewidencji zaliczek pracowników
         </Typography>

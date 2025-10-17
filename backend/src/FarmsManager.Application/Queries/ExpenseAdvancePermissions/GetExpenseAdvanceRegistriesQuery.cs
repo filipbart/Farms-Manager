@@ -1,4 +1,5 @@
 using Ardalis.Specification;
+using AutoMapper;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Models.ExpenseAdvancePermissions;
 using FarmsManager.Application.Specifications;
@@ -20,10 +21,12 @@ public class GetExpenseAdvancesListQueryHandler : IRequestHandler<GetExpenseAdva
     BaseResponse<GetExpenseAdvancesListQueryResponse>>
 {
     private readonly IEmployeeRepository _employeeRepository;
+    private readonly IMapper _mapper;
 
-    public GetExpenseAdvancesListQueryHandler(IEmployeeRepository employeeRepository)
+    public GetExpenseAdvancesListQueryHandler(IEmployeeRepository employeeRepository, IMapper mapper)
     {
         _employeeRepository = employeeRepository;
+        _mapper = mapper;
     }
 
     public async Task<BaseResponse<GetExpenseAdvancesListQueryResponse>> Handle(
@@ -34,13 +37,7 @@ public class GetExpenseAdvancesListQueryHandler : IRequestHandler<GetExpenseAdva
             new GetActiveEmployeesWithAdvancesSpec(),
             cancellationToken);
 
-        var dtos = employees.Select(e => new ExpenseAdvanceEntityDto
-        {
-            Id = e.Id,
-            EmployeeId = e.Id.ToString(),
-            EmployeeName = e.FullName,
-            Description = e.Position
-        }).ToList();
+        var dtos = _mapper.Map<List<ExpenseAdvanceEntityDto>>(employees);
 
         return BaseResponse.CreateResponse(new GetExpenseAdvancesListQueryResponse
         {

@@ -1,4 +1,5 @@
 using Ardalis.Specification;
+using AutoMapper;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models.ExpenseAdvancePermissions;
@@ -31,17 +32,20 @@ public class AssignExpenseAdvancePermissionsCommandHandler : IRequestHandler<Ass
     private readonly IUserRepository _userRepository;
     private readonly IEmployeeRepository _employeeRepository;
     private readonly IExpenseAdvancePermissionRepository _permissionRepository;
+    private readonly IMapper _mapper;
 
     public AssignExpenseAdvancePermissionsCommandHandler(
         IUserDataResolver userDataResolver,
         IUserRepository userRepository,
         IEmployeeRepository employeeRepository,
-        IExpenseAdvancePermissionRepository permissionRepository)
+        IExpenseAdvancePermissionRepository permissionRepository,
+        IMapper mapper)
     {
         _userDataResolver = userDataResolver;
         _userRepository = userRepository;
         _employeeRepository = employeeRepository;
         _permissionRepository = permissionRepository;
+        _mapper = mapper;
     }
 
     public async Task<BaseResponse<List<ExpenseAdvancePermissionDto>>> Handle(
@@ -89,16 +93,7 @@ public class AssignExpenseAdvancePermissionsCommandHandler : IRequestHandler<Ass
             createdPermissions.Add(permission);
         }
 
-        var permissionDtos = createdPermissions.Select(p => new ExpenseAdvancePermissionDto
-        {
-            Id = p.Id,
-            UserId = p.UserId,
-            ExpenseAdvanceId = p.EmployeeId,
-            EmployeeName = employee.FullName,
-            PermissionType = p.PermissionType,
-            DateCreatedUtc = p.DateCreatedUtc,
-            DateModifiedUtc = p.DateModifiedUtc
-        }).ToList();
+        var permissionDtos = _mapper.Map<List<ExpenseAdvancePermissionDto>>(createdPermissions);
 
         return BaseResponse.CreateResponse(permissionDtos);
     }

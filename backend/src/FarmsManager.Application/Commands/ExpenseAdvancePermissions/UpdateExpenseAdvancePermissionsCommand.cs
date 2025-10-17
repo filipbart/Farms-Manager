@@ -1,3 +1,4 @@
+using AutoMapper;
 using FarmsManager.Application.Commands.ExpenseAdvancePermissions;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
@@ -27,15 +28,18 @@ public class UpdateExpenseAdvancePermissionsCommandHandler : IRequestHandler<Upd
     private readonly IUserDataResolver _userDataResolver;
     private readonly IExpenseAdvancePermissionRepository _permissionRepository;
     private readonly IEmployeeRepository _employeeRepository;
+    private readonly IMapper _mapper;
 
     public UpdateExpenseAdvancePermissionsCommandHandler(
         IUserDataResolver userDataResolver,
         IExpenseAdvancePermissionRepository permissionRepository,
-        IEmployeeRepository employeeRepository)
+        IEmployeeRepository employeeRepository,
+        IMapper mapper)
     {
         _userDataResolver = userDataResolver;
         _permissionRepository = permissionRepository;
         _employeeRepository = employeeRepository;
+        _mapper = mapper;
     }
 
     public async Task<BaseResponse<List<ExpenseAdvancePermissionDto>>> Handle(
@@ -85,16 +89,7 @@ public class UpdateExpenseAdvancePermissionsCommandHandler : IRequestHandler<Upd
             newPermissions.Add(permission);
         }
 
-        var permissionDtos = newPermissions.Select(p => new ExpenseAdvancePermissionDto
-        {
-            Id = p.Id,
-            UserId = p.UserId,
-            ExpenseAdvanceId = p.EmployeeId,
-            EmployeeName = employee.FullName,
-            PermissionType = p.PermissionType,
-            DateCreatedUtc = p.DateCreatedUtc,
-            DateModifiedUtc = p.DateModifiedUtc
-        }).ToList();
+        var permissionDtos = _mapper.Map<List<ExpenseAdvancePermissionDto>>(newPermissions);
 
         return BaseResponse.CreateResponse(permissionDtos);
     }

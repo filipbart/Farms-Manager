@@ -1,4 +1,5 @@
 using Ardalis.Specification;
+using AutoMapper;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Models.ExpenseAdvancePermissions;
 using FarmsManager.Application.Specifications;
@@ -7,6 +8,7 @@ using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.UserAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace FarmsManager.Application.Queries.ExpenseAdvancePermissions;
 
@@ -18,13 +20,16 @@ public class GetUserExpenseAdvancePermissionsQueryHandler : IRequestHandler<GetU
 {
     private readonly IUserRepository _userRepository;
     private readonly IExpenseAdvancePermissionRepository _permissionRepository;
+    private readonly IMapper _mapper;
 
     public GetUserExpenseAdvancePermissionsQueryHandler(
         IUserRepository userRepository,
-        IExpenseAdvancePermissionRepository permissionRepository)
+        IExpenseAdvancePermissionRepository permissionRepository,
+        IMapper mapper)
     {
         _userRepository = userRepository;
         _permissionRepository = permissionRepository;
+        _mapper = mapper;
     }
 
     public async Task<BaseResponse<UserExpenseAdvancePermissionsDto>> Handle(
@@ -41,16 +46,7 @@ public class GetUserExpenseAdvancePermissionsQueryHandler : IRequestHandler<GetU
             new GetUserExpenseAdvancePermissionsSpec(request.UserId),
             cancellationToken);
 
-        var permissionDtos = permissions.Select(p => new ExpenseAdvancePermissionDto
-        {
-            Id = p.Id,
-            UserId = p.UserId,
-            ExpenseAdvanceId = p.EmployeeId,
-            EmployeeName = p.Employee?.FullName ?? string.Empty,
-            PermissionType = p.PermissionType,
-            DateCreatedUtc = p.DateCreatedUtc,
-            DateModifiedUtc = p.DateModifiedUtc
-        }).ToList();
+        var permissionDtos = _mapper.Map<List<ExpenseAdvancePermissionDto>>(permissions);
 
         return BaseResponse.CreateResponse(new UserExpenseAdvancePermissionsDto
         {
