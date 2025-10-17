@@ -7,6 +7,7 @@ using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Enums;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.UserAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
 using FarmsManager.Shared.Extensions;
 using MediatR;
@@ -21,36 +22,45 @@ public class DeleteExpenseAdvanceCommandHandler : IRequestHandler<DeleteExpenseA
     private readonly IUserDataResolver _userDataResolver;
     private readonly IExpenseAdvanceRepository _expenseAdvanceRepository;
     private readonly IExpenseAdvancePermissionService _permissionService;
+    private readonly IUserRepository _userRepository;
 
     public DeleteExpenseAdvanceCommandHandler(
         IUserDataResolver userDataResolver,
         IExpenseAdvanceRepository expenseAdvanceRepository, 
         IS3Service s3Service,
-        IExpenseAdvancePermissionService permissionService)
+        IExpenseAdvancePermissionService permissionService,
+        IUserRepository userRepository)
     {
         _userDataResolver = userDataResolver;
         _expenseAdvanceRepository = expenseAdvanceRepository;
         _s3Service = s3Service;
         _permissionService = permissionService;
+        _userRepository = userRepository;
     }
 
     public async Task<EmptyBaseResponse> Handle(DeleteExpenseAdvanceCommand request,
         CancellationToken cancellationToken)
     {
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
+        var user = await _userRepository.GetByIdAsync(userId, cancellationToken) 
+            ?? throw DomainException.Unauthorized();
         var entity =
             await _expenseAdvanceRepository.GetAsync(new GetExpenseAdvanceByIdSpec(request.Id),
                 cancellationToken);
 
-        // Sprawdź uprawnienia do edycji ewidencji tego pracownika
-        var hasPermission = await _permissionService.HasPermissionAsync(
-            userId, 
-            entity.EmployeeId, 
-            ExpenseAdvancePermissionType.Edit,
-            cancellationToken);
+        // Dla admina nie sprawdzamy uprawnień
+        if (!user.IsAdmin)
+        {
+            // Sprawdź uprawnienia do edycji ewidencji tego pracownika
+            var hasPermission = await _permissionService.HasPermissionAsync(
+                userId, 
+                entity.EmployeeId, 
+                ExpenseAdvancePermissionType.Edit,
+                cancellationToken);
 
-        if (!hasPermission)
-            throw DomainException.Forbidden();
+            if (!hasPermission)
+                throw DomainException.Forbidden();
+        }
 
         if (entity.FilePath.IsNotEmpty())
         {

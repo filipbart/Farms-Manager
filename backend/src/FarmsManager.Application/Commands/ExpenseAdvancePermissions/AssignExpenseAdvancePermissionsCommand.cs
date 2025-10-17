@@ -80,7 +80,11 @@ public class AssignExpenseAdvancePermissionsCommandHandler : IRequestHandler<Ass
             // Sprawdź czy uprawnienie już istnieje
             if (existingPermissions.Any(p => p.PermissionType == permissionType))
             {
-                throw new Exception($"Użytkownik już posiada uprawnienie {permissionType} dla tej ewidencji.");
+                var permissionTypeName = permissionType == ExpenseAdvancePermissionType.View ? "Podgląd" : "Edycja";
+                var response = new BaseResponse<List<ExpenseAdvancePermissionDto>>();
+                response.AddError("Permission", 
+                    $"Uprawnienie '{permissionTypeName}' już istnieje dla tego pracownika i użytkownika.");
+                return response;
             }
 
             var permission = ExpenseAdvancePermissionEntity.CreateNew(

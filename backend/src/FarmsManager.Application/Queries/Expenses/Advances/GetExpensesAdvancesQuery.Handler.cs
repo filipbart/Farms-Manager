@@ -8,6 +8,7 @@ using FarmsManager.Domain.Aggregates.EmployeeAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Enums;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.UserAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
 using MediatR;
 
@@ -20,17 +21,20 @@ public class GetExpensesAdvancesQueryHandler : IRequestHandler<GetExpensesAdvanc
     private readonly IExpenseAdvanceRepository _expenseAdvanceRepository;
     private readonly IExpenseAdvancePermissionService _permissionService;
     private readonly IUserDataResolver _userDataResolver;
+    private readonly IUserRepository _userRepository;
 
     public GetExpensesAdvancesQueryHandler(
         IEmployeeRepository employeeRepository,
         IExpenseAdvanceRepository expenseAdvanceRepository,
         IExpenseAdvancePermissionService permissionService,
-        IUserDataResolver userDataResolver)
+        IUserDataResolver userDataResolver,
+        IUserRepository userRepository)
     {
         _employeeRepository = employeeRepository;
         _expenseAdvanceRepository = expenseAdvanceRepository;
         _permissionService = permissionService;
         _userDataResolver = userDataResolver;
+        _userRepository = userRepository;
     }
 
 
@@ -38,16 +42,22 @@ public class GetExpensesAdvancesQueryHandler : IRequestHandler<GetExpensesAdvanc
         CancellationToken cancellationToken)
     {
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
+        var user = await _userRepository.GetByIdAsync(userId, cancellationToken) 
+            ?? throw DomainException.Unauthorized();
         
-        // Sprawdź uprawnienia do przeglądania ewidencji tego pracownika
-        var hasPermission = await _permissionService.HasPermissionAsync(
-            userId, 
-            request.EmployeeId, 
-            ExpenseAdvancePermissionType.View,
-            cancellationToken);
+        // Dla admina nie filtrujemy - ma dostęp do wszystkich
+        if (!user.IsAdmin)
+        {
+            // Sprawdź uprawnienia do przeglądania ewidencji tego pracownika
+            var hasPermission = await _permissionService.HasPermissionAsync(
+                userId, 
+                request.EmployeeId, 
+                ExpenseAdvancePermissionType.View,
+                cancellationToken);
 
-        if (!hasPermission)
-            throw DomainException.Forbidden();
+            if (!hasPermission)
+                throw DomainException.Forbidden();
+        }
 
         var employee = await _employeeRepository.GetAsync(new EmployeeByIdSpec(request.EmployeeId), cancellationToken);
         var data = await _expenseAdvanceRepository.ListAsync<ExpenseAdvanceRowDto>(
