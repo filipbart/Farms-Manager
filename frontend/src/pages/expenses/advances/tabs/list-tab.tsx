@@ -8,22 +8,37 @@ import {
   CircularProgress,
   Divider,
 } from "@mui/material";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useEmployees } from "../../../../hooks/employees/useEmployees";
-import { EmployeeStatus } from "../../../../models/employees/employees";
+import { ExpenseAdvancePermissionsService } from "../../../../services/expense-advance-permissions-service";
+import type { ExpenseAdvanceEntity } from "../../../../models/expenses/advances/expense-advance-permissions";
+import { toast } from "react-toastify";
 
 const AdvancesListTab: React.FC = () => {
-  const { employees, loading, fetchEmployees } = useEmployees({
-    pageSize: -1,
-    farmIds: [],
-    addToAdvances: true,
-    status: EmployeeStatus.Active,
-    dateSince: "",
-    dateTo: "",
-  });
-
+  const [employees, setEmployees] = useState<ExpenseAdvanceEntity[]>([]);
+  const [loading, setLoading] = useState(false);
   const nav = useNavigate();
+
+  const fetchEmployees = async () => {
+    setLoading(true);
+    try {
+      const response = await ExpenseAdvancePermissionsService.getAllExpenseAdvances();
+      if (response.success) {
+        const data = response.responseData as any;
+        // Backend może zwrócić {expenseAdvances: [...]} lub bezpośrednio tablicę
+        const employeesList = data?.expenseAdvances || data;
+        setEmployees(Array.isArray(employeesList) ? employeesList : []);
+      } else {
+        setEmployees([]);
+      }
+    } catch (err) {
+      console.error("Błąd podczas pobierania listy pracowników", err);
+      toast.error("Nie udało się pobrać listy pracowników");
+      setEmployees([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchEmployees();
@@ -50,9 +65,9 @@ const AdvancesListTab: React.FC = () => {
               <div key={employee.id}>
                 <ListItem disablePadding>
                   <ListItemButton
-                    onClick={() => handleEmployeeClick(employee.id)}
+                    onClick={() => handleEmployeeClick(employee.employeeId)}
                   >
-                    <ListItemText primary={employee.fullName} />
+                    <ListItemText primary={employee.employeeName} />
                   </ListItemButton>
                 </ListItem>
                 {index < employees.length - 1 && <Divider />}
