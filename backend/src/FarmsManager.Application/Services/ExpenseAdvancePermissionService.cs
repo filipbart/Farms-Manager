@@ -60,10 +60,10 @@ public class ExpenseAdvancePermissionService : IExpenseAdvancePermissionService
         Guid userId, 
         CancellationToken cancellationToken = default)
     {
-        // Admin ma dostęp do wszystkich
+        // Admin ma dostęp do wszystkich - zwracamy null
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
         if (user?.IsAdmin == true)
-            return new List<Guid>(); // Pusta lista oznacza "wszystkie"
+            return null; // null oznacza "wszystkie" (admin)
 
         // Pobierz pracowników do których użytkownik ma dostęp
         var permissions = await _permissionRepository.ListAsync(cancellationToken);
@@ -71,6 +71,6 @@ public class ExpenseAdvancePermissionService : IExpenseAdvancePermissionService
             .Where(p => p.UserId == userId && p.DateDeletedUtc == null)
             .Select(p => p.EmployeeId)
             .Distinct()
-            .ToList();
+            .ToList(); // Pusta lista oznacza "brak dostępu do nikogo"
     }
 }

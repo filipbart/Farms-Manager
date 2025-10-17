@@ -54,8 +54,9 @@ public class GetExpenseAdvancesListQueryHandler : IRequestHandler<GetExpenseAdva
         // Filtruj według uprawnień (jeśli nie admin)
         var accessibleEmployeeIds = await _permissionService.GetAccessibleEmployeeIdsAsync(userId, cancellationToken);
         
-        // Pusta lista oznacza admin - ma dostęp do wszystkich
-        if (accessibleEmployeeIds.Any())
+        // null oznacza admin - ma dostęp do wszystkich
+        // pusta lista oznacza brak dostępu do nikogo
+        if (accessibleEmployeeIds != null)
         {
             employees = employees.Where(e => accessibleEmployeeIds.Contains(e.Id)).ToList();
         }
