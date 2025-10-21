@@ -1,4 +1,4 @@
-﻿using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models;
 using FarmsManager.Application.Queries.Farms;
@@ -44,7 +44,7 @@ public class GetFallenStocksDictionaryQueryHandler : IRequestHandler<GetFallenSt
         var user = await _userRepository.GetAsync(new UserByIdSpec(userId), ct);
         var accessibleFarmIds = user.AccessibleFarmIds;
 
-        var farms = await _farmRepository.ListAsync<FarmDictModel>(new GetAllFarmsSpec(accessibleFarmIds), ct);
+        var farms = await _farmRepository.ListAsync<FarmDictModel>(new GetAllFarmsSpec(accessibleFarmIds, user.IsAdmin), ct);
         var cycles = await _cycleRepository.ListAsync<CycleDictModel>(new GetAllCyclesSpec(), ct);
 
 

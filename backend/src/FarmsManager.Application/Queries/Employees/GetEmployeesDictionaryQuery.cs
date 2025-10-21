@@ -37,7 +37,7 @@ public class GetEmployeesDictionaryQueryHandler : IRequestHandler<GetEmployeesDi
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
         var accessibleFarmIds = user.AccessibleFarmIds;
-        var farms = await _farmRepository.ListAsync<FarmDictModel>(new GetAllFarmsSpec(accessibleFarmIds), cancellationToken);
+        var farms = await _farmRepository.ListAsync<FarmDictModel>(new GetAllFarmsSpec(accessibleFarmIds, user.IsAdmin), cancellationToken);
 
         return BaseResponse.CreateResponse(new GetEmployeesDictionaryQueryResponse
         {

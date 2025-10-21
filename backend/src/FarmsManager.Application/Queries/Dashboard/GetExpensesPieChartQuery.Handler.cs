@@ -1,4 +1,4 @@
-﻿using Ardalis.Specification;
+using Ardalis.Specification;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models;
@@ -67,7 +67,7 @@ public class
         var accessibleFarmIds = user.AccessibleFarmIds;
         var filteredFarmIds = GetFilteredFarmIds(request.Filters.FarmId, accessibleFarmIds);
 
-        var farms = await _farmRepository.ListAsync(new GetAllFarmsSpec(filteredFarmIds), ct);
+        var farms = await _farmRepository.ListAsync(new GetAllFarmsSpec(filteredFarmIds, user.IsAdmin), ct);
         if (farms.Count == 0)
         {
             return BaseResponse.CreateResponse(new DashboardExpensesPieChart());

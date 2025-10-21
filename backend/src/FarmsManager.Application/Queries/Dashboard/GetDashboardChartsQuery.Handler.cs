@@ -1,4 +1,4 @@
-﻿using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Queries.Farms;
 using FarmsManager.Application.Specifications.Users;
@@ -59,7 +59,7 @@ public class GetDashboardChartsQueryHandler : IRequestHandler<GetDashboardCharts
                 : new List<Guid> { request.Filters.FarmId.Value }
             : accessibleFarmIds;
 
-        var farms = await _farmRepository.ListAsync(new GetAllFarmsSpec(filteredFarmIds), ct);
+        var farms = await _farmRepository.ListAsync(new GetAllFarmsSpec(filteredFarmIds, user.IsAdmin), ct);
         if (farms.Count == 0)
         {
             return BaseResponse.CreateResponse(new GetDashboardChartsQueryResponse());

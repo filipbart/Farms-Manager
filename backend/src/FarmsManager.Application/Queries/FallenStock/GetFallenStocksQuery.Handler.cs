@@ -1,4 +1,4 @@
-﻿using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Extensions;
 using FarmsManager.Application.Specifications.Henhouses;
 using FarmsManager.Domain.Aggregates.FallenStockAggregate.Interfaces;
@@ -38,7 +38,7 @@ public class
 
         // KROK 1: Pobierz kurniki, aby zbudować kolumny (bez zmian)
         var henhouses =
-            await _henhouseRepository.ListAsync(new HenhousesByFarmIdSpec(request.FarmId), cancellationToken);
+            await _henhouseRepository.ListAsync(new HenhousesByFarmIdSpec(request.FarmId, true), cancellationToken);
         if (henhouses.Count == 0)
         {
             return BaseResponse.CreateResponse(viewModel);

@@ -56,7 +56,7 @@ public class GetExpenseProductionDictionaryQueryHandler : IRequestHandler<GetExp
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var user = await _userRepository.GetAsync(new UserByIdSpec(userId), ct);
         var accessibleFarmIds = user.AccessibleFarmIds;
-        var farms = await _farmRepository.ListAsync<FarmDictModel>(new GetAllFarmsSpec(accessibleFarmIds), ct);
+        var farms = await _farmRepository.ListAsync<FarmDictModel>(new GetAllFarmsSpec(accessibleFarmIds, user.IsAdmin), ct);
         var contractors =
             await _expenseContractorRepository.ListAsync<DictModel>(new GetAllExpenseContractorsSpec(), ct);
         var expenseTypes = await _expenseTypeRepository.ListAsync<DictModel>(new GetAllExpenseTypesSpec(), ct);

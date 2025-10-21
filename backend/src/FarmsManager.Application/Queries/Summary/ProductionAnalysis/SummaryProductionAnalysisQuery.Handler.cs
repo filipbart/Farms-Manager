@@ -1,4 +1,4 @@
-﻿using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models.ProductionData;
 using FarmsManager.Application.Models.Summary;
@@ -80,7 +80,7 @@ public class SummaryProductionAnalysisQueryHandler : IRequestHandler<SummaryProd
         var accessibleFarmIds = user.AccessibleFarmIds;
 
         var allInsertions =
-            await _insertionRepository.ListAsync(new GetAllInsertionsSpec(request.Filters, true, accessibleFarmIds),
+            await _insertionRepository.ListAsync(new GetAllInsertionsSpec(request.Filters, true, accessibleFarmIds, user.IsAdmin),
                 ct);
         if (allInsertions.Count == 0)
         {
@@ -96,11 +96,11 @@ public class SummaryProductionAnalysisQueryHandler : IRequestHandler<SummaryProd
 
         var allSales =
             await _saleRepository.ListAsync(
-                new GetAllSalesSpec(new GetSalesQueryFilters { HenhouseIds = henhouseIds }, false, accessibleFarmIds),
+                new GetAllSalesSpec(new GetSalesQueryFilters { HenhouseIds = henhouseIds }, false, accessibleFarmIds, user.IsAdmin),
                 ct);
         var allFailures = await _productionDataFailureRepository.ListAsync(
             new GetAllProductionDataFailuresSpec(new ProductionDataQueryFilters { HenhouseIds = henhouseIds }, false,
-                accessibleFarmIds),
+                accessibleFarmIds, user.IsAdmin),
             ct);
         var gasConsumptions = await _gasConsumptionRepository.ListAsync(new GasConsumptionsByFarmsSpec(farmIds), ct);
         var feedInvoices = await _feedInvoiceRepository.ListAsync(new FeedsDeliveriesByHenhousesSpec(henhouseIds), ct);

@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Specifications.Cycle;
 using FarmsManager.Application.Specifications.FallenStocks;
@@ -44,7 +44,7 @@ public class GetAvailableHenhousesQueryHandler : IRequestHandler<GetAvailableHen
         var farm = await _farmRepository.GetAsync(new FarmByIdSpec(request.FarmId), ct);
         var cycle = await _cycleRepository.GetAsync(new CycleByIdSpec(request.CycleId), ct);
 
-        var henhouses = await _henhouseRepository.ListAsync(new HenhousesByFarmIdSpec(farm.Id), ct);
+        var henhouses = await _henhouseRepository.ListAsync(new HenhousesByFarmIdSpec(farm.Id, true), ct);
 
         var fallenStocks =
             await _fallenStockRepository.ListAsync(

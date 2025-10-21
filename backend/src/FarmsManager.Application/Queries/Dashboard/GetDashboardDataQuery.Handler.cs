@@ -84,7 +84,7 @@ public class
                 : new List<Guid> { request.Filters.FarmId.Value }
             : accessibleFarmIds;
 
-        var farms = await _farmRepository.ListAsync(new GetAllFarmsSpec(filteredFarmIds), ct);
+        var farms = await _farmRepository.ListAsync(new GetAllFarmsSpec(filteredFarmIds, user.IsAdmin), ct);
         if (farms.Count == 0)
         {
             return BaseResponse.CreateResponse(new GetDashboardDataQueryResponse());
@@ -154,7 +154,7 @@ public class
                 // Dla miesiąca: pobierz dane tylko dla aktywnych cykli
                 var activeCycleIds = farms.Where(f => f.ActiveCycleId.HasValue).Select(f => f.ActiveCycleId.Value)
                     .ToList();
-                if (activeCycleIds.Count != 0)
+                if (activeCycleIds.Count() != 0)
                 {
                     var salesForActive =
                         await _saleRepository.ListAsync(new GetSalesForDashboardSpec(farmIds, activeCycleIds), ct);

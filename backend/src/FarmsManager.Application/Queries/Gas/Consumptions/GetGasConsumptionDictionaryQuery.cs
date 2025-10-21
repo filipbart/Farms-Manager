@@ -1,4 +1,4 @@
-﻿using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models;
 using FarmsManager.Application.Queries.Farms;
@@ -43,7 +43,7 @@ public class GetGasConsumptionsDictionaryQueryHandler : IRequestHandler<GetGasCo
         var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
         var accessibleFarmIds = user.AccessibleFarmIds;
 
-        var farms = await _farmRepository.ListAsync<FarmDictModel>(new GetAllFarmsSpec(accessibleFarmIds),
+        var farms = await _farmRepository.ListAsync<FarmDictModel>(new GetAllFarmsSpec(accessibleFarmIds, user.IsAdmin),
             cancellationToken);
         var cycles = await _cycleRepository.ListAsync<CycleDictModel>(new GetAllCyclesSpec(), cancellationToken);
 

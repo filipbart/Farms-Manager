@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models;
@@ -47,7 +47,7 @@ public class GetGasDeliveriesDictionaryQueryHandler : IRequestHandler<GetGasDeli
         var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
         var accessibleFarmIds = user.AccessibleFarmIds;
 
-        var farms = await _farmRepository.ListAsync<FarmDictModel>(new GetAllFarmsSpec(accessibleFarmIds),
+        var farms = await _farmRepository.ListAsync<FarmDictModel>(new GetAllFarmsSpec(accessibleFarmIds, user.IsAdmin),
             cancellationToken);
         var contractors =
             await _gasContractorRepository.ListAsync<DictModel>(new GetAllGasContractorsSpec(), cancellationToken);

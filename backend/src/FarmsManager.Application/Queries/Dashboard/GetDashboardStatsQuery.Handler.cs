@@ -75,7 +75,7 @@ public class
         var accessibleFarmIds = user.AccessibleFarmIds;
         var filteredFarmIds = GetFilteredFarmIds(request, accessibleFarmIds);
 
-        var farms = await _farmRepository.ListAsync(new GetAllFarmsSpec(filteredFarmIds), ct);
+        var farms = await _farmRepository.ListAsync(new GetAllFarmsSpec(filteredFarmIds, user.IsAdmin), ct);
         if (farms.Count == 0)
         {
             return BaseResponse.CreateResponse(new GetDashboardStatsQueryResponse());

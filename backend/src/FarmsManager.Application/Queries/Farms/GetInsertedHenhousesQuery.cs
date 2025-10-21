@@ -39,7 +39,7 @@ public class
         var cycle = await _cycleRepository.GetAsync(new CycleByIdSpec(request.CycleId), cancellationToken);
 
         var henhouses =
-            await _henhouseRepository.ListAsync(new HenhousesByFarmIdSpec(request.FarmId), cancellationToken);
+            await _henhouseRepository.ListAsync(new HenhousesByFarmIdSpec(request.FarmId, true), cancellationToken);
 
         var insertions = await _insertionRepository.ListAsync(new GetInsertionsByFarmAndCycleSpec(farm.Id, cycle.Id),
             cancellationToken);

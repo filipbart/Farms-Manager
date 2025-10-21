@@ -1,4 +1,4 @@
-﻿using Ardalis.Specification;
+using Ardalis.Specification;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Application.Specifications.Farms;
@@ -38,7 +38,7 @@ public class GetAvailableHenhousesQueryHandler : IRequestHandler<GetAvailableHen
     {
         var farm = await _farmRepository.GetAsync(new FarmByIdSpec(request.FarmId), cancellationToken);
         var henhouses =
-            await _henhouseRepository.ListAsync<HenhouseRowDto>(new HenhousesByFarmIdSpec(farm.Id), cancellationToken);
+            await _henhouseRepository.ListAsync<HenhouseRowDto>(new HenhousesByFarmIdSpec(farm.Id, true), cancellationToken);
 
         var insertionHenhouses = await _insertionRepository.ListAsync(
             new GetInsertionHenhousesForCycleAndFarmIdSpec(farm.Id, farm.ActiveCycle.Id), cancellationToken);

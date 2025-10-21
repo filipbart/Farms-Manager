@@ -1,4 +1,4 @@
-﻿using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models.Summary;
 using FarmsManager.Application.Queries.Insertions;
@@ -79,7 +79,7 @@ public class SummaryFinancialAnalysisQueryHandler : IRequestHandler<SummaryFinan
         var accessibleFarmIds = user.AccessibleFarmIds;
 
         var allInsertions =
-            await _insertionRepository.ListAsync(new GetAllInsertionsSpec(request.Filters, true, accessibleFarmIds),
+            await _insertionRepository.ListAsync(new GetAllInsertionsSpec(request.Filters, true, accessibleFarmIds, user.IsAdmin),
                 ct);
         if (allInsertions.Count == 0)
         {
@@ -91,7 +91,7 @@ public class SummaryFinancialAnalysisQueryHandler : IRequestHandler<SummaryFinan
 
         var allSales =
             await _saleRepository.ListAsync(
-                new GetAllSalesSpec(new GetSalesQueryFilters { HenhouseIds = henhouseIds }, false, accessibleFarmIds),
+                new GetAllSalesSpec(new GetSalesQueryFilters { HenhouseIds = henhouseIds }, false, accessibleFarmIds, user.IsAdmin),
                 ct);
         var allExpenses = await _expenseProductionRepository.ListAsync(new ExpensesProductionsByFarmsSpec(farmIds), ct);
         var gasConsumptions = await _gasConsumptionRepository.ListAsync(new GasConsumptionsByFarmsSpec(farmIds), ct);

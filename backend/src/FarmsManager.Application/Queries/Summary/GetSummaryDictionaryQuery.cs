@@ -48,8 +48,8 @@ public class GetSummaryDictionaryQueryHandler : IRequestHandler<GetSummaryDictio
         var user = await _userRepository.GetAsync(new UserByIdSpec(userId), ct);
         var accessibleFarmIds = user.AccessibleFarmIds;
 
-        var farms = await _farmRepository.ListAsync<FarmDictModel>(new GetAllFarmsSpec(accessibleFarmIds), ct);
-        var hatcheries = await _hatcheryRepository.ListAsync<DictModel>(new GetAllHatcheriesSpec(), ct);
+        var farms = await _farmRepository.ListAsync<FarmDictModel>(new GetAllFarmsSpec(accessibleFarmIds, user.IsAdmin), ct);
+        var hatcheries = await _hatcheryRepository.ListAsync<DictModel>(new GetAllHatcheriesSpec(user.IsAdmin), ct);
         var cycles = await _cycleRepository.ListAsync<CycleDictModel>(new GetAllCyclesSpec(), ct);
 
 

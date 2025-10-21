@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using ClosedXML.Excel;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications.Users;
@@ -35,7 +35,7 @@ public class GetSalesExportFileQueryHandler : IRequestHandler<GetSalesExportFile
         var accessibleFarmIds = user.AccessibleFarmIds;
 
         var saleEntites = await _saleRepository.ListAsync(
-            new GetAllSalesSpec(request.Filters, false, accessibleFarmIds),
+            new GetAllSalesSpec(request.Filters, false, accessibleFarmIds, user.IsAdmin),
             cancellationToken);
 
         if (saleEntites.Count == 0)
