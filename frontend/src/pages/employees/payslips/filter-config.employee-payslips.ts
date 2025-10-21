@@ -31,38 +31,51 @@ const getPayrollPeriodOptions = () => {
 
 export const getEmployeePayslipsFiltersConfig = (
   dictionary: EmployeePayslipsDictionary | undefined,
-  uniqueCycles: CycleDictModel[]
-): FilterConfig<keyof EmployeePayslipsFilterPaginationModel>[] => [
-  {
-    key: "searchPhrase",
-    label: "Szukaj pracownika...",
-    type: "text",
-  },
-  {
-    key: "farmIds",
-    label: "Ferma",
-    type: "multiSelect",
-    options:
-      dictionary?.farms.map((farm) => ({
-        value: farm.id,
-        label: farm.name,
-      })) || [],
-    disabled: !dictionary,
-  },
-  {
-    key: "cycles",
-    label: "Cykl",
-    type: "multiSelect",
-    options: uniqueCycles.map((cycle) => ({
-      value: `${cycle.identifier}-${cycle.year}`,
-      label: `${cycle.identifier}/${cycle.year}`,
-    })),
-    disabled: !dictionary,
-  },
-  {
-    key: "payrollPeriod",
-    label: "Okres rozliczeniowy",
-    type: "select",
-    options: getPayrollPeriodOptions(),
-  },
-];
+  uniqueCycles: CycleDictModel[],
+  isAdmin: boolean = false
+): FilterConfig<keyof EmployeePayslipsFilterPaginationModel>[] => {
+  const baseFilters: FilterConfig<keyof EmployeePayslipsFilterPaginationModel>[] = [
+    {
+      key: "searchPhrase",
+      label: "Szukaj pracownika...",
+      type: "text",
+    },
+    {
+      key: "farmIds",
+      label: "Ferma",
+      type: "multiSelect",
+      options:
+        dictionary?.farms.map((farm) => ({
+          value: farm.id,
+          label: farm.name,
+        })) || [],
+      disabled: !dictionary,
+    },
+    {
+      key: "cycles",
+      label: "Cykl",
+      type: "multiSelect",
+      options: uniqueCycles.map((cycle) => ({
+        value: `${cycle.identifier}-${cycle.year}`,
+        label: `${cycle.identifier}/${cycle.year}`,
+      })),
+      disabled: !dictionary,
+    },
+    {
+      key: "payrollPeriod",
+      label: "Okres rozliczeniowy",
+      type: "select",
+      options: getPayrollPeriodOptions(),
+    },
+  ];
+
+  if (isAdmin) {
+    baseFilters.push({
+      key: "showDeleted",
+      label: "Pokaż usunięte",
+      type: "checkbox",
+    });
+  }
+
+  return baseFilters;
+};

@@ -12,7 +12,7 @@ import type { CycleDictModel } from "../../../models/common/dictionaries";
 import { useEmployeePayslips } from "../../../hooks/employees/useEmployeePayslips";
 import { EmployeePayslipsService } from "../../../services/employee-payslips-service";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
-import { getEmployeePayslipColumns } from "./payslips-columns";
+import { getEmployeePayslipsColumns } from "./payslips-columns";
 import NoRowsOverlay from "../../../components/datagrid/custom-norows";
 import {
   EmployeePayslipsOrderType,
@@ -28,8 +28,11 @@ import {
   getSortOptionsFromGridModel,
   initializeFiltersFromLocalStorage,
 } from "../../../utils/grid-state-helper";
+import { useAuth } from "../../../auth/useAuth";
 
 const EmployeePayslipsPage: React.FC = () => {
+  const { userData } = useAuth();
+  const isAdmin = userData?.isAdmin ?? false;
   const [filters, dispatch] = useReducer(
     filterReducer,
     initialFilters,
@@ -124,12 +127,13 @@ const EmployeePayslipsPage: React.FC = () => {
 
   const columns = useMemo(
     () =>
-      getEmployeePayslipColumns({
+      getEmployeePayslipsColumns({
         setSelectedPayslip,
         deletePayslip,
         setIsEditModalOpen,
+        isAdmin,
       }),
-    []
+    [isAdmin]
   );
 
   return (
@@ -155,7 +159,7 @@ const EmployeePayslipsPage: React.FC = () => {
       </Box>
 
       <FiltersForm
-        config={getEmployeePayslipsFiltersConfig(dictionary, uniqueCycles)}
+        config={getEmployeePayslipsFiltersConfig(dictionary, uniqueCycles, isAdmin)}
         filters={filters}
         dispatch={dispatch}
       />

@@ -38,8 +38,12 @@ import {
   initializeFiltersFromLocalStorage,
 } from "../../../utils/grid-state-helper";
 import { getPriorityClassName } from "../../../utils/priority-helper";
+import { useAuth } from "../../../auth/useAuth";
 
 const SalesInvoicesPage: React.FC = () => {
+  const { userData } = useAuth();
+  const isAdmin = userData?.isAdmin ?? false;
+
   const [filters, dispatch] = useReducer(
     filterReducer,
     initialFilters,
@@ -193,8 +197,9 @@ const SalesInvoicesPage: React.FC = () => {
         setIsEditModalOpen,
         downloadSalesInvoiceFile,
         downloadingFilePath,
+        isAdmin,
       }),
-    [downloadingFilePath]
+    [downloadingFilePath, isAdmin]
   );
 
   const handleCloseSaveInvoicesModal = () => {
@@ -246,7 +251,7 @@ const SalesInvoicesPage: React.FC = () => {
       </Box>
 
       <FiltersForm
-        config={getSalesInvoicesFiltersConfig(dictionary, uniqueCycles)}
+        config={getSalesInvoicesFiltersConfig(dictionary, uniqueCycles, filters, isAdmin)}
         filters={filters}
         dispatch={dispatch}
       />

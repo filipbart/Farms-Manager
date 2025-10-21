@@ -1,21 +1,24 @@
 import type { GridColDef } from "@mui/x-data-grid";
-import { CommentCell } from "../../../components/datagrid/comment-cell";
-import type { EmployeePayslipListModel } from "../../../models/employees/employees-payslips";
 import ActionsCell from "../../../components/datagrid/actions-cell";
+import { getAuditColumns } from "../../../utils/audit-columns-helper";
+import type { EmployeePayslipListModel } from "../../../models/employees/employees-payslips";
 import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
+import { CommentCell } from "../../../components/datagrid/comment-cell";
 
 interface GetEmployeePayslipColumnsProps {
   setSelectedPayslip: (payslip: EmployeePayslipListModel) => void;
   setIsEditModalOpen: (isOpen: boolean) => void;
   deletePayslip: (id: string) => void;
+  isAdmin?: boolean;
 }
 
-export const getEmployeePayslipColumns = ({
+export const getEmployeePayslipsColumns = ({
   setSelectedPayslip,
-  setIsEditModalOpen,
   deletePayslip,
-}: GetEmployeePayslipColumnsProps): GridColDef<EmployeePayslipListModel>[] => {
-  return [
+  setIsEditModalOpen,
+  isAdmin = false,
+}: GetEmployeePayslipColumnsProps): GridColDef[] => {
+  const baseColumns: GridColDef[] = [
     {
       field: "farmName",
       headerName: "Ferma",
@@ -151,4 +154,7 @@ export const getEmployeePayslipColumns = ({
       },
     },
   ];
+
+  const auditColumns = getAuditColumns<EmployeePayslipListModel>(isAdmin);
+  return [...baseColumns, ...auditColumns];
 };

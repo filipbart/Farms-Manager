@@ -1,9 +1,10 @@
 import type { GridColDef } from "@mui/x-data-grid";
 import dayjs from "dayjs";
 import ActionsCell from "../../../../components/datagrid/actions-cell";
+import { getAuditColumns } from "../../../../utils/audit-columns-helper";
+import type { ExpenseAdvanceListModel } from "../../../../models/expenses/advances/expenses-advances";
 import { CommentCell } from "../../../../components/datagrid/comment-cell";
 import FileDownloadCell from "../../../../components/datagrid/file-download-cell";
-import type { ExpenseAdvanceListModel } from "../../../../models/expenses/advances/expenses-advances";
 import { AdvanceType } from "../../../../models/expenses/advances/categories";
 import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
 
@@ -13,6 +14,7 @@ interface GetAdvancesColumnsProps {
   setIsEditModalOpen: (isOpen: boolean) => void;
   downloadAdvanceFile: (path: string) => void;
   downloadingFilePath: string | null;
+  isAdmin?: boolean;
 }
 
 export const getAdvancesColumns = ({
@@ -21,8 +23,9 @@ export const getAdvancesColumns = ({
   setIsEditModalOpen,
   downloadAdvanceFile,
   downloadingFilePath,
+  isAdmin = false,
 }: GetAdvancesColumnsProps): GridColDef<ExpenseAdvanceListModel>[] => {
-  return [
+  const baseColumns: GridColDef<ExpenseAdvanceListModel>[] = [
     {
       field: "date",
       headerName: "Data",
@@ -111,4 +114,7 @@ export const getAdvancesColumns = ({
       },
     },
   ];
+
+  const auditColumns = getAuditColumns<ExpenseAdvanceListModel>(isAdmin);
+  return [...baseColumns, ...auditColumns];
 };

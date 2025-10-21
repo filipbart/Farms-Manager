@@ -1,7 +1,8 @@
 import type { GridColDef } from "@mui/x-data-grid";
 import dayjs from "dayjs";
-import type { SalesInvoiceListModel } from "../../../models/sales/sales-invoices";
 import ActionsCell from "../../../components/datagrid/actions-cell";
+import { getAuditColumns } from "../../../utils/audit-columns-helper";
+import type { SalesInvoiceListModel } from "../../../models/sales/sales-invoices";
 import FileDownloadCell from "../../../components/datagrid/file-download-cell";
 import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
 
@@ -11,6 +12,7 @@ interface GetSalesInvoicesColumnsProps {
   setIsEditModalOpen: (isOpen: boolean) => void;
   downloadSalesInvoiceFile: (path: string) => void;
   downloadingFilePath: string | null;
+  isAdmin?: boolean;
 }
 
 export const getSalesInvoicesColumns = ({
@@ -19,8 +21,9 @@ export const getSalesInvoicesColumns = ({
   setIsEditModalOpen,
   downloadSalesInvoiceFile,
   downloadingFilePath,
+  isAdmin = false,
 }: GetSalesInvoicesColumnsProps): GridColDef<SalesInvoiceListModel>[] => {
-  return [
+  const baseColumns: GridColDef[] = [
     {
       field: "cycleText",
       headerName: "Cykl",
@@ -129,4 +132,7 @@ export const getSalesInvoicesColumns = ({
       },
     },
   ];
+
+  const auditColumns = getAuditColumns<SalesInvoiceListModel>(isAdmin);
+  return [...baseColumns, ...auditColumns];
 };

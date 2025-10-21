@@ -1,6 +1,6 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
 import { type GridColDef } from "@mui/x-data-grid";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { FarmsService } from "../../../services/farms-service";
 import AddFarmModal from "../../../components/modals/farms/add-farm-modal";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
@@ -8,6 +8,10 @@ import { useFarms } from "../../../hooks/useFarms";
 import { DataGridPro } from "@mui/x-data-grid-pro";
 import ActionsCell from "../../../components/datagrid/actions-cell";
 import EditFarmModal from "../../../components/modals/farms/edit-farm-modal";
+import { useAuth } from "../../../auth/useAuth";
+import { getAuditColumns } from "../../../utils/audit-columns-helper";
+
+import type { AuditFields } from "../../../common/interfaces/audit-fields";
 
 type FarmRow = {
   id: string;
@@ -15,9 +19,11 @@ type FarmRow = {
   nip: string;
   producerNumber: string;
   address: string;
-};
+} & AuditFields;
 
 const FarmsPage: React.FC = () => {
+  const { userData } = useAuth();
+  const isAdmin = userData?.isAdmin ?? false;
   const { farms, loadingFarms, fetchFarms } = useFarms();
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -50,36 +56,41 @@ const FarmsPage: React.FC = () => {
     );
   };
 
-  const columns: GridColDef<FarmRow>[] = [
-    { field: "name", headerName: "Nazwa", flex: 1 },
-    { field: "nip", headerName: "NIP", flex: 1 },
-    { field: "producerNumber", headerName: "Numer producenta", flex: 1 },
-    { field: "address", headerName: "Adres", flex: 1 },
-    { field: "henHousesCount", headerName: "Liczba kurników", flex: 1 },
-    {
-      field: "dateCreatedUtc",
-      headerName: "Data utworzenia rekordu",
-      type: "dateTime",
-      flex: 1,
-      valueGetter: (params: { value: string | Date }) => {
-        return params.value ? new Date(params.value) : null;
+  const columns: GridColDef<FarmRow>[] = useMemo(() => {
+    const baseColumns: GridColDef<FarmRow>[] = [
+      { field: "name", headerName: "Nazwa", flex: 1 },
+      { field: "nip", headerName: "NIP", flex: 1 },
+      { field: "producerNumber", headerName: "Numer producenta", flex: 1 },
+      { field: "address", headerName: "Adres", flex: 1 },
+      { field: "henHousesCount", headerName: "Liczba kurników", flex: 1 },
+      {
+        field: "dateCreatedUtc",
+        headerName: "Data utworzenia rekordu",
+        type: "dateTime",
+        flex: 1,
+        valueGetter: (params: { value: string | Date }) => {
+          return params.value ? new Date(params.value) : null;
+        },
       },
-    },
-    {
-      field: "actions",
-      type: "actions",
-      headerName: "Akcje",
-      width: 150,
-      getActions: (params) => [
-        <ActionsCell
-          key="actions"
-          params={params}
-          onEdit={handleEditOpen}
-          onDelete={handleDelete}
-        />,
-      ],
-    },
-  ];
+      {
+        field: "actions",
+        type: "actions",
+        headerName: "Akcje",
+        width: 150,
+        getActions: (params) => [
+          <ActionsCell
+            key="actions"
+            params={params}
+            onEdit={handleEditOpen}
+            onDelete={handleDelete}
+          />,
+        ],
+      },
+    ];
+    
+    const auditColumns = getAuditColumns<FarmRow>(isAdmin);
+    return [...baseColumns, ...auditColumns];
+  }, [isAdmin]);
 
   const handleAddOpen = () => setIsAddModalOpen(true);
   const handleAddClose = () => setIsAddModalOpen(false);

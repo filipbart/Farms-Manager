@@ -38,6 +38,7 @@ import {
   initializeFiltersFromLocalStorage,
 } from "../../../../utils/grid-state-helper";
 import { getPriorityClassName } from "../../../../utils/priority-helper";
+import { useAuth } from "../../../../auth/useAuth";
 
 const generateYearOptions = () => {
   const currentYear = new Date().getFullYear();
@@ -73,6 +74,8 @@ const formatCurrencyPLN = (value: number | null | undefined): string => {
 };
 
 const ExpenseAdvanceDetailsPage: React.FC = () => {
+  const { userData } = useAuth();
+  const isAdmin = userData?.isAdmin ?? false;
   const { employeeId } = useParams<{ employeeId: string }>();
   const [openAddModal, setOpenAddModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
@@ -173,16 +176,17 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
     );
   };
 
-const columns = useMemo(
+  const columns = useMemo(
     () =>
       getAdvancesColumns({
         setSelectedAdvance,
         deleteAdvance,
         setIsEditModalOpen: setOpenEditModal,
+        isAdmin,
         downloadAdvanceFile: downloadExpenseAdvanceFile,
         downloadingFilePath,
       }),
-    [downloadingFilePath]
+    [isAdmin, downloadingFilePath]
   );
 
   if (loading && !employeeFullName) {

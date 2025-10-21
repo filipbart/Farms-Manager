@@ -26,19 +26,36 @@ const generateYearOptions = () => {
   return years;
 };
 
-export const getExpensesAdvancesFiltersConfig = (): FilterConfig<
-  keyof ExpensesAdvancesFilterPaginationModel
->[] => [
-  {
-    key: "years",
-    label: "Lata",
-    type: "multiSelect",
-    options: generateYearOptions(),
-  },
-  {
-    key: "months",
-    label: "Miesiące",
-    type: "multiSelect",
-    options: monthOptions,
-  },
-];
+export const getExpensesAdvancesFiltersConfig = (
+  isAdmin: boolean = false
+): FilterConfig<keyof ExpensesAdvancesFilterPaginationModel>[] => {
+  const baseFilters: FilterConfig<keyof ExpensesAdvancesFilterPaginationModel>[] = [
+    {
+      key: "years",
+      label: "Lata",
+      type: "multiSelect",
+      options: generateYearOptions(),
+    },
+    {
+      key: "months",
+      label: "Miesiące",
+      type: "multiSelect",
+      options: monthOptions,
+    },
+    {
+      key: "dateTo",
+      label: "Data do",
+      type: "date",
+    },
+  ];
+
+  if (isAdmin) {
+    baseFilters.push({
+      key: "showDeleted",
+      label: "Pokaż usunięte",
+      type: "checkbox",
+    });
+  }
+
+  return baseFilters;
+};
