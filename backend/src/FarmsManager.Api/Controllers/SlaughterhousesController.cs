@@ -1,4 +1,4 @@
-﻿using FarmsManager.Api.Attributes;
+using FarmsManager.Api.Attributes;
 using FarmsManager.Api.Controllers.Base;
 using FarmsManager.Application.Commands.Slaughterhouses;
 using FarmsManager.Application.Common.Responses;
@@ -15,13 +15,14 @@ public class SlaughterhousesController(IMediator mediator) : BaseController
     /// <summary>
     /// Pobiera wszystkie ubojnie
     /// </summary>
+    /// <param name="showDeleted"></param>
     /// <returns></returns>
     [HttpGet]
     [ProducesResponseType(typeof(BaseResponse<GetAllSlaughterhousesQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetAllSlaughterhouses()
+    public async Task<IActionResult> GetAllSlaughterhouses([FromQuery] bool? showDeleted = null)
     {
-        return Ok(await mediator.Send(new GetAllSlaughterhousesQuery()));
+        return Ok(await mediator.Send(new GetAllSlaughterhousesQuery(showDeleted)));
     }
 
     /// <summary>

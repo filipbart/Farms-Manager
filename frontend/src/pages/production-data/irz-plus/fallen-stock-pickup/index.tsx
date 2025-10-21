@@ -15,6 +15,7 @@ import {
 } from "@mui/x-data-grid-premium";
 import AddFallenStockPickupsModal from "../../../../components/modals/production-data/fallen-stocks/add-fallen-stock-pickups-modal";
 import EditFallenStockPickupModal from "../../../../components/modals/production-data/fallen-stocks/edit-fallen-stock-pickup-modal";
+import { useAuth } from "../../../../auth/useAuth";
 
 interface FallenStocksPickupPageProps {
   filters: FallenStockFilterModel;
@@ -25,6 +26,8 @@ const FallenStocksPickupPage: React.FC<FallenStocksPickupPageProps> = ({
   filters,
   onReloadMain,
 }) => {
+  const { userData } = useAuth();
+  const isAdmin = userData?.isAdmin ?? false;
   const { pickups, loadingPickups, fetchPickups } =
     useFallenStockPickups(filters);
 
@@ -83,8 +86,9 @@ const FallenStocksPickupPage: React.FC<FallenStocksPickupPageProps> = ({
         setSelectedPickup,
         deletePickupRecord,
         setIsEditModalOpen,
+        isAdmin,
       }),
-    [deletePickupRecord]
+    [deletePickupRecord, isAdmin]
   );
 
   return (

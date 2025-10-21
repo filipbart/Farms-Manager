@@ -9,8 +9,13 @@ import AddHatcheryModal from "../../../components/modals/hatcheries/add-hatchery
 import { toast } from "react-toastify";
 import EditHatcheryModal from "../../../components/modals/hatcheries/edit-hatchery-modal";
 import ActionsCell from "../../../components/datagrid/actions-cell";
+import { useAuth } from "../../../auth/useAuth";
+import { getAuditColumns } from "../../../utils/audit-columns-helper";
+import type { AuditFields } from "../../../common/interfaces/audit-fields";
 
 const HatcheriesPage: React.FC = () => {
+  const { userData } = useAuth();
+  const isAdmin = userData?.isAdmin ?? false;
   const [loading, setLoading] = useState(false);
   const [hatcheries, setHatcheries] = useState<HatcheryRowModel[]>([]);
 
@@ -71,7 +76,7 @@ const HatcheriesPage: React.FC = () => {
     );
   };
 
-  const columns: GridColDef<HatcheryRowModel>[] = [
+  const baseColumns: GridColDef<HatcheryRowModel & AuditFields>[] = [
     { field: "name", headerName: "Nazwa", flex: 1 },
     { field: "fullName", headerName: "Pełna nazwa", flex: 1 },
     { field: "producerNumber", headerName: "Numer producenta", flex: 1 },
@@ -102,6 +107,9 @@ const HatcheriesPage: React.FC = () => {
       },
     },
   ];
+  
+  const auditColumns = getAuditColumns<HatcheryRowModel & AuditFields>(isAdmin);
+  const columns: GridColDef<HatcheryRowModel & AuditFields>[] = [...baseColumns, ...auditColumns];
 
   return (
     <Box p={4}>

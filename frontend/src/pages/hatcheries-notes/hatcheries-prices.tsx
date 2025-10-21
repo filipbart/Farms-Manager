@@ -28,8 +28,11 @@ import {
   getSortOptionsFromGridModel,
   initializeFiltersFromLocalStorage,
 } from "../../utils/grid-state-helper";
+import { useAuth } from "../../auth/useAuth";
 
 const HatcheriesPricesPanel: React.FC = () => {
+  const { userData } = useAuth();
+  const isAdmin = userData?.isAdmin ?? false;
   const [filters, dispatch] = useReducer(
     filterReducer,
     initialFilters,
@@ -91,8 +94,9 @@ const HatcheriesPricesPanel: React.FC = () => {
         setSelectedHatcheryPrice,
         setIsEditModalOpen,
         deleteHatcheryPrice,
+        isAdmin,
       }),
-    []
+    [isAdmin]
   );
 
   const fetchDictionaries = async () => {
@@ -158,7 +162,7 @@ const HatcheriesPricesPanel: React.FC = () => {
       </Box>
 
       <FiltersForm
-        config={getHatcheriesPricesFiltersConfig(dictionary)}
+        config={getHatcheriesPricesFiltersConfig(dictionary, isAdmin)}
         filters={filters}
         dispatch={dispatch}
       />

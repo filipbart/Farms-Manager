@@ -28,8 +28,11 @@ import {
   getSortOptionsFromGridModel,
   initializeFiltersFromLocalStorage,
 } from "../../../utils/grid-state-helper";
+import { useAuth } from "../../../auth/useAuth";
 
 const ProductionDataFlockLossPage: React.FC = () => {
+  const { userData } = useAuth();
+  const isAdmin = userData?.isAdmin ?? false;
   const [filters, dispatch] = useReducer(
     filterReducer,
     initialFilters,
@@ -174,8 +177,9 @@ const ProductionDataFlockLossPage: React.FC = () => {
         deleteFlockLoss,
         setIsEditModalOpen,
         columnStats,
+        isAdmin,
       }),
-    [columnStats]
+    [columnStats, isAdmin]
   );
 
   return (

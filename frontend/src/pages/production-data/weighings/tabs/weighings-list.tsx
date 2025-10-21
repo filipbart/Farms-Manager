@@ -27,8 +27,11 @@ import {
   getSortOptionsFromGridModel,
   initializeFiltersFromLocalStorage,
 } from "../../../../utils/grid-state-helper";
+import { useAuth } from "../../../../auth/useAuth";
 
 const ProductionDataWeighingsTab: React.FC = () => {
+  const { userData } = useAuth();
+  const isAdmin = userData?.isAdmin ?? false;
   const [filters, dispatch] = useReducer(
     filterReducer,
     initialFilters,
@@ -159,8 +162,9 @@ const ProductionDataWeighingsTab: React.FC = () => {
         setSelectedWeighing,
         setIsEditModalOpen,
         columnStats,
+        isAdmin,
       }),
-    [columnStats]
+    [columnStats, isAdmin]
   );
 
   return (
@@ -189,7 +193,8 @@ const ProductionDataWeighingsTab: React.FC = () => {
         config={getWeighingsFiltersConfig(
           dictionary,
           uniqueCycles,
-          filters
+          filters,
+          isAdmin
         )}
         filters={filters}
         dispatch={dispatch}

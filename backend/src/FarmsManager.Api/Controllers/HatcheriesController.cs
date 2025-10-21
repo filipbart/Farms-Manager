@@ -15,14 +15,15 @@ public class HatcheriesController(IMediator mediator) : BaseController
     /// <summary>
     /// Pobiera wszystkie wylęgarnie
     /// </summary>
+    /// <param name="showDeleted"></param>
     /// <returns></returns>
     [HttpGet]
     [HasPermission(AppPermissions.Data.HatcheriesManage)]
     [ProducesResponseType(typeof(BaseResponse<GetAllHatcheriesQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetAllHatcheries()
+    public async Task<IActionResult> GetAllHatcheries([FromQuery] bool? showDeleted = null)
     {
-        return Ok(await mediator.Send(new GetAllHatcheriesQuery()));
+        return Ok(await mediator.Send(new GetAllHatcheriesQuery(showDeleted)));
     }
 
     /// <summary>

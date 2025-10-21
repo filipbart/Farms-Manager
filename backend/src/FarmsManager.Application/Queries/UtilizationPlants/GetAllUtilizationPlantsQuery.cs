@@ -29,7 +29,7 @@ public record UtilizationPlantRowDto
     public string DeletedByName { get; init; }
 }
 
-public record GetAllUtilizationPlantsQuery : IRequest<BaseResponse<GetAllUtilizationPlantsQueryResponse>>;
+public record GetAllUtilizationPlantsQuery(bool? ShowDeleted = null) : IRequest<BaseResponse<GetAllUtilizationPlantsQueryResponse>>;
 
 public class GetAllUtilizationPlantsQueryResponse : PaginationModel<UtilizationPlantRowDto>;
 
@@ -57,7 +57,7 @@ public class
         var isAdmin = user.IsAdmin;
 
         var items = await _utilizationPlantRepository.ListAsync<UtilizationPlantRowDto>(
-            new GetAllUtilizationPlantsSpec(isAdmin),
+            new GetAllUtilizationPlantsSpec(isAdmin, request.ShowDeleted),
             cancellationToken);
 
         return BaseResponse.CreateResponse(new GetAllUtilizationPlantsQueryResponse

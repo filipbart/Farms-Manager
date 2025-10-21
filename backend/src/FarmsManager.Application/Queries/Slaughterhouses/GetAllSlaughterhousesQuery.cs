@@ -29,7 +29,7 @@ public record SlaughterhouseRowDto
     public string DeletedByName { get; init; }
 }
 
-public record GetAllSlaughterhousesQuery : IRequest<BaseResponse<GetAllSlaughterhousesQueryResponse>>;
+public record GetAllSlaughterhousesQuery(bool? ShowDeleted = null) : IRequest<BaseResponse<GetAllSlaughterhousesQueryResponse>>;
 
 public class GetAllSlaughterhousesQueryResponse : PaginationModel<SlaughterhouseRowDto>;
 
@@ -57,7 +57,7 @@ public class
         var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
         var isAdmin = user.IsAdmin;
 
-        var items = await _slaughterhouseRepository.ListAsync<SlaughterhouseRowDto>(new GetAllSlaughterhousesSpec(isAdmin),
+        var items = await _slaughterhouseRepository.ListAsync<SlaughterhouseRowDto>(new GetAllSlaughterhousesSpec(isAdmin, request.ShowDeleted),
             cancellationToken);
         return BaseResponse.CreateResponse(new GetAllSlaughterhousesQueryResponse
         {

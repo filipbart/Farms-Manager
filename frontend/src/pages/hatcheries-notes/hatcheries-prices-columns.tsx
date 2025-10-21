@@ -4,17 +4,20 @@ import type { HatcheryPriceListModel } from "../../models/hatcheries/hatcheries-
 import ActionsCell from "../../components/datagrid/actions-cell";
 import { CommentCell } from "../../components/datagrid/comment-cell";
 import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
+import { getAuditColumns } from "../../utils/audit-columns-helper";
 
 export const getHatcheriesPriceColumns = ({
   setSelectedHatcheryPrice,
   setIsEditModalOpen,
   deleteHatcheryPrice,
+  isAdmin = false,
 }: {
   setSelectedHatcheryPrice: (price: HatcheryPriceListModel) => void;
   setIsEditModalOpen: (isOpen: boolean) => void;
   deleteHatcheryPrice: (id: string) => void;
+  isAdmin?: boolean;
 }): GridColDef<HatcheryPriceListModel>[] => {
-  return [
+  const baseColumns: GridColDef<HatcheryPriceListModel>[] = [
     { field: "hatcheryName", headerName: "Wylęgarnia", flex: 1 },
     {
       field: "date",
@@ -63,4 +66,7 @@ export const getHatcheriesPriceColumns = ({
       },
     },
   ];
+  
+  const auditColumns = getAuditColumns<HatcheryPriceListModel>(isAdmin);
+  return [...baseColumns, ...auditColumns];
 };

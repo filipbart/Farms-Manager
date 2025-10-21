@@ -3,15 +3,18 @@ import dayjs from "dayjs";
 import type { UserListModel } from "../../../models/users/users";
 import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
 import ActionsCell from "../../../components/datagrid/actions-cell";
+import { getAuditColumns } from "../../../utils/audit-columns-helper";
 
 interface GetUsersColumnsProps {
   deleteUser: (id: string) => void;
+  isAdmin?: boolean;
 }
 
 export const getUsersColumns = ({
   deleteUser,
+  isAdmin = false,
 }: GetUsersColumnsProps): GridColDef<UserListModel>[] => {
-  return [
+  const baseColumns: GridColDef<UserListModel>[] = [
     {
       field: "login",
       headerName: "Login",
@@ -45,4 +48,7 @@ export const getUsersColumns = ({
       },
     },
   ];
+  
+  const auditColumns = getAuditColumns<UserListModel>(isAdmin);
+  return [...baseColumns, ...auditColumns];
 };

@@ -1,4 +1,4 @@
-﻿using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications.FallenStocks;
 using FarmsManager.Application.Specifications.Farms;
@@ -68,7 +68,7 @@ public class
             cancellationToken);
 
         var fallenStockPickups =
-            await _fallenStockPickupRepository.ListAsync(new FallenStockPickupsByFarmAndCycleSpec(farm.Id, cycle.Id),
+            await _fallenStockPickupRepository.ListAsync(new FallenStockPickupsByFarmAndCycleSpec(farm.Id, cycle.Id, null, false),
                 cancellationToken);
 
         var response = new BaseResponse<GetIrzSummaryDataQueryResponse>();

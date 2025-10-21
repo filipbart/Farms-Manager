@@ -17,12 +17,15 @@ import { getUsersFiltersConfig } from "./filter-config.users";
 import { UsersService } from "../../../services/users-service";
 import AddUserModal from "../../../components/modals/users/add-user-modal";
 import { DataGridPremium, type GridState } from "@mui/x-data-grid-premium";
+import { useAuth } from "../../../auth/useAuth";
 import {
   getSortOptionsFromGridModel,
   initializeFiltersFromLocalStorage,
 } from "../../../utils/grid-state-helper";
 
 const UsersPage: React.FC = () => {
+  const { userData } = useAuth();
+  const isAdmin = userData?.isAdmin ?? false;
   const [filters, dispatch] = useReducer(
     filterReducer,
     initialFilters,
@@ -70,7 +73,7 @@ const UsersPage: React.FC = () => {
     fetchUsers();
   }, [fetchUsers]);
 
-  const columns = useMemo(() => getUsersColumns({ deleteUser }), [deleteUser]);
+  const columns = useMemo(() => getUsersColumns({ deleteUser, isAdmin }), [deleteUser, isAdmin]);
 
   return (
     <Box p={4}>
@@ -95,7 +98,7 @@ const UsersPage: React.FC = () => {
       </Box>
 
       <FiltersForm
-        config={getUsersFiltersConfig()}
+        config={getUsersFiltersConfig(isAdmin)}
         filters={filters}
         dispatch={dispatch}
       />

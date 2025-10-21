@@ -29,7 +29,7 @@ public record HatcheryRowDto
     public string DeletedByName { get; init; }
 }
 
-public record GetAllHatcheriesQuery : IRequest<BaseResponse<GetAllHatcheriesQueryResponse>>;
+public record GetAllHatcheriesQuery(bool? ShowDeleted = null) : IRequest<BaseResponse<GetAllHatcheriesQueryResponse>>;
 
 public class GetAllHatcheriesQueryResponse : PaginationModel<HatcheryRowDto>;
 
@@ -55,7 +55,7 @@ public class
         var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
         var isAdmin = user.IsAdmin;
 
-        var items = await _hatcheryRepository.ListAsync<HatcheryRowDto>(new GetAllHatcheriesSpec(isAdmin), cancellationToken);
+        var items = await _hatcheryRepository.ListAsync<HatcheryRowDto>(new GetAllHatcheriesSpec(isAdmin, request.ShowDeleted), cancellationToken);
         return BaseResponse.CreateResponse(new GetAllHatcheriesQueryResponse
         {
             TotalRows = items.Count,

@@ -2,16 +2,19 @@ import type { GridColDef } from "@mui/x-data-grid";
 import dayjs from "dayjs";
 import ActionsCell from "../../../../components/datagrid/actions-cell";
 import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
+import { getAuditColumns } from "../../../../utils/audit-columns-helper";
 export const getFallenStockPickupColumns = ({
   setSelectedPickup,
   deletePickupRecord,
   setIsEditModalOpen,
+  isAdmin = false,
 }: {
   setSelectedPickup: (s: any) => void;
   deletePickupRecord: (id: string) => void;
   setIsEditModalOpen: (v: boolean) => void;
+  isAdmin?: boolean;
 }): GridColDef[] => {
-  return [
+  const baseColumns: GridColDef[] = [
     { field: "farmName", headerName: "Ferma", flex: 1 },
     { field: "cycleText", headerName: "Identyfikator cyklu", flex: 1 },
     {
@@ -53,4 +56,7 @@ export const getFallenStockPickupColumns = ({
       },
     },
   ];
+  
+  const auditColumns = getAuditColumns<any>(isAdmin);
+  return [...baseColumns, ...auditColumns];
 };

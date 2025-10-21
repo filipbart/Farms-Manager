@@ -9,8 +9,13 @@ import AddSlaughterhouseModal from "../../../components/modals/slaughterhouses/a
 import { toast } from "react-toastify";
 import EditSlaughterhouseModal from "../../../components/modals/slaughterhouses/edit-slaughterhouse-modal";
 import ActionsCell from "../../../components/datagrid/actions-cell";
+import { useAuth } from "../../../auth/useAuth";
+import { getAuditColumns } from "../../../utils/audit-columns-helper";
+import type { AuditFields } from "../../../common/interfaces/audit-fields";
 
 const SlaughterhousesPage: React.FC = () => {
+  const { userData } = useAuth();
+  const isAdmin = userData?.isAdmin ?? false;
   const [loading, setLoading] = useState(false);
   const [slaughterhouses, setSlaughterhouses] = useState<
     SlaughterhouseRowModel[]
@@ -71,7 +76,7 @@ const SlaughterhousesPage: React.FC = () => {
     );
   };
 
-  const columns: GridColDef<SlaughterhouseRowModel>[] = [
+  const baseColumns: GridColDef<SlaughterhouseRowModel & AuditFields>[] = [
     { field: "name", headerName: "Nazwa", flex: 1 },
     { field: "producerNumber", headerName: "Numer producenta", flex: 1 },
     { field: "nip", headerName: "NIP", flex: 1 },
@@ -98,6 +103,9 @@ const SlaughterhousesPage: React.FC = () => {
       ],
     },
   ];
+  
+  const auditColumns = getAuditColumns<SlaughterhouseRowModel & AuditFields>(isAdmin);
+  const columns: GridColDef<SlaughterhouseRowModel & AuditFields>[] = [...baseColumns, ...auditColumns];
 
   return (
     <Box p={4}>

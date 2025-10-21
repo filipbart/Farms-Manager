@@ -9,8 +9,13 @@ import { useUtilizationPlants } from "../../../hooks/useUtilizationPlants";
 import AddUtilizationPlantModal from "../../../components/modals/utilization-plants/add-utilization-plant-modal";
 import EditUtilizationPlantModal from "../../../components/modals/utilization-plants/edit-utilization-plant-modal";
 import ActionsCell from "../../../components/datagrid/actions-cell";
+import { useAuth } from "../../../auth/useAuth";
+import { getAuditColumns } from "../../../utils/audit-columns-helper";
+import type { AuditFields } from "../../../common/interfaces/audit-fields";
 
 const UtilizationPlantsPage: React.FC = () => {
+  const { userData } = useAuth();
+  const isAdmin = userData?.isAdmin ?? false;
   const [openAddModal, setOpenAddModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [selectedPlant, setSelectedPlant] =
@@ -65,7 +70,7 @@ const UtilizationPlantsPage: React.FC = () => {
     fetchUtilizationPlants();
   };
 
-  const columns: GridColDef<UtilizationPlantRowModel>[] = [
+  const baseColumns: GridColDef<UtilizationPlantRowModel & AuditFields>[] = [
     { field: "name", headerName: "Nazwa", flex: 1 },
     { field: "irzNumber", headerName: "Numer IRZ", flex: 1 },
     { field: "nip", headerName: "NIP", flex: 1 },
@@ -92,6 +97,9 @@ const UtilizationPlantsPage: React.FC = () => {
       ],
     },
   ];
+  
+  const auditColumns = getAuditColumns<UtilizationPlantRowModel & AuditFields>(isAdmin);
+  const columns: GridColDef<UtilizationPlantRowModel & AuditFields>[] = [...baseColumns, ...auditColumns];
 
   return (
     <Box p={4}>

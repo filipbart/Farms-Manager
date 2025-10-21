@@ -28,8 +28,11 @@ import {
   getSortOptionsFromGridModel,
   initializeFiltersFromLocalStorage,
 } from "../../../utils/grid-state-helper";
+import { useAuth } from "../../../auth/useAuth";
 
 const ProductionDataTransferFeedPage: React.FC = () => {
+  const { userData } = useAuth();
+  const isAdmin = userData?.isAdmin ?? false;
   const [filters, dispatch] = useReducer(
     filterReducer,
     initialFilters,
@@ -143,8 +146,9 @@ const ProductionDataTransferFeedPage: React.FC = () => {
         setSelectedTransfer: setSelectedFeedTransfer,
         deleteTransfer: deleteFeedTransfer,
         setIsEditModalOpen,
+        isAdmin,
       }),
-    []
+    [isAdmin]
   );
 
   return (
@@ -173,7 +177,8 @@ const ProductionDataTransferFeedPage: React.FC = () => {
         config={getProductionDataFiltersConfig(
           dictionary,
           uniqueCycles,
-          filters
+          filters,
+          isAdmin
         )}
         filters={filters}
         dispatch={dispatch}

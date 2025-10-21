@@ -19,8 +19,13 @@ import { toast } from "react-toastify";
 import { useFarms } from "../../../hooks/useFarms";
 import EditHenhouseModal from "../../../components/modals/farms/edit-henhouse-modal";
 import ActionsCell from "../../../components/datagrid/actions-cell";
+import { useAuth } from "../../../auth/useAuth";
+import { getAuditColumns } from "../../../utils/audit-columns-helper";
+import type { AuditFields } from "../../../common/interfaces/audit-fields";
 
 const HousesPage: React.FC = () => {
+  const { userData } = useAuth();
+  const isAdmin = userData?.isAdmin ?? false;
   const [loading, setLoading] = useState(false);
   const { farms, loadingFarms, fetchFarms } = useFarms();
   const [henhouses, setHenhouses] = useState<HouseRowModel[]>([]);
@@ -92,7 +97,7 @@ const HousesPage: React.FC = () => {
     setLoading(false);
   };
 
-  const columns: GridColDef<HouseRowModel>[] = [
+  const baseColumns: GridColDef<HouseRowModel & AuditFields>[] = [
     { field: "name", headerName: "Nazwa", flex: 1 },
     { field: "code", headerName: "ID Budynku", flex: 1 },
     { field: "area", headerName: "Powierzchnia (m²)", type: "number", flex: 1 },
@@ -121,6 +126,9 @@ const HousesPage: React.FC = () => {
       },
     },
   ];
+  
+  const auditColumns = getAuditColumns<HouseRowModel & AuditFields>(isAdmin);
+  const columns: GridColDef<HouseRowModel & AuditFields>[] = [...baseColumns, ...auditColumns];
 
   return (
     <Box p={4}>

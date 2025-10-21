@@ -28,8 +28,11 @@ import {
   getSortOptionsFromGridModel,
   initializeFiltersFromLocalStorage,
 } from "../../../utils/grid-state-helper";
+import { useAuth } from "../../../auth/useAuth";
 
 const ProductionDataFailuresPage: React.FC = () => {
+  const { userData } = useAuth();
+  const isAdmin = userData?.isAdmin ?? false;
   const [filters, dispatch] = useReducer(
     filterReducer,
     initialFilters,
@@ -141,8 +144,9 @@ const ProductionDataFailuresPage: React.FC = () => {
         setSelectedFailure,
         deleteFailure,
         setIsEditModalOpen,
+        isAdmin,
       }),
-    []
+    [isAdmin]
   );
 
   return (
@@ -171,7 +175,8 @@ const ProductionDataFailuresPage: React.FC = () => {
         config={getProductionDataFiltersConfig(
           dictionary,
           uniqueCycles,
-          filters
+          filters,
+          isAdmin
         )}
         filters={filters}
         dispatch={dispatch}

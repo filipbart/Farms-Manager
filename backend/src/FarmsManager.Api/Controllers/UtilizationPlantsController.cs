@@ -16,13 +16,14 @@ public class UtilizationPlantsController(IMediator mediator) : BaseController
     /// <summary>
     /// Pobiera wszystkie zakłady utylizacyjne
     /// </summary>
+    /// <param name="showDeleted"></param>
     /// <returns></returns>
     [HttpGet]
     [ProducesResponseType(typeof(BaseResponse<GetAllUtilizationPlantsQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetAllUtilizationPlants()
+    public async Task<IActionResult> GetAllUtilizationPlants([FromQuery] bool? showDeleted = null)
     {
-        return Ok(await mediator.Send(new GetAllUtilizationPlantsQuery()));
+        return Ok(await mediator.Send(new GetAllUtilizationPlantsQuery(showDeleted)));
     }
 
     /// <summary>

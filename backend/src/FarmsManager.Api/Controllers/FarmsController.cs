@@ -54,13 +54,14 @@ public class FarmsController(IMediator mediator) : BaseController
     /// Pobiera całą listę kurników fermy
     /// </summary>
     /// <param name="farmId"></param>
+    /// <param name="showDeleted"></param>
     /// <returns></returns>
     [HttpGet("{farmId:guid}/henhouses")]
     [ProducesResponseType(typeof(BaseResponse<GetFarmHenhousesQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetFarmHenhouses([FromRoute] Guid farmId)
+    public async Task<IActionResult> GetFarmHenhouses([FromRoute] Guid farmId, [FromQuery] bool? showDeleted = null)
     {
-        return Ok(await mediator.Send(new GetFarmHenhousesQuery(farmId)));
+        return Ok(await mediator.Send(new GetFarmHenhousesQuery(farmId, showDeleted)));
     }
 
     /// <summary>

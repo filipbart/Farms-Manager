@@ -1,4 +1,4 @@
-﻿namespace FarmsManager.Application.Queries.FallenStockPickups;
+namespace FarmsManager.Application.Queries.FallenStockPickups;
 
 public record FallenStockPickupsRowDto
 {
@@ -10,6 +10,11 @@ public record FallenStockPickupsRowDto
     public DateOnly Date { get; init; }
     public int Quantity { get; init; }
     public DateTime DateCreatedUtc { get; init; }
+    public string CreatedByName { get; init; }
+    public DateTime? DateModifiedUtc { get; init; }
+    public string ModifiedByName { get; init; }
+    public DateTime? DateDeletedUtc { get; init; }
+    public string DeletedByName { get; init; }
 }
 
 public class GetFallenStockPickupsQueryResponse
