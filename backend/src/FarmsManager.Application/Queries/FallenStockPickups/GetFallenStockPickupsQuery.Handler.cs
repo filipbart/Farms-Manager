@@ -64,6 +64,9 @@ public class FallenStockPickupsProfile : Profile
     {
         CreateMap<FallenStockPickupEntity, FallenStockPickupsRowDto>()
             .ForMember(m => m.FarmName, opt => opt.MapFrom(s => s.Farm.Name))
-            .ForMember(dest => dest.CycleText, opt => opt.MapFrom(src => $"{src.Cycle.Identifier}/{src.Cycle.Year}"));
+            .ForMember(dest => dest.CycleText, opt => opt.MapFrom(src => $"{src.Cycle.Identifier}/{src.Cycle.Year}"))
+            .ForMember(m => m.CreatedByName, opt => opt.MapFrom(s => s.Creator != null ? s.Creator.Name : null))
+            .ForMember(m => m.ModifiedByName, opt => opt.MapFrom(s => s.Modifier != null ? s.Modifier.Name : null))
+            .ForMember(m => m.DeletedByName, opt => opt.MapFrom(s => s.Deleter != null ? s.Deleter.Name : null));
     }
 }

@@ -83,6 +83,9 @@ public class EmployeePayslipProfile : Profile
             .ForMember(dest => dest.CycleText, opt => opt.MapFrom(src => $"{src.Cycle.Identifier}/{src.Cycle.Year}"))
             .ForMember(dest => dest.TotalAmount,
                 opt => opt.MapFrom(src =>
-                    src.BankTransferAmount + src.BonusAmount + src.OvertimePay - src.Deductions + src.OtherAllowances));
+                    src.BankTransferAmount + src.BonusAmount + src.OvertimePay - src.Deductions + src.OtherAllowances))
+            .ForMember(dest => dest.CreatedByName, opt => opt.MapFrom(src => src.Creator != null ? src.Creator.Name : null))
+            .ForMember(dest => dest.ModifiedByName, opt => opt.MapFrom(src => src.Modifier != null ? src.Modifier.Name : null))
+            .ForMember(dest => dest.DeletedByName, opt => opt.MapFrom(src => src.Deleter != null ? src.Deleter.Name : null));
     }
 }

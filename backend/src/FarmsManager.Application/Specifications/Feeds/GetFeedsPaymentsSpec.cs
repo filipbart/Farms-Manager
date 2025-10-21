@@ -16,6 +16,10 @@ public sealed class GetAllFeedsPaymentsSpec : BaseSpecification<FeedPaymentEntit
         PopulateFilters(filters);
         ApplyOrdering(filters);
 
+        Query.Include(t => t.Creator);
+        Query.Include(t => t.Modifier);
+        Query.Include(t => t.Deleter);
+
         if (accessibleFarmIds is not null && accessibleFarmIds.Count != 0)
             Query.Where(p => accessibleFarmIds.Contains(p.FarmId));
 

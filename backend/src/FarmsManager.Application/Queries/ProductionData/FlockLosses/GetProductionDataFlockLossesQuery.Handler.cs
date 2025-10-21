@@ -79,6 +79,9 @@ public class ProductionDataFlockLossProfile : Profile
             .ForMember(dest => dest.FlockLoss4Percentage, opt => opt.MapFrom(src =>
                 src.FlockLoss4Quantity.HasValue && src.Insertion.Quantity > 0
                     ? (decimal)src.FlockLoss4Quantity.Value / src.Insertion.Quantity * 100
-                    : (decimal?)null));
+                    : (decimal?)null))
+            .ForMember(dest => dest.CreatedByName, opt => opt.MapFrom(src => src.Creator != null ? src.Creator.Name : null))
+            .ForMember(dest => dest.ModifiedByName, opt => opt.MapFrom(src => src.Modifier != null ? src.Modifier.Name : null))
+            .ForMember(dest => dest.DeletedByName, opt => opt.MapFrom(src => src.Deleter != null ? src.Deleter.Name : null));
     }
 }

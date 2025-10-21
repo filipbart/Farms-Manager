@@ -99,6 +99,9 @@ public class ExpenseAdvanceProfile : Profile
     public ExpenseAdvanceProfile()
     {
         CreateMap<ExpenseAdvanceEntity, ExpenseAdvanceRowDto>()
-            .ForMember(m => m.CategoryName, opt => opt.MapFrom(t => t.ExpenseAdvanceCategory.Name));
+            .ForMember(m => m.CategoryName, opt => opt.MapFrom(t => t.ExpenseAdvanceCategory.Name))
+            .ForMember(m => m.CreatedByName, opt => opt.MapFrom(t => t.Creator != null ? t.Creator.Name : null))
+            .ForMember(m => m.ModifiedByName, opt => opt.MapFrom(t => t.Modifier != null ? t.Modifier.Name : null))
+            .ForMember(m => m.DeletedByName, opt => opt.MapFrom(t => t.Deleter != null ? t.Deleter.Name : null));
     }
 }

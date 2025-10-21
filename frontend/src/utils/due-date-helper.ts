@@ -21,18 +21,18 @@ export const getDueDateClassName = (
   const due = dayjs(dueDate);
   const daysUntilDue = due.diff(today, "day");
 
-  // Po terminie (overdue) - czerwony
-  if (daysUntilDue < 0) {
+  // Dzień terminu lub po terminie (0 dni lub mniej) - czerwony
+  if (daysUntilDue <= 0) {
     return "payment-overdue";
   }
   
-  // 3 dni do końca - żółty
-  if (daysUntilDue <= 3) {
+  // 3-1 dni do końca - żółty
+  if (daysUntilDue >= 1 && daysUntilDue <= 3) {
     return "payment-due-soon";
   }
   
   // 7-4 dni do końca - niebieski
-  if (daysUntilDue <= 7) {
+  if (daysUntilDue >= 4 && daysUntilDue <= 7) {
     return "payment-due-warning";
   }
 

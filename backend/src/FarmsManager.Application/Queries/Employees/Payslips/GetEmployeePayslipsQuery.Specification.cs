@@ -17,6 +17,9 @@ public sealed class GetAllEmployeePayslipsSpec : BaseSpecification<EmployeePaysl
         Query.Include(p => p.Farm);
         Query.Include(p => p.Cycle);
         Query.Include(p => p.Employee);
+        Query.Include(p => p.Creator);
+        Query.Include(p => p.Modifier);
+        Query.Include(p => p.Deleter);
 
         if (accessibleFarmIds is not null && accessibleFarmIds.Count != 0)
             Query.Where(p => accessibleFarmIds.Contains(p.FarmId));

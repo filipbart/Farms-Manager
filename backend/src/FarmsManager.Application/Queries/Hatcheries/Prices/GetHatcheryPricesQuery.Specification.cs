@@ -14,6 +14,10 @@ public sealed class GetAllHatcheryPricesSpec : BaseSpecification<HatcheryPriceEn
         PopulateFilters(filters);
         ApplyOrdering(filters);
 
+        Query.Include(t => t.Creator);
+        Query.Include(t => t.Modifier);
+        Query.Include(t => t.Deleter);
+
         if (withPagination)
         {
             Paginate(filters);

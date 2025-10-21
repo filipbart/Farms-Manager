@@ -55,6 +55,9 @@ public class SalesInvoiceProfile : Profile
         CreateMap<SaleInvoiceEntity, SalesInvoiceRowDto>()
             .ForMember(m => m.CycleText, opt => opt.MapFrom(t => t.Cycle.Identifier + "/" + t.Cycle.Year))
             .ForMember(m => m.FarmName, opt => opt.MapFrom(t => t.Farm.Name))
-            .ForMember(m => m.SlaughterhouseName, opt => opt.MapFrom(t => t.Slaughterhouse.Name));
+            .ForMember(m => m.SlaughterhouseName, opt => opt.MapFrom(t => t.Slaughterhouse.Name))
+            .ForMember(m => m.CreatedByName, opt => opt.MapFrom(t => t.Creator != null ? t.Creator.Name : null))
+            .ForMember(m => m.ModifiedByName, opt => opt.MapFrom(t => t.Modifier != null ? t.Modifier.Name : null))
+            .ForMember(m => m.DeletedByName, opt => opt.MapFrom(t => t.Deleter != null ? t.Deleter.Name : null));
     }
 }

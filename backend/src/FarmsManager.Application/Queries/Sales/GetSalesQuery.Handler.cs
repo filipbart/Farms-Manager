@@ -53,6 +53,9 @@ public class SaleProfile : Profile
             .ForMember(t => t.CycleText, opt => opt.MapFrom(t => t.Cycle.Identifier + "/" + t.Cycle.Year))
             .ForMember(t => t.FarmName, opt => opt.MapFrom(t => t.Farm.Name))
             .ForMember(t => t.HenhouseName, opt => opt.MapFrom(t => t.Henhouse.Name))
-            .ForMember(t => t.SlaughterhouseName, opt => opt.MapFrom(t => t.Slaughterhouse.Name));
+            .ForMember(t => t.SlaughterhouseName, opt => opt.MapFrom(t => t.Slaughterhouse.Name))
+            .ForMember(t => t.CreatedByName, opt => opt.MapFrom(t => t.Creator != null ? t.Creator.Name : null))
+            .ForMember(t => t.ModifiedByName, opt => opt.MapFrom(t => t.Modifier != null ? t.Modifier.Name : null))
+            .ForMember(t => t.DeletedByName, opt => opt.MapFrom(t => t.Deleter != null ? t.Deleter.Name : null));
     }
 }

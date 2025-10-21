@@ -51,6 +51,9 @@ public class HatcheryPriceProfile : Profile
 {
     public HatcheryPriceProfile()
     {
-        CreateMap<HatcheryPriceEntity, HatcheryPriceRowDto>();
+        CreateMap<HatcheryPriceEntity, HatcheryPriceRowDto>()
+            .ForMember(m => m.CreatedByName, opt => opt.MapFrom(t => t.Creator != null ? t.Creator.Name : null))
+            .ForMember(m => m.ModifiedByName, opt => opt.MapFrom(t => t.Modifier != null ? t.Modifier.Name : null))
+            .ForMember(m => m.DeletedByName, opt => opt.MapFrom(t => t.Deleter != null ? t.Deleter.Name : null));
     }
 }

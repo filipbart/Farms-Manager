@@ -10,5 +10,8 @@ public sealed class FallenStockPickupsByFarmAndCycleSpec : BaseSpecification<Fal
         EnsureExists(showDeleted, isAdmin);
         Query.Where(t => t.FarmId == farmId);
         Query.Where(t => t.CycleId == cycleId);
+        Query.Include(t => t.Creator);
+        Query.Include(t => t.Modifier);
+        Query.Include(t => t.Deleter);
     }
 }

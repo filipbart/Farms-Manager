@@ -16,6 +16,9 @@ public sealed class GetAllEmployeesSpec : BaseSpecification<EmployeeEntity>
 
         Query.Include(e => e.Farm);
         Query.Include(e => e.Files);
+        Query.Include(e => e.Creator);
+        Query.Include(e => e.Modifier);
+        Query.Include(e => e.Deleter);
 
         if (accessibleFarmIds is not null && accessibleFarmIds.Count != 0)
             Query.Where(e => accessibleFarmIds.Contains(e.FarmId));

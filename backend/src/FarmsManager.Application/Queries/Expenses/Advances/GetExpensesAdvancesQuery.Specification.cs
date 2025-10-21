@@ -20,6 +20,9 @@ public sealed class GetAllExpensesAdvancesSpec : BaseSpecification<ExpenseAdvanc
 
         Query.Where(t => t.EmployeeId == employeeId);
         Query.Include(t => t.ExpenseAdvanceCategory);
+        Query.Include(t => t.Creator);
+        Query.Include(t => t.Modifier);
+        Query.Include(t => t.Deleter);
 
         if (withPagination)
         {

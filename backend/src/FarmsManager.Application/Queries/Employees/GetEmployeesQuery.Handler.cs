@@ -59,6 +59,9 @@ public class EmployeeProfile : Profile
         CreateMap<EmployeeEntity, EmployeeRowDto>()
             .ForMember(m => m.Files, opt => opt.MapFrom(t => t.Files.Where(f => f.DateDeletedUtc.HasValue == false)))
             .ForMember(m => m.FarmName, opt => opt.MapFrom(t => t.Farm.Name))
+            .ForMember(m => m.CreatedByName, opt => opt.MapFrom(t => t.Creator != null ? t.Creator.Name : null))
+            .ForMember(m => m.ModifiedByName, opt => opt.MapFrom(t => t.Modifier != null ? t.Modifier.Name : null))
+            .ForMember(m => m.DeletedByName, opt => opt.MapFrom(t => t.Deleter != null ? t.Deleter.Name : null))
             .ForMember(m => m.UpcomingDeadline, opt => opt.MapFrom((src, dest) =>
             {
                 var hasUpcomingEndDate = src.EndDate.HasValue &&

@@ -16,6 +16,9 @@ public sealed class GetAllProductionDataWeighingsSpec : BaseSpecification<Produc
         Query.Include(t => t.Henhouse);
         Query.Include(t => t.Cycle);
         Query.Include(t => t.Hatchery);
+        Query.Include(t => t.Creator);
+        Query.Include(t => t.Modifier);
+        Query.Include(t => t.Deleter);
         
         if (accessibleFarmIds is not null && accessibleFarmIds.Count != 0)
             Query.Where(p => accessibleFarmIds.Contains(p.FarmId));
