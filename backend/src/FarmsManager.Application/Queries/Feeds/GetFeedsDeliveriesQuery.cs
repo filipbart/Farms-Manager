@@ -128,11 +128,17 @@ public class
         var orderedCombined = request.Filters.OrderBy switch
         {
             FeedsDeliveriesOrderType.Priority => combined
-                .OrderByDescending(x => x.Priority.HasValue)
-                .ThenBy(x => 
-                    x.Priority == NotificationPriority.High ? 1 :
-                    x.Priority == NotificationPriority.Medium ? 2 :
-                    x.Priority == NotificationPriority.Low ? 3 : 4)
+                .OrderByDescending(x => x.PaymentDateUtc == null && x.DueDate != null)
+                .ThenBy(x =>
+                {
+                    if (x.PaymentDateUtc != null || x.DueDate == null) return 4;
+                    var now = DateOnly.FromDateTime(DateTime.Now);
+                    var daysUntilDue = x.DueDate.Value.DayNumber - now.DayNumber;
+                    if (daysUntilDue < 0) return 1; // High - przeterminowane
+                    if (daysUntilDue <= 2) return 2; // Medium - 0-2 dni
+                    if (daysUntilDue <= 7) return 3; // Low - 3-7 dni
+                    return 4; // Brak priorytetu - >7 dni
+                })
                 .ThenBy(x => x.DueDate),
             FeedsDeliveriesOrderType.Cycle => combined.SortBy(x => x.CycleText, request.Filters.IsDescending),
             FeedsDeliveriesOrderType.Farm => combined.SortBy(x => x.FarmName, request.Filters.IsDescending),

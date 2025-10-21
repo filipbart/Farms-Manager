@@ -1,6 +1,4 @@
 using Ardalis.Specification;
-using FarmsManager.Application.Helpers;
-using FarmsManager.Application.Models.Notifications;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
 using LinqKit;
@@ -72,12 +70,17 @@ public sealed class GetAllSalesInvoicesSpec : BaseSpecification<SaleInvoiceEntit
         {
             case SalesInvoicesOrderBy.Priority:
                 // Multi-level sorting: Priority presence → Priority level → DueDate
+                // Logika priorytetu:
+                // - High (1): przeterminowane (DueDate < Today)
+                // - Medium (2): 0-2 dni do terminu
+                // - Low (3): 3-7 dni do terminu
+                // - Brak (4): opłacone lub >7 dni do terminu
                 Query.OrderByDescending(t => t.PaymentDate == null)
                     .ThenBy(t => 
                         t.PaymentDate != null ? 4 :
-                        PriorityCalculator.CalculatePriority(t.DueDate, t.PaymentDate) == NotificationPriority.High ? 1 :
-                        PriorityCalculator.CalculatePriority(t.DueDate, t.PaymentDate) == NotificationPriority.Medium ? 2 :
-                        PriorityCalculator.CalculatePriority(t.DueDate, t.PaymentDate) == NotificationPriority.Low ? 3 : 4)
+                        t.DueDate < DateOnly.FromDateTime(DateTime.Now) ? 1 :
+                        t.DueDate.DayNumber - DateOnly.FromDateTime(DateTime.Now).DayNumber <= 2 ? 2 :
+                        t.DueDate.DayNumber - DateOnly.FromDateTime(DateTime.Now).DayNumber <= 7 ? 3 : 4)
                     .ThenBy(t => t.DueDate);
                 break;
             
