@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using FarmsManager.Domain.Aggregates.UserAggregate.Entities;
 using FarmsManager.Domain.SeedWork;
 using Microsoft.EntityFrameworkCore;
@@ -40,6 +40,30 @@ public class FarmsManagerContext : DbContext, IUnitOfWork
 
 
         builder.ApplyConfigurationsFromAssembly(typeof(FarmsManagerContext).Assembly);
+
+        // Configure audit field relationships for all entities except UserEntity
+        foreach (var entity in entities.Where(e => e != typeof(UserEntity)))
+        {
+            var entityBuilder = builder.Entity(entity);
+            
+            entityBuilder.HasOne(typeof(UserEntity), "Creator")
+                .WithMany()
+                .HasForeignKey("CreatedBy")
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+
+            entityBuilder.HasOne(typeof(UserEntity), "Modifier")
+                .WithMany()
+                .HasForeignKey("ModifiedBy")
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+
+            entityBuilder.HasOne(typeof(UserEntity), "Deleter")
+                .WithMany()
+                .HasForeignKey("DeletedBy")
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+        }
 
         foreach (var type in builder.Model.GetEntityTypes())
         {

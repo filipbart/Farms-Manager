@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using FarmsManager.Domain.Aggregates.UserAggregate.Entities;
 
 namespace FarmsManager.Domain.SeedWork;
@@ -12,10 +13,13 @@ public abstract class Entity
     public DateTime? DateDeletedUtc { get; private set; }
 
     public Guid? CreatedBy { get; set; }
+    [NotMapped]
     public virtual UserEntity Creator { get; set; }
     public Guid? ModifiedBy { get; private set; }
+    [NotMapped]
     public virtual UserEntity Modifier { get; set; }
     public Guid? DeletedBy { get; private set; }
+    [NotMapped]
     public virtual UserEntity Deleter { get; set; }
 
     protected Entity()
