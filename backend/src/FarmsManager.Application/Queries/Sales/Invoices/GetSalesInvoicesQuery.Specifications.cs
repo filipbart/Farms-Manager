@@ -72,15 +72,15 @@ public sealed class GetAllSalesInvoicesSpec : BaseSpecification<SaleInvoiceEntit
                 // Multi-level sorting: Priority presence → Priority level → DueDate
                 // Logika priorytetu:
                 // - High (1): przeterminowane (DueDate < Today)
-                // - Medium (2): 0-2 dni do terminu
-                // - Low (3): 3-7 dni do terminu
-                // - Brak (4): opłacone lub >7 dni do terminu
+                // - Medium (2): 0-7 dni do terminu
+                // - Low (3): 8-14 dni do terminu
+                // - Brak (4): opłacone lub >14 dni do terminu
                 Query.OrderByDescending(t => t.PaymentDate == null)
                     .ThenBy(t => 
                         t.PaymentDate != null ? 4 :
                         t.DueDate < DateOnly.FromDateTime(DateTime.Now) ? 1 :
-                        t.DueDate.DayNumber - DateOnly.FromDateTime(DateTime.Now).DayNumber <= 2 ? 2 :
-                        t.DueDate.DayNumber - DateOnly.FromDateTime(DateTime.Now).DayNumber <= 7 ? 3 : 4)
+                        t.DueDate.DayNumber - DateOnly.FromDateTime(DateTime.Now).DayNumber <= 7 ? 2 :
+                        t.DueDate.DayNumber - DateOnly.FromDateTime(DateTime.Now).DayNumber <= 14 ? 3 : 4)
                     .ThenBy(t => t.DueDate);
                 break;
             

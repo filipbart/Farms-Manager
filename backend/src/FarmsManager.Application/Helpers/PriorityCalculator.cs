@@ -23,19 +23,19 @@ public static class PriorityCalculator
         var now = DateOnly.FromDateTime(DateTime.Now);
         var daysUntilDue = dueDate.Value.DayNumber - now.DayNumber;
 
-        // Po terminie (przeterminowane)
+        // Przeterminowane (czerwone)
         if (daysUntilDue < 0)
             return NotificationPriority.High;
 
-        // 0-2 dni do terminu
-        if (daysUntilDue <= 2)
+        // Wkrótce termin - do 7 dni (żółte)
+        if (daysUntilDue <= 7)
             return NotificationPriority.Medium;
 
-        // 3-7 dni do terminu
-        if (daysUntilDue <= 7)
+        // Ostrzeżenie - 8-14 dni (niebieskie)
+        if (daysUntilDue <= 14)
             return NotificationPriority.Low;
 
-        // Więcej niż 7 dni - brak priorytetu
+        // Daleki termin - brak priorytetu
         return null;
     }
 

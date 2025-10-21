@@ -135,9 +135,9 @@ public class
                     var now = DateOnly.FromDateTime(DateTime.Now);
                     var daysUntilDue = x.DueDate.Value.DayNumber - now.DayNumber;
                     if (daysUntilDue < 0) return 1; // High - przeterminowane
-                    if (daysUntilDue <= 2) return 2; // Medium - 0-2 dni
-                    if (daysUntilDue <= 7) return 3; // Low - 3-7 dni
-                    return 4; // Brak priorytetu - >7 dni
+                    if (daysUntilDue <= 7) return 2; // Medium - 0-7 dni
+                    if (daysUntilDue <= 14) return 3; // Low - 8-14 dni
+                    return 4; // Brak priorytetu - >14 dni
                 })
                 .ThenBy(x => x.DueDate),
             FeedsDeliveriesOrderType.Cycle => combined.SortBy(x => x.CycleText, request.Filters.IsDescending),
