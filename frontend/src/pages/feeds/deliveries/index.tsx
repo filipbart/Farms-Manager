@@ -39,7 +39,7 @@ import {
   initializeFiltersFromLocalStorage,
 } from "../../../utils/grid-state-helper";
 import { useFeedsNames } from "../../../hooks/feeds/useFeedsNames";
-import { getPriorityClassName } from "../../../utils/priority-helper";
+import { getDueDateClassName } from "../../../utils/due-date-helper";
 import { useAuth } from "../../../auth/useAuth";
 
 const FeedsDeliveriesPage: React.FC = () => {
@@ -498,7 +498,11 @@ const FeedsDeliveriesPage: React.FC = () => {
             if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
               return "aggregated-row";
             }
-            return getPriorityClassName(params.row.priority);
+            return getDueDateClassName(
+              params.row.dueDate,
+              params.row.paymentDateUtc,
+              params.row.isCorrection
+            );
           }}
           sx={{
             [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },
@@ -512,16 +516,16 @@ const FeedsDeliveriesPage: React.FC = () => {
               },
             },
             "& .payment-overdue .MuiDataGrid-cell": {
-              backgroundColor: "#ffebf4",
+              backgroundColor: "#ffebee",
             },
             "& .payment-overdue:hover .MuiDataGrid-cell": {
-              backgroundColor: "#ffcde2",
+              backgroundColor: "#ffcdd2",
             },
             "& .payment-due-soon .MuiDataGrid-cell": {
-              backgroundColor: "#fff4e5",
+              backgroundColor: "#fffde7",
             },
             "& .payment-due-soon:hover .MuiDataGrid-cell": {
-              backgroundColor: "#ffe0b2",
+              backgroundColor: "#fff9c4",
             },
             "& .payment-due-warning .MuiDataGrid-cell": {
               backgroundColor: "#e3f2fd",

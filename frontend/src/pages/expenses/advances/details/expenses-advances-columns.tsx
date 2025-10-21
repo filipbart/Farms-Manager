@@ -91,7 +91,11 @@ export const getAdvancesColumns = ({
         );
       },
     },
-    {
+  ];
+
+  // Only add actions column if user has admin permissions
+  if (isAdmin) {
+    baseColumns.push({
       field: "actions",
       type: "actions",
       headerName: "Akcje",
@@ -112,8 +116,8 @@ export const getAdvancesColumns = ({
           />,
         ];
       },
-    },
-  ];
+    });
+  }
 
   const auditColumns = getAuditColumns<ExpenseAdvanceListModel>(isAdmin);
   return [...baseColumns, ...auditColumns];
