@@ -1,4 +1,6 @@
-﻿using Ardalis.Specification;
+using Ardalis.Specification;
+using FarmsManager.Application.Helpers;
+using FarmsManager.Application.Models.Notifications;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
 using LinqKit;
@@ -65,8 +67,21 @@ public sealed class GetAllSalesInvoicesSpec : BaseSpecification<SaleInvoiceEntit
     private void ApplyOrdering(GetSalesInvoicesQueryFilters filters)
     {
         var isDescending = filters.IsDescending;
+        
         switch (filters.OrderBy)
         {
+            case SalesInvoicesOrderBy.Priority:
+                // Multi-level sorting: Priority presence → Priority level → DueDate
+                Query.OrderByDescending(t => t.PaymentDate == null)
+                    .ThenBy(t => 
+                        t.PaymentDate != null ? 4 :
+                        PriorityCalculator.CalculatePriority(t.DueDate, t.PaymentDate) == NotificationPriority.High ? 1 :
+                        PriorityCalculator.CalculatePriority(t.DueDate, t.PaymentDate) == NotificationPriority.Medium ? 2 :
+                        PriorityCalculator.CalculatePriority(t.DueDate, t.PaymentDate) == NotificationPriority.Low ? 3 : 4)
+                    .ThenBy(t => t.DueDate);
+                break;
+            
+
             case SalesInvoicesOrderBy.Cycle:
                 if (isDescending)
                 {

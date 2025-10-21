@@ -1,4 +1,4 @@
-﻿using FarmsManager.Application.Common;
+using FarmsManager.Application.Common;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Models;
 using MediatR;
@@ -7,6 +7,7 @@ namespace FarmsManager.Application.Queries.Sales.Invoices;
 
 public enum SalesInvoicesOrderBy
 {
+    Priority,
     Cycle,
     Farm,
     Slaughterhouse,

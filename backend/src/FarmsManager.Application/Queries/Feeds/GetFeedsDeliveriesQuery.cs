@@ -17,6 +17,7 @@ namespace FarmsManager.Application.Queries.Feeds;
 
 public enum FeedsDeliveriesOrderType
 {
+    Priority,
     Cycle,
     Farm,
     HenhouseName,
@@ -126,6 +127,13 @@ public class
 
         var orderedCombined = request.Filters.OrderBy switch
         {
+            FeedsDeliveriesOrderType.Priority => combined
+                .OrderByDescending(x => x.Priority.HasValue)
+                .ThenBy(x => 
+                    x.Priority == NotificationPriority.High ? 1 :
+                    x.Priority == NotificationPriority.Medium ? 2 :
+                    x.Priority == NotificationPriority.Low ? 3 : 4)
+                .ThenBy(x => x.DueDate),
             FeedsDeliveriesOrderType.Cycle => combined.SortBy(x => x.CycleText, request.Filters.IsDescending),
             FeedsDeliveriesOrderType.Farm => combined.SortBy(x => x.FarmName, request.Filters.IsDescending),
             FeedsDeliveriesOrderType.HenhouseName => combined.SortBy(x => x.HenhouseName, request.Filters.IsDescending),
