@@ -1,4 +1,4 @@
-﻿using Ardalis.Specification;
+using Ardalis.Specification;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.FileSystem;
 using FarmsManager.Application.Interfaces;
@@ -89,6 +89,15 @@ public class
             return response;
         }
 
+        var duplicateInvoiceCheck = await _feedInvoiceCorrectionRepository.AnyAsync(
+            new GetFeedCorrectionByInvoiceNumberSpec(request.Data.InvoiceNumber), ct);
+
+        if (duplicateInvoiceCheck)
+        {
+            response.AddError("InvoiceNumber", "Faktura korygująca o podanym numerze już istnieje");
+            return response;
+        }
+
         var comment = string.Format(Comment, request.Data.InvoiceNumber);
 
         var newCorrection = FeedInvoiceCorrectionEntity.CreateNew(
@@ -133,12 +142,21 @@ public class
     }
 }
 
-public sealed class GetFeedsCorrectionsByIdsSpec : BaseSpecification<FeedInvoiceCorrectionEntity>
+public sealed class GetFeedCorrectionByInvoiceNumberSpec : BaseSpecification<FeedInvoiceCorrectionEntity>
 {
-    public GetFeedsCorrectionsByIdsSpec(List<Guid> ids)
+    public GetFeedCorrectionByInvoiceNumberSpec(string invoiceNumber)
     {
         EnsureExists();
-        Query.Where(t => ids.Contains(t.Id));
+        Query.Where(t => t.InvoiceNumber == invoiceNumber);
+    }
+}
+
+public sealed class GetFeedsCorrectionsByIdsSpec : BaseSpecification<FeedInvoiceCorrectionEntity>
+{
+    public GetFeedsCorrectionsByIdsSpec(List<Guid> feedInvoiceIds)
+    {
+        EnsureExists();
+        Query.Where(t => feedInvoiceIds.Contains(t.Id));
     }
 }
 
@@ -146,11 +164,15 @@ public class AddFeedInvoiceCorrectionCommandValidator : AbstractValidator<AddFee
 {
     public AddFeedInvoiceCorrectionCommandValidator()
     {
-        RuleFor(t => t.Data.InvoiceNumber).NotEmpty();
+        RuleFor(t => t.Data.InvoiceNumber)
+            .NotEmpty()
+            .MaximumLength(100);
+
         RuleFor(t => t.Data.FarmId).NotEmpty();
         RuleFor(t => t.Data.SubTotal);
         RuleFor(t => t.Data.VatAmount);
         RuleFor(t => t.Data.InvoiceTotal);
         RuleFor(t => t.Data.FeedInvoiceIds).NotEmpty();
+        RuleFor(t => t.Data.InvoiceDate).NotEmpty().LessThanOrEqualTo(DateOnly.FromDateTime(DateTime.UtcNow));
     }
 }
