@@ -306,7 +306,16 @@ const FeedsDeliveriesPage: React.FC = () => {
       await handleApiResponse<PaginateModel<FeedDeliveryListModel>>(
         () => FeedsService.getFeedsDeliveries(filters),
         (data) => {
-          setFeedsDeliveries(data.responseData?.items ?? []);
+          const items = data.responseData?.items ?? [];
+          console.log("🔍 Feeds Deliveries - First 3 items:", items.slice(0, 3));
+          console.log("🎨 Priority check:", items.map(i => ({ 
+            id: i.id, 
+            invoiceNumber: i.invoiceNumber,
+            priority: i.priority,
+            dueDate: i.dueDate,
+            paymentDateUtc: i.paymentDateUtc
+          })));
+          setFeedsDeliveries(items);
           setTotalRows(data.responseData?.totalRows ?? 0);
         },
         undefined,
@@ -493,7 +502,9 @@ const FeedsDeliveriesPage: React.FC = () => {
             if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
               return "aggregated-row";
             }
-            return getPriorityClassName(params.row.priority);
+            const className = getPriorityClassName(params.row.priority);
+            console.log(`🎨 Row ${params.row.invoiceNumber} - Priority: "${params.row.priority}" -> Class: "${className}"`);
+            return className;
           }}
           sx={{
             [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },

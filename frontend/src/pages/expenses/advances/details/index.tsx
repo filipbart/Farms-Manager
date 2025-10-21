@@ -185,12 +185,6 @@ const columns = useMemo(
     [downloadingFilePath]
   );
 
-  useEffect(() => {
-    if (employeeId) {
-      fetchExpenseAdvances();
-    }
-  }, [employeeId, filters]);
-
   if (loading && !employeeFullName) {
     return (
       <Box display="flex" justifyContent="center" p={5}>
