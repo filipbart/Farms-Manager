@@ -507,22 +507,22 @@ const FeedsDeliveriesPage: React.FC = () => {
               },
             },
             "& .payment-overdue .MuiDataGrid-cell": {
-              backgroundColor: "rgba(244, 67, 54, 0.1)",
+              backgroundColor: "#ffebf4",
             },
             "& .payment-overdue:hover .MuiDataGrid-cell": {
-              backgroundColor: "rgba(244, 67, 54, 0.15)",
+              backgroundColor: "#ffcde2",
             },
             "& .payment-due-soon .MuiDataGrid-cell": {
-              backgroundColor: "rgba(255, 193, 7, 0.15)",
+              backgroundColor: "#fff4e5",
             },
             "& .payment-due-soon:hover .MuiDataGrid-cell": {
-              backgroundColor: "rgba(255, 193, 7, 0.2)",
+              backgroundColor: "#ffe0b2",
             },
             "& .payment-due-warning .MuiDataGrid-cell": {
-              backgroundColor: "rgba(33, 150, 243, 0.1)",
+              backgroundColor: "#e3f2fd",
             },
             "& .payment-due-warning:hover .MuiDataGrid-cell": {
-              backgroundColor: "rgba(33, 150, 243, 0.15)",
+              backgroundColor: "#bbdefb",
             },
           }}
           scrollbarSize={17}
