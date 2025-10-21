@@ -36,6 +36,7 @@ public class DeleteExpenseAdvancePermissionCommandHandler : IRequestHandler<Dele
         }
 
         permission.Delete(currentUserId);
+        await _permissionRepository.UpdateAsync(permission, cancellationToken);
 
         return BaseResponse.EmptyResponse;
     }

@@ -33,12 +33,6 @@ public class ExpenseAdvancePermissionEntityConfiguration : BaseConfiguration<Exp
 
         builder.HasIndex(t => new { t.UserId, t.EmployeeId, t.PermissionType })
             .IsUnique()
-            .HasDatabaseName("IX_ExpenseAdvancePermissions_UserEmployeeType");
-
-        builder.HasIndex(t => t.UserId)
-            .HasDatabaseName("IX_ExpenseAdvancePermissions_UserId");
-
-        builder.HasIndex(t => t.EmployeeId)
-            .HasDatabaseName("IX_ExpenseAdvancePermissions_EmployeeId");
+            .HasDatabaseName("IX_ExpenseAdvancePermissions_UserEmployeeType").HasFilter("date_deleted_utc IS NULL");
     }
 }

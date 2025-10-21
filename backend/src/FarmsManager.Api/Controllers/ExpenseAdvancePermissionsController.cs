@@ -80,7 +80,6 @@ public class ExpenseAdvancePermissionsController(IMediator mediator) : BaseContr
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> DeletePermission([FromRoute] Guid permissionId)
     {
-        await mediator.Send(new DeleteExpenseAdvancePermissionCommand(permissionId));
-        return NoContent();
+        return Ok(await mediator.Send(new DeleteExpenseAdvancePermissionCommand(permissionId)));
     }
 }
