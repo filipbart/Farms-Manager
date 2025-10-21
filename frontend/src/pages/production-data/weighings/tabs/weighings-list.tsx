@@ -17,7 +17,7 @@ import {
 import { ProductionDataWeighingsService } from "../../../../services/production-data/production-data-weighings-service";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import { getWeighingsColumns } from "./weighings-columns";
-import { getProductionDataWeighingsFiltersConfig } from "./filter-config.production-data-weighings";
+import { getWeighingsFiltersConfig } from "./filter-config.production-data-weighings";
 import {
   DataGridPremium,
   GRID_AGGREGATION_ROOT_FOOTER_ROW_ID,
@@ -186,7 +186,7 @@ const ProductionDataWeighingsTab: React.FC = () => {
       </Box>
 
       <FiltersForm
-        config={getProductionDataWeighingsFiltersConfig(
+        config={getWeighingsFiltersConfig(
           dictionary,
           uniqueCycles,
           filters

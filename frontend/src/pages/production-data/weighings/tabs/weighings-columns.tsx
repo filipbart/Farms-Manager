@@ -7,6 +7,7 @@ import type {
 import type { ProductionDataWeighingListModel } from "../../../../models/production-data/weighings";
 import ActionsCell from "../../../../components/datagrid/actions-cell";
 import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
+import { getAuditColumns } from "../../../../utils/audit-columns-helper";
 
 const getCellClassName = (
   params: GridCellParams,
@@ -31,6 +32,7 @@ const getCellClassName = (
 interface GetWeighingsColumnsProps {
   setSelectedWeighing: (row: ProductionDataWeighingListModel) => void;
   setIsEditModalOpen: (isOpen: boolean) => void;
+  isAdmin?: boolean;
   columnStats: any;
 }
 
@@ -66,11 +68,13 @@ const renderWeightCell = (
 export const getWeighingsColumns = ({
   setSelectedWeighing,
   setIsEditModalOpen,
+  isAdmin = false,
   columnStats,
 }: GetWeighingsColumnsProps): GridColDef<ProductionDataWeighingListModel>[] => {
-  return [
+  const baseColumns: GridColDef[] = [
     { field: "cycleText", headerName: "Identyfikator", width: 120 },
     { field: "farmName", headerName: "Ferma", width: 200 },
+    { field: "dateCreatedUtc", headerName: "Data utworzenia wpisu", flex: 1 },
     { field: "hatcheryName", headerName: "Wylęgarnia", width: 100 },
     { field: "henhouseName", headerName: "Kurnik", width: 100 },
     {
@@ -205,4 +209,7 @@ export const getWeighingsColumns = ({
       },
     },
   ];
+
+  const auditColumns = getAuditColumns<ProductionDataWeighingListModel>(isAdmin);
+  return [...baseColumns, ...auditColumns];
 };

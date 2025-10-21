@@ -3,19 +3,22 @@ import dayjs from "dayjs";
 import type { ProductionDataFailureListModel } from "../../../models/production-data/failures";
 import ActionsCell from "../../../components/datagrid/actions-cell";
 import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
+import { getAuditColumns } from "../../../utils/audit-columns-helper";
 
 interface GetProductionDataFailuresColumnsProps {
   setSelectedFailure: (row: ProductionDataFailureListModel) => void;
   deleteFailure: (id: string) => void;
   setIsEditModalOpen: (isOpen: boolean) => void;
+  isAdmin?: boolean;
 }
 
 export const getProductionDataFailuresColumns = ({
   setSelectedFailure,
   deleteFailure,
   setIsEditModalOpen,
+  isAdmin = false,
 }: GetProductionDataFailuresColumnsProps): GridColDef<ProductionDataFailureListModel>[] => {
-  return [
+  const baseColumns: GridColDef[] = [
     {
       field: "cycleText",
       headerName: "Cykl",
@@ -78,4 +81,7 @@ export const getProductionDataFailuresColumns = ({
       },
     },
   ];
+
+  const auditColumns = getAuditColumns<ProductionDataFailureListModel>(isAdmin);
+  return [...baseColumns, ...auditColumns];
 };

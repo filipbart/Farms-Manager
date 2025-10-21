@@ -3,17 +3,20 @@ import type { ProductionDataTransferFeedListModel } from "../../../models/produc
 import dayjs from "dayjs";
 import ActionsCell from "../../../components/datagrid/actions-cell";
 import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
+import { getAuditColumns } from "../../../utils/audit-columns-helper";
 
 interface GetFeedTransfersColumnsProps {
   setSelectedTransfer: (row: ProductionDataTransferFeedListModel) => void;
   deleteTransfer: (id: string) => void;
   setIsEditModalOpen: (isOpen: boolean) => void;
+  isAdmin?: boolean;
 }
 
 export const getFeedTransfersColumns = ({
   setSelectedTransfer,
   deleteTransfer,
   setIsEditModalOpen,
+  isAdmin = false,
 }: GetFeedTransfersColumnsProps): {
   columns: GridColDef<ProductionDataTransferFeedListModel>[];
   columnGroupingModel: GridColumnGroupingModel;
@@ -96,5 +99,8 @@ export const getFeedTransfersColumns = ({
     },
   ];
 
-  return { columns, columnGroupingModel };
+  const auditColumns = getAuditColumns<ProductionDataTransferFeedListModel>(isAdmin);
+  const allColumns = [...columns, ...auditColumns];
+
+  return { columns: allColumns, columnGroupingModel };
 };

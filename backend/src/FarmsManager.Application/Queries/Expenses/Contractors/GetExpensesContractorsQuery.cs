@@ -1,9 +1,14 @@
-﻿using Ardalis.Specification;
+using Ardalis.Specification;
 using AutoMapper;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Extensions;
+using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications;
+using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.UserAggregate.Interfaces;
+using FarmsManager.Domain.Exceptions;
 using FarmsManager.Shared.Extensions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +18,7 @@ namespace FarmsManager.Application.Queries.Expenses.Contractors;
 public class GetExpensesContractorsQueryFilters
 {
     public string SearchPhrase { get; init; }
+    public bool? ShowDeleted { get; init; }
 }
 
 public record GetExpensesContractorsQuery(GetExpensesContractorsQueryFilters Filters)
@@ -32,40 +38,54 @@ public record ExpenseContractorRow
     public string Nip { get; init; }
     public string Address { get; init; }
     public DateTime DateCreatedUtc { get; init; }
+    public string CreatedByName { get; init; }
+    public DateTime? DateModifiedUtc { get; init; }
+    public string ModifiedByName { get; init; }
+    public DateTime? DateDeletedUtc { get; init; }
+    public string DeletedByName { get; init; }
 }
 
 public class GetExpensesContractorsQueryHandler : IRequestHandler<GetExpensesContractorsQuery,
     BaseResponse<GetExpensesContractorsQueryResponse>>
 {
     private readonly IExpenseContractorRepository _expenseContractorRepository;
+    private readonly IUserDataResolver _userDataResolver;
+    private readonly IUserRepository _userRepository;
 
-    public GetExpensesContractorsQueryHandler(IExpenseContractorRepository expenseContractorRepository)
+    public GetExpensesContractorsQueryHandler(IExpenseContractorRepository expenseContractorRepository,
+        IUserDataResolver userDataResolver, IUserRepository userRepository)
     {
         _expenseContractorRepository = expenseContractorRepository;
+        _userDataResolver = userDataResolver;
+        _userRepository = userRepository;
     }
 
     public async Task<BaseResponse<GetExpensesContractorsQueryResponse>> Handle(GetExpensesContractorsQuery request,
         CancellationToken cancellationToken)
     {
+        var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
+        var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
+        var isAdmin = user.IsAdmin;
+
         var items = await _expenseContractorRepository.ListAsync<ExpenseContractorRow>(
-            new GetAllExpensesContractorsSpec(request.Filters.SearchPhrase),
+            new GetAllExpensesContractorsSpec(request.Filters, isAdmin),
             cancellationToken);
         return BaseResponse.CreateResponse(new GetExpensesContractorsQueryResponse
         {
-            Contractors = items
+            Contractors = items.ClearAdminData(isAdmin)
         });
     }
 }
 
 public sealed class GetAllExpensesContractorsSpec : BaseSpecification<ExpenseContractorEntity>
 {
-    public GetAllExpensesContractorsSpec(string searchPhrase)
+    public GetAllExpensesContractorsSpec(GetExpensesContractorsQueryFilters filters, bool isAdmin)
     {
-        EnsureExists();
+        EnsureExists(filters.ShowDeleted, isAdmin);
         DisableTracking();
-        if (searchPhrase.IsNotEmpty())
+        if (filters.SearchPhrase.IsNotEmpty())
         {
-            var phrase = $"%{searchPhrase}%";
+            var phrase = $"%{filters.SearchPhrase}%";
             Query.Where(e => EF.Functions.ILike(e.Name, phrase));
         }
     }

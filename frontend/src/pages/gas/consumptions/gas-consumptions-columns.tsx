@@ -1,15 +1,8 @@
 import type { GridColDef } from "@mui/x-data-grid";
-import dayjs from "dayjs";
 import ActionsCell from "../../../components/datagrid/actions-cell";
 import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
 import { getAuditColumns } from "../../../utils/audit-columns-helper";
 import type { GasConsumptionListModel } from "../../../models/gas/gas-consumptions";
-
-interface GetGasConsumptionsColumnsProps {
-  setSelectedGasConsumption: (row: GasConsumptionListModel) => void;
-  deleteGasConsumption: (id: string) => void;
-  setIsEditModalOpen: (isOpen: boolean) => void;
-}
 
 export const getGasConsumptionsColumns = ({
   setSelectedGasConsumption,

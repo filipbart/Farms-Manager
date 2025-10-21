@@ -1,4 +1,4 @@
-﻿using FarmsManager.Api.Attributes;
+using FarmsManager.Api.Attributes;
 using FarmsManager.Api.Controllers.Base;
 using FarmsManager.Application.Commands.Hatcheries;
 using FarmsManager.Application.Common.Responses;
@@ -169,14 +169,15 @@ public class HatcheriesController(IMediator mediator) : BaseController
     /// <summary>
     /// Zwraca notatki 
     /// </summary>
+    /// <param name="showDeleted"></param>
     /// <returns></returns>
     [HttpGet("notes")]
     [HasPermission(AppPermissions.HatcheryNotes.View)]
     [ProducesResponseType(typeof(BaseResponse<GetHatcheryNotesQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetHatcheryNotes()
+    public async Task<IActionResult> GetHatcheryNotes([FromQuery] bool? showDeleted = null)
     {
-        return Ok(await mediator.Send(new GetHatcheryNotesQuery()));
+        return Ok(await mediator.Send(new GetHatcheryNotesQuery(showDeleted)));
     }
 
     /// <summary>

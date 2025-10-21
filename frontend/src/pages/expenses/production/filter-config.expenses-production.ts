@@ -6,7 +6,7 @@ import type { ExpensesProductionsFilterPaginationModel } from "../../../models/e
 export const getExpensesProductionFiltersConfig = (
   dictionary: ExpensesProductionsDictionary | undefined,
   uniqueCycles: CycleDictModel[],
-  filters: ExpensesProductionsFilterPaginationModel,
+  _filters: ExpensesProductionsFilterPaginationModel,
   isAdmin: boolean = false
 ): FilterConfig<keyof ExpensesProductionsFilterPaginationModel>[] => {
   const baseFilters: FilterConfig<keyof ExpensesProductionsFilterPaginationModel>[] = [

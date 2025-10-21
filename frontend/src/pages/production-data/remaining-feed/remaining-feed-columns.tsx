@@ -2,20 +2,23 @@ import dayjs from "dayjs";
 import type { ProductionDataRemainingFeedListModel } from "../../../models/production-data/remaining-feed";
 import type { GridColDef } from "@mui/x-data-grid";
 import ActionsCell from "../../../components/datagrid/actions-cell";
+import { getAuditColumns } from "../../../utils/audit-columns-helper";
 import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
 
 interface GetRemainingFeedColumnsProps {
   setSelectedRemainingFeed: (row: ProductionDataRemainingFeedListModel) => void;
   deleteRemainingFeed: (id: string) => void;
   setIsEditModalOpen: (isOpen: boolean) => void;
+  isAdmin?: boolean;
 }
 
 export const getRemainingFeedColumns = ({
   setSelectedRemainingFeed,
   deleteRemainingFeed,
   setIsEditModalOpen,
-}: GetRemainingFeedColumnsProps): GridColDef<ProductionDataRemainingFeedListModel>[] => {
-  return [
+  isAdmin = false,
+}: GetRemainingFeedColumnsProps): GridColDef[] => {
+  const baseColumns: GridColDef[] = [
     {
       field: "cycleText",
       headerName: "Cykl",
@@ -83,4 +86,7 @@ export const getRemainingFeedColumns = ({
       },
     },
   ];
+
+  const auditColumns = getAuditColumns<ProductionDataRemainingFeedListModel>(isAdmin);
+  return [...baseColumns, ...auditColumns];
 };

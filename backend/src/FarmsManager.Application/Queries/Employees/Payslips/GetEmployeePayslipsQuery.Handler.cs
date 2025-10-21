@@ -1,6 +1,7 @@
-﻿using AutoMapper;
+using AutoMapper;
 using FarmsManager.Application.Common;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Extensions;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.EmployeeAggregate.Entities;
@@ -35,16 +36,17 @@ public class
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
         var accessibleFarmIds = user.AccessibleFarmIds;
+        var isAdmin = user.IsAdmin;
 
-        var paginatedSpec = new GetAllEmployeePayslipsSpec(request.Filters, true, accessibleFarmIds);
-        var fullSpec = new GetAllEmployeePayslipsSpec(request.Filters, false, accessibleFarmIds);
+        var paginatedSpec = new GetAllEmployeePayslipsSpec(request.Filters, true, accessibleFarmIds, isAdmin);
+        var fullSpec = new GetAllEmployeePayslipsSpec(request.Filters, false, accessibleFarmIds, isAdmin);
 
         // Pobieranie danych dla aktualnej strony i łącznej liczby
         var data = await _employeePayslipRepository.ListAsync(paginatedSpec, cancellationToken);
         var count = await _employeePayslipRepository.CountAsync(fullSpec, cancellationToken);
 
         // Pobieranie wszystkich pasujących rekordów w celu obliczenia sum
-        var items = _mapper.Map<List<EmployeePayslipRowDto>>(data);
+        var items = _mapper.Map<List<EmployeePayslipRowDto>>(data).ClearAdminData(isAdmin);
 
         // Obliczanie agregacji
         var aggregation = new EmployeePayslipAggregationDto

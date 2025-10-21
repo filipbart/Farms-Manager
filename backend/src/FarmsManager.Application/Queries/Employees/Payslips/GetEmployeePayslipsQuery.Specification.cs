@@ -1,4 +1,4 @@
-﻿using Ardalis.Specification;
+using Ardalis.Specification;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.EmployeeAggregate.Entities;
 using LinqKit;
@@ -9,9 +9,9 @@ namespace FarmsManager.Application.Queries.Employees.Payslips;
 public sealed class GetAllEmployeePayslipsSpec : BaseSpecification<EmployeePayslipEntity>
 {
     public GetAllEmployeePayslipsSpec(GetEmployeePayslipsQueryFilters filters, bool withPagination,
-        List<Guid> accessibleFarmIds)
+        List<Guid> accessibleFarmIds, bool isAdmin)
     {
-        EnsureExists();
+        EnsureExists(filters.ShowDeleted, isAdmin);
         DisableTracking();
 
         Query.Include(p => p.Farm);

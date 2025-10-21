@@ -8,8 +8,10 @@ import type {
 export const getProductionDataFiltersConfig = (
   dictionary: ProductionDataDictionary | undefined,
   uniqueCycles: CycleDictModel[],
-  filters: ProductionDataFilterPaginationModel
-): FilterConfig<keyof ProductionDataFilterPaginationModel>[] => [
+  filters: ProductionDataFilterPaginationModel,
+  isAdmin: boolean = false
+): FilterConfig<keyof ProductionDataFilterPaginationModel>[] => {
+  const baseFilters: FilterConfig<keyof ProductionDataFilterPaginationModel>[] = [
   {
     key: "farmIds",
     label: "Ferma",
@@ -57,3 +59,14 @@ export const getProductionDataFiltersConfig = (
     type: "date",
   },
 ];
+
+  if (isAdmin) {
+    baseFilters.push({
+      key: "showDeleted",
+      label: "Pokaż usunięte",
+      type: "checkbox",
+    });
+  }
+
+  return baseFilters;
+};

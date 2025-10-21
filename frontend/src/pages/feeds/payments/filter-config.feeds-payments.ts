@@ -2,15 +2,11 @@ import type { FilterConfig } from "../../../components/filters/filter-types";
 import type { CycleDictModel } from "../../../models/common/dictionaries";
 import type { FeedsDictionary } from "../../../models/feeds/feeds-dictionary";
 import type { FeedsPaymentsFilterPaginationModel } from "../../../models/feeds/payments/payments-filters";
-import {
-  FeedPaymentStatus,
-  FeedPaymentStatusLabels,
-} from "../../../models/feeds/payments/payment";
 
 export const getFeedsPaymentsFiltersConfig = (
   dictionary: FeedsDictionary | undefined,
   uniqueCycles: CycleDictModel[],
-  filters: FeedsPaymentsFilterPaginationModel,
+  _filters: FeedsPaymentsFilterPaginationModel,
   isAdmin: boolean = false
 ): FilterConfig<keyof FeedsPaymentsFilterPaginationModel>[] => {
   const baseFilters: FilterConfig<keyof FeedsPaymentsFilterPaginationModel>[] = [

@@ -5,11 +5,13 @@ import type {
   ProductionDataWeighingsFilterPaginationModel,
 } from "../../../../models/production-data/weighings-filters";
 
-export const getProductionDataWeighingsFiltersConfig = (
+export const getWeighingsFiltersConfig = (
   dictionary: ProductionDataWeighingsDictionary | undefined,
   uniqueCycles: CycleDictModel[],
-  filters: ProductionDataWeighingsFilterPaginationModel
-): FilterConfig<keyof ProductionDataWeighingsFilterPaginationModel>[] => [
+  filters: ProductionDataWeighingsFilterPaginationModel,
+  isAdmin: boolean = false
+): FilterConfig<keyof ProductionDataWeighingsFilterPaginationModel>[] => {
+  const baseFilters: FilterConfig<keyof ProductionDataWeighingsFilterPaginationModel>[] = [
   {
     key: "farmIds",
     label: "Ferma",
@@ -68,3 +70,14 @@ export const getProductionDataWeighingsFiltersConfig = (
     type: "date",
   },
 ];
+
+  if (isAdmin) {
+    baseFilters.push({
+      key: "showDeleted",
+      label: "Pokaż usunięte",
+      type: "checkbox",
+    });
+  }
+
+  return baseFilters;
+};

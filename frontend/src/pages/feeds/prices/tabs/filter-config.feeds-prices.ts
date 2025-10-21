@@ -7,7 +7,7 @@ import type { FeedsPricesFilterPaginationModel } from "../../../../models/feeds/
 export const getFeedsPricesFiltersConfig = (
   dictionary: FeedsDictionary | undefined,
   uniqueCycles: CycleDictModel[],
-  filters: FeedsPricesFilterPaginationModel,
+  _filters: FeedsPricesFilterPaginationModel,
   feedsNames: FeedsNamesRow[],
   isAdmin: boolean = false
 ): FilterConfig<keyof FeedsPricesFilterPaginationModel>[] => {

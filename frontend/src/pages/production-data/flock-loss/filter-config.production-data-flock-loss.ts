@@ -6,8 +6,10 @@ import type { ProductionDataWeighingsDictionary } from "../../../models/producti
 export const getProductionDataFlockLossFiltersConfig = (
   dictionary: ProductionDataWeighingsDictionary | undefined,
   uniqueCycles: CycleDictModel[],
-  filters: ProductionDataFlockLossFilterPaginationModel
-): FilterConfig<keyof ProductionDataFlockLossFilterPaginationModel>[] => [
+  filters: ProductionDataFlockLossFilterPaginationModel,
+  isAdmin: boolean = false
+): FilterConfig<keyof ProductionDataFlockLossFilterPaginationModel>[] => {
+  const baseFilters: FilterConfig<keyof ProductionDataFlockLossFilterPaginationModel>[] = [
   {
     key: "farmIds",
     label: "Ferma",
@@ -66,3 +68,14 @@ export const getProductionDataFlockLossFiltersConfig = (
     type: "date",
   },
 ];
+
+  if (isAdmin) {
+    baseFilters.push({
+      key: "showDeleted",
+      label: "Pokaż usunięte",
+      type: "checkbox",
+    });
+  }
+
+  return baseFilters;
+};

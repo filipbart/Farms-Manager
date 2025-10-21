@@ -2,6 +2,7 @@ import type { GridCellParams, GridColDef } from "@mui/x-data-grid";
 import ActionsCell from "../../../components/datagrid/actions-cell";
 import type { ProductionDataFlockLossListModel } from "../../../models/production-data/flock-loss";
 import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
+import { getAuditColumns } from "../../../utils/audit-columns-helper";
 
 const getCellClassName = (
   params: GridCellParams,
@@ -28,6 +29,7 @@ interface GetFlockLossColumnsProps {
   deleteFlockLoss: (id: string) => void;
   setIsEditModalOpen: (isOpen: boolean) => void;
   columnStats: any;
+  isAdmin?: boolean;
 }
 
 export const getFlockLossColumns = ({
@@ -35,8 +37,9 @@ export const getFlockLossColumns = ({
   deleteFlockLoss,
   setIsEditModalOpen,
   columnStats,
+  isAdmin = false,
 }: GetFlockLossColumnsProps): GridColDef<ProductionDataFlockLossListModel>[] => {
-  return [
+  const baseColumns: GridColDef[] = [
     { field: "cycleText", headerName: "Identyfikator", width: 120 },
     { field: "farmName", headerName: "Ferma", width: 200 },
     { field: "hatcheryName", headerName: "Wylęgarnia", width: 150 },
@@ -185,4 +188,7 @@ export const getFlockLossColumns = ({
       },
     },
   ];
+
+  const auditColumns = getAuditColumns<ProductionDataFlockLossListModel>(isAdmin);
+  return [...baseColumns, ...auditColumns];
 };
