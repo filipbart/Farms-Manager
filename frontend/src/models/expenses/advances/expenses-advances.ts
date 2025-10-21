@@ -1,7 +1,8 @@
 import type { PaginateModel } from "../../../common/interfaces/paginate";
 import type { AdvanceType } from "./categories";
+import type { AuditFields } from "../../../common/interfaces/audit-fields";
 
-export interface ExpenseAdvanceListModel {
+export interface ExpenseAdvanceListModel extends AuditFields {
   id: string;
   date: string;
   type: AdvanceType;

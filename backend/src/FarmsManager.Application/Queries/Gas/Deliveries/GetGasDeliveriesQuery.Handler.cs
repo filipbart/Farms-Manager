@@ -1,5 +1,6 @@
-﻿using AutoMapper;
+using AutoMapper;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Extensions;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.GasAggregate.Entities;
@@ -31,17 +32,18 @@ public class GetGasDeliveriesQueryHandler : IRequestHandler<GetGasDeliveriesQuer
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
         var accessibleFarmIds = user.AccessibleFarmIds;
+        var isAdmin = user.IsAdmin;
 
         var data = await _gasDeliveryRepository.ListAsync<GasDeliveryRowDto>(
-            new GetAllGasDeliveriesSpec(request.Filters, true, accessibleFarmIds), cancellationToken);
+            new GetAllGasDeliveriesSpec(request.Filters, true, accessibleFarmIds, isAdmin), cancellationToken);
 
         var count = await _gasDeliveryRepository.CountAsync(
-            new GetAllGasDeliveriesSpec(request.Filters, false, accessibleFarmIds), cancellationToken);
+            new GetAllGasDeliveriesSpec(request.Filters, false, accessibleFarmIds, isAdmin), cancellationToken);
 
         return BaseResponse.CreateResponse(new GetGasDeliveriesQueryResponse
         {
             TotalRows = count,
-            Items = data
+            Items = data.ClearAdminData(isAdmin)
         });
     }
 }

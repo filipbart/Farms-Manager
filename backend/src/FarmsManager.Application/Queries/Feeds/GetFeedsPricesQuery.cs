@@ -1,6 +1,7 @@
-﻿using AutoMapper;
+using AutoMapper;
 using FarmsManager.Application.Common;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Extensions;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models;
 using FarmsManager.Application.Specifications.Feeds;
@@ -53,6 +54,11 @@ public record FeedPriceRowDto
     public string Name { get; init; }
     public decimal Price { get; init; }
     public DateTime DateCreatedUtc { get; init; }
+    public string CreatedByName { get; init; }
+    public DateTime? DateModifiedUtc { get; init; }
+    public string ModifiedByName { get; init; }
+    public DateTime? DateDeletedUtc { get; init; }
+    public string DeletedByName { get; init; }
 }
 
 public class GetFeedsPricesQueryResponse : PaginationModel<FeedPriceRowDto>;
@@ -78,16 +84,17 @@ public class
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
         var accessibleFarmIds = user.AccessibleFarmIds;
+        var isAdmin = user.IsAdmin;
 
         var data = await _feedPriceRepository.ListAsync<FeedPriceRowDto>(
-            new GetAllFeedsPricesSpec(request.Filters, true, accessibleFarmIds), cancellationToken);
+            new GetAllFeedsPricesSpec(request.Filters, true, accessibleFarmIds, isAdmin), cancellationToken);
         var count = await _feedPriceRepository.CountAsync(
-            new GetAllFeedsPricesSpec(request.Filters, false, accessibleFarmIds),
+            new GetAllFeedsPricesSpec(request.Filters, false, accessibleFarmIds, isAdmin),
             cancellationToken);
         return BaseResponse.CreateResponse(new GetFeedsPricesQueryResponse
         {
             TotalRows = count,
-            Items = data
+            Items = data.ClearAdminData(isAdmin)
         });
     }
 }

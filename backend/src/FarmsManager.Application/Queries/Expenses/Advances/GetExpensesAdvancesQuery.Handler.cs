@@ -1,6 +1,7 @@
 using AutoMapper;
 using FarmsManager.Application.Common;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Extensions;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Services;
 using FarmsManager.Application.Specifications.Employees;
@@ -60,13 +61,15 @@ public class GetExpensesAdvancesQueryHandler : IRequestHandler<GetExpensesAdvanc
         }
 
         var employee = await _employeeRepository.GetAsync(new EmployeeByIdSpec(request.EmployeeId), cancellationToken);
+        var isAdmin = user.IsAdmin;
+        
         var data = await _expenseAdvanceRepository.ListAsync<ExpenseAdvanceRowDto>(
-            new GetAllExpensesAdvancesSpec(request.EmployeeId, request.Filters, true, true), cancellationToken);
+            new GetAllExpensesAdvancesSpec(request.EmployeeId, request.Filters, true, true, isAdmin), cancellationToken);
         var count = await _expenseAdvanceRepository.CountAsync(
-            new GetAllExpensesAdvancesSpec(request.EmployeeId, request.Filters, false, true), cancellationToken);
+            new GetAllExpensesAdvancesSpec(request.EmployeeId, request.Filters, false, true, isAdmin), cancellationToken);
 
         var allData = await _expenseAdvanceRepository.ListAsync(
-            new GetAllExpensesAdvancesSpec(request.EmployeeId, request.Filters, false, false), cancellationToken);
+            new GetAllExpensesAdvancesSpec(request.EmployeeId, request.Filters, false, false, isAdmin), cancellationToken);
 
         var allExpenses = allData.Where(t => t.Type == ExpenseAdvanceCategoryType.Expense).Sum(t => t.Amount);
         var allIncome = allData.Where(t => t.Type == ExpenseAdvanceCategoryType.Income).Sum(t => t.Amount);
@@ -81,7 +84,7 @@ public class GetExpensesAdvancesQueryHandler : IRequestHandler<GetExpensesAdvanc
             List = new PaginationModel<ExpenseAdvanceRowDto>
             {
                 TotalRows = count,
-                Items = data
+                Items = data.ClearAdminData(isAdmin)
             },
             TotalBalance = allBalance,
             Balance = balance,

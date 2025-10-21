@@ -1,5 +1,6 @@
-﻿using AutoMapper;
+using AutoMapper;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Extensions;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.ProductionDataAggregate.Entities;
@@ -38,9 +39,10 @@ public class GetProductionDataWeighingsQueryHandler : IRequestHandler<GetProduct
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
         var accessibleFarmIds = user.AccessibleFarmIds;
+        var isAdmin = user.IsAdmin;
 
-        var spec = new GetAllProductionDataWeighingsSpec(request.Filters, true, accessibleFarmIds);
-        var countSpec = new GetAllProductionDataWeighingsSpec(request.Filters, false, accessibleFarmIds);
+        var spec = new GetAllProductionDataWeighingsSpec(request.Filters, true, accessibleFarmIds, isAdmin);
+        var countSpec = new GetAllProductionDataWeighingsSpec(request.Filters, false, accessibleFarmIds, isAdmin);
 
         var weighings = await _weighingRepository.ListAsync(spec, cancellationToken);
         var totalRows = await _weighingRepository.CountAsync(countSpec, cancellationToken);
@@ -61,7 +63,7 @@ public class GetProductionDataWeighingsQueryHandler : IRequestHandler<GetProduct
         return BaseResponse.CreateResponse(new GetProductionDataWeighingsQueryResponse
         {
             TotalRows = totalRows,
-            Items = data
+            Items = data.ClearAdminData(isAdmin)
         });
     }
 

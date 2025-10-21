@@ -8,7 +8,9 @@ export const FeedPaymentStatusLabels: Record<FeedPaymentStatus, string> = {
   [FeedPaymentStatus.Realized]: "Zrealizowany",
 };
 
-export interface FeedPaymentListModel {
+import type { AuditFields } from "../../../common/interfaces/audit-fields";
+
+export interface FeedPaymentListModel extends AuditFields {
   id: string;
   cycleText: string;
   farmName: string;

@@ -28,6 +28,7 @@ const getInitialFilters = (): EmployeesFilterPaginationModel => {
     farmIds: [],
     dateSince: "",
     dateTo: "",
+    showDeleted: false,
     page: 0,
     pageSize: 10,
   };
@@ -119,6 +120,7 @@ export interface EmployeesFilter {
   addToAdvances?: boolean;
   dateSince: string;
   dateTo: string;
+  showDeleted?: boolean;
 }
 
 export interface EmployeesFilterPaginationModel

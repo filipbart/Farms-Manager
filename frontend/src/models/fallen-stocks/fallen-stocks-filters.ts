@@ -25,6 +25,7 @@ const getInitialFilters = (): FallenStockFilterModel => {
   const defaultFilters: FallenStockFilterModel = {
     farmId: undefined,
     cycle: undefined,
+    showDeleted: false,
   };
 
   const savedFilters = loadFiltersFromLocalStorage();
@@ -72,4 +73,5 @@ export interface FallenStocksDictionary {
 export interface FallenStockFilterModel {
   farmId?: string;
   cycle?: string;
+  showDeleted?: boolean;
 }

@@ -1,5 +1,6 @@
-﻿using AutoMapper;
+using AutoMapper;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Extensions;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
@@ -30,16 +31,17 @@ public class GetInsertionsQueryHandler : IRequestHandler<GetInsertionsQuery, Bas
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
         var accessibleFarmIds = user.AccessibleFarmIds;
+        var isAdmin = user.IsAdmin;
 
         var data = await _insertionRepository.ListAsync<InsertionRowDto>(
-            new GetAllInsertionsSpec(request.Filters, true, accessibleFarmIds), cancellationToken);
+            new GetAllInsertionsSpec(request.Filters, true, accessibleFarmIds, isAdmin), cancellationToken);
         var count = await _insertionRepository.CountAsync(
-            new GetAllInsertionsSpec(request.Filters, false, accessibleFarmIds),
+            new GetAllInsertionsSpec(request.Filters, false, accessibleFarmIds, isAdmin),
             cancellationToken);
         return BaseResponse.CreateResponse(new GetInsertionsQueryResponse
         {
             TotalRows = count,
-            Items = data
+            Items = data.ClearAdminData(isAdmin)
         });
     }
 }

@@ -1,4 +1,6 @@
-export interface HatcheryRowModel {
+import type { AuditFields } from "../../common/interfaces/audit-fields";
+
+export interface HatcheryRowModel extends AuditFields {
   id: string;
   name: string;
   producerNumber: string;

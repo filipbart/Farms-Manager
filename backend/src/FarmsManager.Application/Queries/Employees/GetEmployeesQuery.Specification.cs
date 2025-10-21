@@ -9,9 +9,9 @@ namespace FarmsManager.Application.Queries.Employees;
 
 public sealed class GetAllEmployeesSpec : BaseSpecification<EmployeeEntity>
 {
-    public GetAllEmployeesSpec(GetEmployeesQueryFilters filters, bool withPagination, List<Guid> accessibleFarmIds)
+    public GetAllEmployeesSpec(GetEmployeesQueryFilters filters, bool withPagination, List<Guid> accessibleFarmIds, bool isAdmin)
     {
-        EnsureExists();
+        EnsureExists(filters.ShowDeleted, isAdmin);
         DisableTracking();
 
         Query.Include(e => e.Farm);

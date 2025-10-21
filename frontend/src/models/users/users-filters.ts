@@ -24,6 +24,7 @@ export const loadFiltersFromLocalStorage =
 const getInitialFilters = (): UsersFilterPaginationModel => {
   const defaultFilters: UsersFilterPaginationModel = {
     searchPhrase: "",
+    showDeleted: false,
     page: 0,
     pageSize: 10,
   };
@@ -95,6 +96,7 @@ export const mapUserOrderTypeToField = (orderType: UsersOrderType): string => {
 
 export interface UsersFilter {
   searchPhrase?: string;
+  showDeleted?: boolean;
 }
 
 export interface UsersFilterPaginationModel

@@ -46,6 +46,11 @@ public record FeedPaymentRowDto
     public string Status { get; init; }
     public string Comment { get; init; }
     public DateTime DateCreatedUtc { get; init; }
+    public string CreatedByName { get; init; }
+    public DateTime? DateModifiedUtc { get; init; }
+    public string ModifiedByName { get; init; }
+    public DateTime? DateDeletedUtc { get; init; }
+    public string DeletedByName { get; init; }
 }
 
 public class GetFeedsPaymentsQueryResponse : PaginationModel<FeedPaymentRowDto>;
@@ -72,16 +77,17 @@ public class
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
         var accessibleFarmIds = user.AccessibleFarmIds;
+        var isAdmin = user.IsAdmin;
 
         var data = await _feedPaymentRepository.ListAsync<FeedPaymentRowDto>(
-            new GetAllFeedsPaymentsSpec(request.Filters, true, accessibleFarmIds), cancellationToken);
+            new GetAllFeedsPaymentsSpec(request.Filters, true, accessibleFarmIds, isAdmin), cancellationToken);
         var count = await _feedPaymentRepository.CountAsync(
-            new GetAllFeedsPaymentsSpec(request.Filters, false, accessibleFarmIds),
+            new GetAllFeedsPaymentsSpec(request.Filters, false, accessibleFarmIds, isAdmin),
             cancellationToken);
         return BaseResponse.CreateResponse(new GetFeedsPaymentsQueryResponse
         {
             TotalRows = count,
-            Items = data
+            Items = data.ClearAdminData(isAdmin)
         });
     }
 }

@@ -1,4 +1,4 @@
-﻿using Ardalis.Specification;
+using Ardalis.Specification;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.GasAggregate.Entities;
 
@@ -7,9 +7,9 @@ namespace FarmsManager.Application.Queries.Gas.Deliveries;
 public sealed class GetAllGasDeliveriesSpec : BaseSpecification<GasDeliveryEntity>
 {
     public GetAllGasDeliveriesSpec(GetGasDeliveriesQueryFilters filters, bool withPagination,
-        List<Guid> accessibleFarmIds)
+        List<Guid> accessibleFarmIds, bool isAdmin)
     {
-        EnsureExists();
+        EnsureExists(filters.ShowDeleted, isAdmin);
         DisableTracking();
 
         PopulateFilters(filters);

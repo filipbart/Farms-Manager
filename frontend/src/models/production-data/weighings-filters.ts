@@ -36,6 +36,7 @@ const getInitialFilters = (): ProductionDataWeighingsFilterPaginationModel => {
     hatcheryIds: [],
     dateSince: "",
     dateTo: "",
+    showDeleted: false,
     page: 0,
     pageSize: 10,
   };
@@ -135,6 +136,7 @@ export interface ProductionDataWeighingsFilter {
   hatcheryIds: string[];
   dateSince: string;
   dateTo: string;
+  showDeleted?: boolean;
 }
 
 export interface ProductionDataWeighingsFilterPaginationModel

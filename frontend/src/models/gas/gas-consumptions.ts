@@ -1,4 +1,6 @@
-export interface GasConsumptionListModel {
+import type { AuditFields } from "../../common/interfaces/audit-fields";
+
+export interface GasConsumptionListModel extends AuditFields {
   id: string;
   farmId: string;
   farmName: string;

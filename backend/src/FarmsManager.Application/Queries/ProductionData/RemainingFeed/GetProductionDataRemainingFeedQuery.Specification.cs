@@ -1,4 +1,4 @@
-﻿using Ardalis.Specification;
+using Ardalis.Specification;
 using FarmsManager.Application.Models.ProductionData;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.ProductionDataAggregate.Entities;
@@ -8,9 +8,9 @@ namespace FarmsManager.Application.Queries.ProductionData.RemainingFeed;
 
 public sealed class GetAllProductionDataRemainingFeedSpec : BaseSpecification<ProductionDataRemainingFeedEntity>
 {
-    public GetAllProductionDataRemainingFeedSpec(ProductionDataQueryFilters filters, bool withPagination, List<Guid> accessibleFarmIds)
+    public GetAllProductionDataRemainingFeedSpec(ProductionDataQueryFilters filters, bool withPagination, List<Guid> accessibleFarmIds, bool isAdmin)
     {
-        EnsureExists();
+        EnsureExists(filters.ShowDeleted, isAdmin);
         DisableTracking();
 
         PopulateFilters(filters);

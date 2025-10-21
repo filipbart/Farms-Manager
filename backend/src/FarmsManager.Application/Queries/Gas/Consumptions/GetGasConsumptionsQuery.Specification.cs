@@ -1,4 +1,4 @@
-﻿using Ardalis.Specification;
+using Ardalis.Specification;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.GasAggregate.Entities;
 using FarmsManager.Domain.Aggregates.GasAggregate.Enum;
@@ -9,9 +9,9 @@ namespace FarmsManager.Application.Queries.Gas.Consumptions;
 public sealed class GetAllGasConsumptionsSpec : BaseSpecification<GasConsumptionEntity>
 {
     public GetAllGasConsumptionsSpec(GetGasConsumptionsQueryFilters filters, bool withPagination,
-        List<Guid> accessibleFarmIds)
+        List<Guid> accessibleFarmIds, bool isAdmin)
     {
-        EnsureExists();
+        EnsureExists(filters.ShowDeleted, isAdmin);
         DisableTracking();
 
         PopulateFilters(filters);

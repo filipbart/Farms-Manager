@@ -1,4 +1,4 @@
-﻿namespace FarmsManager.Domain.Models.FarmAggregate;
+namespace FarmsManager.Domain.Models.FarmAggregate;
 
 public record FarmRowDto
 {
@@ -11,4 +11,9 @@ public record FarmRowDto
     public DateTime DateCreatedUtc { get; init; }
     public List<HenhouseRowDto> Henhouses { get; init; }
     public CycleDto ActiveCycle { get; init; }
+    public string CreatedByName { get; init; }
+    public DateTime? DateModifiedUtc { get; init; }
+    public string ModifiedByName { get; init; }
+    public DateTime? DateDeletedUtc { get; init; }
+    public string DeletedByName { get; init; }
 }

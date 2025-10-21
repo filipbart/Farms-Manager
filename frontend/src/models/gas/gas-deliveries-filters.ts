@@ -27,6 +27,7 @@ const getInitialFilters = (): GasDeliveriesFilterPaginationModel => {
     contractorIds: [],
     dateSince: "",
     dateTo: "",
+    showDeleted: false,
     page: 0,
     pageSize: 10,
   };
@@ -112,6 +113,7 @@ export interface GasDeliveriesFilter {
   contractorIds: string[];
   dateSince: string;
   dateTo: string;
+  showDeleted?: boolean;
 }
 
 export interface GasDeliveriesFilterPaginationModel

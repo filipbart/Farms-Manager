@@ -1,5 +1,6 @@
 using AutoMapper;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Extensions;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.ProductionDataAggregate.Entities;
@@ -35,9 +36,10 @@ public class GetProductionDataFlockLossesQueryHandler : IRequestHandler<GetProdu
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
         var accessibleFarmIds = user.AccessibleFarmIds;
+        var isAdmin = user.IsAdmin;
 
-        var spec = new GetAllProductionDataFlockLossesSpec(request.Filters, true, accessibleFarmIds);
-        var countSpec = new GetAllProductionDataFlockLossesSpec(request.Filters, false, accessibleFarmIds);
+        var spec = new GetAllProductionDataFlockLossesSpec(request.Filters, true, accessibleFarmIds, isAdmin);
+        var countSpec = new GetAllProductionDataFlockLossesSpec(request.Filters, false, accessibleFarmIds, isAdmin);
 
         var flockLosses = await _flockLossRepository.ListAsync(spec, cancellationToken);
         var totalRows = await _flockLossRepository.CountAsync(countSpec, cancellationToken);
@@ -47,7 +49,7 @@ public class GetProductionDataFlockLossesQueryHandler : IRequestHandler<GetProdu
         return BaseResponse.CreateResponse(new GetProductionDataFlockLossesQueryResponse
         {
             TotalRows = totalRows,
-            Items = data
+            Items = data.ClearAdminData(isAdmin)
         });
     }
 }

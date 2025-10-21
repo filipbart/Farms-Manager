@@ -1,5 +1,6 @@
-﻿using AutoMapper;
+using AutoMapper;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Extensions;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
@@ -30,15 +31,16 @@ public class GetSalesQueryHandler : IRequestHandler<GetSalesQuery, BaseResponse<
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
         var accessibleFarmIds = user.AccessibleFarmIds;
+        var isAdmin = user.IsAdmin;
 
         var data = await _saleRepository.ListAsync<SaleRowDto>(
-            new GetAllSalesSpec(request.Filters, true, accessibleFarmIds), cancellationToken);
-        var count = await _saleRepository.CountAsync(new GetAllSalesSpec(request.Filters, false, accessibleFarmIds),
+            new GetAllSalesSpec(request.Filters, true, accessibleFarmIds, isAdmin), cancellationToken);
+        var count = await _saleRepository.CountAsync(new GetAllSalesSpec(request.Filters, false, accessibleFarmIds, isAdmin),
             cancellationToken);
         return BaseResponse.CreateResponse(new GetSalesQueryResponse
         {
             TotalRows = count,
-            Items = data
+            Items = data.ClearAdminData(isAdmin)
         });
     }
 }

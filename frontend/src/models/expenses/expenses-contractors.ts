@@ -1,4 +1,6 @@
-export interface ExpenseContractorRow {
+import type { AuditFields } from "../../common/interfaces/audit-fields";
+
+export interface ExpenseContractorRow extends AuditFields {
   id: string;
   name: string;
   expenseType: string;

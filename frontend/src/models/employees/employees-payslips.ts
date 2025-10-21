@@ -1,6 +1,7 @@
 import type { PaginateModel } from "../../common/interfaces/paginate";
+import type { AuditFields } from "../../common/interfaces/audit-fields";
 
-export interface EmployeePayslipListModel {
+export interface EmployeePayslipListModel extends AuditFields {
   id: string;
   farmId: string;
   farmName: string;

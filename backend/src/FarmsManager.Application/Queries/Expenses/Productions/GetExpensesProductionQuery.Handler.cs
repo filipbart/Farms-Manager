@@ -1,5 +1,6 @@
 using AutoMapper;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Extensions;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities;
@@ -31,15 +32,16 @@ public class GetExpensesProductionQueryHandler : IRequestHandler<GetExpensesProd
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
         var accessibleFarmIds = user.AccessibleFarmIds;
+        var isAdmin = user.IsAdmin;
 
         var data = await _expenseProductionRepository.ListAsync<ExpenseProductionRow>(
-            new GetAllExpenseProductionsSpec(request.Filters, true, accessibleFarmIds), cancellationToken);
+            new GetAllExpenseProductionsSpec(request.Filters, true, accessibleFarmIds, isAdmin), cancellationToken);
         var count = await _expenseProductionRepository.CountAsync(
-            new GetAllExpenseProductionsSpec(request.Filters, false, accessibleFarmIds), cancellationToken);
+            new GetAllExpenseProductionsSpec(request.Filters, false, accessibleFarmIds, isAdmin), cancellationToken);
         return BaseResponse.CreateResponse(new GetExpensesProductionQueryResponse
         {
             TotalRows = count,
-            Items = data
+            Items = data.ClearAdminData(isAdmin)
         });
     }
 }

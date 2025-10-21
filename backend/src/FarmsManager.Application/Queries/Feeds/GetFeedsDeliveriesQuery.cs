@@ -1,6 +1,7 @@
 using AutoMapper;
 using FarmsManager.Application.Common;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Extensions;
 using FarmsManager.Application.Helpers;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models;
@@ -85,6 +86,11 @@ public record FeedDeliveryRowDto
     public DateTime? PaymentDateUtc { get; init; }
     public string FilePath { get; init; }
     public bool IsCorrection { get; init; }
+    public string CreatedByName { get; init; }
+    public DateTime? DateModifiedUtc { get; init; }
+    public string ModifiedByName { get; init; }
+    public DateTime? DateDeletedUtc { get; init; }
+    public string DeletedByName { get; init; }
     public NotificationPriority? Priority => PriorityCalculator.CalculatePriority(DueDate, PaymentDateUtc);
 }
 
@@ -113,17 +119,18 @@ public class
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var user = await _userRepository.GetAsync(new UserByIdSpec(userId), ct);
         var accessibleFarmIds = user.AccessibleFarmIds;
+        var isAdmin = user.IsAdmin;
 
         var feedInvoices = await _feedInvoiceRepository.ListAsync<FeedDeliveryRowDto>(
-            new GetAllFeedsDeliveriesSpec(request.Filters, accessibleFarmIds), ct);
+            new GetAllFeedsDeliveriesSpec(request.Filters, accessibleFarmIds, isAdmin), ct);
 
         var feedCorrections = request.Filters.IncorrectPrices == true ||
                               (request.Filters.HenhouseIds != null && request.Filters.HenhouseIds.Count != 0)
             ? []
             : await _feedInvoiceCorrectionRepository.ListAsync<FeedDeliveryRowDto>(
-                new GetAllFeedsCorrectionsSpec(request.Filters, accessibleFarmIds), ct);
+                new GetAllFeedsCorrectionsSpec(request.Filters, accessibleFarmIds, isAdmin), ct);
 
-        var combined = feedInvoices.Concat(feedCorrections);
+        var combined = feedInvoices.Concat(feedCorrections).ClearAdminData(isAdmin);
 
         var orderedCombined = request.Filters.OrderBy switch
         {
@@ -171,7 +178,7 @@ public class
         return BaseResponse.CreateResponse(new GetFeedsDeliveriesQueryResponse
         {
             TotalRows = total,
-            Items = pageItems
+            Items = pageItems.ToList()
         });
     }
 }

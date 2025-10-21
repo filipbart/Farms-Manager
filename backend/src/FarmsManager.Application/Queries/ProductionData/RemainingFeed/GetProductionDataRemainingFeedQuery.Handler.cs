@@ -1,5 +1,6 @@
-﻿using AutoMapper;
+using AutoMapper;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Extensions;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.ProductionDataAggregate.Entities;
@@ -31,17 +32,18 @@ public class GetProductionDataRemainingFeedQueryHandler : IRequestHandler<GetPro
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
         var accessibleFarmIds = user.AccessibleFarmIds;
+        var isAdmin = user.IsAdmin;
         
         var data = await _repository.ListAsync<ProductionDataRemainingFeedRowDto>(
-            new GetAllProductionDataRemainingFeedSpec(request.Filters, true, accessibleFarmIds), cancellationToken);
+            new GetAllProductionDataRemainingFeedSpec(request.Filters, true, accessibleFarmIds, isAdmin), cancellationToken);
         var count = await _repository.CountAsync(
-            new GetAllProductionDataRemainingFeedSpec(request.Filters, false,accessibleFarmIds),
+            new GetAllProductionDataRemainingFeedSpec(request.Filters, false,accessibleFarmIds, isAdmin),
             cancellationToken);
 
         return BaseResponse.CreateResponse(new GetProductionDataRemainingFeedQueryResponse
         {
             TotalRows = count,
-            Items = data
+            Items = data.ClearAdminData(isAdmin)
         });
     }
 }

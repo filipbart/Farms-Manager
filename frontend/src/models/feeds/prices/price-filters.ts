@@ -29,6 +29,7 @@ const getInitialFilters = (): FeedsPricesFilterPaginationModel => {
     cycles: [],
     dateSince: "",
     dateTo: "",
+    showDeleted: false,
     page: 0,
     pageSize: 10,
   };
@@ -90,6 +91,7 @@ export default interface FeedsPricesFilter {
   cycles: CycleDictModel[];
   dateSince: string;
   dateTo: string;
+  showDeleted?: boolean;
 }
 
 export interface FeedsPricesFilterPaginationModel

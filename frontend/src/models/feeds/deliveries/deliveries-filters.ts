@@ -31,6 +31,7 @@ const getInitialFilters = (): FeedsDeliveriesFilterPaginationModel => {
     cycles: [],
     dateSince: "",
     dateTo: "",
+    showDeleted: false,
     page: 0,
     pageSize: 10,
   };
@@ -108,6 +109,7 @@ export default interface FeedsDeliveriesFilter {
   incorrectPrices?: boolean;
   dateSince: string;
   dateTo: string;
+  showDeleted?: boolean;
 }
 
 export interface FeedsDeliveriesFilterPaginationModel

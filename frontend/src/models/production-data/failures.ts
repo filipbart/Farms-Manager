@@ -1,4 +1,6 @@
-export interface ProductionDataFailureListModel {
+import type { AuditFields } from "../../common/interfaces/audit-fields";
+
+export interface ProductionDataFailureListModel extends AuditFields {
   id: string;
   cycleId: string;
   cycleText: string;

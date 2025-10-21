@@ -1,5 +1,6 @@
-﻿using AutoMapper;
+using AutoMapper;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Extensions;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.ProductionDataAggregate.Entities;
@@ -32,17 +33,18 @@ public class GetProductionDataFailuresQueryHandler : IRequestHandler<GetProducti
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
         var accessibleFarmIds = user.AccessibleFarmIds;
+        var isAdmin = user.IsAdmin;
 
         var data = await _productionDataFailureRepository.ListAsync<ProductionDataFailureRowDto>(
-            new GetAllProductionDataFailuresSpec(request.Filters, true, accessibleFarmIds), cancellationToken);
+            new GetAllProductionDataFailuresSpec(request.Filters, true, accessibleFarmIds, isAdmin), cancellationToken);
         var count = await _productionDataFailureRepository.CountAsync(
-            new GetAllProductionDataFailuresSpec(request.Filters, false, accessibleFarmIds),
+            new GetAllProductionDataFailuresSpec(request.Filters, false, accessibleFarmIds, isAdmin),
             cancellationToken);
 
         return BaseResponse.CreateResponse(new GetProductionDataFailuresQueryResponse
         {
             TotalRows = count,
-            Items = data
+            Items = data.ClearAdminData(isAdmin)
         });
     }
 }

@@ -1,4 +1,4 @@
-﻿using Ardalis.Specification;
+using Ardalis.Specification;
 using FarmsManager.Application.Models.ProductionData;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.ProductionDataAggregate.Entities;
@@ -9,9 +9,9 @@ namespace FarmsManager.Application.Queries.ProductionData.Failures;
 public sealed class GetAllProductionDataFailuresSpec : BaseSpecification<ProductionDataFailureEntity>
 {
     public GetAllProductionDataFailuresSpec(ProductionDataQueryFilters filters, bool withPagination,
-        List<Guid> accessibleFarmIds)
+        List<Guid> accessibleFarmIds, bool isAdmin)
     {
-        EnsureExists();
+        EnsureExists(filters.ShowDeleted, isAdmin);
         DisableTracking();
 
         PopulateFilters(filters);

@@ -1,4 +1,6 @@
-export interface ProductionDataFlockLossListModel {
+import type { AuditFields } from "../../common/interfaces/audit-fields";
+
+export interface ProductionDataFlockLossListModel extends AuditFields {
   id: string;
   dateCreatedUtc: string;
 

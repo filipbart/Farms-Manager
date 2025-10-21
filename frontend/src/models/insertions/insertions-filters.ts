@@ -32,6 +32,7 @@ const getInitialFilters = (): InsertionsFilterPaginationModel => {
     hatcheryIds: [],
     dateSince: "",
     dateTo: "",
+    showDeleted: false,
     page: 0,
     pageSize: 10,
   };
@@ -93,6 +94,7 @@ export default interface InsertionsFilter {
   hatcheryIds: string[];
   dateSince: string;
   dateTo: string;
+  showDeleted?: boolean;
 }
 
 export interface InsertionsFilterPaginationModel

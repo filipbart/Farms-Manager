@@ -1,4 +1,4 @@
-﻿using Ardalis.Specification;
+using Ardalis.Specification;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities;
 
@@ -7,9 +7,9 @@ namespace FarmsManager.Application.Queries.Expenses.Advances;
 public sealed class GetAllExpensesAdvancesSpec : BaseSpecification<ExpenseAdvanceEntity>
 {
     public GetAllExpensesAdvancesSpec(Guid employeeId, GetExpensesAdvancesQueryFilters filters, bool withPagination,
-        bool withFilters)
+        bool withFilters, bool isAdmin)
     {
-        EnsureExists();
+        EnsureExists(filters.ShowDeleted, isAdmin);
         DisableTracking();
 
         if (withFilters)

@@ -20,6 +20,12 @@ public class EmployeeRowDto
     public string Comment { get; init; }
     public List<EmployeeFileDto> Files { get; init; } = [];
     public bool UpcomingDeadline { get; init; }
+    public DateTime DateCreatedUtc { get; init; }
+    public string CreatedByName { get; init; }
+    public DateTime? DateModifiedUtc { get; init; }
+    public string ModifiedByName { get; init; }
+    public DateTime? DateDeletedUtc { get; init; }
+    public string DeletedByName { get; init; }
 }
 
 public class GetEmployeesQueryResponse : PaginationModel<EmployeeRowDto>;

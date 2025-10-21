@@ -1,5 +1,6 @@
-﻿using AutoMapper;
+using AutoMapper;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Extensions;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
@@ -31,17 +32,18 @@ public class
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
         var accessibleFarmIds = user.AccessibleFarmIds;
+        var isAdmin = user.IsAdmin;
 
         var data = await _saleInvoiceRepository.ListAsync<SalesInvoiceRowDto>(
-            new GetAllSalesInvoicesSpec(request.Filters, true, accessibleFarmIds), cancellationToken);
+            new GetAllSalesInvoicesSpec(request.Filters, true, accessibleFarmIds, isAdmin), cancellationToken);
 
         var count = await _saleInvoiceRepository.CountAsync(
-            new GetAllSalesInvoicesSpec(request.Filters, false, accessibleFarmIds), cancellationToken);
+            new GetAllSalesInvoicesSpec(request.Filters, false, accessibleFarmIds, isAdmin), cancellationToken);
 
         return BaseResponse.CreateResponse(new GetSalesInvoicesQueryResponse
         {
             TotalRows = count,
-            Items = data
+            Items = data.ClearAdminData(isAdmin)
         });
     }
 }

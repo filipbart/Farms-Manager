@@ -28,6 +28,7 @@ const getInitialFilters = (): GasConsumptionsFilterPaginationModel => {
   const defaultFilters: GasConsumptionsFilterPaginationModel = {
     farmIds: [],
     cycles: [],
+    showDeleted: false,
     page: 0,
     pageSize: 10,
   };
@@ -105,6 +106,7 @@ export const mapGasConsumptionOrderTypeToField = (
 export interface GasConsumptionsFilter {
   farmIds: string[];
   cycles: CycleDictModel[];
+  showDeleted?: boolean;
 }
 
 export interface GasConsumptionsFilterPaginationModel

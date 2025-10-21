@@ -9,9 +9,9 @@ namespace FarmsManager.Application.Queries.Expenses.Productions;
 public sealed class GetAllExpenseProductionsSpec : BaseSpecification<ExpenseProductionEntity>
 {
     public GetAllExpenseProductionsSpec(GetExpensesProductionsFilters filters, bool withPagination,
-        List<Guid> accessibleFarmIds)
+        List<Guid> accessibleFarmIds, bool isAdmin)
     {
-        EnsureExists();
+        EnsureExists(filters.ShowDeleted, isAdmin);
         DisableTracking();
 
         PopulateFilters(filters);

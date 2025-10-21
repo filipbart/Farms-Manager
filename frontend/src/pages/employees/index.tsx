@@ -27,8 +27,11 @@ import {
   getSortOptionsFromGridModel,
   initializeFiltersFromLocalStorage,
 } from "../../utils/grid-state-helper";
+import { useAuth } from "../../auth/useAuth";
 
 const EmployeesPage: React.FC = () => {
+  const { userData } = useAuth();
+  const isAdmin = userData?.isAdmin ?? false;
   const [filters, dispatch] = useReducer(
     filterReducer,
     initialFilters,
@@ -102,8 +105,8 @@ const EmployeesPage: React.FC = () => {
   }, [fetchEmployees]);
 
   const columns = useMemo(
-    () => getEmployeesColumns({ deleteEmployee }),
-    [deleteEmployee]
+    () => getEmployeesColumns({ deleteEmployee, isAdmin }),
+    [deleteEmployee, isAdmin]
   );
 
   return (
@@ -129,7 +132,7 @@ const EmployeesPage: React.FC = () => {
       </Box>
 
       <FiltersForm
-        config={getEmployeesFiltersConfig(dictionary)}
+        config={getEmployeesFiltersConfig(dictionary, isAdmin)}
         filters={filters}
         dispatch={dispatch}
       />

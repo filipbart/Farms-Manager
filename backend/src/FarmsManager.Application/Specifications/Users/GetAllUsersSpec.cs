@@ -7,9 +7,9 @@ namespace FarmsManager.Application.Specifications.Users;
 
 public sealed class GetAllUsersSpec : BaseSpecification<UserEntity>
 {
-    public GetAllUsersSpec(GetUsersQueryFilters filters, bool withPagination)
+    public GetAllUsersSpec(GetUsersQueryFilters filters, bool withPagination, bool isAdmin)
     {
-        EnsureExists();
+        EnsureExists(filters.ShowDeleted, isAdmin);
         DisableTracking();
 
         PopulateFilters(filters);

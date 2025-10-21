@@ -28,6 +28,7 @@ const getInitialFilters = (): HatcheriesPricesFilterPaginationModel => {
     hatcheryNames: [],
     dateSince: "",
     dateTo: "",
+    showDeleted: false,
     page: 0,
     pageSize: 10,
   };
@@ -105,6 +106,7 @@ export default interface HatcheriesPricesFilter {
   dateTo: string;
   priceFrom?: number;
   priceTo?: number;
+  showDeleted?: boolean;
 }
 
 export interface HatcheriesPricesFilterPaginationModel

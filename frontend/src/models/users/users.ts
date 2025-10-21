@@ -1,4 +1,6 @@
-export interface UserListModel {
+import type { AuditFields } from "../../common/interfaces/audit-fields";
+
+export interface UserListModel extends AuditFields {
   id: string;
   dateCreatedUtc: string;
 

@@ -1,4 +1,6 @@
-export interface ProductionDataTransferFeedListModel {
+import type { AuditFields } from "../../common/interfaces/audit-fields";
+
+export interface ProductionDataTransferFeedListModel extends AuditFields {
   id: string;
   fromCycleId: string;
   fromCycleText: string;

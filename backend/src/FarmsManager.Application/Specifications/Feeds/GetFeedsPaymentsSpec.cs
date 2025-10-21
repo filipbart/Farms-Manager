@@ -8,9 +8,9 @@ namespace FarmsManager.Application.Specifications.Feeds;
 public sealed class GetAllFeedsPaymentsSpec : BaseSpecification<FeedPaymentEntity>
 {
     public GetAllFeedsPaymentsSpec(GetFeedsPaymentsQueryFilters filters, bool withPagination,
-        List<Guid> accessibleFarmIds)
+        List<Guid> accessibleFarmIds, bool isAdmin)
     {
-        EnsureExists();
+        EnsureExists(filters.ShowDeleted, isAdmin);
         DisableTracking();
 
         PopulateFilters(filters);

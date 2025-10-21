@@ -29,6 +29,7 @@ const getInitialFilters = (): SalesInvoicesFilterPaginationModel => {
     cycles: [],
     dateSince: "",
     dateTo: "",
+    showDeleted: false,
     page: 0,
     pageSize: 10,
   };
@@ -124,6 +125,7 @@ export interface SalesInvoicesFilter {
   cycles: CycleDictModel[];
   dateSince: string;
   dateTo: string;
+  showDeleted?: boolean;
 }
 
 export interface SalesInvoicesFilterPaginationModel

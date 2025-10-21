@@ -1,12 +1,12 @@
-import { TextField, MenuItem, Autocomplete } from "@mui/material";
+import { TextField, MenuItem, Autocomplete, FormControlLabel, Checkbox } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs, { Dayjs } from "dayjs";
 import type { FilterConfig } from "./filter-types";
 
 interface RenderFilterFieldProps {
   filter: FilterConfig;
-  value: string[] | string | null;
-  onChange: (val: string[] | string | null) => void;
+  value: string[] | string | boolean | null;
+  onChange: (val: string[] | string | boolean | null) => void;
 }
 
 export const RenderFilterField = ({
@@ -153,6 +153,21 @@ export const RenderFilterField = ({
         value={value || ""}
         onChange={(e) => onChange(e.target.value)}
         disabled={filter.disabled}
+      />
+    );
+  }
+
+  if (filter.type === "checkbox") {
+    return (
+      <FormControlLabel
+        control={
+          <Checkbox
+            checked={Boolean(value)}
+            onChange={(e) => onChange(e.target.checked)}
+            disabled={filter.disabled}
+          />
+        }
+        label={filter.label}
       />
     );
   }

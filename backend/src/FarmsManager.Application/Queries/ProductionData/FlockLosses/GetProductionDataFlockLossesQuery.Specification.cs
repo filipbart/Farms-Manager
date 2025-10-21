@@ -8,9 +8,9 @@ namespace FarmsManager.Application.Queries.ProductionData.FlockLosses;
 public sealed class GetAllProductionDataFlockLossesSpec : BaseSpecification<ProductionDataFlockLossMeasureEntity>
 {
     public GetAllProductionDataFlockLossesSpec(GetProductionDataFlockLossesQueryFilters filters, bool withPagination,
-        List<Guid> accessibleFarmIds)
+        List<Guid> accessibleFarmIds, bool isAdmin)
     {
-        EnsureExists();
+        EnsureExists(filters.ShowDeleted, isAdmin);
         DisableTracking();
 
         Query.Include(t => t.Farm);

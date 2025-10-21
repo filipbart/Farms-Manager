@@ -29,6 +29,7 @@ const getInitialFilters = (): ProductionDataFilterPaginationModel => {
     henhouseIds: [],
     dateSince: "",
     dateTo: "",
+    showDeleted: false,
     page: 0,
     pageSize: 10,
   };
@@ -115,6 +116,7 @@ export interface ProductionDataFilter {
   henhouseIds: string[];
   dateSince: string;
   dateTo: string;
+  showDeleted?: boolean;
 }
 
 export interface ProductionDataFilterPaginationModel

@@ -1,4 +1,4 @@
-﻿using Ardalis.Specification;
+using Ardalis.Specification;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
 using LinqKit;
@@ -7,9 +7,9 @@ namespace FarmsManager.Application.Queries.Sales;
 
 public sealed class GetAllSalesSpec : BaseSpecification<SaleEntity>
 {
-    public GetAllSalesSpec(GetSalesQueryFilters filters, bool withPagination, List<Guid> accessibleFarmIds)
+    public GetAllSalesSpec(GetSalesQueryFilters filters, bool withPagination, List<Guid> accessibleFarmIds, bool isAdmin)
     {
-        EnsureExists();
+        EnsureExists(filters.ShowDeleted, isAdmin);
         DisableTracking();
 
         PopulateFilters(filters);

@@ -1,4 +1,6 @@
-export interface ExpenseProductionListModel {
+import type { AuditFields } from "../../../common/interfaces/audit-fields";
+
+export interface ExpenseProductionListModel extends AuditFields {
   id: string;
   farmId: string;
   cycleId: string;

@@ -18,6 +18,11 @@ public class ExpenseAdvanceRowDto
     public string Comment { get; init; }
     public string FilePath { get; init; }
     public DateTime DateCreatedUtc { get; init; }
+    public string CreatedByName { get; init; }
+    public DateTime? DateModifiedUtc { get; init; }
+    public string ModifiedByName { get; init; }
+    public DateTime? DateDeletedUtc { get; init; }
+    public string DeletedByName { get; init; }
     
     /// <summary>
     /// Priorytet obliczany tylko dla wydatków (Expense).

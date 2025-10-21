@@ -1,4 +1,4 @@
-﻿using Ardalis.Specification;
+using Ardalis.Specification;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.HatcheryAggregate.Entities;
 
@@ -6,9 +6,9 @@ namespace FarmsManager.Application.Queries.Hatcheries.Prices;
 
 public sealed class GetAllHatcheryPricesSpec : BaseSpecification<HatcheryPriceEntity>
 {
-    public GetAllHatcheryPricesSpec(GetHatcheryPricesQueryFilters filters, bool withPagination)
+    public GetAllHatcheryPricesSpec(GetHatcheryPricesQueryFilters filters, bool withPagination, bool isAdmin)
     {
-        EnsureExists();
+        EnsureExists(filters.ShowDeleted, isAdmin);
         DisableTracking();
 
         PopulateFilters(filters);

@@ -24,6 +24,7 @@ export const loadFiltersFromLocalStorage =
 export const defaultFilters: ExpensesAdvancesFilterPaginationModel = {
   dateSince: "",
   dateTo: "",
+  showDeleted: false,
   page: 0,
   pageSize: 10,
 };
@@ -93,6 +94,7 @@ export enum ExpensesAdvancesOrderType {
 export interface ExpensesAdvancesFilter {
   dateSince: string;
   dateTo: string;
+  showDeleted?: boolean;
 }
 
 export interface ExpensesAdvancesFilterPaginationModel

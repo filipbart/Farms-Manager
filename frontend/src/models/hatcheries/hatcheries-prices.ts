@@ -1,4 +1,6 @@
-export interface HatcheryPriceListModel {
+import type { AuditFields } from "../../common/interfaces/audit-fields";
+
+export interface HatcheryPriceListModel extends AuditFields {
   id: string;
   hatcheryName: string;
   price: number;

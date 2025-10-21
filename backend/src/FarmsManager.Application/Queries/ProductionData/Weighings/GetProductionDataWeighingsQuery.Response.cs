@@ -1,4 +1,4 @@
-﻿using FarmsManager.Application.Common;
+using FarmsManager.Application.Common;
 
 namespace FarmsManager.Application.Queries.ProductionData.Weighings;
 
@@ -31,6 +31,11 @@ public class ProductionDataWeighingRowDto
     public int? Weighing5Day { get; init; }
     public decimal? Weighing5Weight { get; init; }
     public decimal? Weighing5Deviation { get; set; }
+    public string CreatedByName { get; init; }
+    public DateTime? DateModifiedUtc { get; init; }
+    public string ModifiedByName { get; init; }
+    public DateTime? DateDeletedUtc { get; init; }
+    public string DeletedByName { get; init; }
 }
 
 public class GetProductionDataWeighingsQueryResponse : PaginationModel<ProductionDataWeighingRowDto>;

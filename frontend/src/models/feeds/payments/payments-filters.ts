@@ -27,6 +27,7 @@ const getInitialFilters = (): FeedsPaymentsFilterPaginationModel => {
     farmIds: [],
     cycles: [],
     status: undefined,
+    showDeleted: false,
     page: 0,
     pageSize: 10,
   };
@@ -85,6 +86,7 @@ export default interface FeedsPaymentsFilter {
   farmIds: string[];
   cycles: CycleDictModel[];
   status?: string;
+  showDeleted?: boolean;
 }
 
 export interface FeedsPaymentsFilterPaginationModel

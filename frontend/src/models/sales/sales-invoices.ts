@@ -1,4 +1,6 @@
-export interface SalesInvoiceListModel {
+import type { AuditFields } from "../../common/interfaces/audit-fields";
+
+export interface SalesInvoiceListModel extends AuditFields {
   id: string;
   cycleId: string;
   cycleText: string;

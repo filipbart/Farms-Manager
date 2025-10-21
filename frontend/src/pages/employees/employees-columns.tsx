@@ -8,15 +8,18 @@ import type {
 } from "../../models/employees/employees";
 import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
 import ActionsCell from "../../components/datagrid/actions-cell";
+import { getAuditColumns } from "../../utils/audit-columns-helper";
 
 interface GetEmployeesColumnsProps {
   deleteEmployee: (id: string) => void;
+  isAdmin?: boolean;
 }
 
 export const getEmployeesColumns = ({
   deleteEmployee,
+  isAdmin = false,
 }: GetEmployeesColumnsProps): GridColDef<EmployeeListModel>[] => {
-  return [
+  const baseColumns: GridColDef<EmployeeListModel>[] = [
     {
       field: "farmName",
       headerName: "Ferma",
@@ -127,4 +130,9 @@ export const getEmployeesColumns = ({
       },
     },
   ];
+
+  // Dodaj kolumny audytowe dla admina
+  const auditColumns = getAuditColumns<EmployeeListModel>(isAdmin);
+  
+  return [...baseColumns, ...auditColumns];
 };

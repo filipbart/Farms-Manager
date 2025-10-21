@@ -32,6 +32,7 @@ const getInitialFilters = (): EmployeePayslipsFilterPaginationModel => {
     cycles: [],
     searchPhrase: "",
     payrollPeriod: undefined,
+    showDeleted: false,
     page: 0,
     pageSize: 10,
   };
@@ -120,6 +121,7 @@ export interface EmployeePayslipsFilter {
   cycles: string[];
   searchPhrase?: string;
   payrollPeriod?: PayrollPeriod;
+  showDeleted?: boolean;
 }
 
 export interface EmployeePayslipsFilterPaginationModel

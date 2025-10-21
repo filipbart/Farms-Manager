@@ -1,6 +1,7 @@
-﻿using Ardalis.Specification;
+using Ardalis.Specification;
 using FarmsManager.Application.Common;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Extensions;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Application.Specifications.Users;
@@ -37,22 +38,23 @@ public class GetAllFarmsQueryHandler : IRequestHandler<GetAllFarmsQuery, BaseRes
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
         var accessibleFarmIds = user.AccessibleFarmIds;
+        var isAdmin = user.IsAdmin;
 
-        var items = await _farmRepository.ListAsync<FarmRowDto>(new GetAllFarmsSpec(accessibleFarmIds),
+        var items = await _farmRepository.ListAsync<FarmRowDto>(new GetAllFarmsSpec(accessibleFarmIds, isAdmin),
             cancellationToken);
         return BaseResponse.CreateResponse(new GetAllFarmsQueryResponse
         {
             TotalRows = items.Count,
-            Items = items
+            Items = items.ClearAdminData(isAdmin)
         });
     }
 }
 
 public sealed class GetAllFarmsSpec : BaseSpecification<FarmEntity>
 {
-    public GetAllFarmsSpec(List<Guid> accessibleFarmIds)
+    public GetAllFarmsSpec(List<Guid> accessibleFarmIds, bool isAdmin, bool? showDeleted = null)
     {
-        EnsureExists();
+        EnsureExists(showDeleted, isAdmin);
         if (accessibleFarmIds is not null && accessibleFarmIds.Count != 0)
         {
             Query.Where(t => accessibleFarmIds.Contains(t.Id));

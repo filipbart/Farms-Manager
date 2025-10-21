@@ -32,6 +32,7 @@ export const defaultFilters: ExpensesProductionsFilterPaginationModel = {
   dateSince: "",
   dateTo: "",
   invoiceNumber: "",
+  showDeleted: false,
   page: 0,
   pageSize: 10,
 };
@@ -91,6 +92,7 @@ export default interface ExpensesProductionsFilter {
   dateSince: string;
   dateTo: string;
   invoiceNumber: string;
+  showDeleted?: boolean;
 }
 
 export interface ExpensesProductionsFilterPaginationModel

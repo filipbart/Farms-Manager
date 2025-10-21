@@ -1,5 +1,6 @@
 using AutoMapper;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Extensions;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models.Employees;
 using FarmsManager.Application.Specifications.Users;
@@ -33,14 +34,15 @@ public class GetEmployeesQueryHandler : IRequestHandler<GetEmployeesQuery, BaseR
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
         var accessibleFarmIds = user.AccessibleFarmIds;
+        var isAdmin = user.IsAdmin;
 
         var data = await _employeeRepository.ListAsync(
-            new GetAllEmployeesSpec(request.Filters, true, accessibleFarmIds), cancellationToken);
+            new GetAllEmployeesSpec(request.Filters, true, accessibleFarmIds, isAdmin), cancellationToken);
 
         var count = await _employeeRepository.CountAsync(
-            new GetAllEmployeesSpec(request.Filters, false, accessibleFarmIds), cancellationToken);
+            new GetAllEmployeesSpec(request.Filters, false, accessibleFarmIds, isAdmin), cancellationToken);
 
-        var items = _mapper.Map<List<EmployeeRowDto>>(data);
+        var items = _mapper.Map<List<EmployeeRowDto>>(data).ClearAdminData(isAdmin);
 
         return BaseResponse.CreateResponse(new GetEmployeesQueryResponse
         {

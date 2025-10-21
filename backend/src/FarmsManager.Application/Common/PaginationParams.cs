@@ -1,9 +1,10 @@
-﻿namespace FarmsManager.Application.Common;
+namespace FarmsManager.Application.Common;
 
 public record PaginationParams
 {
     public int Page { get; set; } = 0;
     public int PageSize { get; set; } = 10;
+    public bool? ShowDeleted { get; set; }
 
     public int Skip => Page * PageSize;
 }

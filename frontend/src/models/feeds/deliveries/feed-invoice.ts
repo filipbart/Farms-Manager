@@ -27,7 +27,9 @@ export interface SaveFeedInvoiceDto {
   data: FeedInvoiceData;
 }
 
-export interface FeedDeliveryListModel {
+import type { AuditFields } from "../../../common/interfaces/audit-fields";
+
+export interface FeedDeliveryListModel extends AuditFields {
   id: string;
   cycleId: string;
   cycleText: string;

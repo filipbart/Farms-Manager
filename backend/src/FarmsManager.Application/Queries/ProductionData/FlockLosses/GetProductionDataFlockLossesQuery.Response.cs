@@ -30,6 +30,11 @@ public class ProductionDataFlockLossRowDto
     public int? FlockLoss4Day { get; init; }
     public int? FlockLoss4Quantity { get; init; }
     public decimal? FlockLoss4Percentage { get; init; }
+    public string CreatedByName { get; init; }
+    public DateTime? DateModifiedUtc { get; init; }
+    public string ModifiedByName { get; init; }
+    public DateTime? DateDeletedUtc { get; init; }
+    public string DeletedByName { get; init; }
 }
 
 public class GetProductionDataFlockLossesQueryResponse : PaginationModel<ProductionDataFlockLossRowDto>;

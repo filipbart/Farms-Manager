@@ -1,4 +1,4 @@
-﻿using FarmsManager.Application.Common;
+using FarmsManager.Application.Common;
 using FarmsManager.Application.Extensions;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Enums;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Models;
@@ -34,6 +34,11 @@ public class SaleRowDto
     public bool IsSentToIrz { get; init; }
     public string DocumentNumber { get; init; }
     public string DirectoryPath { get; init; }
+    public string CreatedByName { get; init; }
+    public DateTime? DateModifiedUtc { get; init; }
+    public string ModifiedByName { get; init; }
+    public DateTime? DateDeletedUtc { get; init; }
+    public string DeletedByName { get; init; }
 }
 
 public class GetSalesQueryResponse : PaginationModel<SaleRowDto>;

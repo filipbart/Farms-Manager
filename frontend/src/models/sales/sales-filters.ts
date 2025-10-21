@@ -30,6 +30,7 @@ const getInitialFilters = (): SalesFilterPaginationModel => {
     slaughterhouseIds: [],
     dateSince: "",
     dateTo: "",
+    showDeleted: false,
     page: 0,
     pageSize: 10,
   };
@@ -90,6 +91,7 @@ interface SalesFilter {
   slaughterhouseIds: string[];
   dateSince: string;
   dateTo: string;
+  showDeleted?: boolean;
 }
 
 export interface SalesFilterPaginationModel

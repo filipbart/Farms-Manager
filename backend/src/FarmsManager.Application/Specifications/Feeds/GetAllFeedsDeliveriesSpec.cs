@@ -1,4 +1,4 @@
-﻿using Ardalis.Specification;
+using Ardalis.Specification;
 using FarmsManager.Application.Queries.Feeds;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
 using FarmsManager.Shared.Extensions;
@@ -8,9 +8,9 @@ namespace FarmsManager.Application.Specifications.Feeds;
 
 public sealed class GetAllFeedsDeliveriesSpec : BaseSpecification<FeedInvoiceEntity>
 {
-    public GetAllFeedsDeliveriesSpec(GetFeedsDeliveriesQueryFilters filters, List<Guid> accessibleFarmIds)
+    public GetAllFeedsDeliveriesSpec(GetFeedsDeliveriesQueryFilters filters, List<Guid> accessibleFarmIds, bool isAdmin)
     {
-        EnsureExists();
+        EnsureExists(filters.ShowDeleted, isAdmin);
         DisableTracking();
 
         PopulateFilters(filters);

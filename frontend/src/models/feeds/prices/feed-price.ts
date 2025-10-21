@@ -1,4 +1,6 @@
-export interface FeedPriceListModel {
+import type { AuditFields } from "../../../common/interfaces/audit-fields";
+
+export interface FeedPriceListModel extends AuditFields {
   id: string;
   farmId: string;
   farmName: string;

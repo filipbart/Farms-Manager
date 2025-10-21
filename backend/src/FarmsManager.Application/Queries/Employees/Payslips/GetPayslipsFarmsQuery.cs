@@ -1,6 +1,7 @@
-﻿using AutoMapper;
+using AutoMapper;
 using FarmsManager.Application.Common;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Extensions;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Queries.Farms;
 using FarmsManager.Application.Specifications.Users;
@@ -61,8 +62,9 @@ public class
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var user = await _userRepository.GetAsync(new UserByIdSpec(userId), cancellationToken);
         var accessibleFarmIds = user.AccessibleFarmIds;
+        var isAdmin = user.IsAdmin;
 
-        var items = await _farmRepository.ListAsync<FarmPayslipRowModel>(new GetAllFarmsSpec(accessibleFarmIds),
+        var items = await _farmRepository.ListAsync<FarmPayslipRowModel>(new GetAllFarmsSpec(accessibleFarmIds, isAdmin),
             cancellationToken);
         return BaseResponse.CreateResponse(new GetPayslipsFarmsQueryResponse
         {

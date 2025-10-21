@@ -1,4 +1,6 @@
-export interface ProductionDataWeighingListModel {
+import type { AuditFields } from "../../common/interfaces/audit-fields";
+
+export interface ProductionDataWeighingListModel extends AuditFields {
   id: string;
   dateCreatedUtc: string;
 

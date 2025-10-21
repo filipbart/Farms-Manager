@@ -4,7 +4,8 @@ export type FilterType =
   | "number"
   | "text"
   | "select"
-  | "multiSelectSearch";
+  | "multiSelectSearch"
+  | "checkbox";
 
 interface BaseFilterConfig<K extends string> {
   key: K;
@@ -42,10 +43,15 @@ export interface TextFilter<K extends string> extends BaseFilterConfig<K> {
   type: "text";
 }
 
+export interface CheckboxFilter<K extends string> extends BaseFilterConfig<K> {
+  type: "checkbox";
+}
+
 export type FilterConfig<K extends string = string> =
   | MultiSelectFilter<K>
   | SelectFilter<K>
   | DateFilter<K>
   | NumberFilter<K>
   | TextFilter<K>
-  | MultiSelectSearchFilter<K>;
+  | MultiSelectSearchFilter<K>
+  | CheckboxFilter<K>;

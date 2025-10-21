@@ -1,4 +1,6 @@
-export interface EmployeeListModel {
+import type { AuditFields } from "../../common/interfaces/audit-fields";
+
+export interface EmployeeListModel extends AuditFields {
   id: string;
   farmName: string;
   fullName: string;

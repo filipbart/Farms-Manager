@@ -1,4 +1,4 @@
-﻿using Ardalis.Specification;
+using Ardalis.Specification;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
 using LinqKit;
@@ -8,9 +8,9 @@ namespace FarmsManager.Application.Queries.Insertions;
 public sealed class GetAllInsertionsSpec : BaseSpecification<InsertionEntity>
 {
     public GetAllInsertionsSpec(GetInsertionsQueryFilters filters, bool withPagination,
-        List<Guid> accessibleFarmIds)
+        List<Guid> accessibleFarmIds, bool isAdmin)
     {
-        EnsureExists();
+        EnsureExists(filters.ShowDeleted, isAdmin);
         DisableTracking();
 
         PopulateFilters(filters);

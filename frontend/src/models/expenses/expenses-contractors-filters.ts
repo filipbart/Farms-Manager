@@ -22,6 +22,7 @@ export const loadFiltersFromLocalStorage =
 const getInitialFilters = (): ExpensesContractorsFilters => {
   const defaultFilters: ExpensesContractorsFilters = {
     searchPhrase: "",
+    showDeleted: false,
   };
 
   const savedFilters = loadFiltersFromLocalStorage();
@@ -70,4 +71,5 @@ export function filterReducer(
 
 export interface ExpensesContractorsFilters {
   searchPhrase: string;
+  showDeleted?: boolean;
 }

@@ -3,7 +3,9 @@ export interface SaleOtherExtras {
   value: number;
 }
 
-export interface SaleListModel {
+import type { AuditFields } from "../../common/interfaces/audit-fields";
+
+export interface SaleListModel extends AuditFields {
   id: string;
   cycleId: string;
   cycleText: string;

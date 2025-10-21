@@ -1,4 +1,4 @@
-﻿using Ardalis.Specification;
+using Ardalis.Specification;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.ProductionDataAggregate.Entities;
 using LinqKit;
@@ -7,9 +7,9 @@ namespace FarmsManager.Application.Queries.ProductionData.Weighings;
 
 public sealed class GetAllProductionDataWeighingsSpec : BaseSpecification<ProductionDataWeighingEntity>
 {
-    public GetAllProductionDataWeighingsSpec(GetProductionDataWeighingsQueryFilters filters, bool withPagination, List<Guid> accessibleFarmIds)
+    public GetAllProductionDataWeighingsSpec(GetProductionDataWeighingsQueryFilters filters, bool withPagination, List<Guid> accessibleFarmIds, bool isAdmin)
     {
-        EnsureExists();
+        EnsureExists(filters.ShowDeleted, isAdmin);
         DisableTracking();
 
         Query.Include(t => t.Farm);

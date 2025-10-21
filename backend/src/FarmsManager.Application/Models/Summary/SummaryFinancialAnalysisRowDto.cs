@@ -1,4 +1,4 @@
-﻿namespace FarmsManager.Application.Models.Summary;
+namespace FarmsManager.Application.Models.Summary;
 
 public class SummaryFinancialAnalysisRowDto
 {
