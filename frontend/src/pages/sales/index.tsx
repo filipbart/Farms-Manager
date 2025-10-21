@@ -31,8 +31,11 @@ import {
   getSortOptionsFromGridModel,
   initializeFiltersFromLocalStorage,
 } from "../../utils/grid-state-helper";
+import { useAuth } from "../../auth/useAuth";
 
 const SalesPage: React.FC = () => {
+  const { userData } = useAuth();
+  const isAdmin = userData?.isAdmin ?? false;
   const [filters, dispatch] = useReducer(
     filterReducer,
     initialFilters,
@@ -156,8 +159,9 @@ const SalesPage: React.FC = () => {
         dispatch,
         filters,
         uniqueExtraNames,
+        isAdmin,
       }),
-    [dispatch, filters, downloadDirectoryPath, uniqueExtraNames]
+    [uniqueExtraNames, downloadDirectoryPath, isAdmin]
   );
 
   return (
@@ -183,7 +187,7 @@ const SalesPage: React.FC = () => {
       </Box>
 
       <FiltersForm
-        config={getSaleFiltersConfig(dictionary, uniqueCycles, filters)}
+        config={getSaleFiltersConfig(dictionary, uniqueCycles, filters, isAdmin)}
         filters={filters}
         dispatch={dispatch}
       />

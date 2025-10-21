@@ -23,7 +23,7 @@ import { getExpenseProductionColumns } from "./expenses-production-columns";
 import NoRowsOverlay from "../../../components/datagrid/custom-norows";
 import LoadingButton from "../../../components/common/loading-button";
 import { mapExpenseProductionOrderTypeToField } from "../../../common/helpers/expenses-productions-order-type-helper";
-import { getExpensesProductionsFiltersConfig } from "./filter-config.expenses-production";
+import { getExpensesProductionFiltersConfig } from "./filter-config.expenses-production";
 import AddExpenseProductionModal from "../../../components/modals/expenses/production/add-expense-production-modal";
 import EditExpenseProductionModal from "../../../components/modals/expenses/production/edit-expense-production-modal";
 import UploadExpenseInvoicesModal from "../../../components/modals/expenses/production/upload-expense-invoices-modal";
@@ -37,8 +37,11 @@ import {
   getSortOptionsFromGridModel,
   initializeFiltersFromLocalStorage,
 } from "../../../utils/grid-state-helper";
+import { useAuth } from "../../../auth/useAuth";
 
 const ExpenseProductionPage: React.FC = () => {
+  const { userData } = useAuth();
+  const isAdmin = userData?.isAdmin ?? false;
   const [filters, dispatch] = useReducer(
     filterReducer,
     initialFilters,
@@ -218,8 +221,9 @@ const ExpenseProductionPage: React.FC = () => {
         setIsEditModalOpen,
         downloadExpenseProductionFile,
         downloadingFilePath,
+        isAdmin,
       }),
-    []
+    [isAdmin, downloadingFilePath]
   );
 
   const handleCloseSaveInvoicesModal = () => {
@@ -302,7 +306,12 @@ const ExpenseProductionPage: React.FC = () => {
       </Box>
 
       <FiltersForm
-        config={getExpensesProductionsFiltersConfig(dictionary, uniqueCycles)}
+        config={getExpensesProductionFiltersConfig(
+          dictionary,
+          uniqueCycles,
+          filters,
+          isAdmin
+        )}
         filters={filters}
         dispatch={dispatch}
       />

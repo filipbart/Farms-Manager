@@ -5,6 +5,8 @@ import SaleSendToIrzCell from "../../components/datagrid/sale-send-to-irz-cell";
 import ActionsCell from "../../components/datagrid/actions-cell";
 import FileDownloadCell from "../../components/datagrid/file-download-cell";
 import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
+import { getAuditColumns } from "../../utils/audit-columns-helper";
+import type { SaleListModel } from "../../models/sales/sales";
 
 // Zaktualizowano interfejs propsów, aby przyjmował `uniqueExtraNames`
 interface GetSalesColumnsProps {
@@ -15,7 +17,8 @@ interface GetSalesColumnsProps {
   downloadDirectoryPath: string | null;
   dispatch: any;
   filters: any;
-  uniqueExtraNames: string[]; // Nowa właściwość
+  uniqueExtraNames: string[];
+  isAdmin?: boolean;
 }
 
 export const getSalesColumns = ({
@@ -26,7 +29,8 @@ export const getSalesColumns = ({
   downloadDirectoryPath,
   dispatch,
   filters,
-  uniqueExtraNames, // Nowa właściwość
+  uniqueExtraNames,
+  isAdmin = false,
 }: GetSalesColumnsProps): GridColDef[] => {
   // Kolumny, które zawsze pojawiają się na początku
   const staticColumns: GridColDef[] = [
@@ -217,6 +221,9 @@ export const getSalesColumns = ({
     },
   ];
 
+  // Dodaj kolumny audytowe dla admina
+  const auditColumns = getAuditColumns<SaleListModel>(isAdmin);
+
   // Połączenie wszystkich kolumn w jedną listę
-  return [...staticColumns, ...extraColumns, ...finalColumns];
+  return [...staticColumns, ...extraColumns, ...finalColumns, ...auditColumns];
 };

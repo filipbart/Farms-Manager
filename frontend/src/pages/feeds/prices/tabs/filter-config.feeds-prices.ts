@@ -7,48 +7,62 @@ import type { FeedsPricesFilterPaginationModel } from "../../../../models/feeds/
 export const getFeedsPricesFiltersConfig = (
   dictionary: FeedsDictionary | undefined,
   uniqueCycles: CycleDictModel[],
-  feedsNames: FeedsNamesRow[]
-): FilterConfig<keyof FeedsPricesFilterPaginationModel>[] => [
-  {
-    key: "farmIds",
-    label: "Ferma",
-    type: "multiSelect",
-    options:
-      dictionary?.farms.map((farm) => ({
-        value: farm.id,
-        label: farm.name,
-      })) || [],
-    disabled: !dictionary,
-  },
-  {
-    key: "feedNames",
-    label: "Nazwa paszy",
-    type: "multiSelect",
-    options:
-      feedsNames.map((feed) => ({
-        value: feed.name,
-        label: feed.name,
-      })) || [],
-    disabled: feedsNames.length === 0,
-  },
-  {
-    key: "cycles",
-    label: "Identyfikator (cykl)",
-    type: "multiSelect",
-    options: uniqueCycles.map((cycle) => ({
-      value: `${cycle.identifier}-${cycle.year}`,
-      label: `${cycle.identifier}/${cycle.year}`,
-    })),
-    disabled: !dictionary,
-  },
-  {
-    key: "dateSince",
-    label: "Data od",
-    type: "date",
-  },
-  {
-    key: "dateTo",
-    label: "Data do",
-    type: "date",
-  },
-];
+  filters: FeedsPricesFilterPaginationModel,
+  feedsNames: FeedsNamesRow[],
+  isAdmin: boolean = false
+): FilterConfig<keyof FeedsPricesFilterPaginationModel>[] => {
+  const baseFilters: FilterConfig<keyof FeedsPricesFilterPaginationModel>[] = [
+    {
+      key: "farmIds",
+      label: "Ferma",
+      type: "multiSelect",
+      options:
+        dictionary?.farms.map((farm) => ({
+          value: farm.id,
+          label: farm.name,
+        })) || [],
+      disabled: !dictionary,
+    },
+    {
+      key: "feedNames",
+      label: "Nazwa paszy",
+      type: "multiSelect",
+      options:
+        feedsNames.map((feed) => ({
+          value: feed.name,
+          label: feed.name,
+        })) || [],
+      disabled: feedsNames.length === 0,
+    },
+    {
+      key: "cycles",
+      label: "Identyfikator (cykl)",
+      type: "multiSelect",
+      options: uniqueCycles.map((cycle) => ({
+        value: `${cycle.identifier}-${cycle.year}`,
+        label: `${cycle.identifier}/${cycle.year}`,
+      })),
+      disabled: !dictionary,
+    },
+    {
+      key: "dateSince",
+      label: "Data od",
+      type: "date",
+    },
+    {
+      key: "dateTo",
+      label: "Data do",
+      type: "date",
+    },
+  ];
+
+  if (isAdmin) {
+    baseFilters.push({
+      key: "showDeleted",
+      label: "Pokaż usunięte",
+      type: "checkbox",
+    });
+  }
+
+  return baseFilters;
+};

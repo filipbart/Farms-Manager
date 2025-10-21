@@ -6,8 +6,10 @@ import type { SalesFilterPaginationModel } from "../../models/sales/sales-filter
 export const getSaleFiltersConfig = (
   dictionary: SalesDictionary | undefined,
   uniqueCycles: CycleDictModel[],
-  filters: SalesFilterPaginationModel
-): FilterConfig<keyof SalesFilterPaginationModel>[] => [
+  filters: SalesFilterPaginationModel,
+  isAdmin: boolean = false
+): FilterConfig<keyof SalesFilterPaginationModel>[] => {
+  const baseFilters: FilterConfig<keyof SalesFilterPaginationModel>[] = [
   {
     key: "farmIds",
     label: "Ferma",
@@ -66,3 +68,14 @@ export const getSaleFiltersConfig = (
     type: "date",
   },
 ];
+
+  if (isAdmin) {
+    baseFilters.push({
+      key: "showDeleted",
+      label: "Pokaż usunięte",
+      type: "checkbox",
+    });
+  }
+
+  return baseFilters;
+};

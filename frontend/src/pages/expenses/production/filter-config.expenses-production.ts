@@ -3,10 +3,13 @@ import type { CycleDictModel } from "../../../models/common/dictionaries";
 import type { ExpensesProductionsDictionary } from "../../../models/expenses/production/expenses-productions-dictionary";
 import type { ExpensesProductionsFilterPaginationModel } from "../../../models/expenses/production/expenses-productions-filters";
 
-export const getExpensesProductionsFiltersConfig = (
+export const getExpensesProductionFiltersConfig = (
   dictionary: ExpensesProductionsDictionary | undefined,
-  uniqueCycles: CycleDictModel[]
-): FilterConfig<keyof ExpensesProductionsFilterPaginationModel>[] => [
+  uniqueCycles: CycleDictModel[],
+  filters: ExpensesProductionsFilterPaginationModel,
+  isAdmin: boolean = false
+): FilterConfig<keyof ExpensesProductionsFilterPaginationModel>[] => {
+  const baseFilters: FilterConfig<keyof ExpensesProductionsFilterPaginationModel>[] = [
   {
     key: "farmIds",
     label: "Ferma",
@@ -66,3 +69,14 @@ export const getExpensesProductionsFiltersConfig = (
     type: "text",
   },
 ];
+
+  if (isAdmin) {
+    baseFilters.push({
+      key: "showDeleted",
+      label: "Pokaż usunięte",
+      type: "checkbox",
+    });
+  }
+
+  return baseFilters;
+};

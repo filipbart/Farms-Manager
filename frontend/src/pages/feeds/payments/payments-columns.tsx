@@ -5,19 +5,23 @@ import ActionsCell from "../../../components/datagrid/actions-cell";
 import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
 import { Button, Chip } from "@mui/material";
 import { CommentCell } from "../../../components/datagrid/comment-cell";
+import { getAuditColumns } from "../../../utils/audit-columns-helper";
+import type { FeedPaymentListModel } from "../../../models/feeds/payments/payment";
 
 export const getFeedsPaymentsColumns = ({
   deleteFeedPayment,
   downloadPaymentFile,
   downloadFilePath,
   onMarkAsCompleted,
+  isAdmin = false,
 }: {
   deleteFeedPayment: (id: string) => void;
   downloadPaymentFile: (path: string) => void;
   downloadFilePath: string | null;
   onMarkAsCompleted: (id: string) => void;
+  isAdmin?: boolean;
 }): GridColDef[] => {
-  return [
+  const baseColumns: GridColDef[] = [
     {
       field: "cycleText",
       headerName: "Identyfikator",
@@ -123,4 +127,7 @@ export const getFeedsPaymentsColumns = ({
       },
     },
   ];
+
+  const auditColumns = getAuditColumns<FeedPaymentListModel>(isAdmin);
+  return [...baseColumns, ...auditColumns];
 };

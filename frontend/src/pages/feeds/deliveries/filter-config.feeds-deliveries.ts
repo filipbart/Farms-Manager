@@ -8,8 +8,10 @@ export const getFeedsDeliveriesFiltersConfig = (
   dictionary: FeedsDictionary | undefined,
   uniqueCycles: CycleDictModel[],
   filters: FeedsDeliveriesFilterPaginationModel,
-  feedsNames: FeedsNamesRow[]
-): FilterConfig<keyof FeedsDeliveriesFilterPaginationModel>[] => [
+  feedsNames: FeedsNamesRow[],
+  isAdmin: boolean = false
+): FilterConfig<keyof FeedsDeliveriesFilterPaginationModel>[] => {
+  const baseFilters: FilterConfig<keyof FeedsDeliveriesFilterPaginationModel>[] = [
   {
     key: "farmIds",
     label: "Ferma",
@@ -82,3 +84,14 @@ export const getFeedsDeliveriesFiltersConfig = (
     type: "date",
   },
 ];
+
+  if (isAdmin) {
+    baseFilters.push({
+      key: "showDeleted",
+      label: "Pokaż usunięte",
+      type: "checkbox",
+    });
+  }
+
+  return baseFilters;
+};

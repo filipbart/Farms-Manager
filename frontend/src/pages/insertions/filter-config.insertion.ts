@@ -6,8 +6,10 @@ import type { InsertionsFilterPaginationModel } from "../../models/insertions/in
 export const getInsertionFiltersConfig = (
   dictionary: InsertionDictionary | undefined,
   uniqueCycles: CycleDictModel[],
-  filters: InsertionsFilterPaginationModel
-): FilterConfig<keyof InsertionsFilterPaginationModel>[] => [
+  filters: InsertionsFilterPaginationModel,
+  isAdmin: boolean = false
+): FilterConfig<keyof InsertionsFilterPaginationModel>[] => {
+  const baseFilters: FilterConfig<keyof InsertionsFilterPaginationModel>[] = [
   {
     key: "farmIds",
     label: "Ferma",
@@ -66,3 +68,14 @@ export const getInsertionFiltersConfig = (
     type: "date",
   },
 ];
+
+  if (isAdmin) {
+    baseFilters.push({
+      key: "showDeleted",
+      label: "Pokaż usunięte",
+      type: "checkbox",
+    });
+  }
+
+  return baseFilters;
+};

@@ -15,7 +15,7 @@ import {
 import { FeedsService } from "../../../../services/feeds-service";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import { getFeedsPricesFiltersConfig } from "./filter-config.feeds-prices";
-import { getFeedsPriceColumns } from "../price-columns";
+import { getFeedsPricesColumns } from "../price-columns";
 import type { FeedPriceListModel } from "../../../../models/feeds/prices/feed-price";
 import type { PaginateModel } from "../../../../common/interfaces/paginate";
 import EditFeedPriceModal from "../../../../components/modals/feeds/prices/edit-feed-price-modal";
@@ -29,8 +29,11 @@ import {
   initializeFiltersFromLocalStorage,
 } from "../../../../utils/grid-state-helper";
 import { useFeedsNames } from "../../../../hooks/feeds/useFeedsNames";
+import { useAuth } from "../../../../auth/useAuth";
 
 const FeedsPricesTab: React.FC = () => {
+  const { userData } = useAuth();
+  const isAdmin = userData?.isAdmin ?? false;
   const [filters, dispatch] = useReducer(
     filterReducer,
     initialFilters,
@@ -86,12 +89,13 @@ const FeedsPricesTab: React.FC = () => {
 
   const columns = useMemo(
     () =>
-      getFeedsPriceColumns({
+      getFeedsPricesColumns({
         setSelectedFeedPrice,
-        setIsEditModalOpen,
         deleteFeedPrice,
+        setIsEditModalOpen,
+        isAdmin,
       }),
-    []
+    [isAdmin]
   );
 
   const fetchDictionaries = async () => {
@@ -173,7 +177,9 @@ const FeedsPricesTab: React.FC = () => {
         config={getFeedsPricesFiltersConfig(
           dictionary,
           uniqueCycles,
-          feedsNames
+          filters,
+          feedsNames,
+          isAdmin
         )}
         filters={filters}
         dispatch={dispatch}

@@ -1,7 +1,9 @@
 import type { GridColDef } from "@mui/x-data-grid";
-import type { GasConsumptionListModel } from "../../../models/gas/gas-consumptions";
+import dayjs from "dayjs";
 import ActionsCell from "../../../components/datagrid/actions-cell";
 import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
+import { getAuditColumns } from "../../../utils/audit-columns-helper";
+import type { GasConsumptionListModel } from "../../../models/gas/gas-consumptions";
 
 interface GetGasConsumptionsColumnsProps {
   setSelectedGasConsumption: (row: GasConsumptionListModel) => void;
@@ -13,8 +15,14 @@ export const getGasConsumptionsColumns = ({
   setSelectedGasConsumption,
   deleteGasConsumption,
   setIsEditModalOpen,
-}: GetGasConsumptionsColumnsProps): GridColDef<GasConsumptionListModel>[] => {
-  return [
+  isAdmin = false,
+}: {
+  setSelectedGasConsumption: (s: any) => void;
+  deleteGasConsumption: (id: string) => void;
+  setIsEditModalOpen: (v: boolean) => void;
+  isAdmin?: boolean;
+}): GridColDef[] => {
+  const baseColumns: GridColDef[] = [
     {
       field: "cycleText",
       headerName: "Identyfikator",
@@ -64,4 +72,7 @@ export const getGasConsumptionsColumns = ({
       },
     },
   ];
+
+  const auditColumns = getAuditColumns<GasConsumptionListModel>(isAdmin);
+  return [...baseColumns, ...auditColumns];
 };

@@ -40,8 +40,11 @@ import {
 } from "../../../utils/grid-state-helper";
 import { useFeedsNames } from "../../../hooks/feeds/useFeedsNames";
 import { getPriorityClassName } from "../../../utils/priority-helper";
+import { useAuth } from "../../../auth/useAuth";
 
 const FeedsDeliveriesPage: React.FC = () => {
+  const { userData } = useAuth();
+  const isAdmin = userData?.isAdmin ?? false;
   const [filters, dispatch] = useReducer(
     filterReducer,
     initialFilters,
@@ -263,8 +266,9 @@ const FeedsDeliveriesPage: React.FC = () => {
         downloadInvoiceFile,
         downloadCorrectionFile,
         downloadFilePath,
+        isAdmin,
       }),
-    [downloadFilePath]
+    [downloadFilePath, isAdmin]
   );
 
   const fetchDictionaries = async () => {
@@ -432,7 +436,8 @@ const FeedsDeliveriesPage: React.FC = () => {
           dictionary,
           uniqueCycles,
           filters,
-          feedsNames
+          feedsNames,
+          isAdmin
         )}
         filters={filters}
         dispatch={dispatch}

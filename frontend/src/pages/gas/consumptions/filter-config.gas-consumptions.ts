@@ -5,8 +5,10 @@ import type { GasConsumptionsDictionary } from "../../../models/gas/gas-dictiona
 
 export const getGasConsumptionsFiltersConfig = (
   dictionary: GasConsumptionsDictionary | undefined,
-  uniqueCycles: CycleDictModel[]
-): FilterConfig<keyof GasConsumptionsFilterPaginationModel>[] => [
+  uniqueCycles: CycleDictModel[],
+  isAdmin: boolean = false
+): FilterConfig<keyof GasConsumptionsFilterPaginationModel>[] => {
+  const baseFilters: FilterConfig<keyof GasConsumptionsFilterPaginationModel>[] = [
   {
     key: "farmIds",
     label: "Ferma",
@@ -29,3 +31,14 @@ export const getGasConsumptionsFiltersConfig = (
     disabled: !dictionary,
   },
 ];
+
+  if (isAdmin) {
+    baseFilters.push({
+      key: "showDeleted",
+      label: "Pokaż usunięte",
+      type: "checkbox",
+    });
+  }
+
+  return baseFilters;
+};

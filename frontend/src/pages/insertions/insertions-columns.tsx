@@ -5,6 +5,8 @@ import InsertionSendToIrzCell from "../../components/datagrid/insertion-send-to-
 import { Box, Tooltip } from "@mui/material";
 import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
+import { getAuditColumns } from "../../utils/audit-columns-helper";
+import type InsertionListModel from "../../models/insertions/insertions";
 
 export const getInsertionsColumns = ({
   setSelectedInsertion,
@@ -12,14 +14,16 @@ export const getInsertionsColumns = ({
   setIsEditModalOpen,
   dispatch,
   filters,
+  isAdmin = false,
 }: {
   setSelectedInsertion: (s: any) => void;
   deleteInsertion: (id: string) => void;
   setIsEditModalOpen: (v: boolean) => void;
   dispatch: any;
   filters: any;
+  isAdmin?: boolean;
 }): GridColDef[] => {
-  return [
+  const baseColumns: GridColDef[] = [
     { field: "cycleText", headerName: "Identyfikator", flex: 1 },
     { field: "farmName", headerName: "Ferma", flex: 1 },
     { field: "henhouseName", headerName: "Kurnik", flex: 1 },
@@ -151,4 +155,7 @@ export const getInsertionsColumns = ({
     },
     { field: "dateCreatedUtc", headerName: "Data utworzenia wpisu", flex: 1 },
   ];
+
+  const auditColumns = getAuditColumns<InsertionListModel>(isAdmin);
+  return [...baseColumns, ...auditColumns];
 };

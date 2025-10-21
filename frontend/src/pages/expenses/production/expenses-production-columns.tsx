@@ -5,6 +5,7 @@ import ActionsCell from "../../../components/datagrid/actions-cell";
 import FileDownloadCell from "../../../components/datagrid/file-download-cell";
 import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
 import { CommentCell } from "../../../components/datagrid/comment-cell";
+import { getAuditColumns } from "../../../utils/audit-columns-helper";
 
 interface GetExpenseProductionColumnsProps {
   setSelectedExpenseProduction: (row: ExpenseProductionListModel) => void;
@@ -12,6 +13,7 @@ interface GetExpenseProductionColumnsProps {
   setIsEditModalOpen: (isOpen: boolean) => void;
   downloadExpenseProductionFile: (path: string) => void;
   downloadingFilePath: string | null;
+  isAdmin?: boolean;
 }
 
 export const getExpenseProductionColumns = ({
@@ -20,8 +22,9 @@ export const getExpenseProductionColumns = ({
   setIsEditModalOpen,
   downloadExpenseProductionFile,
   downloadingFilePath,
+  isAdmin = false,
 }: GetExpenseProductionColumnsProps): GridColDef<ExpenseProductionListModel>[] => {
-  return [
+  const baseColumns: GridColDef[] = [
     {
       field: "cycleText",
       headerName: "Cykl",
@@ -66,7 +69,6 @@ export const getExpenseProductionColumns = ({
     {
       field: "vatAmount",
       headerName: "Wartość VAT [zł]",
-
       flex: 1,
       type: "number",
       headerAlign: "left",
@@ -141,4 +143,7 @@ export const getExpenseProductionColumns = ({
       renderCell: (params) => <CommentCell value={params.value} />,
     },
   ];
+
+  const auditColumns = getAuditColumns<ExpenseProductionListModel>(isAdmin);
+  return [...baseColumns, ...auditColumns];
 };

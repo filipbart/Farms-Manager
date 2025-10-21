@@ -7,6 +7,8 @@ import { CommentCell } from "../../../components/datagrid/comment-cell";
 import FileDownloadCell from "../../../components/datagrid/file-download-cell";
 import ActionsCell from "../../../components/datagrid/actions-cell";
 import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
+import { getAuditColumns } from "../../../utils/audit-columns-helper";
+import type { FeedDeliveryListModel } from "../../../models/feeds/deliveries/feed-invoice";
 
 export const getFeedsDeliveriesColumns = ({
   setSelectedFeedDelivery,
@@ -17,6 +19,7 @@ export const getFeedsDeliveriesColumns = ({
   downloadInvoiceFile,
   downloadCorrectionFile,
   downloadFilePath,
+  isAdmin = false,
 }: {
   setSelectedFeedDelivery: (s: any) => void;
   setIsEditModalOpen: (v: boolean) => void;
@@ -26,8 +29,9 @@ export const getFeedsDeliveriesColumns = ({
   downloadInvoiceFile: (path: string) => void;
   downloadCorrectionFile: (path: string) => void;
   downloadFilePath: string | null;
+  isAdmin?: boolean;
 }): GridColDef[] => {
-  return [
+  const baseColumns: GridColDef[] = [
     { field: "cycleText", headerName: "Identyfikator", flex: 1 },
     { field: "farmName", headerName: "Ferma", flex: 1 },
     { field: "henhouseName", headerName: "Kurnik", flex: 1 },
@@ -238,4 +242,7 @@ export const getFeedsDeliveriesColumns = ({
     },
     { field: "dateCreatedUtc", headerName: "Data utworzenia wpisu", flex: 1 },
   ];
+
+  const auditColumns = getAuditColumns<FeedDeliveryListModel>(isAdmin);
+  return [...baseColumns, ...auditColumns];
 };

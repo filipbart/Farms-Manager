@@ -2,17 +2,21 @@ import type { GridColDef } from "@mui/x-data-grid";
 import dayjs from "dayjs";
 import ActionsCell from "../../../components/datagrid/actions-cell";
 import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
+import { getAuditColumns } from "../../../utils/audit-columns-helper";
+import type { FeedPriceListModel } from "../../../models/feeds/prices/feed-price";
 
-export const getFeedsPriceColumns = ({
+export const getFeedsPricesColumns = ({
   setSelectedFeedPrice,
-  setIsEditModalOpen,
   deleteFeedPrice,
+  setIsEditModalOpen,
+  isAdmin = false,
 }: {
   setSelectedFeedPrice: (s: any) => void;
-  setIsEditModalOpen: (v: boolean) => void;
   deleteFeedPrice: (id: string) => void;
+  setIsEditModalOpen: (v: boolean) => void;
+  isAdmin?: boolean;
 }): GridColDef[] => {
-  return [
+  const baseColumns: GridColDef[] = [
     { field: "cycleText", headerName: "Identyfikator", flex: 1 },
     { field: "farmName", headerName: "Ferma", flex: 1 },
     {
@@ -57,4 +61,7 @@ export const getFeedsPriceColumns = ({
     },
     { field: "dateCreatedUtc", headerName: "Data utworzenia wpisu", flex: 1 },
   ];
+
+  const auditColumns = getAuditColumns<FeedPriceListModel>(isAdmin);
+  return [...baseColumns, ...auditColumns];
 };

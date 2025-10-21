@@ -9,36 +9,50 @@ import {
 
 export const getFeedsPaymentsFiltersConfig = (
   dictionary: FeedsDictionary | undefined,
-  uniqueCycles: CycleDictModel[]
-): FilterConfig<keyof FeedsPaymentsFilterPaginationModel>[] => [
-  {
-    key: "farmIds",
-    label: "Ferma",
-    type: "multiSelect",
-    options:
-      dictionary?.farms.map((farm) => ({
-        value: farm.id,
-        label: farm.name,
-      })) || [],
-    disabled: !dictionary,
-  },
-  {
-    key: "cycles",
-    label: "Identyfikator (cykl)",
-    type: "multiSelect",
-    options: uniqueCycles.map((cycle) => ({
-      value: `${cycle.identifier}-${cycle.year}`,
-      label: `${cycle.identifier}/${cycle.year}`,
-    })),
-    disabled: !dictionary,
-  },
-  {
-    key: "status",
-    label: "Status",
-    type: "select",
-    options: Object.values(FeedPaymentStatus).map((status) => ({
-      value: status,
-      label: FeedPaymentStatusLabels[status],
-    })),
-  },
-];
+  uniqueCycles: CycleDictModel[],
+  filters: FeedsPaymentsFilterPaginationModel,
+  isAdmin: boolean = false
+): FilterConfig<keyof FeedsPaymentsFilterPaginationModel>[] => {
+  const baseFilters: FilterConfig<keyof FeedsPaymentsFilterPaginationModel>[] = [
+    {
+      key: "farmIds",
+      label: "Ferma",
+      type: "multiSelect",
+      options:
+        dictionary?.farms.map((farm) => ({
+          value: farm.id,
+          label: farm.name,
+        })) || [],
+      disabled: !dictionary,
+    },
+    {
+      key: "cycles",
+      label: "Identyfikator (cykl)",
+      type: "multiSelect",
+      options: uniqueCycles.map((cycle) => ({
+        value: `${cycle.identifier}-${cycle.year}`,
+        label: `${cycle.identifier}/${cycle.year}`,
+      })),
+      disabled: !dictionary,
+    },
+    {
+      key: "status",
+      label: "Status",
+      type: "select",
+      options: [
+        { value: "Niezrealizowany", label: "Niezrealizowany" },
+        { value: "Zrealizowany", label: "Zrealizowany" },
+      ],
+    },
+  ];
+
+  if (isAdmin) {
+    baseFilters.push({
+      key: "showDeleted",
+      label: "Pokaż usunięte",
+      type: "checkbox",
+    });
+  }
+
+  return baseFilters;
+};

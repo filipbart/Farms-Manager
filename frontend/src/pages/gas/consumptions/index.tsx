@@ -28,8 +28,11 @@ import {
   getSortOptionsFromGridModel,
   initializeFiltersFromLocalStorage,
 } from "../../../utils/grid-state-helper";
+import { useAuth } from "../../../auth/useAuth";
 
 const GasConsumptionsPage: React.FC = () => {
+  const { userData } = useAuth();
+  const isAdmin = userData?.isAdmin ?? false;
   const [filters, dispatch] = useReducer(
     filterReducer,
     initialFilters,
@@ -118,8 +121,9 @@ const GasConsumptionsPage: React.FC = () => {
         setSelectedGasConsumption,
         deleteGasConsumption,
         setIsEditModalOpen,
+        isAdmin,
       }),
-    []
+    [isAdmin]
   );
 
   return (
@@ -145,7 +149,7 @@ const GasConsumptionsPage: React.FC = () => {
       </Box>
 
       <FiltersForm
-        config={getGasConsumptionsFiltersConfig(dictionary, uniqueCycles)}
+        config={getGasConsumptionsFiltersConfig(dictionary, uniqueCycles, isAdmin)}
         filters={filters}
         dispatch={dispatch}
       />

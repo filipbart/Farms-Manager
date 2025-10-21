@@ -6,6 +6,7 @@ import { CommentCell } from "../../../components/datagrid/comment-cell";
 import FileDownloadCell from "../../../components/datagrid/file-download-cell";
 import ActionsCell from "../../../components/datagrid/actions-cell";
 import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
+import { getAuditColumns } from "../../../utils/audit-columns-helper";
 
 interface GetGasDeliveriesColumnsProps {
   setSelectedGasDelivery: (row: GasDeliveryListModel) => void;
@@ -13,6 +14,7 @@ interface GetGasDeliveriesColumnsProps {
   setIsEditModalOpen: (isOpen: boolean) => void;
   downloadGasDeliveryFile: (path: string) => void;
   downloadingFilePath: string | null;
+  isAdmin?: boolean;
 }
 
 export const getGasDeliveriesColumns = ({
@@ -21,8 +23,9 @@ export const getGasDeliveriesColumns = ({
   setIsEditModalOpen,
   downloadGasDeliveryFile,
   downloadingFilePath,
+  isAdmin = false,
 }: GetGasDeliveriesColumnsProps): GridColDef<GasDeliveryListModel>[] => {
-  return [
+  const baseColumns: GridColDef[] = [
     {
       field: "farmName",
       headerName: "Ferma",
@@ -150,4 +153,7 @@ export const getGasDeliveriesColumns = ({
       },
     },
   ];
+
+  const auditColumns = getAuditColumns<GasDeliveryListModel>(isAdmin);
+  return [...baseColumns, ...auditColumns];
 };

@@ -29,8 +29,11 @@ import {
   getSortOptionsFromGridModel,
   initializeFiltersFromLocalStorage,
 } from "../../../utils/grid-state-helper";
+import { useAuth } from "../../../auth/useAuth";
 
 const FeedsPaymentsPage: React.FC = () => {
+  const { userData } = useAuth();
+  const isAdmin = userData?.isAdmin ?? false;
   const [filters, dispatch] = useReducer(
     filterReducer,
     initialFilters,
@@ -167,8 +170,9 @@ const FeedsPaymentsPage: React.FC = () => {
         downloadPaymentFile,
         downloadFilePath,
         onMarkAsCompleted: handleMarkAsCompleted,
+        isAdmin,
       }),
-    [downloadFilePath]
+    [downloadFilePath, isAdmin]
   );
 
   useEffect(() => {
@@ -205,7 +209,7 @@ const FeedsPaymentsPage: React.FC = () => {
       </Box>
 
       <FiltersForm
-        config={getFeedsPaymentsFiltersConfig(dictionary, uniqueCycles)}
+        config={getFeedsPaymentsFiltersConfig(dictionary, uniqueCycles, filters, isAdmin)}
         filters={filters}
         dispatch={dispatch}
       />

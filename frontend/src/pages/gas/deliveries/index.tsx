@@ -34,8 +34,11 @@ import {
   getSortOptionsFromGridModel,
   initializeFiltersFromLocalStorage,
 } from "../../../utils/grid-state-helper";
+import { useAuth } from "../../../auth/useAuth";
 
 const GasDeliveriesPage: React.FC = () => {
+  const { userData } = useAuth();
+  const isAdmin = userData?.isAdmin ?? false;
   const [filters, dispatch] = useReducer(
     filterReducer,
     initialFilters,
@@ -150,8 +153,9 @@ const GasDeliveriesPage: React.FC = () => {
         setIsEditModalOpen,
         downloadGasDeliveryFile,
         downloadingFilePath,
+        isAdmin,
       }),
-    [downloadingFilePath]
+    [downloadingFilePath, isAdmin]
   );
 
   const handleCloseSaveInvoicesModal = () => {
@@ -200,7 +204,7 @@ const GasDeliveriesPage: React.FC = () => {
       </Box>
 
       <FiltersForm
-        config={getGasDeliveriesFiltersConfig(dictionary)}
+        config={getGasDeliveriesFiltersConfig(dictionary, isAdmin)}
         filters={filters}
         dispatch={dispatch}
       />
