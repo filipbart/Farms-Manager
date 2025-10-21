@@ -1,4 +1,4 @@
-import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
+import { Box, Button, Checkbox, FormControlLabel, tablePaginationClasses, Typography } from "@mui/material";
 import { DataGridPro, type GridColDef } from "@mui/x-data-grid-pro";
 import { useEffect, useState, useCallback } from "react";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
@@ -16,6 +16,7 @@ import type { AuditFields } from "../../../common/interfaces/audit-fields";
 const UtilizationPlantsPage: React.FC = () => {
   const { userData } = useAuth();
   const isAdmin = userData?.isAdmin ?? false;
+  const [showDeleted, setShowDeleted] = useState(false);
   const [openAddModal, setOpenAddModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [selectedPlant, setSelectedPlant] =
@@ -122,6 +123,20 @@ const UtilizationPlantsPage: React.FC = () => {
           </Button>
         </Box>
       </Box>
+
+      {isAdmin && (
+        <Box mb={2}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={showDeleted}
+                onChange={(e) => setShowDeleted(e.target.checked)}
+              />
+            }
+            label="Pokaż usunięte"
+          />
+        </Box>
+      )}
 
       <Box
         mt={4}

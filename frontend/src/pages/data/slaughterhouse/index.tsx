@@ -1,4 +1,4 @@
-import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
+import { Box, Button, Checkbox, FormControlLabel, tablePaginationClasses, Typography } from "@mui/material";
 import { DataGridPro, type GridColDef } from "@mui/x-data-grid-pro";
 import { useEffect, useState } from "react";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
@@ -17,6 +17,7 @@ const SlaughterhousesPage: React.FC = () => {
   const { userData } = useAuth();
   const isAdmin = userData?.isAdmin ?? false;
   const [loading, setLoading] = useState(false);
+  const [showDeleted, setShowDeleted] = useState(false);
   const [slaughterhouses, setSlaughterhouses] = useState<
     SlaughterhouseRowModel[]
   >([]);
@@ -124,6 +125,20 @@ const SlaughterhousesPage: React.FC = () => {
           </Button>
         </Box>
       </Box>
+
+      {isAdmin && (
+        <Box mb={2}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={showDeleted}
+                onChange={(e) => setShowDeleted(e.target.checked)}
+              />
+            }
+            label="Pokaż usunięte"
+          />
+        </Box>
+      )}
 
       <Box
         mt={4}

@@ -1,6 +1,8 @@
 import {
   Box,
   Button,
+  Checkbox,
+  FormControlLabel,
   MenuItem,
   tablePaginationClasses,
   TextField,
@@ -30,7 +32,7 @@ const HousesPage: React.FC = () => {
   const { farms, loadingFarms, fetchFarms } = useFarms();
   const [henhouses, setHenhouses] = useState<HouseRowModel[]>([]);
   const [chosenFarm, setChosenFarm] = useState<FarmRowModel>();
-
+  const [showDeleted, setShowDeleted] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedHenhouse, setSelectedHenhouse] =
@@ -181,6 +183,20 @@ const HousesPage: React.FC = () => {
           </TextField>
         )}
       </Box>
+
+      {isAdmin && (
+        <Box mb={2}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={showDeleted}
+                onChange={(e) => setShowDeleted(e.target.checked)}
+              />
+            }
+            label="Pokaż usunięte"
+          />
+        </Box>
+      )}
 
       <Box mt={4} sx={{ width: "100%", overflowX: "auto" }}>
         <DataGridPro
