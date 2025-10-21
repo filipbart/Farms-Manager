@@ -306,16 +306,7 @@ const FeedsDeliveriesPage: React.FC = () => {
       await handleApiResponse<PaginateModel<FeedDeliveryListModel>>(
         () => FeedsService.getFeedsDeliveries(filters),
         (data) => {
-          const items = data.responseData?.items ?? [];
-          console.log("🔍 Feeds Deliveries - First 3 items:", items.slice(0, 3));
-          console.log("🎨 Priority check:", items.map(i => ({ 
-            id: i.id, 
-            invoiceNumber: i.invoiceNumber,
-            priority: i.priority,
-            dueDate: i.dueDate,
-            paymentDateUtc: i.paymentDateUtc
-          })));
-          setFeedsDeliveries(items);
+          setFeedsDeliveries(data.responseData?.items ?? []);
           setTotalRows(data.responseData?.totalRows ?? 0);
         },
         undefined,
@@ -502,9 +493,7 @@ const FeedsDeliveriesPage: React.FC = () => {
             if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
               return "aggregated-row";
             }
-            const className = getPriorityClassName(params.row.priority);
-            console.log(`🎨 Row ${params.row.invoiceNumber} - Priority: "${params.row.priority}" -> Class: "${className}"`);
-            return className;
+            return getPriorityClassName(params.row.priority);
           }}
           sx={{
             [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },
@@ -517,23 +506,23 @@ const FeedsDeliveriesPage: React.FC = () => {
                 backgroundColor: "rgba(240, 240, 240, 0.7)",
               },
             },
-            "& .payment-overdue": {
+            "& .payment-overdue .MuiDataGrid-cell": {
               backgroundColor: "rgba(244, 67, 54, 0.1)",
-              "&:hover": {
-                backgroundColor: "rgba(244, 67, 54, 0.15)",
-              },
             },
-            "& .payment-due-soon": {
+            "& .payment-overdue:hover .MuiDataGrid-cell": {
+              backgroundColor: "rgba(244, 67, 54, 0.15)",
+            },
+            "& .payment-due-soon .MuiDataGrid-cell": {
               backgroundColor: "rgba(255, 193, 7, 0.15)",
-              "&:hover": {
-                backgroundColor: "rgba(255, 193, 7, 0.2)",
-              },
             },
-            "& .payment-due-warning": {
+            "& .payment-due-soon:hover .MuiDataGrid-cell": {
+              backgroundColor: "rgba(255, 193, 7, 0.2)",
+            },
+            "& .payment-due-warning .MuiDataGrid-cell": {
               backgroundColor: "rgba(33, 150, 243, 0.1)",
-              "&:hover": {
-                backgroundColor: "rgba(33, 150, 243, 0.15)",
-              },
+            },
+            "& .payment-due-warning:hover .MuiDataGrid-cell": {
+              backgroundColor: "rgba(33, 150, 243, 0.15)",
             },
           }}
           scrollbarSize={17}

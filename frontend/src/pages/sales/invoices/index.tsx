@@ -324,23 +324,23 @@ const SalesInvoicesPage: React.FC = () => {
                 backgroundColor: "rgba(240, 240, 240, 0.7)",
               },
             },
-            "& .payment-overdue": {
+            "& .payment-overdue .MuiDataGrid-cell": {
               backgroundColor: "rgba(244, 67, 54, 0.1)",
-              "&:hover": {
-                backgroundColor: "rgba(244, 67, 54, 0.15)",
-              },
             },
-            "& .payment-due-soon": {
+            "& .payment-overdue:hover .MuiDataGrid-cell": {
+              backgroundColor: "rgba(244, 67, 54, 0.15)",
+            },
+            "& .payment-due-soon .MuiDataGrid-cell": {
               backgroundColor: "rgba(255, 193, 7, 0.15)",
-              "&:hover": {
-                backgroundColor: "rgba(255, 193, 7, 0.2)",
-              },
             },
-            "& .payment-due-warning": {
+            "& .payment-due-soon:hover .MuiDataGrid-cell": {
+              backgroundColor: "rgba(255, 193, 7, 0.2)",
+            },
+            "& .payment-due-warning .MuiDataGrid-cell": {
               backgroundColor: "rgba(33, 150, 243, 0.1)",
-              "&:hover": {
-                backgroundColor: "rgba(33, 150, 243, 0.15)",
-              },
+            },
+            "& .payment-due-warning:hover .MuiDataGrid-cell": {
+              backgroundColor: "rgba(33, 150, 243, 0.15)",
             },
           }}
           sortingMode="server"
