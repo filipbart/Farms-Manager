@@ -278,23 +278,25 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
             ))}
           </TextField>
         </Grid>
-        <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={filters.showDeleted || false}
-                onChange={(e) =>
-                  dispatch({
-                    type: "set",
-                    key: "showDeleted",
-                    value: e.target.checked,
-                  })
-                }
-              />
-            }
-            label="Pokaż usunięte"
-          />
-        </Grid>
+        {isAdmin && (
+          <Grid size={{ xs: 12, sm: 3 }} display="flex" alignItems="center">
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={filters.showDeleted || false}
+                  onChange={(e) =>
+                    dispatch({
+                      type: "set",
+                      key: "showDeleted",
+                      value: e.target.checked,
+                    })
+                  }
+                />
+              }
+              label="Pokaż usunięte"
+            />
+          </Grid>
+        )}
         <Grid
           gap={2}
           size={{ xs: 12, sm: 3 }}
