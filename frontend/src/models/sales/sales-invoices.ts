@@ -1,5 +1,15 @@
 import type { AuditFields } from "../../common/interfaces/audit-fields";
 
+export enum SalesInvoiceStatus {
+  Unrealized = "Unrealized",
+  Realized = "Realized",
+}
+
+export const SalesInvoiceStatusLabels: Record<SalesInvoiceStatus, string> = {
+  [SalesInvoiceStatus.Unrealized]: "Niezrealizowany",
+  [SalesInvoiceStatus.Realized]: "Zrealizowany",
+};
+
 export interface SalesInvoiceListModel extends AuditFields {
   id: string;
   cycleId: string;
@@ -17,6 +27,8 @@ export interface SalesInvoiceListModel extends AuditFields {
   filePath?: string;
   paymentDate?: string;
   priority?: "Low" | "Medium" | "High";
+  status?: SalesInvoiceStatus;
+  comment?: string;
 }
 
 export interface UpdateSalesInvoiceData {

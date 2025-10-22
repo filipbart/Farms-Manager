@@ -1,4 +1,4 @@
-﻿using Ardalis.Specification;
+using Ardalis.Specification;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,5 +12,8 @@ public class GetSaleInvoiceByInvoiceNumberSpec : BaseSpecification<SaleInvoiceEn
         EnsureExists();
         DisableTracking();
         Query.Where(t => EF.Functions.ILike(t.InvoiceNumber, invoiceNumber));
+        Query.Include(t => t.Creator);
+        Query.Include(t => t.Modifier);
+        Query.Include(t => t.Deleter);
     }
 }

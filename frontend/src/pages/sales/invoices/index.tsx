@@ -27,6 +27,7 @@ import UploadSalesInvoicesModal from "../../../components/modals/sales/invoices/
 import SaveSalesInvoicesModal from "../../../components/modals/sales/invoices/save-sales-invoices-modal";
 import EditSaleInvoiceModal from "../../../components/modals/sales/invoices/edit-sale-invoice-modal";
 import BookPaymentModal from "../../../components/modals/sales/invoices/book-payment-modal";
+import MarkInvoiceCompletedModal from "../../../components/modals/sales/invoices/mark-invoice-completed-modal";
 import { NotificationContext } from "../../../context/notification-context";
 import {
   DataGridPremium,
@@ -73,6 +74,8 @@ const SalesInvoicesPage: React.FC = () => {
   });
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isBookingPayment, setIsBookingPayment] = useState(false);
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
+  const [isMarkCompletedModalOpen, setIsMarkCompletedModalOpen] = useState(false);
 
   const { salesInvoices, totalRows, loading, fetchSalesInvoices } =
     useSalesInvoices(filters);
@@ -153,6 +156,38 @@ const SalesInvoicesPage: React.FC = () => {
     }
   };
 
+  const handleMarkAsCompleted = (id: string) => {
+    setSelectedInvoiceId(id);
+    setIsMarkCompletedModalOpen(true);
+  };
+
+  const handleConfirmMarkAsCompleted = async (
+    paymentDate: string,
+    comment: string
+  ) => {
+    if (!selectedInvoiceId) return;
+
+    try {
+      await handleApiResponse(
+        () =>
+          SalesService.markInvoiceAsCompleted(selectedInvoiceId, {
+            paymentDate,
+            comment,
+          }),
+        async () => {
+          toast.success("Faktura została oznaczona jako zrealizowana");
+          setIsMarkCompletedModalOpen(false);
+          setSelectedInvoiceId(null);
+          await fetchSalesInvoices();
+        },
+        undefined,
+        "Błąd podczas oznaczania faktury jako zrealizowanej"
+      );
+    } catch {
+      toast.error("Błąd podczas oznaczania faktury jako zrealizowanej");
+    }
+  };
+
   useEffect(() => {
     const fetchDictionaries = async () => {
       try {
@@ -198,6 +233,7 @@ const SalesInvoicesPage: React.FC = () => {
         downloadSalesInvoiceFile,
         downloadingFilePath,
         isAdmin,
+        onMarkAsCompleted: handleMarkAsCompleted,
       }),
     [downloadingFilePath, isAdmin]
   );
@@ -405,6 +441,15 @@ const SalesInvoicesPage: React.FC = () => {
         loading={isBookingPayment}
         onClose={() => setIsPaymentModalOpen(false)}
         onBookPayment={handleBookPayment}
+      />
+
+      <MarkInvoiceCompletedModal
+        open={isMarkCompletedModalOpen}
+        onClose={() => {
+          setIsMarkCompletedModalOpen(false);
+          setSelectedInvoiceId(null);
+        }}
+        onConfirm={handleConfirmMarkAsCompleted}
       />
     </Box>
   );

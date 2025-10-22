@@ -21,6 +21,8 @@ public class SalesInvoiceRowDto
     public DateTime DateCreatedUtc { get; init; }
     public string FilePath { get; init; }
     public DateOnly? PaymentDate { get; init; }
+    public string Status { get; init; }
+    public string Comment { get; init; }
     public string CreatedByName { get; init; }
     public DateTime? DateModifiedUtc { get; init; }
     public string ModifiedByName { get; init; }

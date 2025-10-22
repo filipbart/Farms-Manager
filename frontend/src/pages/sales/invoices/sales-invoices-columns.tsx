@@ -3,8 +3,11 @@ import dayjs from "dayjs";
 import ActionsCell from "../../../components/datagrid/actions-cell";
 import { getAuditColumns } from "../../../utils/audit-columns-helper";
 import type { SalesInvoiceListModel } from "../../../models/sales/sales-invoices";
+import { SalesInvoiceStatus } from "../../../models/sales/sales-invoices";
 import FileDownloadCell from "../../../components/datagrid/file-download-cell";
 import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
+import { Button, Chip } from "@mui/material";
+import { CommentCell } from "../../../components/datagrid/comment-cell";
 
 interface GetSalesInvoicesColumnsProps {
   setSelectedSalesInvoice: (row: SalesInvoiceListModel) => void;
@@ -13,6 +16,7 @@ interface GetSalesInvoicesColumnsProps {
   downloadSalesInvoiceFile: (path: string) => void;
   downloadingFilePath: string | null;
   isAdmin?: boolean;
+  onMarkAsCompleted?: (id: string) => void;
 }
 
 export const getSalesInvoicesColumns = ({
@@ -22,6 +26,7 @@ export const getSalesInvoicesColumns = ({
   downloadSalesInvoiceFile,
   downloadingFilePath,
   isAdmin = false,
+  onMarkAsCompleted,
 }: GetSalesInvoicesColumnsProps): GridColDef<SalesInvoiceListModel>[] => {
   const baseColumns: GridColDef[] = [
     {
@@ -90,6 +95,39 @@ export const getSalesInvoicesColumns = ({
       align: "left",
     },
     {
+      field: "status",
+      headerName: "Status",
+      flex: 1,
+      renderCell: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return null;
+        }
+        const isCompleted = params.row.status === SalesInvoiceStatus.Realized;
+        return (
+          <Chip
+            label={params.row.status || SalesInvoiceStatus.Unrealized}
+            color={isCompleted ? "success" : "error"}
+            size="small"
+          />
+        );
+      },
+    },
+    {
+      field: "comment",
+      headerName: "Komentarz",
+      flex: 1.5,
+      renderCell: (params) => {
+        if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+          return null;
+        }
+        return params.row.comment ? (
+          <CommentCell value={params.row.comment} />
+        ) : (
+          <span>-</span>
+        );
+      },
+    },
+    {
       field: "filePath",
       headerName: "Faktura",
       align: "center",
@@ -113,12 +151,29 @@ export const getSalesInvoicesColumns = ({
       field: "actions",
       type: "actions",
       headerName: "Akcje",
-      width: 200,
+      width: 250,
       getActions: (params) => {
         if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
           return [];
         }
-        return [
+        const isCompleted = params.row.status === SalesInvoiceStatus.Realized;
+        const actions = [];
+
+        if (!isCompleted && onMarkAsCompleted) {
+          actions.push(
+            <Button
+              key="complete"
+              size="small"
+              variant="outlined"
+              color="success"
+              onClick={() => onMarkAsCompleted(params.row.id)}
+            >
+              Zrealizowany
+            </Button>
+          );
+        }
+
+        actions.push(
           <ActionsCell
             key="actions"
             params={params}
@@ -127,8 +182,10 @@ export const getSalesInvoicesColumns = ({
               setIsEditModalOpen(true);
             }}
             onDelete={deleteSalesInvoice}
-          />,
-        ];
+          />
+        );
+
+        return actions;
       },
     },
   ];

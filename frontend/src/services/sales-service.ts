@@ -144,4 +144,14 @@ export class SalesService {
   public static async bookInvoicesPayment(data: BookInvoicesPaymentData) {
     return await AxiosWrapper.post(ApiUrl.BookSalesInvoicesPayment, data);
   }
+
+  public static async markInvoiceAsCompleted(
+    id: string,
+    data: { paymentDate: string; comment?: string }
+  ) {
+    return await AxiosWrapper.patch(
+      ApiUrl.MarkInvoiceAsCompleted + "/" + id,
+      data
+    );
+  }
 }

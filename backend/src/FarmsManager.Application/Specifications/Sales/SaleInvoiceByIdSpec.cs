@@ -1,4 +1,4 @@
-﻿using Ardalis.Specification;
+using Ardalis.Specification;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
 
 namespace FarmsManager.Application.Specifications.Sales;
@@ -9,5 +9,8 @@ public class SaleInvoiceByIdSpec : BaseSpecification<SaleInvoiceEntity>, ISingle
     {
         EnsureExists();
         Query.Where(t => t.Id == id);
+        Query.Include(t => t.Creator);
+        Query.Include(t => t.Modifier);
+        Query.Include(t => t.Deleter);
     }
 }
