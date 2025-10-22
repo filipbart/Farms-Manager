@@ -91,7 +91,9 @@ public record FeedDeliveryRowDto
     public string ModifiedByName { get; init; }
     public DateTime? DateDeletedUtc { get; init; }
     public string DeletedByName { get; init; }
-    public NotificationPriority? Priority => PriorityCalculator.CalculatePriority(DueDate, PaymentDateUtc);
+
+    public NotificationPriority? Priority =>
+        PriorityCalculator.CalculatePriority(DueDate, PaymentDateUtc, IsCorrection);
 }
 
 public class
@@ -135,16 +137,21 @@ public class
         var orderedCombined = request.Filters.OrderBy switch
         {
             FeedsDeliveriesOrderType.Priority => combined
-                .OrderByDescending(x => x.PaymentDateUtc == null && x.DueDate != null)
+                .OrderByDescending(x => x.PaymentDateUtc == null && x.DueDate != null && !x.IsCorrection)
                 .ThenBy(x =>
                 {
-                    if (x.PaymentDateUtc != null || x.DueDate == null) return 4;
+                    if (x.IsCorrection || x.PaymentDateUtc != null || x.DueDate == null) return 4;
+
                     var now = DateOnly.FromDateTime(DateTime.Now);
                     var daysUntilDue = x.DueDate.Value.DayNumber - now.DayNumber;
-                    if (daysUntilDue < 0) return 1; // High - przeterminowane
-                    if (daysUntilDue <= 7) return 2; // Medium - 0-7 dni
-                    if (daysUntilDue <= 14) return 3; // Low - 8-14 dni
-                    return 4; // Brak priorytetu - >14 dni
+
+                    return daysUntilDue switch
+                    {
+                        <= 0 => 1,
+                        <= 3 => 2,
+                        <= 7 => 3,
+                        _ => 4
+                    };
                 })
                 .ThenBy(x => x.DueDate),
             FeedsDeliveriesOrderType.Cycle => combined.SortBy(x => x.CycleText, request.Filters.IsDescending),
