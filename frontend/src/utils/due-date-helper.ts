@@ -17,8 +17,8 @@ export const getDueDateClassName = (
     return "";
   }
 
-  const today = dayjs();
-  const due = dayjs(dueDate);
+  const today = dayjs().startOf("day");
+  const due = dayjs(dueDate).startOf("day");
   const daysUntilDue = due.diff(today, "day");
 
   // Dzień terminu lub po terminie (0 dni lub mniej) - czerwony
