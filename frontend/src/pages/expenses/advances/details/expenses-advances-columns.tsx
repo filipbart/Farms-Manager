@@ -15,6 +15,8 @@ interface GetAdvancesColumnsProps {
   downloadAdvanceFile: (path: string) => void;
   downloadingFilePath: string | null;
   isAdmin?: boolean;
+  hasEditPermission: (employeeId: string) => boolean;
+  employeeId: string;
 }
 
 export const getAdvancesColumns = ({
@@ -24,6 +26,8 @@ export const getAdvancesColumns = ({
   downloadAdvanceFile,
   downloadingFilePath,
   isAdmin = false,
+  hasEditPermission,
+  employeeId,
 }: GetAdvancesColumnsProps): GridColDef<ExpenseAdvanceListModel>[] => {
   const baseColumns: GridColDef<ExpenseAdvanceListModel>[] = [
     {
@@ -93,8 +97,9 @@ export const getAdvancesColumns = ({
     },
   ];
 
-  // Only add actions column if user has admin permissions
-  if (isAdmin) {
+  // Only add actions column if user has admin permissions or edit permissions for this employee
+  const canEdit = isAdmin || hasEditPermission(employeeId);
+  if (canEdit) {
     baseColumns.push({
       field: "actions",
       type: "actions",

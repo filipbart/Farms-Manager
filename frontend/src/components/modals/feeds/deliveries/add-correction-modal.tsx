@@ -8,6 +8,8 @@ import {
   TextField,
   MenuItem,
   Box,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -40,6 +42,9 @@ const AddCorrectionModal: React.FC<AddCorrectionModalProps> = ({
   onSave,
   selectedDeliveries,
 }) => {
+  const theme = useTheme();
+  const isMd = useMediaQuery(theme.breakpoints.up("md"));
+  const isLg = useMediaQuery(theme.breakpoints.up("lg"));
   const { farms, loadingFarms, fetchFarms } = useFarms();
   const [selectedFile, setSelectedFile] = useState<File>();
   const [loading, setLoading] = useState(false);
@@ -146,7 +151,7 @@ const AddCorrectionModal: React.FC<AddCorrectionModalProps> = ({
 
   return (
     <>
-      <AppDialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
+      <AppDialog open={open} onClose={onClose} maxWidth="xl" fullWidth>
         <DialogTitle>Dodaj fakturę kosztową</DialogTitle>
 
         <form onSubmit={handleSubmit(handleSave)}>
@@ -179,7 +184,7 @@ const AddCorrectionModal: React.FC<AddCorrectionModalProps> = ({
                     </Grid>
                     <Grid size={{ xs: 12 }}>
                       <Box mt={1}>
-                        <FilePreview file={selectedFile} maxHeight={700} />
+                        <FilePreview file={selectedFile} maxHeight={isLg ? 900 : isMd ? 700 : 500} />
                       </Box>
                     </Grid>
                   </>

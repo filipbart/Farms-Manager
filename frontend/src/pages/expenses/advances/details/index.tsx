@@ -11,7 +11,7 @@ import {
   FormControlLabel,
   Checkbox,
 } from "@mui/material";
-import { useEffect, useReducer, useState, useMemo } from "react";
+import { useEffect, useReducer, useState, useMemo, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useExpenseAdvances } from "../../../../hooks/expenses/advances/useExpensesAdvances";
 import {
@@ -41,6 +41,7 @@ import {
 } from "../../../../utils/grid-state-helper";
 import { getPriorityClassName } from "../../../../utils/priority-helper";
 import { useAuth } from "../../../../auth/useAuth";
+import { useUserExpenseAdvancePermissions } from "../../../../hooks/expenses/advances/useUserExpenseAdvancePermissions";
 
 const generateYearOptions = () => {
   const currentYear = new Date().getFullYear();
@@ -79,6 +80,7 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
   const { userData } = useAuth();
   const isAdmin = userData?.isAdmin ?? false;
   const { employeeId } = useParams<{ employeeId: string }>();
+  const { hasEditPermission } = useUserExpenseAdvancePermissions(userData?.id);
   const [openAddModal, setOpenAddModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [selectedAdvance, setSelectedAdvance] =
@@ -166,7 +168,7 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
     });
   }, [selectedMonths, selectedYears]);
 
-  const deleteAdvance = async (id: string) => {
+  const deleteAdvance = useCallback(async (id: string) => {
     await handleApiResponse(
       () => ExpensesAdvancesService.deleteExpenseAdvance(id),
       () => {
@@ -176,7 +178,7 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
       undefined,
       "Błąd podczas usuwania ewidencji"
     );
-  };
+  }, [fetchExpenseAdvances]);
 
   const columns = useMemo(
     () =>
@@ -187,8 +189,10 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
         isAdmin,
         downloadAdvanceFile: downloadExpenseAdvanceFile,
         downloadingFilePath,
+        hasEditPermission,
+        employeeId: employeeId || "",
       }),
-    [isAdmin, downloadingFilePath]
+    [isAdmin, downloadingFilePath, deleteAdvance, hasEditPermission, employeeId]
   );
 
   if (loading && !employeeFullName) {
@@ -304,7 +308,7 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
           >
             Cofnij do listy
           </Button>
-          {isAdmin && (
+          {(isAdmin || hasEditPermission(employeeId || "")) && (
             <Button
               variant="contained"
               color="primary"
