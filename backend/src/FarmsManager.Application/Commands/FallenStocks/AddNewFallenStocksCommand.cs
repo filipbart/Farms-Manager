@@ -1,4 +1,4 @@
-﻿using Ardalis.Specification;
+using Ardalis.Specification;
 using FarmsManager.Application.Commands.Insertions;
 using FarmsManager.Application.Commands.UtilizationPlants;
 using FarmsManager.Application.Common.Responses;
@@ -103,7 +103,7 @@ public class AddNewFallenStocksCommandHandler : IRequestHandler<AddNewFallenStoc
 
         var existingFallenStocks =
             await _fallenStockRepository.ListAsync(
-                new GetFallenStockByDateAndHenhouseIdsSpec(request.Date, henhouseIds), ct);
+                new GetFallenStockByDateTypeAndHenhouseIdsSpec(request.Date, request.Type, henhouseIds), ct);
 
         var insertions =
             await _insertionRepository.ListAsync(
@@ -123,7 +123,7 @@ public class AddNewFallenStocksCommandHandler : IRequestHandler<AddNewFallenStoc
 
             if (existingFallenStockHenhouseIds.Contains(henhouseId))
             {
-                response.AddError("Entries", $"Kurnik '{henhouse.Name}' ma już zgłoszenie w tym dniu.");
+                response.AddError("Entries", $"Kurnik '{henhouse.Name}' ma już zgłoszenie typu '{request.Type}' w tym dniu.");
             }
 
             if (!insertionHenhouseIds.Contains(henhouseId))
@@ -138,13 +138,7 @@ public class AddNewFallenStocksCommandHandler : IRequestHandler<AddNewFallenStoc
         }
 
         var existingGroupForDate = await _fallenStockRepository.FirstOrDefaultAsync(
-            new GetFallenStockByDateSpec(request.FarmId, request.CycleId, request.Date), ct);
-        if (existingGroupForDate is not null && existingGroupForDate.Type != request.Type)
-        {
-            response.AddError("Type",
-                $"Dla wybranej daty istnieje już zgłoszenie innego typu ({existingGroupForDate.Type}). Wszystkie zgłoszenia w danym dniu muszą być tego samego typu.");
-            return response;
-        }
+            new GetFallenStockByDateAndTypeSpec(request.FarmId, request.CycleId, request.Date, request.Type), ct);
 
         var internalGroupId = existingGroupForDate?.InternalGroupId ?? Guid.NewGuid();
 
@@ -230,24 +224,24 @@ public class AddNewFallenStocksValidator : AbstractValidator<AddNewFallenStocksC
     }
 }
 
-public sealed class GetFallenStockByDateAndHenhouseIdsSpec : BaseSpecification<FallenStockEntity>
+public sealed class GetFallenStockByDateTypeAndHenhouseIdsSpec : BaseSpecification<FallenStockEntity>
 {
-    public GetFallenStockByDateAndHenhouseIdsSpec(DateOnly date, Guid[] henhouseIds)
+    public GetFallenStockByDateTypeAndHenhouseIdsSpec(DateOnly date, FallenStockType type, Guid[] henhouseIds)
     {
         EnsureExists();
         DisableTracking();
-        Query.Where(fs => fs.Date == date && henhouseIds.Contains(fs.HenhouseId));
+        Query.Where(fs => fs.Date == date && fs.Type == type && henhouseIds.Contains(fs.HenhouseId));
     }
 }
 
-public sealed class GetFallenStockByDateSpec : BaseSpecification<FallenStockEntity>,
+public sealed class GetFallenStockByDateAndTypeSpec : BaseSpecification<FallenStockEntity>,
     ISingleResultSpecification<FallenStockEntity>
 {
-    public GetFallenStockByDateSpec(Guid farmId, Guid cycleId, DateOnly date)
+    public GetFallenStockByDateAndTypeSpec(Guid farmId, Guid cycleId, DateOnly date, FallenStockType type)
     {
         EnsureExists();
         DisableTracking();
-        Query.Where(fs => fs.FarmId == farmId && fs.CycleId == cycleId && fs.Date == date)
+        Query.Where(fs => fs.FarmId == farmId && fs.CycleId == cycleId && fs.Date == date && fs.Type == type)
             .Take(1);
     }
 }
