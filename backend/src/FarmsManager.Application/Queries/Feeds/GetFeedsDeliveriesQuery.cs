@@ -91,9 +91,12 @@ public record FeedDeliveryRowDto
     public string ModifiedByName { get; init; }
     public DateTime? DateDeletedUtc { get; init; }
     public string DeletedByName { get; init; }
+    public bool IsNotificationSubscribed { get; set; }
 
     public NotificationPriority? Priority =>
-        PriorityCalculator.CalculatePriority(DueDate, PaymentDateUtc, IsCorrection);
+        IsNotificationSubscribed
+            ? PriorityCalculator.CalculatePriority(DueDate, PaymentDateUtc, IsCorrection)
+            : null;
 }
 
 public class
@@ -121,6 +124,7 @@ public class
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var user = await _userRepository.GetAsync(new UserByIdSpec(userId), ct);
         var accessibleFarmIds = user.AccessibleFarmIds;
+        var notificationFarmIds = user.NotificationFarmIds;
         var isAdmin = user.IsAdmin;
 
         var feedInvoices = await _feedInvoiceRepository.ListAsync<FeedDeliveryRowDto>(
@@ -134,10 +138,17 @@ public class
 
         var combined = feedInvoices.Concat(feedCorrections).ClearAdminData(isAdmin);
 
+        // Oznacz dostawy z farm subskrybowanych przez użytkownika
+        foreach (var item in combined)
+        {
+            item.IsNotificationSubscribed = notificationFarmIds == null || notificationFarmIds.Contains(item.FarmId);
+        }
+
         var orderedCombined = request.Filters.OrderBy switch
         {
             FeedsDeliveriesOrderType.Priority => combined
-                .OrderByDescending(x => x.PaymentDateUtc == null && x.DueDate != null && !x.IsCorrection)
+                .OrderByDescending(x => x.IsNotificationSubscribed)
+                .ThenByDescending(x => x.PaymentDateUtc == null && x.DueDate != null && !x.IsCorrection)
                 .ThenBy(x =>
                 {
                     if (x.IsCorrection || x.PaymentDateUtc != null || x.DueDate == null) return 4;
