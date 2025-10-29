@@ -1,4 +1,4 @@
-﻿using Ardalis.Specification;
+using Ardalis.Specification;
 using FarmsManager.Application.Commands.Farms;
 using FarmsManager.Application.Commands.Hatcheries;
 using FarmsManager.Application.Commands.ProductionData.Weighings;
@@ -23,6 +23,7 @@ public record AddNewInsertionCommand : IRequest<BaseResponse<AddNewInsertionComm
     public Guid FarmId { get; init; }
     public Guid CycleId { get; init; }
     public DateOnly InsertionDate { get; init; }
+    public string Comment { get; init; }
     public List<InsertionEntry> Entries { get; init; } = [];
 
     public record InsertionEntry
@@ -107,7 +108,7 @@ public class
             var hatchery = await _hatcheryRepository.GetAsync(new HatcheryByIdSpec(entry.HatcheryId), ct);
 
             var newInsertion = InsertionEntity.CreateNew(internalGroupId, farm.Id, cycle.Id, henhouse.Id, hatchery.Id,
-                request.InsertionDate, entry.Quantity, entry.BodyWeight, userId);
+                request.InsertionDate, entry.Quantity, entry.BodyWeight, request.Comment, userId);
             newInsertions.Add(newInsertion);
 
             var existingWeighing = await _productionDataWeighingRepository.FirstOrDefaultAsync(

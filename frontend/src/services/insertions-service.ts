@@ -18,6 +18,7 @@ export interface AddInsertionData {
   farmId: string;
   cycleId: string;
   insertionDate: string;
+  comment?: string;
   entries: {
     henhouseId: string;
     hatcheryId: string;

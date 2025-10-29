@@ -19,4 +19,5 @@ export default interface InsertionListModel extends AuditFields {
   irzComment?: string;
   reportedToWios: boolean;
   wiosComment?: string;
+  comment?: string;
 }

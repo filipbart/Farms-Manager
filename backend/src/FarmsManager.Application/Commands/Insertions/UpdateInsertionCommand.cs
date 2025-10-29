@@ -1,4 +1,4 @@
-﻿using FarmsManager.Application.Commands.ProductionData.Weighings;
+using FarmsManager.Application.Commands.ProductionData.Weighings;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications.Cycle;
@@ -28,6 +28,11 @@ public record UpdateInsertionCommandDto
     /// Średnia masa ciała
     /// </summary>
     public decimal BodyWeight { get; init; }
+
+    /// <summary>
+    /// Komentarz
+    /// </summary>
+    public string Comment { get; init; }
 }
 
 public record UpdateInsertionCommand(Guid Id, UpdateInsertionCommandDto Data) : IRequest<EmptyBaseResponse>;
@@ -76,7 +81,7 @@ public class UpdateInsertionCommandHandler : IRequestHandler<UpdateInsertionComm
             insertion.SetCycle(cycle.Id);
         }
 
-        insertion.UpdateData(request.Data.InsertionDate, request.Data.Quantity, request.Data.BodyWeight);
+        insertion.UpdateData(request.Data.InsertionDate, request.Data.Quantity, request.Data.BodyWeight, request.Data.Comment);
         insertion.SetModified(userId);
         await _insertionRepository.UpdateAsync(insertion, cancellationToken);
 

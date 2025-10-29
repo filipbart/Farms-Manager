@@ -7,6 +7,7 @@ import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
 import { getAuditColumns } from "../../utils/audit-columns-helper";
 import type InsertionListModel from "../../models/insertions/insertions";
+import { CommentCell } from "../../components/datagrid/comment-cell";
 
 export const getInsertionsColumns = ({
   setSelectedInsertion,
@@ -52,6 +53,14 @@ export const getInsertionsColumns = ({
       type: "number",
       headerAlign: "left",
       align: "left",
+    },
+    {
+      field: "comment",
+      headerName: "Komentarz",
+      flex: 1,
+      sortable: false,
+      aggregable: false,
+      renderCell: (params) => <CommentCell value={params.value} />,
     },
     {
       field: "reportedToWios",

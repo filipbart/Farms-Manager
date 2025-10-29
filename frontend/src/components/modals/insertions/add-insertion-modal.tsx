@@ -40,6 +40,7 @@ interface InsertionFormState {
   farmId: string;
   cycleId: string;
   insertionDate: Dayjs | null;
+  comment: string;
   entries: InsertionEntry[];
 }
 
@@ -55,6 +56,7 @@ const initialState: InsertionFormState = {
   farmId: "",
   cycleId: "",
   insertionDate: null,
+  comment: "",
   entries: [],
 };
 
@@ -229,6 +231,7 @@ const AddInsertionModal: React.FC<AddInsertionModalProps> = ({
           farmId: form.farmId,
           cycleId: form.cycleId,
           insertionDate: form.insertionDate!.format("YYYY-MM-DD"),
+          comment: form.comment || undefined,
           entries: form.entries.map(
             ({ henhouseId, hatcheryId, quantity, bodyWeight }) => ({
               henhouseId,
@@ -342,6 +345,23 @@ const AddInsertionModal: React.FC<AddInsertionModalProps> = ({
                 fullWidth: true,
               },
             }}
+          />
+
+          <LoadingTextField
+            label="Komentarz"
+            value={form.comment}
+            onChange={(e) =>
+              dispatch({
+                type: "SET_FIELD",
+                name: "comment",
+                value: e.target.value,
+              })
+            }
+            fullWidth
+            multiline
+            rows={3}
+            placeholder="Opcjonalny komentarz do wstawienia"
+            loading={false}
           />
 
           {errors.entriesGeneral && (

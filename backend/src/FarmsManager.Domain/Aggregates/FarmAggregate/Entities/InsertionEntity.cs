@@ -1,4 +1,4 @@
-﻿using FarmsManager.Domain.Aggregates.HatcheryAggregate.Entities;
+using FarmsManager.Domain.Aggregates.HatcheryAggregate.Entities;
 using FarmsManager.Domain.SeedWork;
 
 namespace FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
@@ -27,6 +27,7 @@ public class InsertionEntity : Entity
 
     public bool ReportedToWios { get; protected internal set; }
     public string WiosComment { get; protected internal set; }
+    public string Comment { get; protected internal set; }
 
     public virtual CycleEntity Cycle { get; init; }
     public virtual HenhouseEntity Henhouse { get; init; }
@@ -36,7 +37,7 @@ public class InsertionEntity : Entity
 
     public static InsertionEntity CreateNew(Guid internalGroupId, Guid farmId, Guid cycleId, Guid henhouseId,
         Guid hatcheryId,
-        DateOnly insertionDate, int quantity, decimal bodyWeight, Guid? userId = null)
+        DateOnly insertionDate, int quantity, decimal bodyWeight, string comment = null, Guid? userId = null)
     {
         return new InsertionEntity
         {
@@ -48,6 +49,7 @@ public class InsertionEntity : Entity
             InsertionDate = insertionDate,
             Quantity = quantity,
             BodyWeight = bodyWeight,
+            Comment = comment,
             CreatedBy = userId
         };
     }
@@ -67,11 +69,12 @@ public class InsertionEntity : Entity
         SentToIrzBy = userId;
     }
 
-    public void UpdateData(DateOnly insertionDate, int quantity, decimal bodyWeight)
+    public void UpdateData(DateOnly insertionDate, int quantity, decimal bodyWeight, string comment = null)
     { 
         InsertionDate = insertionDate;
         Quantity = quantity;
         BodyWeight = bodyWeight;
+        Comment = comment;
     }
 
     public void SetCycle(Guid cycleId)

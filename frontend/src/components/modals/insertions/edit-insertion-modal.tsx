@@ -47,6 +47,7 @@ const EditInsertionModal: React.FC<EditInsertionModalProps> = ({
     insertionDate: null as Dayjs | null,
     quantity: "",
     bodyWeight: "",
+    comment: "",
   });
 
   const farmName = useMemo(() => {
@@ -76,6 +77,7 @@ const EditInsertionModal: React.FC<EditInsertionModalProps> = ({
         insertionDate: dayjs(insertion.insertionDate),
         quantity: insertion.quantity.toString(),
         bodyWeight: insertion.bodyWeight.toString(),
+        comment: insertion.comment || "",
       });
     }
   }, [open, insertion]);
@@ -144,6 +146,7 @@ const EditInsertionModal: React.FC<EditInsertionModalProps> = ({
           insertionDate: form.insertionDate!.format("YYYY-MM-DD"),
           quantity: Number(form.quantity),
           bodyWeight: Number(form.bodyWeight),
+          comment: form.comment || undefined,
         }),
       () => {
         toast.success("Zaktualizowano wstawienie");
@@ -227,6 +230,19 @@ const EditInsertionModal: React.FC<EditInsertionModalProps> = ({
               helperText={errors.bodyWeight}
               fullWidth
               type="number"
+            />
+          </Grid>
+          <Grid size={12}>
+            <TextField
+              label="Komentarz"
+              value={form.comment}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, comment: e.target.value }))
+              }
+              fullWidth
+              multiline
+              rows={3}
+              placeholder="Opcjonalny komentarz do wstawienia"
             />
           </Grid>
         </Grid>
