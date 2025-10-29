@@ -1,4 +1,4 @@
-﻿using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
+using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Enums;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Models;
 using FarmsManager.Domain.Aggregates.SlaughterhouseAggregate.Entities;
@@ -153,4 +153,6 @@ public class SaleEntity : Entity
 
     public bool IsAlreadySentToIrz() => DateIrzSentUtc.HasValue || IsSentToIrz;
     public void SetDirectoryPath(string directoryPath) => DirectoryPath = directoryPath;
+    
+    public bool HasDirectoryPath() => !string.IsNullOrEmpty(DirectoryPath);
 }

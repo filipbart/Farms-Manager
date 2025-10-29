@@ -77,9 +77,11 @@ public class SalesController(IMediator mediator, IS3Service s3Service) : BaseCon
     /// <param name="payload"></param>
     /// <returns></returns>
     [HttpPatch("update/{id:guid}")]
+    [Consumes("multipart/form-data")]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> UpdateInsertin([FromRoute] Guid id, [FromBody] UpdateSaleCommandDto payload)
+    public async Task<IActionResult> UpdateSale([FromRoute] Guid id, [FromForm] UpdateSaleCommandFormDto payload)
     {
         return Ok(await mediator.Send(new UpdateSaleCommand(id, payload)));
     }

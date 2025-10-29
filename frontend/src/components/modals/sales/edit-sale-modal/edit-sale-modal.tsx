@@ -26,6 +26,8 @@ import AppDialog from "../../../common/app-dialog";
 import { FarmsService } from "../../../../services/farms-service";
 import type CycleDto from "../../../../models/farms/latest-cycle";
 import LoadingTextField from "../../../common/loading-textfield";
+import FilePreview from "../../../common/file-preview";
+import { MdAttachFile } from "react-icons/md";
 
 interface EditSaleModalProps {
   open: boolean;
@@ -44,6 +46,7 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({
   const [cycles, setCycles] = useState<CycleDto[]>([]);
   const [loadingCycles, setLoadingCycles] = useState(false);
   const [form, setForm] = useState<SaleListModel | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [errors, setErrors] = useState<{
     [key: string]: any;
     otherExtras?: { name?: string; value?: string }[];
@@ -53,6 +56,7 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({
     if (sale && open) {
       setForm({ ...sale });
       setErrors({});
+      setSelectedFile(null);
     }
   }, [sale, open]);
 
@@ -162,24 +166,28 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({
     setLoading(true);
     await handleApiResponse(
       () =>
-        SalesService.updateSale(form.id, {
-          cycleId: form.cycleId,
-          saleDate: form.saleDate,
-          quantity: Number(form.quantity),
-          weight: Number(form.weight),
-          confiscatedCount: Number(form.confiscatedCount),
-          confiscatedWeight: Number(form.confiscatedWeight),
-          deadCount: Number(form.deadCount),
-          deadWeight: Number(form.deadWeight),
-          farmerWeight: Number(form.farmerWeight),
-          basePrice: Number(form.basePrice),
-          priceWithExtras: Number(form.priceWithExtras),
-          comment: form.comment,
-          otherExtras: form.otherExtras.map((extra) => ({
-            name: extra.name,
-            value: Number(extra.value),
-          })),
-        }),
+        SalesService.updateSale(
+          form.id,
+          {
+            cycleId: form.cycleId,
+            saleDate: form.saleDate,
+            quantity: Number(form.quantity),
+            weight: Number(form.weight),
+            confiscatedCount: Number(form.confiscatedCount),
+            confiscatedWeight: Number(form.confiscatedWeight),
+            deadCount: Number(form.deadCount),
+            deadWeight: Number(form.deadWeight),
+            farmerWeight: Number(form.farmerWeight),
+            basePrice: Number(form.basePrice),
+            priceWithExtras: Number(form.priceWithExtras),
+            comment: form.comment,
+            otherExtras: form.otherExtras.map((extra) => ({
+              name: extra.name,
+              value: Number(extra.value),
+            })),
+          },
+          selectedFile || undefined
+        ),
       () => {
         toast.success("Zaktualizowano sprzedaż");
         onSave();
@@ -195,10 +203,72 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({
   if (!form) return null;
 
   return (
-    <AppDialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <AppDialog
+      open={open}
+      onClose={onClose}
+      maxWidth={!form.directoryPath ? "lg" : "md"}
+      fullWidth
+    >
       <DialogTitle>Edycja pozycji sprzedaży</DialogTitle>
       <DialogContent dividers>
         <Grid container spacing={2} sx={{ mt: 1 }}>
+          {!form.directoryPath && (
+            <>
+              {selectedFile && (
+                <Grid size={12}>
+                  <Box mb={2}>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Podgląd nowego pliku
+                    </Typography>
+                    <FilePreview
+                      file={selectedFile}
+                      maxHeight={400}
+                      showPreviewButton={false}
+                    />
+                  </Box>
+                </Grid>
+              )}
+
+              <Grid size={12}>
+                <Button
+                  variant="outlined"
+                  component="label"
+                  startIcon={<MdAttachFile />}
+                  fullWidth
+                >
+                  {selectedFile ? "Zmień plik" : "Dodaj plik"}
+                  <input
+                    type="file"
+                    hidden
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setSelectedFile(file);
+                      }
+                    }}
+                  />
+                </Button>
+                {selectedFile && (
+                  <Box
+                    mt={1}
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="center"
+                  >
+                    <Typography variant="body2">{selectedFile.name}</Typography>
+                    <Button
+                      size="small"
+                      color="error"
+                      onClick={() => setSelectedFile(null)}
+                    >
+                      Usuń
+                    </Button>
+                  </Box>
+                )}
+              </Grid>
+            </>
+          )}
+
           <Grid size={12}>
             <TextField label="Ferma" fullWidth value={form.farmName} disabled />
           </Grid>

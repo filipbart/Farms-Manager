@@ -82,10 +82,14 @@ export default class AxiosWrapper {
     });
   }
 
-  public static patch<T>(url: string, params?: any): Promise<BaseResponse<T>> {
+  public static patch<T>(
+    url: string,
+    params?: any,
+    config?: AxiosRequestConfig
+  ): Promise<BaseResponse<T>> {
     return new Promise((resolve) => {
       axios
-        .patch<BaseResponse<T>>(url, params)
+        .patch<BaseResponse<T>>(url, params, config)
         .then((response) => {
           resolve({
             ...response.data,
