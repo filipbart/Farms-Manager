@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using FarmsManager.Application.Common.Configurations;
 using FarmsManager.Application.Extensions;
 using FarmsManager.Application.Interfaces;
@@ -226,7 +226,9 @@ public class IrzplusService : IIrzplusService
                 NumerIdenPartiiDrobiu = isInsertion ? item.DoDzialalnosci : item.ZDzialalnosci,
                 LiczbaDrobiuUbylo = item.Quantity,
                 KategoriaJajWylegowych = null,
-                Budynek = new KodOpisWartosciDto { Kod = item.HenhouseCode, Opis = item.HenhouseName },
+                Budynek = type == IrzPlusDispositionType.EndCycle 
+                    ? null 
+                    : new KodOpisWartosciDto { Kod = item.HenhouseCode, Opis = item.HenhouseName },
                 ZDzialalnosci = item.ZDzialalnosci
             }).ToList();
 

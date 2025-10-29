@@ -197,6 +197,11 @@ const AddFallenStocksModal: React.FC<AddFallenStocksModalProps> = ({
     if (newType === FallenStockType.EndCycle) {
       dispatch({ type: "SET_FIELD", name: "utilizationPlantId", value: "" });
       setErrors((prev) => ({ ...prev, utilizationPlantId: undefined }));
+      // Clear entries for EndCycle as it's farm-wide
+      dispatch({ type: "SET_FIELD", name: "entries", value: [] });
+    } else if (newType === FallenStockType.FallCollision && form.entries.length === 0) {
+      // Add initial entry for FallCollision
+      dispatch({ type: "ADD_ENTRY" });
     }
   };
 
@@ -254,15 +259,18 @@ const AddFallenStocksModal: React.FC<AddFallenStocksModalProps> = ({
 
     if (!form.date) newErrors.date = "Data jest wymagana";
 
-    if (form.entries.length === 0) {
-      newErrors.entriesGeneral = "Musisz dodać przynajmniej jedną pozycję";
-    } else {
-      const entryErrors: { [index: number]: any } = {};
-      form.entries.forEach((entry, index) => {
-        const e = validateEntry(entry);
-        if (Object.keys(e).length > 0) entryErrors[index] = e;
-      });
-      if (Object.keys(entryErrors).length > 0) newErrors.entries = entryErrors;
+    // For EndCycle, entries are not required (farm-wide operation)
+    if (form.type === FallenStockType.FallCollision) {
+      if (form.entries.length === 0) {
+        newErrors.entriesGeneral = "Musisz dodać przynajmniej jedną pozycję";
+      } else {
+        const entryErrors: { [index: number]: any } = {};
+        form.entries.forEach((entry, index) => {
+          const e = validateEntry(entry);
+          if (Object.keys(e).length > 0) entryErrors[index] = e;
+        });
+        if (Object.keys(entryErrors).length > 0) newErrors.entries = entryErrors;
+      }
     }
 
     setErrors(newErrors);
@@ -284,10 +292,14 @@ const AddFallenStocksModal: React.FC<AddFallenStocksModalProps> = ({
               ? form.utilizationPlantId
               : null,
           date: form.date!.format("YYYY-MM-DD"),
-          entries: form.entries.map(({ henhouseId, quantity }) => ({
-            henhouseId,
-            quantity: Number(quantity),
-          })),
+          // For EndCycle, send empty entries array (farm-wide operation)
+          entries:
+            form.type === FallenStockType.EndCycle
+              ? []
+              : form.entries.map(({ henhouseId, quantity }) => ({
+                  henhouseId,
+                  quantity: Number(quantity),
+                })),
           sendToIrz: sendToIrz,
         }),
       () => {
@@ -427,28 +439,40 @@ const AddFallenStocksModal: React.FC<AddFallenStocksModalProps> = ({
             }}
           />
 
-          {errors.entriesGeneral && (
-            <Box sx={{ mb: 1 }}>
-              <Typography color="error">{errors.entriesGeneral}</Typography>
+          {form.type === FallenStockType.EndCycle && (
+            <Box sx={{ p: 2, bgcolor: "info.light", borderRadius: 1 }}>
+              <Typography variant="body2" color="info.dark">
+                Zamknięcie cyklu dotyczy całej fermy - nie ma możliwości dodawania pozycji per kurnik.
+              </Typography>
             </Box>
           )}
 
-          <FallenStockEntriesTable
-            entries={form.entries}
-            henhouses={henhouses}
-            errors={errors.entries}
-            dispatch={dispatch}
-            farmId={form.farmId}
-            loadingHenhouses={loadingHenhouses}
-          />
+          {form.type === FallenStockType.FallCollision && (
+            <>
+              {errors.entriesGeneral && (
+                <Box sx={{ mb: 1 }}>
+                  <Typography color="error">{errors.entriesGeneral}</Typography>
+                </Box>
+              )}
 
-          <Button
-            variant="outlined"
-            onClick={() => dispatch({ type: "ADD_ENTRY" })}
-            disabled={!canAddMoreEntries || !form.farmId || loadingHenhouses}
-          >
-            Dodaj pozycję
-          </Button>
+              <FallenStockEntriesTable
+                entries={form.entries}
+                henhouses={henhouses}
+                errors={errors.entries}
+                dispatch={dispatch}
+                farmId={form.farmId}
+                loadingHenhouses={loadingHenhouses}
+              />
+
+              <Button
+                variant="outlined"
+                onClick={() => dispatch({ type: "ADD_ENTRY" })}
+                disabled={!canAddMoreEntries || !form.farmId || loadingHenhouses}
+              >
+                Dodaj pozycję
+              </Button>
+            </>
+          )}
         </Box>
       </DialogContent>
       <DialogActions>
