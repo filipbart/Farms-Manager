@@ -11,6 +11,7 @@ import {
   TextField,
   Grid,
   Tooltip,
+  useMediaQuery,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { useFarms } from "../../../../hooks/useFarms";
@@ -35,6 +36,7 @@ import FilePreview from "../../../common/file-preview";
 import AppDialog from "../../../common/app-dialog";
 import { FarmsService } from "../../../../services/farms-service";
 import type CycleDto from "../../../../models/farms/latest-cycle";
+import theme from "../../../../theme/theme";
 
 interface AddSaleModalProps {
   open: boolean;
@@ -60,6 +62,9 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
   const [sendToIrz, setSendToIrz] = useState(false);
   const [entriesTableReady, setEntriesTableReady] = useState<number[]>([]);
   const [activePreviewFile, setActivePreviewFile] = useState<File | null>(null);
+
+  const isMd = useMediaQuery(theme.breakpoints.up("md"));
+  const isLg = useMediaQuery(theme.breakpoints.up("lg"));
 
   useEffect(() => {
     const handlePaste = (event: ClipboardEvent) => {
@@ -231,13 +236,13 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
     : "";
 
   return (
-    <AppDialog open={open} onClose={handleClose} fullWidth maxWidth="lg">
+    <AppDialog open={open} onClose={handleClose} fullWidth maxWidth="xl">
       <DialogTitle>Nowa sprzedaż</DialogTitle>
       <DialogContent>
         <Grid container spacing={2} mt={1}>
           {activePreviewFile && (
             <Grid
-              size={{ xs: 12, md: 5 }}
+              size={{ xs: 12, md: 6 }}
               sx={{
                 display: "flex",
                 flexDirection: "column",
@@ -249,11 +254,15 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
                 Podgląd pliku
               </Typography>
 
-              <FilePreview file={activePreviewFile} maxHeight={900} />
+              <FilePreview
+                file={activePreviewFile}
+                maxHeight={isLg ? 1100 : isMd ? 700 : 500}
+                showPreviewButton={true}
+              />
             </Grid>
           )}
 
-          <Grid size={{ xs: 12, md: activePreviewFile ? 7 : 12 }}>
+          <Grid size={{ xs: 12, md: activePreviewFile ? 6 : 12 }}>
             <Grid container spacing={2}>
               <Grid size={{ xs: 12, sm: 6 }}>
                 <LoadingTextField
