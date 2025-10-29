@@ -28,6 +28,7 @@ import type CycleDto from "../../../../models/farms/latest-cycle";
 import LoadingTextField from "../../../common/loading-textfield";
 import FilePreview from "../../../common/file-preview";
 import { MdAttachFile } from "react-icons/md";
+import { useSaleFieldsExtra } from "../../../../hooks/sales/useSaleFieldsExtra";
 
 interface EditSaleModalProps {
   open: boolean;
@@ -51,14 +52,16 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({
     [key: string]: any;
     otherExtras?: { name?: string; value?: string }[];
   }>({});
+  const { saleFieldsExtra, fetchSaleFieldsExtra } = useSaleFieldsExtra();
 
   useEffect(() => {
     if (sale && open) {
       setForm({ ...sale });
       setErrors({});
       setSelectedFile(null);
+      fetchSaleFieldsExtra();
     }
-  }, [sale, open]);
+  }, [sale, open, fetchSaleFieldsExtra]);
 
   useEffect(() => {
     const fetchCycles = async (farmId: string) => {
@@ -409,7 +412,7 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({
                       handleExtraChange(idx, "name", e.target.value)
                     }
                   >
-                    {sale?.otherExtras.map((field) => (
+                    {saleFieldsExtra.map((field) => (
                       <MenuItem key={field.name} value={field.name}>
                         {field.name}
                       </MenuItem>
