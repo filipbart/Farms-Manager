@@ -10,7 +10,7 @@ using MediatR;
 
 namespace FarmsManager.Application.Queries.Insertions.Henhouses;
 
-public record GetAvailableHenhousesQuery(Guid FarmId)
+public record GetAvailableHenhousesQuery(Guid FarmId, Guid CycleId)
     : IRequest<BaseResponse<GetAvailableHenhousesQueryResponse>>;
 
 public record GetAvailableHenhousesQueryResponse
@@ -41,7 +41,7 @@ public class GetAvailableHenhousesQueryHandler : IRequestHandler<GetAvailableHen
             await _henhouseRepository.ListAsync<HenhouseRowDto>(new HenhousesByFarmIdSpec(farm.Id, true), cancellationToken);
 
         var insertionHenhouses = await _insertionRepository.ListAsync(
-            new GetInsertionHenhousesForCycleAndFarmIdSpec(farm.Id, farm.ActiveCycle.Id), cancellationToken);
+            new GetInsertionHenhousesForCycleAndFarmIdSpec(farm.Id, request.CycleId), cancellationToken);
 
         var result = henhouses.Where(t => !insertionHenhouses.Contains(t.Id)).ToList();
 

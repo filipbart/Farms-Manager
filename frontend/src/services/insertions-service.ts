@@ -85,11 +85,12 @@ export class InsertionsService {
     );
   }
 
-  public static async getAvailableHenhouses(farmId: string) {
+  public static async getAvailableHenhouses(farmId: string, cycleId?: string) {
     return await AxiosWrapper.get<AvailableHenhousesResponse>(
       ApiUrl.InsertionAvailableHenhouses,
       {
         farmId: farmId,
+        ...(cycleId && { cycleId: cycleId }),
       }
     );
   }
