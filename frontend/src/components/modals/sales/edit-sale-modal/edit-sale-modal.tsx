@@ -272,7 +272,7 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({
               label="Sztuki"
               type="number"
               value={form.quantity}
-              onChange={(e) => handleChange("quantity", Number(e.target.value))}
+              onChange={(e) => handleChange("quantity", e.target.value)}
               error={!!errors.quantity}
               helperText={errors.quantity}
               fullWidth
@@ -284,7 +284,7 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({
               label="Waga (kg)"
               type="number"
               value={form.weight}
-              onChange={(e) => handleChange("weight", Number(e.target.value))}
+              onChange={(e) => handleChange("weight", e.target.value)}
               error={!!errors.weight}
               helperText={errors.weight}
               fullWidth
@@ -301,7 +301,7 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({
               type="number"
               value={form.confiscatedCount}
               onChange={(e) =>
-                handleChange("confiscatedCount", Number(e.target.value))
+                handleChange("confiscatedCount", e.target.value)
               }
               fullWidth
             />
@@ -313,7 +313,7 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({
               type="number"
               value={form.confiscatedWeight}
               onChange={(e) =>
-                handleChange("confiscatedWeight", Number(e.target.value))
+                handleChange("confiscatedWeight", e.target.value)
               }
               fullWidth
             />
@@ -329,7 +329,7 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({
               type="number"
               value={form.deadCount}
               onChange={(e) =>
-                handleChange("deadCount", Number(e.target.value))
+                handleChange("deadCount", e.target.value)
               }
               fullWidth
             />
@@ -341,7 +341,7 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({
               type="number"
               value={form.deadWeight}
               onChange={(e) =>
-                handleChange("deadWeight", Number(e.target.value))
+                handleChange("deadWeight", e.target.value)
               }
               fullWidth
             />
@@ -355,7 +355,7 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({
               type="number"
               value={form.farmerWeight}
               onChange={(e) =>
-                handleChange("farmerWeight", Number(e.target.value))
+                handleChange("farmerWeight", e.target.value)
               }
               fullWidth
             />
@@ -371,7 +371,7 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({
               type="number"
               value={form.basePrice}
               onChange={(e) =>
-                handleChange("basePrice", Number(e.target.value))
+                handleChange("basePrice", e.target.value)
               }
               fullWidth
             />
@@ -383,7 +383,7 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({
               type="number"
               value={form.priceWithExtras}
               onChange={(e) =>
-                handleChange("priceWithExtras", Number(e.target.value))
+                handleChange("priceWithExtras", e.target.value)
               }
               fullWidth
             />
