@@ -212,62 +212,6 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({
       <DialogTitle>Edycja pozycji sprzedaży</DialogTitle>
       <DialogContent dividers>
         <Grid container spacing={2} sx={{ mt: 1 }}>
-          {!form.directoryPath && (
-            <>
-              {selectedFile && (
-                <Grid size={12}>
-                  <Box mb={2}>
-                    <Typography variant="subtitle2" gutterBottom>
-                      Podgląd nowego pliku
-                    </Typography>
-                    <FilePreview
-                      file={selectedFile}
-                      maxHeight={400}
-                      showPreviewButton={false}
-                    />
-                  </Box>
-                </Grid>
-              )}
-
-              <Grid size={12}>
-                <Button
-                  variant="outlined"
-                  component="label"
-                  startIcon={<MdAttachFile />}
-                  fullWidth
-                >
-                  {selectedFile ? "Zmień plik" : "Dodaj plik"}
-                  <input
-                    type="file"
-                    hidden
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        setSelectedFile(file);
-                      }
-                    }}
-                  />
-                </Button>
-                {selectedFile && (
-                  <Box
-                    mt={1}
-                    display="flex"
-                    justifyContent="space-between"
-                    alignItems="center"
-                  >
-                    <Typography variant="body2">{selectedFile.name}</Typography>
-                    <Button
-                      size="small"
-                      color="error"
-                      onClick={() => setSelectedFile(null)}
-                    >
-                      Usuń
-                    </Button>
-                  </Box>
-                )}
-              </Grid>
-            </>
-          )}
 
           <Grid size={12}>
             <TextField label="Ferma" fullWidth value={form.farmName} disabled />
