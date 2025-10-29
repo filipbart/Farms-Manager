@@ -84,7 +84,35 @@ export class SalesService {
     );
   }
 
-  public static async updateSale(saleId: string, payload: any) {
+  public static async updateSale(
+    saleId: string,
+    payload: any,
+    file?: File
+  ) {
+    if (file) {
+      const formData = new FormData();
+      formData.append("file", file);
+      
+      // Append all other fields as JSON string
+      Object.keys(payload).forEach((key) => {
+        if (key === "otherExtras") {
+          formData.append(key, JSON.stringify(payload[key]));
+        } else {
+          formData.append(key, payload[key]);
+        }
+      });
+
+      return await AxiosWrapper.patch(
+        ApiUrl.UpdateSale + "/" + saleId,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+    }
+
     return await AxiosWrapper.patch(ApiUrl.UpdateSale + "/" + saleId, payload);
   }
 
