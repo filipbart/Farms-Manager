@@ -95,6 +95,13 @@ export const getAdvancesColumns = ({
         );
       },
     },
+    {
+      field: "dateCreatedUtc",
+      headerName: "Data utworzenia wpisu",
+      flex: 1,
+      valueGetter: (value: string) =>
+        value ? dayjs(value).format("YYYY-MM-DD HH:mm:ss") : "",
+    },
   ];
 
   // Only add actions column if user has admin permissions or edit permissions for this employee
