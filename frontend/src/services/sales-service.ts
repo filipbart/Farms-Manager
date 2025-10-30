@@ -90,14 +90,8 @@ export class SalesService {
     // Append all fields to FormData
     Object.keys(payload).forEach((key) => {
       if (key === "otherExtras") {
-        // OtherExtras must be JSON string with numbers having comma as decimal separator
-        const extrasWithComma = payload[key].map((extra: any) => ({
-          name: extra.name,
-          value: typeof extra.value === 'number' 
-            ? extra.value.toString().replace('.', ',')
-            : extra.value
-        }));
-        formData.append(key, JSON.stringify(extrasWithComma));
+        // OtherExtras must be JSON string with numbers having dot as decimal separator
+        formData.append(key, JSON.stringify(payload[key]));
       } else {
         const value = payload[key];
         // Skip undefined/null values
