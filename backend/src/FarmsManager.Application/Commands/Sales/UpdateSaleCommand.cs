@@ -8,6 +8,7 @@ using FarmsManager.Domain.Exceptions;
 using MediatR;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
 using FarmsManager.Application.Specifications.Cycle;
+using FarmsManager.Shared.Extensions;
 using FluentValidation;
 using Microsoft.AspNetCore.Http;
 
@@ -92,7 +93,7 @@ public class UpdateSaleCommandHandler : IRequestHandler<UpdateSaleCommand, Empty
     private readonly ICycleRepository _cycleRepository;
     private readonly IS3Service _s3Service;
 
-    public UpdateSaleCommandHandler(IUserDataResolver userDataResolver, ISaleRepository saleRepository, 
+    public UpdateSaleCommandHandler(IUserDataResolver userDataResolver, ISaleRepository saleRepository,
         ICycleRepository cycleRepository, IS3Service s3Service)
     {
         _userDataResolver = userDataResolver;
@@ -108,7 +109,7 @@ public class UpdateSaleCommandHandler : IRequestHandler<UpdateSaleCommand, Empty
         var cycle = await _cycleRepository.GetAsync(new CycleByIdSpec(request.Data.CycleId), cancellationToken);
 
         var response = new EmptyBaseResponse();
-        
+
         // Walidacja: jeśli plik jest wysyłany, sprzedaż nie może mieć już zapisanego pliku
         if (request.Data.File != null && sale.HasDirectoryPath())
         {
@@ -127,7 +128,7 @@ public class UpdateSaleCommandHandler : IRequestHandler<UpdateSaleCommand, Empty
         {
             try
             {
-                var parsedExtras = System.Text.Json.JsonSerializer.Deserialize<List<SaleOtherExtras>>(request.Data.OtherExtras);
+                var parsedExtras = request.Data.OtherExtras.ParseJsonString<List<SaleOtherExtras>>();
                 otherExtras = parsedExtras;
             }
             catch
@@ -189,14 +190,14 @@ public class UpdateSaleCommandValidator : AbstractValidator<UpdateSaleCommand>
         RuleFor(x => x.Data.FarmerWeight).GreaterThanOrEqualTo(0);
         RuleFor(x => x.Data.BasePrice).GreaterThanOrEqualTo(0);
         RuleFor(x => x.Data.PriceWithExtras).GreaterThanOrEqualTo(0);
-        
+
         // Walidacja pliku
         When(x => x.Data.File != null, () =>
         {
             RuleFor(x => x.Data.File.Length)
                 .LessThanOrEqualTo(50 * 1024 * 1024) // Max 50MB
                 .WithMessage("Plik nie może być większy niż 50MB");
-            
+
             RuleFor(x => x.Data.File.ContentType)
                 .Must(IsValidFileType)
                 .WithMessage("Niedozwolony typ pliku. Akceptowane: PDF, JPG, PNG, GIF");
@@ -205,15 +206,15 @@ public class UpdateSaleCommandValidator : AbstractValidator<UpdateSaleCommand>
 
     private static bool IsValidFileType(string contentType)
     {
-        var allowedTypes = new[] 
-        { 
+        var allowedTypes = new[]
+        {
             "application/pdf",
             "image/jpeg",
             "image/png",
             "image/gif",
             "image/webp"
         };
-        
+
         return allowedTypes.Contains(contentType?.ToLower());
     }
 }
