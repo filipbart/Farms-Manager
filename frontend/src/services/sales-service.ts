@@ -93,9 +93,9 @@ export class SalesService {
         // OtherExtras must be JSON string
         formData.append(key, JSON.stringify(payload[key]));
       } else {
-        // Convert numbers to strings with dot as decimal separator
+        // Convert numbers to strings with comma as decimal separator
         const value = typeof payload[key] === 'number' 
-          ? payload[key].toString() 
+          ? payload[key].toString().replace('.', ',')
           : payload[key];
         formData.append(key, value);
       }
