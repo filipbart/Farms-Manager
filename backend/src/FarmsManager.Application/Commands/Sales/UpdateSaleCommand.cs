@@ -110,13 +110,6 @@ public class UpdateSaleCommandHandler : IRequestHandler<UpdateSaleCommand, Empty
 
         var response = new EmptyBaseResponse();
 
-        // Walidacja: jeśli plik jest wysyłany, sprzedaż nie może mieć już zapisanego pliku
-        if (request.Data.File != null && sale.HasDirectoryPath())
-        {
-            response.AddError("file", "Plik został już dodany do tej sprzedaży");
-            return response;
-        }
-
         if (sale.CycleId != cycle.Id)
         {
             sale.SetCycle(cycle.Id);
