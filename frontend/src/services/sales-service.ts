@@ -86,7 +86,7 @@ export class SalesService {
 
   public static async updateSale(saleId: string, payload: any, file?: File) {
     const formData = new FormData();
-    
+
     // Append all fields to FormData
     Object.keys(payload).forEach((key) => {
       if (key === "otherExtras") {
@@ -96,10 +96,10 @@ export class SalesService {
         const value = payload[key];
         // Skip undefined/null values
         if (value === undefined || value === null) {
-          formData.append(key, '');
-        } else if (typeof value === 'number') {
+          formData.append(key, "");
+        } else if (typeof value === "number") {
           // Convert numbers to strings with comma as decimal separator
-          formData.append(key, value.toString().replace('.', ','));
+          formData.append(key, value.toString().replace(".", ","));
         } else {
           formData.append(key, value);
         }
@@ -111,15 +111,11 @@ export class SalesService {
       formData.append("file", file);
     }
 
-    return await AxiosWrapper.post(
-      ApiUrl.UpdateSale + "/" + saleId,
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
+    return await AxiosWrapper.post(ApiUrl.UpdateSale + "/" + saleId, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
   }
 
   public static async deleteSale(saleId: string) {
