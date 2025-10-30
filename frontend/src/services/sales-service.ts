@@ -177,7 +177,7 @@ export class SalesService {
     id: string,
     data: { paymentDate: string; comment?: string }
   ) {
-    return await AxiosWrapper.patch(
+    return await AxiosWrapper.post(
       ApiUrl.MarkInvoiceAsCompleted + "/" + id,
       data
     );
