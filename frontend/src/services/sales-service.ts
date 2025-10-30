@@ -90,14 +90,25 @@ export class SalesService {
     // Append all fields to FormData
     Object.keys(payload).forEach((key) => {
       if (key === "otherExtras") {
-        // OtherExtras must be JSON string
-        formData.append(key, JSON.stringify(payload[key]));
+        // OtherExtras must be JSON string with numbers having comma as decimal separator
+        const extrasWithComma = payload[key].map((extra: any) => ({
+          name: extra.name,
+          value: typeof extra.value === 'number' 
+            ? extra.value.toString().replace('.', ',')
+            : extra.value
+        }));
+        formData.append(key, JSON.stringify(extrasWithComma));
       } else {
-        // Convert numbers to strings with comma as decimal separator
-        const value = typeof payload[key] === 'number' 
-          ? payload[key].toString().replace('.', ',')
-          : payload[key];
-        formData.append(key, value);
+        const value = payload[key];
+        // Skip undefined/null values
+        if (value === undefined || value === null) {
+          formData.append(key, '');
+        } else if (typeof value === 'number') {
+          // Convert numbers to strings with comma as decimal separator
+          formData.append(key, value.toString().replace('.', ','));
+        } else {
+          formData.append(key, value);
+        }
       }
     });
 
