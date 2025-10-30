@@ -3,7 +3,7 @@ import dayjs from "dayjs";
 import ActionsCell from "../../../components/datagrid/actions-cell";
 import { getAuditColumns } from "../../../utils/audit-columns-helper";
 import type { SalesInvoiceListModel } from "../../../models/sales/sales-invoices";
-import { SalesInvoiceStatus } from "../../../models/sales/sales-invoices";
+import { SalesInvoiceStatus, SalesInvoiceStatusLabels } from "../../../models/sales/sales-invoices";
 import FileDownloadCell from "../../../components/datagrid/file-download-cell";
 import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
 import { Button, Chip } from "@mui/material";
@@ -102,10 +102,11 @@ export const getSalesInvoicesColumns = ({
         if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
           return null;
         }
-        const isCompleted = params.row.status === SalesInvoiceStatus.Realized;
+        const status: SalesInvoiceStatus = params.row.status || SalesInvoiceStatus.Unrealized;
+        const isCompleted = status === SalesInvoiceStatus.Realized;
         return (
           <Chip
-            label={params.row.status || SalesInvoiceStatus.Unrealized}
+            label={SalesInvoiceStatusLabels[status]}
             color={isCompleted ? "success" : "error"}
             size="small"
           />
@@ -156,7 +157,8 @@ export const getSalesInvoicesColumns = ({
         if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
           return [];
         }
-        const isCompleted = params.row.status === SalesInvoiceStatus.Realized;
+        const status: SalesInvoiceStatus = params.row.status || SalesInvoiceStatus.Unrealized;
+        const isCompleted = status === SalesInvoiceStatus.Realized;
         const actions = [];
 
         if (!isCompleted && onMarkAsCompleted) {
