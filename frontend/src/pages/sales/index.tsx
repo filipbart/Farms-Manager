@@ -56,24 +56,13 @@ const SalesPage: React.FC = () => {
 
   const [initialGridState] = useState(() => {
     const savedState = localStorage.getItem("salesGridState");
-    if (savedState) {
-      try {
-        const parsed = JSON.parse(savedState);
-        // Clear rowGrouping to prevent errors with undefined fields
-        if (parsed.rowGrouping) {
-          delete parsed.rowGrouping;
-        }
-        return parsed;
-      } catch (e) {
-        console.error("Failed to parse salesGridState", e);
-        localStorage.removeItem("salesGridState");
-      }
-    }
-    return {
-      columns: {
-        columnVisibilityModel: { dateCreatedUtc: false },
-      },
-    };
+    return savedState
+      ? JSON.parse(savedState)
+      : {
+          columns: {
+            columnVisibilityModel: { dateCreatedUtc: false },
+          },
+        };
   });
 
   const [downloadDirectoryPath, setDownloadDirectoryPath] = useState<
@@ -198,12 +187,7 @@ const SalesPage: React.FC = () => {
       </Box>
 
       <FiltersForm
-        config={getSaleFiltersConfig(
-          dictionary,
-          uniqueCycles,
-          filters,
-          isAdmin
-        )}
+        config={getSaleFiltersConfig(dictionary, uniqueCycles, filters, isAdmin)}
         filters={filters}
         dispatch={dispatch}
       />
