@@ -85,32 +85,32 @@ export class SalesService {
   }
 
   public static async updateSale(saleId: string, payload: any, file?: File) {
-    console.log("file: ", file);
+    const formData = new FormData();
+    
+    // Append all fields to FormData
+    Object.keys(payload).forEach((key) => {
+      if (key === "otherExtras") {
+        // OtherExtras must be JSON string
+        formData.append(key, JSON.stringify(payload[key]));
+      } else {
+        formData.append(key, payload[key]);
+      }
+    });
+
+    // Append file if provided
     if (file) {
-      const formData = new FormData();
       formData.append("file", file);
-
-      // Append all other fields as JSON string
-      Object.keys(payload).forEach((key) => {
-        if (key === "otherExtras") {
-          formData.append(key, JSON.stringify(payload[key]));
-        } else {
-          formData.append(key, payload[key]);
-        }
-      });
-
-      return await AxiosWrapper.post(
-        ApiUrl.UpdateSale + "/" + saleId,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
     }
 
-    return await AxiosWrapper.post(ApiUrl.UpdateSale + "/" + saleId, payload);
+    return await AxiosWrapper.post(
+      ApiUrl.UpdateSale + "/" + saleId,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
   }
 
   public static async deleteSale(saleId: string) {
