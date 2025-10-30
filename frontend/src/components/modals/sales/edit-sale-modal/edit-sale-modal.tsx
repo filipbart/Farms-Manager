@@ -209,7 +209,7 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({
     <AppDialog
       open={open}
       onClose={onClose}
-      maxWidth={!form.directoryPath ? "lg" : "md"}
+      maxWidth="lg"
       fullWidth
     >
       <DialogTitle>Edycja pozycji sprzedaży</DialogTitle>
@@ -218,6 +218,9 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({
 
           <Grid size={12}>
             <TextField label="Ferma" fullWidth value={form.farmName} disabled />
+          </Grid>
+          <Grid size={12}>
+            <TextField label="Kurnik" fullWidth value={form.henhouseName} disabled />
           </Grid>
           <Grid size={12}>
             <LoadingTextField
@@ -460,63 +463,59 @@ const EditSaleModal: React.FC<EditSaleModalProps> = ({
             />
           </Grid>
 
-          {!form.directoryPath && (
-            <>
-              {selectedFile && (
-                <Grid size={12}>
-                  <Box mb={2}>
-                    <Typography variant="subtitle2" gutterBottom>
-                      Podgląd nowego pliku
-                    </Typography>
-                    <FilePreview
-                      file={selectedFile}
-                      maxHeight={400}
-                      showPreviewButton={false}
-                    />
-                  </Box>
-                </Grid>
-              )}
-
-              <Grid size={12}>
-                <Button
-                  variant="outlined"
-                  component="label"
-                  startIcon={<MdAttachFile />}
-                  fullWidth
-                  sx={{ mt: 2 }}
-                >
-                  {selectedFile ? "Zmień plik" : "Dodaj plik"}
-                  <input
-                    type="file"
-                    hidden
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        setSelectedFile(file);
-                      }
-                    }}
-                  />
-                </Button>
-                {selectedFile && (
-                  <Box
-                    mt={1}
-                    display="flex"
-                    justifyContent="space-between"
-                    alignItems="center"
-                  >
-                    <Typography variant="body2">{selectedFile.name}</Typography>
-                    <Button
-                      size="small"
-                      color="error"
-                      onClick={() => setSelectedFile(null)}
-                    >
-                      Usuń
-                    </Button>
-                  </Box>
-                )}
-              </Grid>
-            </>
+          {selectedFile && (
+            <Grid size={12}>
+              <Box mb={2}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Podgląd nowego pliku
+                </Typography>
+                <FilePreview
+                  file={selectedFile}
+                  maxHeight={400}
+                  showPreviewButton={false}
+                />
+              </Box>
+            </Grid>
           )}
+
+          <Grid size={12}>
+            <Button
+              variant="outlined"
+              component="label"
+              startIcon={<MdAttachFile />}
+              fullWidth
+              sx={{ mt: 2 }}
+            >
+              {selectedFile ? "Zmień plik" : "Dodaj plik"}
+              <input
+                type="file"
+                hidden
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setSelectedFile(file);
+                  }
+                }}
+              />
+            </Button>
+            {selectedFile && (
+              <Box
+                mt={1}
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+              >
+                <Typography variant="body2">{selectedFile.name}</Typography>
+                <Button
+                  size="small"
+                  color="error"
+                  onClick={() => setSelectedFile(null)}
+                >
+                  Usuń
+                </Button>
+              </Box>
+            )}
+          </Grid>
         </Grid>
       </DialogContent>
       <DialogActions>
