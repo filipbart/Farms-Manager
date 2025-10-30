@@ -84,15 +84,12 @@ export class SalesService {
     );
   }
 
-  public static async updateSale(
-    saleId: string,
-    payload: any,
-    file?: File
-  ) {
+  public static async updateSale(saleId: string, payload: any, file?: File) {
+    console.log("file: ", file);
     if (file) {
       const formData = new FormData();
       formData.append("file", file);
-      
+
       // Append all other fields as JSON string
       Object.keys(payload).forEach((key) => {
         if (key === "otherExtras") {
@@ -102,7 +99,7 @@ export class SalesService {
         }
       });
 
-      return await AxiosWrapper.patch(
+      return await AxiosWrapper.post(
         ApiUrl.UpdateSale + "/" + saleId,
         formData,
         {
@@ -113,7 +110,7 @@ export class SalesService {
       );
     }
 
-    return await AxiosWrapper.patch(ApiUrl.UpdateSale + "/" + saleId, payload);
+    return await AxiosWrapper.post(ApiUrl.UpdateSale + "/" + saleId, payload);
   }
 
   public static async deleteSale(saleId: string) {
