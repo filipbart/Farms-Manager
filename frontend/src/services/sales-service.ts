@@ -93,7 +93,11 @@ export class SalesService {
         // OtherExtras must be JSON string
         formData.append(key, JSON.stringify(payload[key]));
       } else {
-        formData.append(key, payload[key]);
+        // Convert numbers to strings with dot as decimal separator
+        const value = typeof payload[key] === 'number' 
+          ? payload[key].toString() 
+          : payload[key];
+        formData.append(key, value);
       }
     });
 
