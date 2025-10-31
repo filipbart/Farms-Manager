@@ -1,4 +1,4 @@
-﻿using Ardalis.Specification;
+using Ardalis.Specification;
 using AutoMapper;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.FileSystem;
@@ -168,7 +168,25 @@ public class UploadDeliveriesFilesCommandProfile : Profile
             .ForMember(m => m.Quantity,
                 opt => opt.MapFrom(t => t.Items.Count != 0 ? t.Items.Sum(i => i.Quantity) : null))
             .ForMember(m => m.UnitPrice,
-                opt => opt.MapFrom(t => t.Items.Count != 0 ? t.Items.FirstOrDefault().UnitPrice : null));
+                opt => opt.MapFrom(t => t.Items.Count != 0 ? t.Items.FirstOrDefault().UnitPrice : null))
+            .ForMember(m => m.SubTotal,
+                opt => opt.MapFrom(t =>
+                    t.Items.Count != 0
+                        ? (decimal?)Math.Round(t.Items.Sum(i => i.Quantity * i.UnitPrice).Value, 2,
+                            MidpointRounding.AwayFromZero)
+                        : null))
+            .ForMember(m => m.VatAmount,
+                opt => opt.MapFrom(t =>
+                    t.Items.Count != 0
+                        ? (decimal?)Math.Round(t.Items.Sum(i => i.Quantity * i.UnitPrice * 0.08m).Value, 2,
+                            MidpointRounding.AwayFromZero)
+                        : null))
+            .ForMember(m => m.InvoiceTotal,
+                opt => opt.MapFrom(t =>
+                    t.Items.Count != 0
+                        ? (decimal?)Math.Round(t.Items.Sum(i => i.Quantity * i.UnitPrice * 1.08m).Value, 2,
+                            MidpointRounding.AwayFromZero)
+                        : null));
     }
 }
 

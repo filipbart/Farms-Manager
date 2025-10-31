@@ -1,7 +1,6 @@
 using AutoMapper;
 using FarmsManager.Application.Common;
 using FarmsManager.Application.Common.Responses;
-using FarmsManager.Application.Extensions;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Queries.Farms;
 using FarmsManager.Application.Specifications.Users;

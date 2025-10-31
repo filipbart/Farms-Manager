@@ -71,8 +71,33 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
 
   const [previewOpen, setPreviewOpen] = useState(false);
   const watchedFarmId = watch("farmId");
+  const watchedUnitPrice = watch("unitPrice");
+  const watchedQuantity = watch("quantity");
 
   const draftFeed = draftFeedInvoices[currentIndex];
+
+  // Helper function to round to 2 decimal places (0.005 rounds up)
+  const roundTo2Decimals = (value: number): number => {
+    return Math.round(value * 100) / 100;
+  };
+
+  // Auto-calculate invoice values when unitPrice or quantity changes
+  useEffect(() => {
+    if (watchedUnitPrice && watchedQuantity) {
+      const unitPrice = Number(watchedUnitPrice);
+      const quantity = Number(watchedQuantity);
+
+      if (!isNaN(unitPrice) && !isNaN(quantity) && unitPrice >= 0 && quantity >= 0) {
+        const subTotal = roundTo2Decimals(unitPrice * quantity);
+        const vatAmount = roundTo2Decimals(subTotal * 0.08);
+        const invoiceTotal = roundTo2Decimals(subTotal + vatAmount);
+
+        setValue("subTotal", subTotal);
+        setValue("vatAmount", vatAmount);
+        setValue("invoiceTotal", invoiceTotal);
+      }
+    }
+  }, [watchedUnitPrice, watchedQuantity, setValue]);
 
   useEffect(() => {
     const fetchCyclesAndHenhouses = async (farmId: string) => {
