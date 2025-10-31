@@ -1,3 +1,4 @@
+using System.Globalization;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.FileSystem;
 using FarmsManager.Application.Interfaces;
@@ -24,9 +25,14 @@ public record UpdateSaleCommandFormDto
     public DateOnly SaleDate { get; init; }
 
     /// <summary>
-    /// Masa całkowita sprzedanych sztuk (w kg)
+    /// Masa całkowita sprzedanych sztuk (w kg) - string z frontendu
     /// </summary>
-    public decimal Weight { get; init; }
+    public string Weight { get; init; }
+
+    /// <summary>
+    /// Masa całkowita sprzedanych sztuk (w kg) - sparsowana wartość decimal
+    /// </summary>
+    public decimal WeightDecimal => ParseDecimal(Weight);
 
     /// <summary>
     /// Ilość sprzedanych sztuk
@@ -34,9 +40,14 @@ public record UpdateSaleCommandFormDto
     public int Quantity { get; init; }
 
     /// <summary>
-    /// Masa sztuk skonfiskowanych (w kg)
+    /// Masa sztuk skonfiskowanych (w kg) - string z frontendu
     /// </summary>
-    public decimal ConfiscatedWeight { get; init; }
+    public string ConfiscatedWeight { get; init; }
+
+    /// <summary>
+    /// Masa sztuk skonfiskowanych (w kg) - sparsowana wartość decimal
+    /// </summary>
+    public decimal ConfiscatedWeightDecimal => ParseDecimal(ConfiscatedWeight);
 
     /// <summary>
     /// Liczba sztuk skonfiskowanych
@@ -44,9 +55,14 @@ public record UpdateSaleCommandFormDto
     public int ConfiscatedCount { get; init; }
 
     /// <summary>
-    /// Masa sztuk martwych (w kg)
+    /// Masa sztuk martwych (w kg) - string z frontendu
     /// </summary>
-    public decimal DeadWeight { get; init; }
+    public string DeadWeight { get; init; }
+
+    /// <summary>
+    /// Masa sztuk martwych (w kg) - sparsowana wartość decimal
+    /// </summary>
+    public decimal DeadWeightDecimal => ParseDecimal(DeadWeight);
 
     /// <summary>
     /// Liczba sztuk martwych
@@ -54,19 +70,34 @@ public record UpdateSaleCommandFormDto
     public int DeadCount { get; init; }
 
     /// <summary>
-    /// Masa wskazana przez hodowcę (w kg)
+    /// Masa wskazana przez hodowcę (w kg) - string z frontendu
     /// </summary>
-    public decimal FarmerWeight { get; init; }
+    public string FarmerWeight { get; init; }
 
     /// <summary>
-    /// Cena bazowa za 1 kg (zł)
+    /// Masa wskazana przez hodowcę (w kg) - sparsowana wartość decimal
     /// </summary>
-    public decimal BasePrice { get; init; }
+    public decimal FarmerWeightDecimal => ParseDecimal(FarmerWeight);
 
     /// <summary>
-    /// Cena końcowa z uwzględnieniem dodatków (zł)
+    /// Cena bazowa za 1 kg (zł) - string z frontendu
     /// </summary>
-    public decimal PriceWithExtras { get; init; }
+    public string BasePrice { get; init; }
+
+    /// <summary>
+    /// Cena bazowa za 1 kg (zł) - sparsowana wartość decimal
+    /// </summary>
+    public decimal BasePriceDecimal => ParseDecimal(BasePrice);
+
+    /// <summary>
+    /// Cena końcowa z uwzględnieniem dodatków (zł) - string z frontendu
+    /// </summary>
+    public string PriceWithExtras { get; init; }
+
+    /// <summary>
+    /// Cena końcowa z uwzględnieniem dodatków (zł) - sparsowana wartość decimal
+    /// </summary>
+    public decimal PriceWithExtrasDecimal => ParseDecimal(PriceWithExtras);
 
     /// <summary>
     /// Komentarz
@@ -82,6 +113,20 @@ public record UpdateSaleCommandFormDto
     /// Plik do dodania (opcjonalny)
     /// </summary>
     public IFormFile File { get; init; }
+
+    private static decimal ParseDecimal(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return 0m;
+
+        // Zamiana przecinka na kropkę
+        var normalizedValue = value.Replace(",", ".");
+
+        if (decimal.TryParse(normalizedValue, NumberStyles.Any, CultureInfo.InvariantCulture, out var result))
+            return result;
+
+        return 0m;
+    }
 }
 
 public record UpdateSaleCommand(Guid Id, UpdateSaleCommandFormDto Data) : IRequest<EmptyBaseResponse>;
@@ -133,15 +178,15 @@ public class UpdateSaleCommandHandler : IRequestHandler<UpdateSaleCommand, Empty
 
         sale.Update(
             request.Data.SaleDate,
-            request.Data.Weight,
+            request.Data.WeightDecimal,
             request.Data.Quantity,
-            request.Data.ConfiscatedWeight,
+            request.Data.ConfiscatedWeightDecimal,
             request.Data.ConfiscatedCount,
-            request.Data.DeadWeight,
+            request.Data.DeadWeightDecimal,
             request.Data.DeadCount,
-            request.Data.FarmerWeight,
-            request.Data.BasePrice,
-            request.Data.PriceWithExtras,
+            request.Data.FarmerWeightDecimal,
+            request.Data.BasePriceDecimal,
+            request.Data.PriceWithExtrasDecimal,
             request.Data.Comment,
             otherExtras
         );
@@ -175,14 +220,14 @@ public class UpdateSaleCommandValidator : AbstractValidator<UpdateSaleCommand>
         RuleFor(x => x.Data.CycleId).NotEmpty();
         RuleFor(x => x.Data.SaleDate).NotNull().LessThanOrEqualTo(DateOnly.FromDateTime(DateTime.Now));
         RuleFor(x => x.Data.Quantity).GreaterThan(0);
-        RuleFor(x => x.Data.Weight).GreaterThan(0);
+        RuleFor(x => x.Data.Weight).NotEmpty().WithMessage("Waga jest wymagana");
         RuleFor(x => x.Data.ConfiscatedCount).GreaterThanOrEqualTo(0);
-        RuleFor(x => x.Data.ConfiscatedWeight).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.Data.ConfiscatedWeight).NotNull().WithMessage("Waga skonfiskowana jest wymagana");
         RuleFor(x => x.Data.DeadCount).GreaterThanOrEqualTo(0);
-        RuleFor(x => x.Data.DeadWeight).GreaterThanOrEqualTo(0);
-        RuleFor(x => x.Data.FarmerWeight).GreaterThanOrEqualTo(0);
-        RuleFor(x => x.Data.BasePrice).GreaterThanOrEqualTo(0);
-        RuleFor(x => x.Data.PriceWithExtras).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.Data.DeadWeight).NotNull().WithMessage("Waga martwych jest wymagana");
+        RuleFor(x => x.Data.FarmerWeight).NotNull().WithMessage("Waga hodowcy jest wymagana");
+        RuleFor(x => x.Data.BasePrice).NotEmpty().WithMessage("Cena bazowa jest wymagana");
+        RuleFor(x => x.Data.PriceWithExtras).NotEmpty().WithMessage("Cena końcowa jest wymagana");
 
         // Walidacja pliku
         When(x => x.Data.File != null, () =>
