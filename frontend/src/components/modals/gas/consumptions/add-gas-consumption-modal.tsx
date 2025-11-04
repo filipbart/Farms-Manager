@@ -16,10 +16,11 @@ import LoadingTextField from "../../../common/loading-textfield";
 import LoadingButton from "../../../common/loading-button";
 import AppDialog from "../../../common/app-dialog";
 import { useFarms } from "../../../../hooks/useFarms";
-import { useLatestCycle } from "../../../../hooks/useLatestCycle";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import type { AddGasConsumptionData } from "../../../../models/gas/gas-consumptions";
 import { GasService } from "../../../../services/gas-service";
+import { FarmsService } from "../../../../services/farms-service";
+import type CycleDto from "../../../../models/farms/latest-cycle";
 
 interface AddGasConsumptionModalProps {
   open: boolean;
@@ -33,7 +34,8 @@ const AddGasConsumptionModal: React.FC<AddGasConsumptionModalProps> = ({
   onSave,
 }) => {
   const { farms, loadingFarms, fetchFarms } = useFarms();
-  const { loadLatestCycle, loadingCycle } = useLatestCycle();
+  const [cycles, setCycles] = useState<CycleDto[]>([]);
+  const [loadingCycles, setLoadingCycles] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isCalculatingCost, setIsCalculatingCost] = useState(false);
 
@@ -43,10 +45,8 @@ const AddGasConsumptionModal: React.FC<AddGasConsumptionModalProps> = ({
     formState: { errors },
     reset,
     setValue,
-    setError,
-    clearErrors,
     watch,
-  } = useForm<AddGasConsumptionData & { cycleDisplay: string }>();
+  } = useForm<AddGasConsumptionData>();
 
   const farmId = watch("farmId");
   const quantityConsumed = watch("quantityConsumed");
@@ -87,24 +87,26 @@ const AddGasConsumptionModal: React.FC<AddGasConsumptionModalProps> = ({
 
   const handleFarmChange = async (farmId: string) => {
     setValue("cycleId", "");
-    setValue("cycleDisplay", "");
-    clearErrors("cycleId");
+    setCycles([]);
 
-    const cycle = await loadLatestCycle(farmId);
-    if (cycle) {
-      setValue("cycleId", cycle.id);
-      setValue("cycleDisplay", `${cycle.identifier}/${cycle.year}`);
-      clearErrors("cycleId");
-    } else {
-      setError("cycleId", {
-        type: "manual",
-        message: "Brak aktywnego cyklu dla wybranej fermy",
-      });
+    const selectedFarm = farms.find((f) => f.id === farmId);
+    if (selectedFarm?.activeCycle) {
+      setValue("cycleId", selectedFarm.activeCycle.id);
     }
+
+    setLoadingCycles(true);
+    await handleApiResponse(
+      () => FarmsService.getFarmCycles(farmId),
+      (data) => setCycles(data.responseData ?? []),
+      () => setCycles([]),
+      "Nie udało się pobrać listy cykli"
+    );
+    setLoadingCycles(false);
   };
 
   const handleClose = () => {
     reset();
+    setCycles([]);
     onClose();
   };
 
@@ -152,14 +154,23 @@ const AddGasConsumptionModal: React.FC<AddGasConsumptionModalProps> = ({
 
             <Grid size={{ xs: 12 }}>
               <LoadingTextField
-                loading={loadingCycle}
+                loading={loadingCycles}
                 label="Cykl"
-                value={watch("cycleDisplay") || ""}
-                slotProps={{ input: { readOnly: true } }}
+                select
                 error={!!errors.cycleId}
                 helperText={errors.cycleId?.message}
                 fullWidth
-              />
+                disabled={!farmId || loadingCycles || cycles.length === 0}
+                {...register("cycleId", {
+                  required: "Cykl jest wymagany",
+                })}
+              >
+                {cycles.map((cycle) => (
+                  <MenuItem key={cycle.id} value={cycle.id}>
+                    {`${cycle.identifier}/${cycle.year}`}
+                  </MenuItem>
+                ))}
+              </LoadingTextField>
             </Grid>
 
             <Grid size={{ xs: 12, sm: 6 }}>
