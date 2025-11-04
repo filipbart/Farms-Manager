@@ -75,10 +75,10 @@ public class SummaryProductionAnalysisRowDto
     public decimal? PartSaleConfiscatedWeight { get; set; }
 
     /// <summary>Liczba sztuk uwzględnionych do rozliczenia ubiórka</summary>
-    public int? PartSaleSettlementCount => PartSaleSoldCount - PartSaleDeadCount - PartSaleConfiscatedCount;
+    public int? PartSaleSettlementCount => PartSaleSoldCount.GetValueOrDefault() - PartSaleDeadCount.GetValueOrDefault() - PartSaleConfiscatedCount.GetValueOrDefault();
 
     /// <summary>Masa ciała sprzedanych ptaków do rozliczenia ubióka [kg]</summary>
-    public decimal? PartSaleSettlementWeight => PartSaleSoldWeight - PartSaleDeadWeight - PartSaleConfiscatedWeight;
+    public decimal? PartSaleSettlementWeight => PartSaleSoldWeight.GetValueOrDefault() - PartSaleDeadWeight.GetValueOrDefault() - PartSaleConfiscatedWeight.GetValueOrDefault();
 
     /// <summary>Data sprzedaży całkowitej</summary>
     public DateOnly? TotalSaleDate { get; set; }
@@ -133,10 +133,10 @@ public class SummaryProductionAnalysisRowDto
     public decimal? TotalSaleConfiscatedWeight { get; set; }
 
     /// <summary>Liczba sztuk uwzględnionych do rozliczenia sprzedaż całkowita</summary>
-    public int? TotalSaleSettlementCount => TotalSaleSoldCount - TotalSaleDeadCount - TotalSaleConfiscatedCount;
+    public int? TotalSaleSettlementCount => TotalSaleSoldCount.GetValueOrDefault() - TotalSaleDeadCount.GetValueOrDefault() - TotalSaleConfiscatedCount.GetValueOrDefault();
 
     /// <summary>Masa ciała sprzedanych ptaków do rozliczenia sprzedaż całkowita</summary>
-    public decimal? TotalSaleSettlementWeight => TotalSaleSoldWeight - TotalSaleDeadWeight - TotalSaleConfiscatedWeight;
+    public decimal? TotalSaleSettlementWeight => TotalSaleSoldWeight.GetValueOrDefault() - TotalSaleDeadWeight.GetValueOrDefault() - TotalSaleConfiscatedWeight.GetValueOrDefault();
 
     /// <summary>Sztuki sprzedane razem</summary>
     public int? CombinedSoldCount { get; set; }
@@ -158,10 +158,10 @@ public class SummaryProductionAnalysisRowDto
     public decimal? CombinedFarmerWeight { get; set; }
 
     /// <summary>Liczba sztuk uwzględnionych do rozliczenia ubiórka + sprzedaż całkowita</summary>
-    public int? CombinedSettlementCount => PartSaleSettlementCount + TotalSaleSettlementCount;
+    public int? CombinedSettlementCount => PartSaleSettlementCount.GetValueOrDefault() + TotalSaleSettlementCount.GetValueOrDefault();
 
     /// <summary>Masa ciała sprzedanych ptaków do rozliczenia ubiórka + sprzedaż całkowita [kg]</summary>
-    public decimal? CombinedSettlementWeight => PartSaleSettlementWeight + TotalSaleSettlementWeight;
+    public decimal? CombinedSettlementWeight => PartSaleSettlementWeight.GetValueOrDefault() + TotalSaleSettlementWeight.GetValueOrDefault();
 
     /// <summary>Średnia doba życia ubiórka + sprzedaż całkowita</summary>
     public decimal? CombinedAvgAgeInDays
@@ -255,7 +255,7 @@ public class SummaryProductionAnalysisRowDto
     }
 
     /// <summary>Punkty</summary>
-    public decimal? Points => CombinedAvgWeight - FcrWithoutLosses;
+    public decimal? Points => CombinedAvgWeight.GetValueOrDefault() - FcrWithoutLosses.GetValueOrDefault();
 
     /// <summary>EWW</summary>
     public decimal? Eww
