@@ -36,12 +36,6 @@ public class DeleteFallenStocksCommandHandler : IRequestHandler<DeleteFallenStoc
             return response;
         }
 
-        if (fallenStocksToDelete.Any(fs => fs.DateIrzSentUtc.HasValue))
-        {
-            response.AddError("Delete", "Nie można usunąć zgłoszenia, ponieważ zostało już wysłane do IRZplus.");
-            return response;
-        }
-
         foreach (var fallenStockEntity in fallenStocksToDelete)
         {
             fallenStockEntity.Delete(userId);
