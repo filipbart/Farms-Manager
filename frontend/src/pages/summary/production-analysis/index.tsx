@@ -219,10 +219,10 @@ const SummaryProductionAnalysisPage: React.FC = () => {
     [columnStats]
   );
 
-  const rowsWithSummary = useMemo(() => {
-    if (!summaryData) return analysisData;
+  const summaryRow = useMemo(() => {
+    if (!summaryData) return null;
     
-    const summaryRow: ProductionAnalysisRowModel = {
+    return {
       id: 'sum',
       cycleText: 'Suma',
       farmName: '',
@@ -235,10 +235,8 @@ const SummaryProductionAnalysisPage: React.FC = () => {
       totalSaleAvgWeightDeviation: null,
       partSaleDate: null,
       totalSaleDate: null,
-    };
-    
-    return [...analysisData, summaryRow];
-  }, [analysisData, summaryData]);
+    } as ProductionAnalysisRowModel;
+  }, [summaryData]);
 
   // Pass the state and handlers down to the toolbar component
   const SummaryProductionToolbar = (props: GridToolbarProps) => {
@@ -274,10 +272,12 @@ const SummaryProductionAnalysisPage: React.FC = () => {
         <DataGridPremium
           apiRef={apiRef} // Attach the apiRef to the grid
           loading={loading}
-          rows={rowsWithSummary}
+          rows={analysisData}
           columns={columns}
           scrollbarSize={17}
           initialState={initialGridState}
+          pinnedRows={summaryRow ? { bottom: [summaryRow] } : undefined}
+          isRowSelectable={(params) => !params.row.isSummaryRow}
           onStateChange={(newState: GridState) => {
             const stateToSave = {
               columns: newState.columns,
