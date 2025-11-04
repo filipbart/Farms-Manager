@@ -254,6 +254,7 @@ const EditFallenStocksModal: React.FC<EditFallenStocksModalProps> = ({
                       setErrors((prev) => ({ ...prev, date: undefined }));
                     }}
                     format="DD.MM.YYYY"
+                    maxDate={dayjs()}
                     slotProps={{
                       textField: {
                         fullWidth: true,
