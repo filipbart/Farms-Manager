@@ -36,7 +36,7 @@ public class SummaryProductionAnalysisRowDto
     {
         get
         {
-            if (PartSaleSoldCount is null or 0) return null;
+            if (PartSaleSoldCount is null or 0) return 0;
             return PartSaleSoldWeight / PartSaleSoldCount;
         }
     }
@@ -57,7 +57,7 @@ public class SummaryProductionAnalysisRowDto
     {
         get
         {
-            if (PartSaleFarmerWeight is null or 0) return null;
+            if (PartSaleFarmerWeight is null or 0) return 0;
             return (PartSaleFarmerWeight - PartSaleSoldWeight) / PartSaleFarmerWeight * 100;
         }
     }
@@ -94,7 +94,7 @@ public class SummaryProductionAnalysisRowDto
     {
         get
         {
-            if (TotalSaleSoldCount is null or 0) return null;
+            if (TotalSaleSoldCount is null or 0) return 0;
             return TotalSaleSoldWeight / TotalSaleSoldCount;
         }
     }
@@ -115,7 +115,7 @@ public class SummaryProductionAnalysisRowDto
     {
         get
         {
-            if (TotalSaleFarmerWeight is null or 0) return null;
+            if (TotalSaleFarmerWeight is null or 0) return 0;
             return (TotalSaleFarmerWeight - TotalSaleSoldWeight) / TotalSaleFarmerWeight * 100;
         }
     }
@@ -149,7 +149,7 @@ public class SummaryProductionAnalysisRowDto
     {
         get
         {
-            if (CombinedSoldCount is null or 0) return null;
+            if (CombinedSoldCount is null or 0) return 0;
             return CombinedSoldWeight / CombinedSoldCount;
         }
     }
@@ -168,7 +168,7 @@ public class SummaryProductionAnalysisRowDto
     {
         get
         {
-            if (CombinedSettlementCount is null or 0) return null;
+            if (CombinedSettlementCount is null or 0) return 0;
 
             var weightedSum = PartSaleSettlementCount.GetValueOrDefault() * PartSaleAgeInDays.GetValueOrDefault() +
                               TotalSaleSettlementCount.GetValueOrDefault() * TotalSaleAgeInDays.GetValueOrDefault();
@@ -188,7 +188,7 @@ public class SummaryProductionAnalysisRowDto
     {
         get
         {
-            if (InsertionQuantity is null or 0) return null;
+            if (InsertionQuantity is null or 0) return 0;
             
             var totalLosses = PartSaleDeadCount.GetValueOrDefault() +
                               PartSaleConfiscatedCount.GetValueOrDefault() +
@@ -206,7 +206,7 @@ public class SummaryProductionAnalysisRowDto
     {
         get
         {
-            if (InsertionQuantity is null or 0) return null;
+            if (InsertionQuantity is null or 0) return 0;
             return DeadCountCycle * 100m / InsertionQuantity;
         }
     }
@@ -216,7 +216,7 @@ public class SummaryProductionAnalysisRowDto
     {
         get
         {
-            if (InsertionQuantity is null or 0) return null;
+            if (InsertionQuantity is null or 0) return 0;
             return DefectiveCountCycle * 100m / InsertionQuantity;
         }
     }
@@ -226,7 +226,7 @@ public class SummaryProductionAnalysisRowDto
     {
         get
         {
-            if (InsertionQuantity is null or 0) return null;
+            if (InsertionQuantity is null or 0) return 0;
             return (DeadCountCycle.GetValueOrDefault() + DefectiveCountCycle.GetValueOrDefault()) * 100m / InsertionQuantity;
         }
     }
@@ -239,7 +239,7 @@ public class SummaryProductionAnalysisRowDto
     {
         get
         {
-            if (CombinedSoldWeight is null or 0) return null;
+            if (CombinedSoldWeight is null or 0) return 0;
             return FeedConsumedTons * 1000 / CombinedSoldWeight;
         }
     }
@@ -249,7 +249,7 @@ public class SummaryProductionAnalysisRowDto
     {
         get
         {
-            if (CombinedSettlementWeight is null or 0) return null;
+            if (CombinedSettlementWeight is null or 0) return 0;
             return FeedConsumedTons * 1000 / CombinedSettlementWeight;
         }
     }
@@ -263,7 +263,7 @@ public class SummaryProductionAnalysisRowDto
         get
         {
             var denominator = CombinedAvgAgeInDays * FcrWithoutLosses;
-            if (denominator is null or 0) return null;
+            if (denominator is null or 0) return 0;
             
             return SurvivalRatePct * CombinedAvgWeight / denominator * 100;
         }
@@ -277,7 +277,7 @@ public class SummaryProductionAnalysisRowDto
     {
         get
         {
-            if (HouseAreaM2 is null or 0) return null;
+            if (HouseAreaM2 is null or 0) return 0;
             return CombinedSoldWeight / HouseAreaM2;
         }
     }
@@ -287,7 +287,7 @@ public class SummaryProductionAnalysisRowDto
     {
         get
         {
-            if (HouseAreaM2 is null or 0) return null;
+            if (HouseAreaM2 is null or 0) return 0;
             return CombinedSettlementWeight / HouseAreaM2;
         }
     }
@@ -300,7 +300,7 @@ public class SummaryProductionAnalysisRowDto
     {
         get
         {
-            if (HouseAreaM2 is null or 0) return null;
+            if (HouseAreaM2 is null or 0) return 0;
             return GasConsumptionLiters / HouseAreaM2;
         }
     }
