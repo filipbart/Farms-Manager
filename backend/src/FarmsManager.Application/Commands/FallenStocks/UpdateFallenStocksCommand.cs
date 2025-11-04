@@ -1,4 +1,4 @@
-﻿using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications.Cycle;
 using FarmsManager.Application.Specifications.FallenStocks;
@@ -19,6 +19,7 @@ public record UpdateFallenStockEntry
 public record UpdateFallenStocksData
 {
     public Guid CycleId { get; init; }
+    public DateOnly Date { get; init; }
     public List<UpdateFallenStockEntry> Entries { get; init; }
 }
 
@@ -64,7 +65,7 @@ public class UpdateFallenStocksCommandHandler : IRequestHandler<UpdateFallenStoc
 
             if (updatedEntryData != null)
             {
-                existingEntry.Update(updatedEntryData.Quantity);
+                existingEntry.Update(updatedEntryData.Quantity, request.Data.Date);
                 existingEntry.SetModified(userId);
             }
         }

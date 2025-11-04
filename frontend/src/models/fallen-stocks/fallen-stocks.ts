@@ -51,6 +51,7 @@ export type FallenStockEditableEntry = {
 
 export interface UpdateFallenStocksData {
   cycleId: string;
+  date: string;
   entries: FallenStockEditableEntry[];
 }
 

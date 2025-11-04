@@ -52,9 +52,10 @@ public class FallenStockEntity : Entity
         };
     }
 
-    public void Update(int quantity)
+    public void Update(int quantity, DateOnly date)
     {
         Quantity = quantity;
+        Date = date;
     }
 
     public void SetCycle(Guid cycleId)

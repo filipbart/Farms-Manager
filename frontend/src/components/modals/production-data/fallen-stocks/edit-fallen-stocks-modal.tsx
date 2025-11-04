@@ -14,6 +14,8 @@ import {
   MenuItem,
   TableRow,
 } from "@mui/material";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import dayjs, { type Dayjs } from "dayjs";
 import { toast } from "react-toastify";
 import { MdSave } from "react-icons/md";
 import { FallenStockService } from "../../../../services/production-data/fallen-stocks-service";
@@ -56,10 +58,12 @@ const EditFallenStocksModal: React.FC<EditFallenStocksModalProps> = ({
   const [errors, setErrors] = useState<{
     [index: number]: { quantity?: string };
     cycleId?: string;
+    date?: string;
   }>({});
   const [cycles, setCycles] = useState<CycleDto[]>([]);
   const [loadingCycles, setLoadingCycles] = useState(false);
   const [selectedCycleId, setSelectedCycleId] = useState("");
+  const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null);
 
   useEffect(() => {
     const fetchFallenStockData = async () => {
@@ -82,6 +86,7 @@ const EditFallenStocksModal: React.FC<EditFallenStocksModalProps> = ({
               utilizationPlantName: responseData.utilizationPlantName,
               date: new Date(responseData.date).toLocaleDateString("pl-PL"),
             });
+            setSelectedDate(dayjs(responseData.date));
             setEntries(
               responseData.entries.map((e) => ({
                 ...e,
@@ -128,11 +133,16 @@ const EditFallenStocksModal: React.FC<EditFallenStocksModalProps> = ({
   };
 
   const validate = (): boolean => {
-    const newErrors: { [index: number]: { quantity?: string } } = {};
+    const newErrors: { [index: number]: { quantity?: string }; date?: string; cycleId?: string } = {};
     let isValid = true;
 
     if (!selectedCycleId) {
-      setErrors((prev) => ({ ...prev, cycleId: "Cykl jest wymagany" }));
+      newErrors.cycleId = "Cykl jest wymagany";
+      isValid = false;
+    }
+    
+    if (!selectedDate || !selectedDate.isValid()) {
+      newErrors.date = "Data jest wymagana";
       isValid = false;
     }
     entries.forEach((entry, index) => {
@@ -143,7 +153,7 @@ const EditFallenStocksModal: React.FC<EditFallenStocksModalProps> = ({
       }
     });
 
-    setErrors(newErrors);
+    setErrors(newErrors as any);
     return isValid;
   };
 
@@ -155,6 +165,7 @@ const EditFallenStocksModal: React.FC<EditFallenStocksModalProps> = ({
       () =>
         FallenStockService.updateFallenStocks(internalGroupId, {
           cycleId: selectedCycleId,
+          date: selectedDate!.format("YYYY-MM-DD"),
           entries,
         }),
       () => {
@@ -173,6 +184,7 @@ const EditFallenStocksModal: React.FC<EditFallenStocksModalProps> = ({
     setEntries([]);
     setCycles([]);
     setErrors({});
+    setSelectedDate(null);
     onClose();
   };
 
@@ -234,11 +246,21 @@ const EditFallenStocksModal: React.FC<EditFallenStocksModalProps> = ({
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField
+                  <DatePicker
                     label="Data zgłoszenia"
-                    value={formData.date}
-                    slotProps={{ input: { readOnly: true } }}
-                    fullWidth
+                    value={selectedDate}
+                    onChange={(newValue) => {
+                      setSelectedDate(newValue);
+                      setErrors((prev) => ({ ...prev, date: undefined }));
+                    }}
+                    format="DD.MM.YYYY"
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        error: !!errors.date,
+                        helperText: errors.date,
+                      },
+                    }}
                   />
                 </Grid>
               </Grid>
