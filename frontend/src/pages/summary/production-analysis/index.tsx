@@ -6,7 +6,7 @@ import {
   initialFilters,
   type AnalysisDictionary,
 } from "../../../models/summary/analysis-filters";
-import type { ProductionAnalysisRowModel } from "../../../models/summary/production-analysis";
+import type { ProductionAnalysisRowModel, ProductionAnalysisSummaryModel } from "../../../models/summary/production-analysis";
 import type { CycleDictModel } from "../../../models/common/dictionaries";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import { SummaryService } from "../../../services/summary-service";
@@ -50,6 +50,7 @@ const SummaryProductionAnalysisPage: React.FC = () => {
     ProductionAnalysisRowModel[]
   >([]);
   const [totalRows, setTotalRows] = useState(0);
+  const [summaryData, setSummaryData] = useState<ProductionAnalysisSummaryModel | null>(null);
 
   const apiRef = useGridApiRef();
   const [savedViews, setSavedViews] = useState<ColumnViewRow[]>([]);
@@ -118,6 +119,7 @@ const SummaryProductionAnalysisPage: React.FC = () => {
           (data) => {
             setAnalysisData(data.responseData?.items ?? []);
             setTotalRows(data.responseData?.totalRows ?? 0);
+            setSummaryData(data.responseData?.summary ?? null);
           },
           undefined,
           "Błąd podczas pobierania danych analitycznych"
@@ -217,6 +219,27 @@ const SummaryProductionAnalysisPage: React.FC = () => {
     [columnStats]
   );
 
+  const rowsWithSummary = useMemo(() => {
+    if (!summaryData) return analysisData;
+    
+    const summaryRow: ProductionAnalysisRowModel = {
+      id: 'sum',
+      cycleText: 'Suma',
+      farmName: '',
+      henhouseName: '',
+      hatcheryName: '',
+      insertionDate: '',
+      isSummaryRow: true,
+      ...summaryData,
+      partSaleAvgWeightDeviation: null,
+      totalSaleAvgWeightDeviation: null,
+      partSaleDate: null,
+      totalSaleDate: null,
+    };
+    
+    return [...analysisData, summaryRow];
+  }, [analysisData, summaryData]);
+
   // Pass the state and handlers down to the toolbar component
   const SummaryProductionToolbar = (props: GridToolbarProps) => {
     return (
@@ -251,7 +274,7 @@ const SummaryProductionAnalysisPage: React.FC = () => {
         <DataGridPremium
           apiRef={apiRef} // Attach the apiRef to the grid
           loading={loading}
-          rows={analysisData}
+          rows={rowsWithSummary}
           columns={columns}
           scrollbarSize={17}
           initialState={initialGridState}
@@ -295,7 +318,7 @@ const SummaryProductionAnalysisPage: React.FC = () => {
           }}
           showToolbar
           getRowClassName={(params) => {
-            if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
+            if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID || params.row.isSummaryRow) {
               return "aggregated-row";
             }
             return "";

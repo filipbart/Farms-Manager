@@ -1,6 +1,6 @@
 import ApiUrl from "../common/ApiUrl";
 import type { PaginateModel } from "../common/interfaces/paginate";
-import type { ProductionAnalysisRowModel } from "../models/summary/production-analysis";
+import type { ProductionAnalysisResponseModel } from "../models/summary/production-analysis";
 import type {
   AnalysisDictionary,
   AnalysisFilterPaginationModel,
@@ -16,7 +16,7 @@ export class SummaryService {
   public static async getProductionAnalysis(
     filters: AnalysisFilterPaginationModel
   ) {
-    return await AxiosWrapper.get<PaginateModel<ProductionAnalysisRowModel>>(
+    return await AxiosWrapper.get<ProductionAnalysisResponseModel>(
       ApiUrl.SummaryProductionAnalysis,
       { ...filters }
     );

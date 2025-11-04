@@ -1,10 +1,11 @@
 export interface ProductionAnalysisRowModel {
-  id: number;
+  id: number | string;
   cycleText: string;
   farmName: string;
   henhouseName: string;
   hatcheryName: string;
   insertionDate: string;
+  isSummaryRow?: boolean;
   insertionQuantity: number | null;
   partSaleDate: string | null;
   partSaleSoldCount: number | null;
@@ -25,6 +26,64 @@ export interface ProductionAnalysisRowModel {
   totalSaleSoldWeight: number | null;
   totalSaleAvgWeight: number | null;
   totalSaleAvgWeightDeviation: number | null;
+  totalSaleFarmerWeight: number | null;
+  totalSaleAgeInDays: number | null;
+  totalWeightDiffPct: number | null;
+  totalSaleDeadCount: number | null;
+  totalSaleDeadWeight: number | null;
+  totalSaleConfiscatedCount: number | null;
+  totalSaleConfiscatedWeight: number | null;
+  totalSaleSettlementCount: number | null;
+  totalSaleSettlementWeight: number | null;
+  combinedSoldCount: number | null;
+  combinedSoldWeight: number | null;
+  combinedAvgWeight: number | null;
+  combinedFarmerWeight: number | null;
+  combinedSettlementCount: number | null;
+  combinedSettlementWeight: number | null;
+  combinedAvgAgeInDays: number | null;
+  deadCountCycle: number | null;
+  defectiveCountCycle: number | null;
+  survivalRatePct: number | null;
+  deadPctCycle: number | null;
+  defectivePctCycle: number | null;
+  deadAndDefectivePctCycle: number | null;
+  feedConsumedTons: number | null;
+  fcrWithLosses: number | null;
+  fcrWithoutLosses: number | null;
+  points: number | null;
+  eww: number | null;
+  houseAreaM2: number | null;
+  kgPerM2BeforeConf: number | null;
+  kgPerM2AfterConf: number | null;
+  gasConsumptionLiters: number | null;
+  gasConsumptionPerM2: number | null;
+  endCycleBirdBalance: number | null;
+}
+
+export interface ProductionAnalysisResponseModel {
+  totalRows: number;
+  items: ProductionAnalysisRowModel[];
+  summary?: ProductionAnalysisSummaryModel | null;
+}
+
+export interface ProductionAnalysisSummaryModel {
+  insertionQuantity: number | null;
+  partSaleSoldCount: number | null;
+  partSaleSoldWeight: number | null;
+  partSaleAvgWeight: number | null;
+  partSaleFarmerWeight: number | null;
+  partSaleAgeInDays: number | null;
+  partSaleWeightDiffPct: number | null;
+  partSaleDeadCount: number | null;
+  partSaleDeadWeight: number | null;
+  partSaleConfiscatedCount: number | null;
+  partSaleConfiscatedWeight: number | null;
+  partSaleSettlementCount: number | null;
+  partSaleSettlementWeight: number | null;
+  totalSaleSoldCount: number | null;
+  totalSaleSoldWeight: number | null;
+  totalSaleAvgWeight: number | null;
   totalSaleFarmerWeight: number | null;
   totalSaleAgeInDays: number | null;
   totalWeightDiffPct: number | null;

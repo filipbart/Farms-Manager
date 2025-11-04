@@ -20,7 +20,8 @@ const renderAvgWeightCell = (
 
   const formattedAvgWeight = avgWeight.toFixed(3);
 
-  if (deviation === null || deviation === undefined || deviation === 0) {
+  // For summary row, don't show deviation
+  if (params.row.isSummaryRow || deviation === null || deviation === undefined || deviation === 0) {
     return formattedAvgWeight;
   }
 

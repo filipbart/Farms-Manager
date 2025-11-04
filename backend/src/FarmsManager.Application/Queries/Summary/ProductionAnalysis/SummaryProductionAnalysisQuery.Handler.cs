@@ -202,10 +202,13 @@ public class SummaryProductionAnalysisQueryHandler : IRequestHandler<SummaryProd
             id++;
         }
 
+        var summary = CalculateSummary(resultList);
+        
         return BaseResponse.CreateResponse(new SummaryProductionAnalysisQueryResponse
         {
             TotalRows = resultList.Count,
-            Items = resultList
+            Items = resultList,
+            Summary = summary
         });
     }
 
@@ -270,5 +273,204 @@ public class SummaryProductionAnalysisQueryHandler : IRequestHandler<SummaryProd
         var consumedGasForFarm = gasLookup[gasKey].Sum(g => g.QuantityConsumed);
 
         return consumedGasForFarm / farmHenhousesArea * insertion.Henhouse.Area;
+    }
+
+    private static SummaryProductionAnalysisSummaryDto CalculateSummary(List<SummaryProductionAnalysisRowDto> rows)
+    {
+        if (rows.Count == 0) return null;
+
+        // Sumy proste
+        var insertionQuantity = rows.Sum(r => r.InsertionQuantity);
+        
+        var partSaleSoldCount = rows.Sum(r => r.PartSaleSoldCount);
+        var partSaleSoldWeight = rows.Sum(r => r.PartSaleSoldWeight);
+        var partSaleFarmerWeight = rows.Sum(r => r.PartSaleFarmerWeight);
+        var partSaleDeadCount = rows.Sum(r => r.PartSaleDeadCount);
+        var partSaleDeadWeight = rows.Sum(r => r.PartSaleDeadWeight);
+        var partSaleConfiscatedCount = rows.Sum(r => r.PartSaleConfiscatedCount);
+        var partSaleConfiscatedWeight = rows.Sum(r => r.PartSaleConfiscatedWeight);
+        
+        var totalSaleSoldCount = rows.Sum(r => r.TotalSaleSoldCount);
+        var totalSaleSoldWeight = rows.Sum(r => r.TotalSaleSoldWeight);
+        var totalSaleFarmerWeight = rows.Sum(r => r.TotalSaleFarmerWeight);
+        var totalSaleDeadCount = rows.Sum(r => r.TotalSaleDeadCount);
+        var totalSaleDeadWeight = rows.Sum(r => r.TotalSaleDeadWeight);
+        var totalSaleConfiscatedCount = rows.Sum(r => r.TotalSaleConfiscatedCount);
+        var totalSaleConfiscatedWeight = rows.Sum(r => r.TotalSaleConfiscatedWeight);
+        
+        var combinedSoldCount = rows.Sum(r => r.CombinedSoldCount);
+        var combinedSoldWeight = rows.Sum(r => r.CombinedSoldWeight);
+        var combinedFarmerWeight = rows.Sum(r => r.CombinedFarmerWeight);
+        
+        var deadCountCycle = rows.Sum(r => r.DeadCountCycle);
+        var defectiveCountCycle = rows.Sum(r => r.DefectiveCountCycle);
+        
+        var feedConsumedTons = rows.Sum(r => r.FeedConsumedTons);
+        var houseAreaM2 = rows.Sum(r => r.HouseAreaM2);
+        var gasConsumptionLiters = rows.Sum(r => r.GasConsumptionLiters);
+        
+        var endCycleBirdBalance = rows.Sum(r => r.EndCycleBirdBalance);
+        
+        // Sumy obliczeniowe (settlement)
+        var partSaleSettlementCount = partSaleSoldCount.GetValueOrDefault() - 
+                                      partSaleDeadCount.GetValueOrDefault() - 
+                                      partSaleConfiscatedCount.GetValueOrDefault();
+        var partSaleSettlementWeight = partSaleSoldWeight.GetValueOrDefault() - 
+                                       partSaleDeadWeight.GetValueOrDefault() - 
+                                       partSaleConfiscatedWeight.GetValueOrDefault();
+        
+        var totalSaleSettlementCount = totalSaleSoldCount.GetValueOrDefault() - 
+                                       totalSaleDeadCount.GetValueOrDefault() - 
+                                       totalSaleConfiscatedCount.GetValueOrDefault();
+        var totalSaleSettlementWeight = totalSaleSoldWeight.GetValueOrDefault() - 
+                                        totalSaleDeadWeight.GetValueOrDefault() - 
+                                        totalSaleConfiscatedWeight.GetValueOrDefault();
+        
+        var combinedSettlementCount = partSaleSettlementCount + totalSaleSettlementCount;
+        var combinedSettlementWeight = partSaleSettlementWeight + totalSaleSettlementWeight;
+        
+        // Średnie ważone
+        var partSaleAvgWeight = partSaleSoldCount > 0 
+            ? partSaleSoldWeight / partSaleSoldCount 
+            : null;
+        var totalSaleAvgWeight = totalSaleSoldCount > 0 
+            ? totalSaleSoldWeight / totalSaleSoldCount 
+            : null;
+        var combinedAvgWeight = combinedSoldCount > 0 
+            ? combinedSoldWeight / combinedSoldCount 
+            : null;
+        
+        // Średnie dla wieku
+        var partSaleAgeInDays = rows.Where(r => r.PartSaleAgeInDays.HasValue)
+            .Select(r => r.PartSaleAgeInDays!.Value)
+            .DefaultIfEmpty()
+            .Average();
+        var totalSaleAgeInDays = rows.Where(r => r.TotalSaleAgeInDays.HasValue)
+            .Select(r => r.TotalSaleAgeInDays!.Value)
+            .DefaultIfEmpty()
+            .Average();
+        var combinedAvgAgeInDays = rows.Where(r => r.CombinedAvgAgeInDays.HasValue)
+            .Select(r => r.CombinedAvgAgeInDays!.Value)
+            .DefaultIfEmpty()
+            .Average();
+        
+        // Procenty wagowe
+        var partSaleWeightDiffPct = partSaleFarmerWeight > 0 
+            ? (partSaleFarmerWeight - partSaleSoldWeight) / partSaleFarmerWeight * 100 
+            : null;
+        var totalWeightDiffPct = totalSaleFarmerWeight > 0 
+            ? (totalSaleFarmerWeight - totalSaleSoldWeight) / totalSaleFarmerWeight * 100 
+            : null;
+        
+        // Procenty przeżywalności
+        var totalLosses = partSaleDeadCount.GetValueOrDefault() +
+                         partSaleConfiscatedCount.GetValueOrDefault() +
+                         totalSaleDeadCount.GetValueOrDefault() +
+                         totalSaleConfiscatedCount.GetValueOrDefault() +
+                         deadCountCycle.GetValueOrDefault() +
+                         defectiveCountCycle.GetValueOrDefault();
+        
+        var survivalRatePct = insertionQuantity > 0 
+            ? (insertionQuantity - totalLosses) * 100m / insertionQuantity 
+            : null;
+        var deadPctCycle = insertionQuantity > 0 
+            ? deadCountCycle * 100m / insertionQuantity 
+            : null;
+        var defectivePctCycle = insertionQuantity > 0 
+            ? defectiveCountCycle * 100m / insertionQuantity 
+            : null;
+        var deadAndDefectivePctCycle = insertionQuantity > 0 
+            ? (deadCountCycle.GetValueOrDefault() + defectiveCountCycle.GetValueOrDefault()) * 100m / insertionQuantity 
+            : null;
+        
+        // FCR
+        var fcrWithLosses = combinedSoldWeight > 0 
+            ? feedConsumedTons * 1000 / combinedSoldWeight 
+            : null;
+        var fcrWithoutLosses = combinedSettlementWeight > 0 
+            ? feedConsumedTons * 1000 / combinedSettlementWeight 
+            : null;
+        
+        // Points
+        var points = combinedAvgWeight.GetValueOrDefault() - fcrWithoutLosses.GetValueOrDefault();
+        
+        // EWW
+        var denominator = combinedAvgAgeInDays * fcrWithoutLosses;
+        var eww = denominator > 0 
+            ? survivalRatePct * combinedAvgWeight / denominator * 100 
+            : null;
+        
+        // Kg per m2
+        var kgPerM2BeforeConf = houseAreaM2 > 0 
+            ? combinedSoldWeight / houseAreaM2 
+            : null;
+        var kgPerM2AfterConf = houseAreaM2 > 0 
+            ? combinedSettlementWeight / houseAreaM2 
+            : null;
+        
+        // Gas per m2
+        var gasConsumptionPerM2 = houseAreaM2 > 0 
+            ? gasConsumptionLiters / houseAreaM2 
+            : null;
+        
+        return new SummaryProductionAnalysisSummaryDto
+        {
+            InsertionQuantity = insertionQuantity,
+            
+            PartSaleSoldCount = partSaleSoldCount,
+            PartSaleSoldWeight = partSaleSoldWeight,
+            PartSaleAvgWeight = partSaleAvgWeight,
+            PartSaleFarmerWeight = partSaleFarmerWeight,
+            PartSaleAgeInDays = partSaleAgeInDays > 0 ? (int?)partSaleAgeInDays : null,
+            PartSaleWeightDiffPct = partSaleWeightDiffPct,
+            PartSaleDeadCount = partSaleDeadCount,
+            PartSaleDeadWeight = partSaleDeadWeight,
+            PartSaleConfiscatedCount = partSaleConfiscatedCount,
+            PartSaleConfiscatedWeight = partSaleConfiscatedWeight,
+            PartSaleSettlementCount = partSaleSettlementCount > 0 ? partSaleSettlementCount : null,
+            PartSaleSettlementWeight = partSaleSettlementWeight > 0 ? partSaleSettlementWeight : null,
+            
+            TotalSaleSoldCount = totalSaleSoldCount,
+            TotalSaleSoldWeight = totalSaleSoldWeight,
+            TotalSaleAvgWeight = totalSaleAvgWeight,
+            TotalSaleFarmerWeight = totalSaleFarmerWeight,
+            TotalSaleAgeInDays = totalSaleAgeInDays > 0 ? (int?)totalSaleAgeInDays : null,
+            TotalWeightDiffPct = totalWeightDiffPct,
+            TotalSaleDeadCount = totalSaleDeadCount,
+            TotalSaleDeadWeight = totalSaleDeadWeight,
+            TotalSaleConfiscatedCount = totalSaleConfiscatedCount,
+            TotalSaleConfiscatedWeight = totalSaleConfiscatedWeight,
+            TotalSaleSettlementCount = totalSaleSettlementCount > 0 ? totalSaleSettlementCount : null,
+            TotalSaleSettlementWeight = totalSaleSettlementWeight > 0 ? totalSaleSettlementWeight : null,
+            
+            CombinedSoldCount = combinedSoldCount,
+            CombinedSoldWeight = combinedSoldWeight,
+            CombinedAvgWeight = combinedAvgWeight,
+            CombinedFarmerWeight = combinedFarmerWeight,
+            CombinedSettlementCount = combinedSettlementCount > 0 ? combinedSettlementCount : null,
+            CombinedSettlementWeight = combinedSettlementWeight > 0 ? combinedSettlementWeight : null,
+            CombinedAvgAgeInDays = combinedAvgAgeInDays > 0 ? (decimal?)combinedAvgAgeInDays : null,
+            
+            DeadCountCycle = deadCountCycle,
+            DefectiveCountCycle = defectiveCountCycle,
+            SurvivalRatePct = survivalRatePct,
+            DeadPctCycle = deadPctCycle,
+            DefectivePctCycle = defectivePctCycle,
+            DeadAndDefectivePctCycle = deadAndDefectivePctCycle,
+            
+            FeedConsumedTons = feedConsumedTons,
+            FcrWithLosses = fcrWithLosses,
+            FcrWithoutLosses = fcrWithoutLosses,
+            Points = points != 0 ? points : null,
+            Eww = eww,
+            
+            HouseAreaM2 = houseAreaM2,
+            KgPerM2BeforeConf = kgPerM2BeforeConf,
+            KgPerM2AfterConf = kgPerM2AfterConf,
+            GasConsumptionLiters = gasConsumptionLiters,
+            GasConsumptionPerM2 = gasConsumptionPerM2,
+            
+            EndCycleBirdBalance = endCycleBirdBalance
+        };
     }
 }
