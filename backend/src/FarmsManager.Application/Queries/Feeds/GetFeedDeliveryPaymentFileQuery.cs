@@ -300,5 +300,6 @@ public sealed class GetFeedsInvoicesByIdsSpec : BaseSpecification<FeedInvoiceEnt
         Query.Include(t => t.Farm);
         Query.Include(t => t.InvoiceCorrection);
         Query.Where(t => ids.Contains(t.Id));
+        Query.OrderBy(t => t.InvoiceNumber);
     }
 }

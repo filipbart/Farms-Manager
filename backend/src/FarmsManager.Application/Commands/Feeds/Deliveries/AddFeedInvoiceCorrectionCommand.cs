@@ -157,6 +157,7 @@ public sealed class GetFeedsCorrectionsByIdsSpec : BaseSpecification<FeedInvoice
     {
         EnsureExists();
         Query.Where(t => feedInvoiceIds.Contains(t.Id));
+        Query.OrderBy(t => t.InvoiceNumber);
     }
 }
 
