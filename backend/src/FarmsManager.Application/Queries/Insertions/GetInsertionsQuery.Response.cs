@@ -22,6 +22,7 @@ public class InsertionRowDto
     public string IrzComment { get; init; }
     public bool ReportedToWios { get; init; }
     public string WiosComment { get; init; }
+    public string Comment { get; init; }
     public string CreatedByName { get; init; }
     public DateTime? DateModifiedUtc { get; init; }
     public string ModifiedByName { get; init; }
