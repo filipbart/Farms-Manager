@@ -100,6 +100,5 @@ public class AddProductionDataTransferFeedValidator : AbstractValidator<AddProdu
         RuleFor(t => t.FeedName).NotEmpty();
         RuleFor(t => t.Tonnage).GreaterThan(0);
         RuleFor(t => t.Value).GreaterThanOrEqualTo(0);
-        RuleFor(t => t.FromHenhouseId).NotEqual(t => t.ToHenhouseId);
     }
 }
