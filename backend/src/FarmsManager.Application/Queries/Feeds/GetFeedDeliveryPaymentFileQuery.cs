@@ -1,4 +1,4 @@
-﻿using Ardalis.Specification;
+using Ardalis.Specification;
 using FarmsManager.Application.Commands.Feeds.Deliveries;
 using FarmsManager.Application.FileSystem;
 using FarmsManager.Application.Interfaces;
@@ -121,6 +121,10 @@ public class GetFeedDeliveryPaymentFileQueryHandler : IRequestHandler<GetFeedDel
         List<FeedInvoiceCorrectionEntity> corrections,
         string comment)
     {
+        // Sortowanie faktur po miesiącu, potem po pierwszej liczbie
+        invoices = SortInvoicesByNumber(invoices);
+        corrections = SortCorrectionsByNumber(corrections);
+        
         var firstInvoice = invoices.First();
 
         var totalAmount = invoices.Sum(i => i.InvoiceTotal);
@@ -252,7 +256,7 @@ public class GetFeedDeliveryPaymentFileQueryHandler : IRequestHandler<GetFeedDel
 
                     // Info bankowe
                     col.Item().PaddingVertical(20).LineHorizontal(1);
-                    col.Item().Text($"Numer rachunku bankowego: {firstInvoice.BankAccountNumber}");
+                    col.Item().Text($"Numer rachunku bankowego: {FormatBankAccountNumber(firstInvoice.BankAccountNumber)}");
                     col.Item().Text($"Termin płatności: {dueDate:yyyy-MM-dd}");
 
                     // Komentarz
@@ -288,6 +292,72 @@ public class GetFeedDeliveryPaymentFileQueryHandler : IRequestHandler<GetFeedDel
         }
 
         string FormatCurrency(decimal amount) => $"{amount:N2} zł";
+    }
+
+    private static List<FeedInvoiceEntity> SortInvoicesByNumber(List<FeedInvoiceEntity> invoices)
+    {
+        return invoices.OrderBy(invoice =>
+        {
+            var parts = invoice.InvoiceNumber?.Split('/') ?? [];
+            if (parts.Length >= 3 && int.TryParse(parts[1], out var month))
+            {
+                return month;
+            }
+            return int.MaxValue;
+        })
+        .ThenBy(invoice =>
+        {
+            var parts = invoice.InvoiceNumber?.Split('/') ?? [];
+            if (parts.Length >= 1 && int.TryParse(parts[0], out var firstNumber))
+            {
+                return firstNumber;
+            }
+            return int.MaxValue;
+        })
+        .ToList();
+    }
+
+    private static List<FeedInvoiceCorrectionEntity> SortCorrectionsByNumber(List<FeedInvoiceCorrectionEntity> corrections)
+    {
+        return corrections.OrderBy(correction =>
+        {
+            var parts = correction.InvoiceNumber?.Split('/') ?? [];
+            if (parts.Length >= 3 && int.TryParse(parts[1], out var month))
+            {
+                return month;
+            }
+            return int.MaxValue;
+        })
+        .ThenBy(correction =>
+        {
+            var parts = correction.InvoiceNumber?.Split('/') ?? [];
+            if (parts.Length >= 1 && int.TryParse(parts[0], out var firstNumber))
+            {
+                return firstNumber;
+            }
+            return int.MaxValue;
+        })
+        .ToList();
+    }
+
+    private static string FormatBankAccountNumber(string? accountNumber)
+    {
+        if (string.IsNullOrWhiteSpace(accountNumber))
+        {
+            return string.Empty;
+        }
+
+        // Usuń wszystkie spacje i inne znaki niebędące cyframi
+        var digitsOnly = new string(accountNumber.Where(char.IsDigit).ToArray());
+
+        if (digitsOnly.Length != 26)
+        {
+            // Jeśli nie jest to standardowy polski numer rachunku (26 cyfr), zwróć oryginalny
+            return accountNumber;
+        }
+
+        // Format: 12 3456 7890 1234 5678 9012 3456
+        return $"{digitsOnly.Substring(0, 2)} {digitsOnly.Substring(2, 4)} {digitsOnly.Substring(6, 4)} {digitsOnly.Substring(10, 4)} {digitsOnly.Substring(14, 4)} {digitsOnly.Substring(18, 4)} {digitsOnly.Substring(22, 4)}";
     }
 }
 
