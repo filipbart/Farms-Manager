@@ -77,7 +77,7 @@ public class GetDashboardChartsQueryHandler : IRequestHandler<GetDashboardCharts
         // 3. Zbudowanie wszystkich wykresów
         var fcrChart = BuildFcrChart(farms, allSales, allFeeds);
         var ewwChart = BuildEwwChart(farms, allInsertions, allSales, allFeeds, allFailures);
-        var gasConsumptionChart = BuildGasConsumptionChart(farms, allGasConsumptions);
+        var gasConsumptionChart = BuildGasConsumptionChart(farms, allGasConsumptions, allInsertions);
         var flockLossChart = BuildFlockLossChart(farms, allFailures, allInsertions);
 
         // 4. Złożenie odpowiedzi
@@ -202,27 +202,33 @@ public class GetDashboardChartsQueryHandler : IRequestHandler<GetDashboardCharts
     }
 
     private static DashboardGasConsumptionChart BuildGasConsumptionChart(IReadOnlyList<FarmEntity> farms,
-        IReadOnlyList<GasConsumptionEntity> gasConsumptions)
+        IReadOnlyList<GasConsumptionEntity> gasConsumptions, IReadOnlyList<InsertionEntity> allInsertions)
     {
         var result = new DashboardGasConsumptionChart();
-        var consumptionsLookup = gasConsumptions.ToLookup(c => c.FarmId);
+        var consumptionsLookup = gasConsumptions.ToLookup(c => (c.FarmId, c.CycleId));
+        var insertionsLookup = allInsertions.ToLookup(i => (i.FarmId, i.CycleId));
 
         foreach (var farm in farms)
         {
-            var totalArea = farm.Henhouses?.Where(h => !h.DateDeletedUtc.HasValue).Sum(h => h.Area) ?? 0;
-            if (totalArea == 0) continue;
-
-            var farmConsumptionsByCycle = consumptionsLookup[farm.Id]
-                .GroupBy(c => c.CycleId)
-                .Select(g => new { g.First().Cycle, TotalQuantity = g.Sum(c => c.QuantityConsumed) });
-
             var chartSeries = new ChartSeries { FarmId = farm.Id, FarmName = farm.Name };
+
+            var farmConsumptionsByCycle = gasConsumptions
+                .Where(c => c.FarmId == farm.Id)
+                .GroupBy(c => c.CycleId)
+                .Select(g => new { CycleId = g.Key, g.First().Cycle, TotalQuantity = g.Sum(c => c.QuantityConsumed) });
+
             foreach (var consumption in farmConsumptionsByCycle)
             {
+                // Oblicz powierzchnię tylko kurników wstawionych w danym cyklu
+                var cycleInsertedHenhousesArea = insertionsLookup[(farm.Id, consumption.CycleId)]
+                    .Sum(i => i.Henhouse.Area);
+
+                if (cycleInsertedHenhousesArea == 0) continue;
+
                 chartSeries.Data.Add(new ChartDataPoint
                 {
                     X = $"{consumption.Cycle.Identifier}/{consumption.Cycle.Year}",
-                    Y = Math.Round(consumption.TotalQuantity / totalArea, 2)
+                    Y = Math.Round(consumption.TotalQuantity / cycleInsertedHenhousesArea, 2)
                 });
             }
 
