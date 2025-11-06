@@ -5,6 +5,7 @@ import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import { MdSave } from "react-icons/md";
 import LoadingButton from "../../common/loading-button";
 import { UtilizationPlantsService } from "../../../services/utilization-plants-service";
+import { isValidProducerNumber } from "../../../utils/validation";
 
 export interface UtilizationPlantData {
   id: string;
@@ -117,6 +118,8 @@ const EditUtilizationPlantModal: React.FC<EditUtilizationPlantModalProps> = ({
             label="Numer IRZ"
             {...register("irzNumber", {
               required: "To pole jest wymagane",
+              validate: (value) =>
+                isValidProducerNumber(value) || "Numer IRZ musi mieć format: liczba-liczba (np. 000111222-012)",
             })}
             error={!!errors.irzNumber}
             helperText={errors.irzNumber?.message}

@@ -5,6 +5,7 @@ import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import { MdSave } from "react-icons/md";
 import LoadingButton from "../../common/loading-button";
 import { SlaughterhousesService } from "../../../services/slaughterhouses-service";
+import { isValidProducerNumber } from "../../../utils/validation";
 
 export interface SlaughterhouseData {
   id: string;
@@ -117,6 +118,8 @@ const EditSlaughterhouseModal: React.FC<EditSlaughterhouseModalProps> = ({
             label="Numer producenta"
             {...register("producerNumber", {
               required: "To pole jest wymagane",
+              validate: (value) =>
+                isValidProducerNumber(value) || "Numer producenta musi mieć format: liczba-liczba (np. 000111222-012)",
             })}
             error={!!errors.producerNumber}
             helperText={errors.producerNumber?.message}

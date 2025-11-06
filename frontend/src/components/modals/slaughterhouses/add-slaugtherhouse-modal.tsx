@@ -17,7 +17,7 @@ import {
 } from "../../../services/slaughterhouses-service";
 import { MdSave } from "react-icons/md";
 import AppDialog from "../../common/app-dialog";
-import { isValidNip } from "../../../utils/validation";
+import { isValidNip, isValidProducerNumber } from "../../../utils/validation";
 
 interface AddSlaughterhouseModalProps {
   open: boolean;
@@ -84,6 +84,8 @@ const AddSlaughterhouseModal: React.FC<AddSlaughterhouseModalProps> = ({
               }
               {...register("prodNumber", {
                 required: "Numer producenta jest wymagany",
+                validate: (value) =>
+                  isValidProducerNumber(value) || "Numer producenta musi mieć format: liczba-liczba (np. 000111222-012)",
               })}
               fullWidth
             />

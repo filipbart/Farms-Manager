@@ -5,6 +5,7 @@ import { FarmsService } from "../../../services/farms-service";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import { MdSave } from "react-icons/md";
 import LoadingButton from "../../common/loading-button";
+import { isValidProducerNumber } from "../../../utils/validation";
 
 export interface FarmData {
   id: string;
@@ -107,6 +108,8 @@ const EditFarmModal: React.FC<EditFarmModalProps> = ({
             label="Numer producenta"
             {...register("producerNumber", {
               required: "To pole jest wymagane",
+              validate: (value) =>
+                isValidProducerNumber(value) || "Numer producenta musi mieć format: liczba-liczba (np. 000111222-012)",
             })}
             error={!!errors.producerNumber}
             helperText={errors.producerNumber?.message}

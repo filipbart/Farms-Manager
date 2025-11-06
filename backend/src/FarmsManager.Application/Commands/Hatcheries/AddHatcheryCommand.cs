@@ -1,4 +1,4 @@
-﻿using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Common.Validators;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Domain.Aggregates.HatcheryAggregate.Entities;
@@ -42,6 +42,10 @@ public class AddHatcheryCommandValidator : AbstractValidator<AddHatcheryCommand>
     public AddHatcheryCommandValidator()
     {
         RuleFor(t => t.Name).NotEmpty();
+        RuleFor(t => t.ProdNumber)
+            .NotEmpty().WithMessage("Numer producenta jest wymagany.")
+            .Must(ValidationHelpers.IsValidProducerOrIrzNumber)
+            .WithMessage("Numer producenta musi być w formacie liczba-liczba (np. 00011233-123).");
         RuleFor(t => t.FullName).NotEmpty();
         RuleFor(t => t.Nip).NotEmpty().Must(ValidationHelpers.IsValidNip)
             .WithMessage("Podany numer NIP jest nieprawidłowy.");

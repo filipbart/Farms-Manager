@@ -1,4 +1,6 @@
-﻿namespace FarmsManager.Application.Common.Validators;
+using System.Text.RegularExpressions;
+
+namespace FarmsManager.Application.Common.Validators;
 
 public static class ValidationHelpers
 {
@@ -20,5 +22,18 @@ public static class ValidationHelpers
         }
 
         return sum % 11 == nip[9] - '0';
+    }
+
+    /// <summary>
+    /// Waliduje format numeru producenta lub IRZ w formacie "liczba-liczba" (np. 00011233-123)
+    /// </summary>
+    public static bool IsValidProducerOrIrzNumber(string number)
+    {
+        if (string.IsNullOrWhiteSpace(number))
+            return false;
+
+        // Format: liczba-liczba (np. 00011233-123)
+        var regex = new Regex(@"^\d+-\d+$");
+        return regex.IsMatch(number.Trim());
     }
 }

@@ -13,7 +13,7 @@ import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import LoadingButton from "../../common/loading-button";
 import { MdSave } from "react-icons/md";
 import { UtilizationPlantsService } from "../../../services/utilization-plants-service";
-import { isValidNip } from "../../../utils/validation";
+import { isValidNip, isValidProducerNumber } from "../../../utils/validation";
 import AppDialog from "../../common/app-dialog";
 import type { AddUtilizationPlantFormData } from "../../../models/utilization-plants/utilization-plants";
 
@@ -82,6 +82,8 @@ const AddUtilizationPlantModal: React.FC<AddUtilizationPlantModalProps> = ({
               }
               {...register("irzNumber", {
                 required: "Numer IRZplus jest wymagany",
+                validate: (value) =>
+                  isValidProducerNumber(value) || "Numer IRZplus musi mieć format: liczba-liczba (np. 000111222-012)",
               })}
               fullWidth
             />

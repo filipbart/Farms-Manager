@@ -17,7 +17,7 @@ import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import LoadingButton from "../../common/loading-button";
 import { MdSave } from "react-icons/md";
 import AppDialog from "../../common/app-dialog";
-import { isValidNip } from "../../../utils/validation";
+import { isValidNip, isValidProducerNumber } from "../../../utils/validation";
 
 interface AddFarmModalProps {
   open: boolean;
@@ -84,6 +84,8 @@ const AddFarmModal: React.FC<AddFarmModalProps> = ({
               }
               {...register("prodNumber", {
                 required: "Numer producenta jest wymagany",
+                validate: (value) =>
+                  isValidProducerNumber(value) || "Numer producenta musi mieć format: liczba-liczba (np. 000111222-012)",
               })}
               fullWidth
             />

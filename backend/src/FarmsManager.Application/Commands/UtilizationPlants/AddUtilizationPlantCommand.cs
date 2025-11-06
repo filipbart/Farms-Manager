@@ -22,7 +22,10 @@ public class AddUtilizationPlantCommandValidator : AbstractValidator<AddUtilizat
     public AddUtilizationPlantCommandValidator()
     {
         RuleFor(t => t.Name).NotEmpty();
-        RuleFor(t => t.IrzNumber).NotEmpty();
+        RuleFor(t => t.IrzNumber)
+            .NotEmpty().WithMessage("Numer IRZ jest wymagany.")
+            .Must(ValidationHelpers.IsValidProducerOrIrzNumber)
+            .WithMessage("Numer IRZ musi być w formacie liczba-liczba (np. 00011233-123).");
         RuleFor(t => t.Nip).NotEmpty()
             .Must(ValidationHelpers.IsValidNip)
             .WithMessage("Podany numer NIP jest nieprawidłowy.");

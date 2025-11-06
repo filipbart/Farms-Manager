@@ -1,4 +1,4 @@
-﻿using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Common.Validators;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Domain.Aggregates.SlaughterhouseAggregate.Interfaces;
@@ -66,6 +66,8 @@ public class UpdateSlaughterhouseCommandValidator : AbstractValidator<UpdateSlau
 
             RuleFor(x => x.Data.ProducerNumber)
                 .NotEmpty().WithMessage("Numer producenta jest wymagany.")
+                .Must(ValidationHelpers.IsValidProducerOrIrzNumber)
+                .WithMessage("Numer producenta musi być w formacie liczba-liczba (np. 00011233-123).")
                 .MaximumLength(50);
 
             RuleFor(t => t.Data.Nip)

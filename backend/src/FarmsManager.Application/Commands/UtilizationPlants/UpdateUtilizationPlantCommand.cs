@@ -1,4 +1,4 @@
-﻿using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Common.Validators;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Domain.Aggregates.FallenStockAggregate.Interfaces;
@@ -66,7 +66,9 @@ public class UpdateUtilizationPlantValidator : AbstractValidator<UpdateUtilizati
                 .MaximumLength(100);
 
             RuleFor(x => x.Data.IrzNumber)
-                .NotEmpty().WithMessage("Numer producenta jest wymagany.")
+                .NotEmpty().WithMessage("Numer IRZ jest wymagany.")
+                .Must(ValidationHelpers.IsValidProducerOrIrzNumber)
+                .WithMessage("Numer IRZ musi być w formacie liczba-liczba (np. 00011233-123).")
                 .MaximumLength(50);
 
             RuleFor(t => t.Data.Nip)

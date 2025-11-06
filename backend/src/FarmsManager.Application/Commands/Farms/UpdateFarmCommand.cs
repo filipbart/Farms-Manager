@@ -1,4 +1,4 @@
-﻿using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Common.Validators;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications.Farms;
@@ -70,6 +70,8 @@ public class UpdateFarmCommandValidator : AbstractValidator<UpdateFarmCommand>
 
             RuleFor(x => x.Data.ProducerNumber)
                 .NotEmpty().WithMessage("Numer producenta jest wymagany.")
+                .Must(ValidationHelpers.IsValidProducerOrIrzNumber)
+                .WithMessage("Numer producenta musi być w formacie liczba-liczba (np. 00011233-123).")
                 .MaximumLength(50);
 
             RuleFor(x => x.Data.Address)

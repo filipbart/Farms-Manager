@@ -5,6 +5,7 @@ import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import { MdSave } from "react-icons/md";
 import LoadingButton from "../../common/loading-button";
 import { HatcheriesService } from "../../../services/hatcheries-service";
+import { isValidProducerNumber } from "../../../utils/validation";
 
 export interface HatcheryData {
   id: string;
@@ -123,6 +124,8 @@ const EditHatcheryModal: React.FC<EditHatcheryModalProps> = ({
             label="Numer producenta"
             {...register("producerNumber", {
               required: "To pole jest wymagane",
+              validate: (value) =>
+                isValidProducerNumber(value) || "Numer producenta musi mieć format: liczba-liczba (np. 000111222-012)",
             })}
             error={!!errors.producerNumber}
             helperText={errors.producerNumber?.message}

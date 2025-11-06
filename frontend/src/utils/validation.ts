@@ -13,3 +13,10 @@ export const isValidNip = (nip: string): boolean => {
   const controlDigit = parseInt(nip[9], 10);
   return checksum === controlDigit;
 };
+
+export const isValidProducerNumber = (producerNumber: string): boolean => {
+  if (!producerNumber) return false;
+  // Format: dowolna liczba - myślnik - dowolna liczba (np. 000111222-012)
+  const pattern = /^\d+-\d+$/;
+  return pattern.test(producerNumber);
+};
