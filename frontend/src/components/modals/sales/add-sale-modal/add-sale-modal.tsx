@@ -208,10 +208,8 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
         }
 
         toast.success("Dodano sprzedaż");
-        dispatch({ type: "RESET" });
-        setErrors({});
         onSave();
-        onClose();
+        handleClose();
       },
       undefined,
       "Nie udało się dodać sprzedaży"
