@@ -81,13 +81,39 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
     return Math.round(value * 100) / 100;
   };
 
+  // Helper function to format number with thousand separators (spaces)
+  const formatNumberWithSpaces = (value: string | number): string => {
+    if (value === "" || value === null || value === undefined) return "";
+
+    const numStr = String(value);
+    const parts = numStr.split(".");
+    const integerPart = parts[0].replace(/\s/g, "");
+    const decimalPart = parts[1] || "";
+
+    // Add spaces as thousand separators
+    const formatted = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+
+    return decimalPart ? `${formatted}.${decimalPart}` : formatted;
+  };
+
+  // Helper function to parse formatted number back to plain number
+  const parseFormattedNumber = (value: string): string => {
+    if (!value) return "";
+    return value.replace(/\s/g, "");
+  };
+
   // Auto-calculate invoice values when unitPrice or quantity changes
   useEffect(() => {
     if (watchedUnitPrice && watchedQuantity) {
       const unitPrice = Number(watchedUnitPrice);
       const quantity = Number(watchedQuantity);
 
-      if (!isNaN(unitPrice) && !isNaN(quantity) && unitPrice >= 0 && quantity >= 0) {
+      if (
+        !isNaN(unitPrice) &&
+        !isNaN(quantity) &&
+        unitPrice >= 0 &&
+        quantity >= 0
+      ) {
         const subTotal = roundTo2Decimals(unitPrice * quantity);
         const vatAmount = roundTo2Decimals(subTotal * 0.08);
         const invoiceTotal = roundTo2Decimals(subTotal + vatAmount);
@@ -413,20 +439,35 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
                   </Grid>
 
                   <Grid size={{ xs: 12, sm: 12, md: 6 }}>
-                    <TextField
-                      label="Cena jednostkowa [zł]"
-                      type="number"
-                      slotProps={{
-                        htmlInput: { min: 0, step: "0.01" },
-                        inputLabel: { shrink: true },
-                      }}
-                      error={!!errors.unitPrice}
-                      helperText={errors.unitPrice?.message}
-                      {...register("unitPrice", {
+                    <Controller
+                      name="unitPrice"
+                      control={control}
+                      rules={{
                         required: "Cena jednostkowa jest wymagana",
-                        valueAsNumber: true,
-                      })}
-                      fullWidth
+                        validate: (value) => {
+                          const num = Number(value);
+                          return (
+                            (!isNaN(num) && num >= 0) ||
+                            "Wartość musi być liczbą większą lub równą 0"
+                          );
+                        },
+                      }}
+                      render={({ field }) => (
+                        <TextField
+                          label="Cena jednostkowa [zł]"
+                          value={formatNumberWithSpaces(field.value || "")}
+                          onChange={(e) => {
+                            const parsed = parseFormattedNumber(e.target.value);
+                            field.onChange(parsed ? Number(parsed) : "");
+                          }}
+                          slotProps={{
+                            inputLabel: { shrink: true },
+                          }}
+                          error={!!errors.unitPrice}
+                          helperText={errors.unitPrice?.message}
+                          fullWidth
+                        />
+                      )}
                     />
                   </Grid>
 
@@ -489,56 +530,101 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
                   </Grid>
 
                   <Grid size={{ xs: 12, sm: 4 }}>
-                    <TextField
-                      label="Wartość netto [zł]"
-                      type="number"
-                      slotProps={{
-                        htmlInput: { min: 0, step: "0.01" },
-                        inputLabel: { shrink: true },
-                      }}
-                      error={!!errors.subTotal}
-                      helperText={errors.subTotal?.message}
-                      {...register("subTotal", {
+                    <Controller
+                      name="subTotal"
+                      control={control}
+                      rules={{
                         required: "Wartość netto jest wymagana",
-                        valueAsNumber: true,
-                      })}
-                      fullWidth
+                        validate: (value) => {
+                          const num = Number(value);
+                          return (
+                            (!isNaN(num) && num >= 0) ||
+                            "Wartość musi być liczbą większą lub równą 0"
+                          );
+                        },
+                      }}
+                      render={({ field }) => (
+                        <TextField
+                          label="Wartość netto [zł]"
+                          value={formatNumberWithSpaces(field.value || "")}
+                          onChange={(e) => {
+                            const parsed = parseFormattedNumber(e.target.value);
+                            field.onChange(parsed ? Number(parsed) : "");
+                          }}
+                          slotProps={{
+                            inputLabel: { shrink: true },
+                          }}
+                          error={!!errors.subTotal}
+                          helperText={errors.subTotal?.message}
+                          fullWidth
+                        />
+                      )}
                     />
                   </Grid>
 
                   <Grid size={{ xs: 12, sm: 4 }}>
-                    <TextField
-                      label="VAT [zł]"
-                      type="number"
-                      slotProps={{
-                        htmlInput: { min: 0, step: "0.01" },
-                        inputLabel: { shrink: true },
-                      }}
-                      error={!!errors.vatAmount}
-                      helperText={errors.vatAmount?.message}
-                      {...register("vatAmount", {
+                    <Controller
+                      name="vatAmount"
+                      control={control}
+                      rules={{
                         required: "VAT jest wymagany",
-                        valueAsNumber: true,
-                      })}
-                      fullWidth
+                        validate: (value) => {
+                          const num = Number(value);
+                          return (
+                            (!isNaN(num) && num >= 0) ||
+                            "Wartość musi być liczbą większą lub równą 0"
+                          );
+                        },
+                      }}
+                      render={({ field }) => (
+                        <TextField
+                          label="VAT [zł]"
+                          value={formatNumberWithSpaces(field.value || "")}
+                          onChange={(e) => {
+                            const parsed = parseFormattedNumber(e.target.value);
+                            field.onChange(parsed ? Number(parsed) : "");
+                          }}
+                          slotProps={{
+                            inputLabel: { shrink: true },
+                          }}
+                          error={!!errors.vatAmount}
+                          helperText={errors.vatAmount?.message}
+                          fullWidth
+                        />
+                      )}
                     />
                   </Grid>
 
                   <Grid size={{ xs: 12, sm: 4 }}>
-                    <TextField
-                      label="Wartość brutto [zł]"
-                      type="number"
-                      slotProps={{
-                        htmlInput: { min: 0, step: "0.01" },
-                        inputLabel: { shrink: true },
-                      }}
-                      error={!!errors.invoiceTotal}
-                      helperText={errors.invoiceTotal?.message}
-                      {...register("invoiceTotal", {
+                    <Controller
+                      name="invoiceTotal"
+                      control={control}
+                      rules={{
                         required: "Wartość brutto jest wymagana",
-                        valueAsNumber: true,
-                      })}
-                      fullWidth
+                        validate: (value) => {
+                          const num = Number(value);
+                          return (
+                            (!isNaN(num) && num >= 0) ||
+                            "Wartość musi być liczbą większą lub równą 0"
+                          );
+                        },
+                      }}
+                      render={({ field }) => (
+                        <TextField
+                          label="Wartość brutto [zł]"
+                          value={formatNumberWithSpaces(field.value || "")}
+                          onChange={(e) => {
+                            const parsed = parseFormattedNumber(e.target.value);
+                            field.onChange(parsed ? Number(parsed) : "");
+                          }}
+                          slotProps={{
+                            inputLabel: { shrink: true },
+                          }}
+                          error={!!errors.invoiceTotal}
+                          helperText={errors.invoiceTotal?.message}
+                          fullWidth
+                        />
+                      )}
                     />
                   </Grid>
 
