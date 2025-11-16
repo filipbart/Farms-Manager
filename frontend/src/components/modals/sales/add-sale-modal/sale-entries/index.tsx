@@ -154,6 +154,7 @@ const SaleEntriesSection: React.FC<SaleEntriesSectionProps> = ({
                   onChange={(e) =>
                     handleFieldChange(index, "weight", e.target.value)
                   }
+                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
                   slotProps={{ htmlInput: { min: 0, step: 0.01 } }}
                   error={!!errors?.[index]?.weight}
                   helperText={errors?.[index]?.weight}
@@ -169,6 +170,7 @@ const SaleEntriesSection: React.FC<SaleEntriesSectionProps> = ({
                   onChange={(e) =>
                     handleFieldChange(index, "quantity", e.target.value)
                   }
+                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
                   slotProps={{ htmlInput: { min: 1, step: 1 } }}
                   error={!!errors?.[index]?.quantity}
                   helperText={errors?.[index]?.quantity}
@@ -194,6 +196,7 @@ const SaleEntriesSection: React.FC<SaleEntriesSectionProps> = ({
                       e.target.value
                     )
                   }
+                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
                   slotProps={{ htmlInput: { min: 0, step: 0.01 } }}
                   error={!!errors?.[index]?.confiscatedWeight}
                   helperText={errors?.[index]?.confiscatedWeight}
@@ -208,6 +211,7 @@ const SaleEntriesSection: React.FC<SaleEntriesSectionProps> = ({
                   onChange={(e) =>
                     handleFieldChange(index, "confiscatedCount", e.target.value)
                   }
+                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
                   slotProps={{ htmlInput: { min: 0, step: 1 } }}
                   error={!!errors?.[index]?.confiscatedCount}
                   helperText={errors?.[index]?.confiscatedCount}
@@ -229,6 +233,7 @@ const SaleEntriesSection: React.FC<SaleEntriesSectionProps> = ({
                   onChange={(e) =>
                     handleFieldChange(index, "deadWeight", e.target.value)
                   }
+                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
                   slotProps={{ htmlInput: { min: 0, step: 0.01 } }}
                   error={!!errors?.[index]?.deadWeight}
                   helperText={errors?.[index]?.deadWeight}
@@ -244,6 +249,7 @@ const SaleEntriesSection: React.FC<SaleEntriesSectionProps> = ({
                   onChange={(e) =>
                     handleFieldChange(index, "deadCount", e.target.value)
                   }
+                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
                   slotProps={{ htmlInput: { min: 0, step: 1 } }}
                   error={!!errors?.[index]?.deadCount}
                   helperText={errors?.[index]?.deadCount}
@@ -261,6 +267,7 @@ const SaleEntriesSection: React.FC<SaleEntriesSectionProps> = ({
                   onChange={(e) =>
                     handleFieldChange(index, "farmerWeight", e.target.value)
                   }
+                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
                   slotProps={{ htmlInput: { min: 0, step: 0.01 } }}
                   error={!!errors?.[index]?.farmerWeight}
                   helperText={errors?.[index]?.farmerWeight}
@@ -283,6 +290,7 @@ const SaleEntriesSection: React.FC<SaleEntriesSectionProps> = ({
                   onChange={(e) =>
                     handleFieldChange(index, "basePrice", e.target.value)
                   }
+                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
                   error={!!errors?.[index]?.basePrice}
                   helperText={errors?.[index]?.basePrice}
                   slotProps={{ htmlInput: { min: 0, step: 0.01 } }}
@@ -298,6 +306,7 @@ const SaleEntriesSection: React.FC<SaleEntriesSectionProps> = ({
                   onChange={(e) =>
                     handleFieldChange(index, "priceWithExtras", e.target.value)
                   }
+                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
                   error={!!errors?.[index]?.priceWithExtras}
                   helperText={errors?.[index]?.priceWithExtras}
                   slotProps={{ htmlInput: { min: 0, step: 0.01 } }}
@@ -365,6 +374,7 @@ const SaleEntriesSection: React.FC<SaleEntriesSectionProps> = ({
                           e.target.value
                         )
                       }
+                      onWheel={(e) => (e.target as HTMLInputElement).blur()}
                       error={
                         !!errors?.[index]?.otherExtras?.[extraIndex]?.value
                       }

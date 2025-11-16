@@ -19,6 +19,11 @@ export const validateEntry = (entry: SaleEntry): SaleEntryErrors => {
     e.weight = "Waga jest wymagana i musi być większa niż 0";
   }
 
+  // Walidacja że ilość sztuk nie może być większa niż waga
+  if (!e.quantity && !e.weight && quantityNum > weightNum) {
+    e.quantity = "Ilość sztuk nie może być większa niż waga";
+  }
+
   const confiscatedCountNum = Number(entry.confiscatedCount);
   if (
     entry.confiscatedCount === "" ||
@@ -37,6 +42,16 @@ export const validateEntry = (entry: SaleEntry): SaleEntryErrors => {
     e.confiscatedWeight = "Wymagana waga konfiskaty";
   }
 
+  // Walidacja że liczba konfiskowanych sztuk nie może być większa niż waga konfiskaty
+  if (
+    !e.confiscatedCount &&
+    !e.confiscatedWeight &&
+    confiscatedCountNum > confiscatedWeightNum
+  ) {
+    e.confiscatedCount =
+      "Ilość sztuk konfiskaty nie może być większa niż waga konfiskaty";
+  }
+
   const deadCountNum = Number(entry.deadCount);
   if (entry.deadCount === "" || isNaN(deadCountNum) || deadCountNum < 0) {
     e.deadCount = "Wymagana liczba martwych sztuk";
@@ -45,6 +60,12 @@ export const validateEntry = (entry: SaleEntry): SaleEntryErrors => {
   const deadWeightNum = Number(entry.deadWeight);
   if (entry.deadWeight === "" || isNaN(deadWeightNum) || deadWeightNum < 0) {
     e.deadWeight = "Wymagana waga martwych sztuk";
+  }
+
+  // Walidacja że liczba martwych sztuk nie może być większa niż waga martwych sztuk
+  if (!e.deadCount && !e.deadWeight && deadCountNum > deadWeightNum) {
+    e.deadCount =
+      "Ilość martwych sztuk nie może być większa niż waga martwych sztuk";
   }
 
   const farmerWeightNum = Number(entry.farmerWeight);
