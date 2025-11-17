@@ -144,7 +144,8 @@ const SalesPage: React.FC = () => {
       params: { path },
       defaultFilename: "Przelew",
       setLoading: (value) => setDownloadDirectoryPath(value ? path : null),
-      errorMessage: "Błąd podczas folderu dokumentów sprzedaży",
+      errorMessage: "Błąd podczas pobierania folderu dokumentów sprzedaży",
+      fileExtension: "zip",
     });
   };
 
@@ -187,7 +188,12 @@ const SalesPage: React.FC = () => {
       </Box>
 
       <FiltersForm
-        config={getSaleFiltersConfig(dictionary, uniqueCycles, filters, isAdmin)}
+        config={getSaleFiltersConfig(
+          dictionary,
+          uniqueCycles,
+          filters,
+          isAdmin
+        )}
         filters={filters}
         dispatch={dispatch}
       />
