@@ -88,6 +88,7 @@ public class SummaryFinancialAnalysisQueryHandler : IRequestHandler<SummaryFinan
 
         var henhouseIds = allInsertions.Select(i => i.HenhouseId).Distinct().ToList();
         var farmIds = allInsertions.Select(i => i.FarmId).Distinct().ToList();
+        var cycleIds = allInsertions.Select(i => i.CycleId).Distinct().ToList();
 
         var allSales =
             await _saleRepository.ListAsync(
@@ -97,7 +98,7 @@ public class SummaryFinancialAnalysisQueryHandler : IRequestHandler<SummaryFinan
         var gasConsumptions = await _gasConsumptionRepository.ListAsync(new GasConsumptionsByFarmsSpec(farmIds), ct);
         var employeesPayslips =
             await _employeePayslipRepository.ListAsync(new EmployeePayslipsByFarmsSpec(farmIds), ct);
-        var feedInvoices = await _feedInvoiceRepository.ListAsync(new FeedsDeliveriesByHenhousesSpec(henhouseIds), ct);
+        var feedInvoices = await _feedInvoiceRepository.ListAsync(new FeedsDeliveriesByHenhousesSpec(henhouseIds, cycleIds), ct);
         var feedRemainings =
             await _productionDataRemainingFeedRepository.ListAsync(
                 new ProductionDataRemainingFeedByHenhousesSpec(henhouseIds), ct);

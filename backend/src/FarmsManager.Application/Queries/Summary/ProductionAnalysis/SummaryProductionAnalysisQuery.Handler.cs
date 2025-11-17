@@ -89,6 +89,7 @@ public class SummaryProductionAnalysisQueryHandler : IRequestHandler<SummaryProd
 
         var henhouseIds = allInsertions.Select(i => i.HenhouseId).Distinct().ToList();
         var farmIds = allInsertions.Select(i => i.FarmId).Distinct().ToList();
+        var cycleIds = allInsertions.Select(i => i.CycleId).Distinct().ToList();
 
         var allWeightStandards =
             (await _productionDataWeightStandardRepository.ListAsync(new GetAllWeightStandardsSpec(), ct))
@@ -103,7 +104,7 @@ public class SummaryProductionAnalysisQueryHandler : IRequestHandler<SummaryProd
                 accessibleFarmIds, user.IsAdmin),
             ct);
         var gasConsumptions = await _gasConsumptionRepository.ListAsync(new GasConsumptionsByFarmsSpec(farmIds), ct);
-        var feedInvoices = await _feedInvoiceRepository.ListAsync(new FeedsDeliveriesByHenhousesSpec(henhouseIds), ct);
+        var feedInvoices = await _feedInvoiceRepository.ListAsync(new FeedsDeliveriesByHenhousesSpec(henhouseIds, cycleIds), ct);
         var feedRemainings =
             await _productionDataRemainingFeedRepository.ListAsync(
                 new ProductionDataRemainingFeedByHenhousesSpec(henhouseIds), ct);

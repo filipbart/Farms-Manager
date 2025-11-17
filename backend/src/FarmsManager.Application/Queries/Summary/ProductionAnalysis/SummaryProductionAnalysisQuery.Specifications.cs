@@ -1,4 +1,4 @@
-﻿using Ardalis.Specification;
+using Ardalis.Specification;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.EmployeeAggregate.Entities;
 using FarmsManager.Domain.Aggregates.EmployeeAggregate.Enums;
@@ -35,11 +35,15 @@ public sealed class EmployeePayslipsByFarmsSpec : BaseSpecification<EmployeePays
 
 public sealed class FeedsDeliveriesByHenhousesSpec : BaseSpecification<FeedInvoiceEntity>
 {
-    public FeedsDeliveriesByHenhousesSpec(List<Guid> henhousesIds)
+    public FeedsDeliveriesByHenhousesSpec(List<Guid> henhousesIds, List<Guid>? cycleIds = null)
     {
         EnsureExists();
         DisableTracking();
         Query.Where(t => henhousesIds.Contains(t.HenhouseId));
+        if (cycleIds is not null && cycleIds.Count > 0)
+        {
+            Query.Where(t => cycleIds.Contains(t.CycleId));
+        }
     }
 }
 
