@@ -8,6 +8,7 @@ using FarmsManager.Application.Specifications.Expenses;
 using FarmsManager.Application.Specifications.Farms;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
 using FarmsManager.Shared.Extensions;
@@ -96,10 +97,21 @@ public class UploadExpensesInvoicesCommandHandler : IRequestHandler<UploadExpens
                 throw new Exception("Faktura nie jest możliwa do odczytu");
             }
 
-            var farm = await _farmRepository.FirstOrDefaultAsync(new FarmByNipOrNameSpec(
-                    expenseProductionInvoiceModel.CustomerNip?.Replace("-", ""),
-                    expenseProductionInvoiceModel.CustomerName),
-                cancellationToken);
+            // Szukaj fermy najpierw po NIP, potem po nazwie
+            FarmEntity farm = null;
+            if (!string.IsNullOrWhiteSpace(expenseProductionInvoiceModel.CustomerNip))
+            {
+                farm = await _farmRepository.FirstOrDefaultAsync(
+                    new FarmByNipSpec(expenseProductionInvoiceModel.CustomerNip?.Replace("-", "")),
+                    cancellationToken);
+            }
+            
+            if (farm is null && !string.IsNullOrWhiteSpace(expenseProductionInvoiceModel.CustomerName))
+            {
+                farm = await _farmRepository.FirstOrDefaultAsync(
+                    new FarmByNameSpec(expenseProductionInvoiceModel.CustomerName),
+                    cancellationToken);
+            }
 
             var expenseContractor = await _expenseContractorRepository.FirstOrDefaultAsync(
                 new ExpenseContractorByNipSpec(expenseProductionInvoiceModel.VendorNip?.Replace("-", "")),

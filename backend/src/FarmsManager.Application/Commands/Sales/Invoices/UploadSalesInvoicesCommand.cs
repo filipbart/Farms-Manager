@@ -8,6 +8,7 @@ using FarmsManager.Application.Models.Invoices;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Application.Specifications.Farms;
 using FarmsManager.Application.Specifications.Sales;
+using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.SlaughterhouseAggregate.Entities;
@@ -103,10 +104,21 @@ public class UploadSalesInvoicesCommandHandler : IRequestHandler<UploadSalesInvo
             }
 
             // W fakturze sprzedaży, nasza ferma to SPRZEDAWCA (Vendor)
-            var farm = await _farmRepository.FirstOrDefaultAsync(new FarmByNipOrNameSpec(
-                    salesInvoiceModel.VendorNip?.Replace("-", ""),
-                    salesInvoiceModel.VendorName),
-                cancellationToken);
+            // Szukaj fermy najpierw po NIP, potem po nazwie
+            FarmEntity farm = null;
+            if (!string.IsNullOrWhiteSpace(salesInvoiceModel.VendorNip))
+            {
+                farm = await _farmRepository.FirstOrDefaultAsync(
+                    new FarmByNipSpec(salesInvoiceModel.VendorNip?.Replace("-", "")),
+                    cancellationToken);
+            }
+            
+            if (farm is null && !string.IsNullOrWhiteSpace(salesInvoiceModel.VendorName))
+            {
+                farm = await _farmRepository.FirstOrDefaultAsync(
+                    new FarmByNameSpec(salesInvoiceModel.VendorName),
+                    cancellationToken);
+            }
 
             // Sprawdź czy dla danej fermy nie istnieje już faktura z tym numerem
             if (farm is not null)

@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.FileSystem;
 using FarmsManager.Application.Interfaces;
@@ -6,6 +6,7 @@ using FarmsManager.Application.Models.AzureDi;
 using FarmsManager.Application.Models.Invoices;
 using FarmsManager.Application.Specifications.Farms;
 using FarmsManager.Application.Specifications.Gas;
+using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.GasAggregate.Entities;
 using FarmsManager.Domain.Aggregates.GasAggregate.Interfaces;
@@ -97,10 +98,21 @@ public class UploadGasDeliveriesInvoicesCommandHandler : IRequestHandler<UploadG
                 throw new Exception($"Istnieje już dostawa z tym numerem faktury: {existedInvoice.InvoiceNumber}");
             }
 
-            var farm = await _farmRepository.FirstOrDefaultAsync(new FarmByNipOrNameSpec(
-                    gasInvoiceModel.CustomerNip?.Replace("-", ""),
-                    gasInvoiceModel.CustomerName),
-                cancellationToken);
+            // Szukaj fermy najpierw po NIP, potem po nazwie
+            FarmEntity farm = null;
+            if (!string.IsNullOrWhiteSpace(gasInvoiceModel.CustomerNip))
+            {
+                farm = await _farmRepository.FirstOrDefaultAsync(
+                    new FarmByNipSpec(gasInvoiceModel.CustomerNip?.Replace("-", "")),
+                    cancellationToken);
+            }
+            
+            if (farm is null && !string.IsNullOrWhiteSpace(gasInvoiceModel.CustomerName))
+            {
+                farm = await _farmRepository.FirstOrDefaultAsync(
+                    new FarmByNameSpec(gasInvoiceModel.CustomerName),
+                    cancellationToken);
+            }
 
             var contractor = await _gasContractorRepository.FirstOrDefaultAsync(
                 new GasContractorByNipSpec(gasInvoiceModel.VendorNip?.Replace("-", "")),
