@@ -1,4 +1,4 @@
-﻿namespace FarmsManager.Domain.Exceptions;
+namespace FarmsManager.Domain.Exceptions;
 
 public abstract partial class DomainException
 {
@@ -9,4 +9,6 @@ public abstract partial class DomainException
     public static DomainException InsertionExists(string henhouseName) => new InsertionExistsDomainException(henhouseName, null);
     public static DomainException FileNotFound() => new FileNotFoundDomainException(null);
     public static DomainException Forbidden() => new ForbiddenDomainException(null);
+    public static DomainException BadRequest() => new BadRequestDomainException(null, null);
+    public static DomainException BadRequest(string message) => new BadRequestDomainException(message, null);
 }

@@ -6,6 +6,7 @@ using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Services;
 using FarmsManager.Application.Specifications.Cycle;
 using FarmsManager.Application.Specifications.Farms;
+using FarmsManager.Application.Specifications.Sales;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Enums;
@@ -124,6 +125,21 @@ public class AddNewSaleCommandHandler : IRequestHandler<AddNewSaleCommand, BaseR
         {
             var henhouse = await _henhouseRepository.GetAsync(new HenhouseByIdSpec(entry.HenhouseId),
                 ct);
+
+            // Sprawdź czy istnieje już sprzedaż z tymi samymi parametrami
+            var duplicateSpec = new SaleDuplicateCheckSpec(
+                request.CycleId, 
+                request.FarmId, 
+                entry.HenhouseId, 
+                request.SaleDate, 
+                entry.Quantity);
+            
+            var existingSale = await _saleRepository.FirstOrDefaultAsync(duplicateSpec, ct);
+            if (existingSale != null)
+            {
+                throw DomainException.BadRequest(
+                    $"Sprzedaż dla kurnika '{henhouse.Name}' z datą {request.SaleDate:yyyy-MM-dd} i ilością {entry.Quantity} sztuk już istnieje.");
+            }
 
             var otherExtras = entry.OtherExtras?.Select(t => new SaleOtherExtras
             {

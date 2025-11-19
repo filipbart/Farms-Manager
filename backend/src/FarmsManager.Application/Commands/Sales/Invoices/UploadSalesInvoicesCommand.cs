@@ -1,4 +1,4 @@
-﻿using Ardalis.Specification;
+using Ardalis.Specification;
 using AutoMapper;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.FileSystem;
@@ -90,14 +90,6 @@ public class UploadSalesInvoicesCommandHandler : IRequestHandler<UploadSalesInvo
                 await _azureDiService.AnalyzeInvoiceAsync<SaleInvoiceModel>(preSignedUrl, cancellationToken);
             var extractedFields = _mapper.Map<AddSaleInvoiceDto>(salesInvoiceModel);
 
-            var existedInvoice = await _saleInvoiceRepository.FirstOrDefaultAsync(
-                new GetSaleInvoiceByInvoiceNumberSpec(extractedFields.InvoiceNumber), cancellationToken);
-
-            if (existedInvoice is not null)
-            {
-                throw new Exception($"Istnieje już faktura sprzedaży z tym numerem: {existedInvoice.InvoiceNumber}");
-            }
-
             // A rzeźnia to KLIENT (Customer)
             var slaughterhouse = await _slaughterhouseRepository.FirstOrDefaultAsync(
                 new SlaughterhouseByNipSpec(salesInvoiceModel.CustomerNip?.Replace("-", "")),
@@ -115,6 +107,20 @@ public class UploadSalesInvoicesCommandHandler : IRequestHandler<UploadSalesInvo
                     salesInvoiceModel.VendorNip?.Replace("-", ""),
                     salesInvoiceModel.VendorName),
                 cancellationToken);
+
+            // Sprawdź czy dla danej fermy nie istnieje już faktura z tym numerem
+            if (farm is not null)
+            {
+                var existedInvoice = await _saleInvoiceRepository.FirstOrDefaultAsync(
+                    new GetSaleInvoiceByInvoiceNumberAndFarmSpec(extractedFields.InvoiceNumber, farm.Id), 
+                    cancellationToken);
+
+                if (existedInvoice is not null)
+                {
+                    throw DomainException.BadRequest(
+                        $"Istnieje już faktura sprzedaży z numerem '{existedInvoice.InvoiceNumber}' dla fermy '{farm.Name}'.");
+                }
+            }
 
 
             extractedFields.FarmId = farm?.Id;

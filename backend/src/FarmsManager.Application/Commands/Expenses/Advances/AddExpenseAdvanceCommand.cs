@@ -66,16 +66,16 @@ public class AddExpenseAdvanceCommandHandler : IRequestHandler<AddExpenseAdvance
     public async Task<EmptyBaseResponse> Handle(AddExpenseAdvanceCommand request, CancellationToken ct)
     {
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
-        var user = await _userRepository.GetByIdAsync(userId, ct) 
-            ?? throw DomainException.Unauthorized();
+        var user = await _userRepository.GetByIdAsync(userId, ct)
+                   ?? throw DomainException.Unauthorized();
 
         // Dla admina nie sprawdzamy uprawnień
         if (!user.IsAdmin)
         {
             // Sprawdź uprawnienia do edycji ewidencji tego pracownika
             var hasPermission = await _permissionService.HasPermissionAsync(
-                userId, 
-                request.EmployeeId, 
+                userId,
+                request.EmployeeId,
                 ExpenseAdvancePermissionType.Edit,
                 ct);
 
@@ -104,7 +104,7 @@ public class AddExpenseAdvanceCommandHandler : IRequestHandler<AddExpenseAdvance
                 using var memoryStream = new MemoryStream();
                 await entry.File.CopyToAsync(memoryStream, ct);
 
-                filePath = await _s3Service.UploadFileAsync(memoryStream.ToArray(), FileType.ExpenseAdvance, path);
+                filePath = await _s3Service.UploadFileAsync(memoryStream.ToArray(), FileType.ExpenseAdvance, path, ct);
             }
 
             var newAdvance = ExpenseAdvanceEntity.CreateNew(

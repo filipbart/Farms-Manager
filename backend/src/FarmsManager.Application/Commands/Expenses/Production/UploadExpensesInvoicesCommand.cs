@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.FileSystem;
 using FarmsManager.Application.Interfaces;
@@ -91,15 +91,6 @@ public class UploadExpensesInvoicesCommandHandler : IRequestHandler<UploadExpens
                     cancellationToken);
             var extractedFields = _mapper.Map<AddExpenseProductionInvoiceDto>(expenseProductionInvoiceModel);
 
-            var existedInvoice = await _expenseProductionRepository.FirstOrDefaultAsync(
-                new GetExpenseProductionInvoiceByInvoiceNumberSpec(extractedFields.InvoiceNumber), cancellationToken);
-
-            if (existedInvoice is not null)
-            {
-                throw new Exception(
-                    $"Istnieje już koszt produkcyjny z tym numerem faktury: {existedInvoice.InvoiceNumber}");
-            }
-
             if (expenseProductionInvoiceModel is null)
             {
                 throw new Exception("Faktura nie jest możliwa do odczytu");
@@ -120,6 +111,20 @@ public class UploadExpensesInvoicesCommandHandler : IRequestHandler<UploadExpens
                     expenseProductionInvoiceModel.VendorName, expenseProductionInvoiceModel.VendorNip ?? string.Empty,
                     expenseProductionInvoiceModel.VendorAddress.Replace("\n", ""), userId);
                 await _expenseContractorRepository.AddAsync(expenseContractor, cancellationToken);
+            }
+
+            // Sprawdź czy dla danego sprzedawcy nie istnieje już faktura z tym numerem
+            if (expenseContractor is not null)
+            {
+                var existedInvoice = await _expenseProductionRepository.FirstOrDefaultAsync(
+                    new GetExpenseProductionInvoiceByInvoiceNumberAndContractorSpec(extractedFields.InvoiceNumber, expenseContractor.Id),
+                    cancellationToken);
+
+                if (existedInvoice is not null)
+                {
+                    throw DomainException.BadRequest(
+                        $"Istnieje już koszt produkcyjny z numerem faktury '{existedInvoice.InvoiceNumber}' dla sprzedawcy '{expenseContractor.Name}'.");
+                }
             }
 
             extractedFields.FarmId = farm?.Id;
