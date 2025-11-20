@@ -6,7 +6,11 @@ import { GRID_AGGREGATION_ROOT_FOOTER_ROW_ID } from "@mui/x-data-grid-premium";
 import { Button, Chip } from "@mui/material";
 import { CommentCell } from "../../../components/datagrid/comment-cell";
 import { getAuditColumns } from "../../../utils/audit-columns-helper";
-import type { FeedPaymentListModel } from "../../../models/feeds/payments/payment";
+import {
+  type FeedPaymentListModel,
+  FeedPaymentStatus,
+  FeedPaymentStatusLabels,
+} from "../../../models/feeds/payments/payment";
 
 export const getFeedsPaymentsColumns = ({
   deleteFeedPayment,
@@ -37,10 +41,12 @@ export const getFeedsPaymentsColumns = ({
         if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
           return null;
         }
-        const isCompleted = params.row.status === "Zrealizowany";
+        const isCompleted = params.row.status === FeedPaymentStatus.Realized;
         return (
           <Chip
-            label={params.row.status}
+            label={
+              FeedPaymentStatusLabels[params.row.status as FeedPaymentStatus]
+            }
             color={isCompleted ? "success" : "error"}
             size="small"
           />
@@ -98,7 +104,7 @@ export const getFeedsPaymentsColumns = ({
         if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID) {
           return [];
         }
-        const isCompleted = params.row.status === "Zrealizowany";
+        const isCompleted = params.row.status === FeedPaymentStatus.Realized;
         const actions = [];
 
         if (!isCompleted) {

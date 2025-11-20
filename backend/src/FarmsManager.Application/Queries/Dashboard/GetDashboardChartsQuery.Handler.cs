@@ -225,10 +225,15 @@ public class GetDashboardChartsQueryHandler : IRequestHandler<GetDashboardCharts
 
                 if (cycleInsertedHenhousesArea == 0) continue;
 
+                var gasConsumptionValue = Math.Round(consumption.TotalQuantity / cycleInsertedHenhousesArea, 3);
+                
+                // Pomiń wartości powyżej 2.00
+                if (gasConsumptionValue > 2.00m) continue;
+
                 chartSeries.Data.Add(new ChartDataPoint
                 {
                     X = $"{consumption.Cycle.Identifier}/{consumption.Cycle.Year}",
-                    Y = Math.Round(consumption.TotalQuantity / cycleInsertedHenhousesArea, 2)
+                    Y = gasConsumptionValue
                 });
             }
 

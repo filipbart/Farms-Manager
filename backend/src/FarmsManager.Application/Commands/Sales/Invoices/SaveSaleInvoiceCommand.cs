@@ -1,4 +1,4 @@
-﻿using FarmsManager.Application.Commands.Slaughterhouses;
+using FarmsManager.Application.Commands.Slaughterhouses;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.FileSystem;
 using FarmsManager.Application.Interfaces;
@@ -62,11 +62,11 @@ public class SaveSalesInvoiceCommandHandler : IRequestHandler<SaveSalesInvoiceCo
             return response;
         }
 
-        var existedInvoice = await _saleInvoiceRepository.SingleOrDefaultAsync(
-            new GetSaleInvoiceByInvoiceNumberSpec(request.Data.InvoiceNumber), ct);
+        var existedInvoice = await _saleInvoiceRepository.FirstOrDefaultAsync(
+            new GetSaleInvoiceByInvoiceNumberAndFarmSpec(request.Data.InvoiceNumber, farm.Id), ct);
         if (existedInvoice is not null)
         {
-            throw new Exception($"Istnieje już faktura sprzedaży z tym numerem: {existedInvoice.InvoiceNumber}");
+            throw new Exception($"Istnieje już faktura sprzedaży z numerem '{existedInvoice.InvoiceNumber}' dla fermy '{farm.Name}'.");
         }
 
         var newSalesInvoice = SaleInvoiceEntity.CreateNew(

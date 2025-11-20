@@ -9,38 +9,39 @@ export const getFeedsPaymentsFiltersConfig = (
   _filters: FeedsPaymentsFilterPaginationModel,
   isAdmin: boolean = false
 ): FilterConfig<keyof FeedsPaymentsFilterPaginationModel>[] => {
-  const baseFilters: FilterConfig<keyof FeedsPaymentsFilterPaginationModel>[] = [
-    {
-      key: "farmIds",
-      label: "Ferma",
-      type: "multiSelect",
-      options:
-        dictionary?.farms.map((farm) => ({
-          value: farm.id,
-          label: farm.name,
-        })) || [],
-      disabled: !dictionary,
-    },
-    {
-      key: "cycles",
-      label: "Identyfikator (cykl)",
-      type: "multiSelect",
-      options: uniqueCycles.map((cycle) => ({
-        value: `${cycle.identifier}-${cycle.year}`,
-        label: `${cycle.identifier}/${cycle.year}`,
-      })),
-      disabled: !dictionary,
-    },
-    {
-      key: "status",
-      label: "Status",
-      type: "select",
-      options: [
-        { value: "Niezrealizowany", label: "Niezrealizowany" },
-        { value: "Zrealizowany", label: "Zrealizowany" },
-      ],
-    },
-  ];
+  const baseFilters: FilterConfig<keyof FeedsPaymentsFilterPaginationModel>[] =
+    [
+      {
+        key: "farmIds",
+        label: "Ferma",
+        type: "multiSelect",
+        options:
+          dictionary?.farms.map((farm) => ({
+            value: farm.id,
+            label: farm.name,
+          })) || [],
+        disabled: !dictionary,
+      },
+      {
+        key: "cycles",
+        label: "Identyfikator (cykl)",
+        type: "multiSelect",
+        options: uniqueCycles.map((cycle) => ({
+          value: `${cycle.identifier}-${cycle.year}`,
+          label: `${cycle.identifier}/${cycle.year}`,
+        })),
+        disabled: !dictionary,
+      },
+      {
+        key: "status",
+        label: "Status",
+        type: "select",
+        options: [
+          { value: "Unrealized", label: "Niezrealizowany" },
+          { value: "Realized", label: "Zrealizowany" },
+        ],
+      },
+    ];
 
   if (isAdmin) {
     baseFilters.push({
