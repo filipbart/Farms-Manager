@@ -116,11 +116,16 @@ public class GetDashboardChartsQueryHandler : IRequestHandler<GetDashboardCharts
             {
                 if (totalWeight > 0 && farmFeedsByCycle.TryGetValue(cycleId, out var totalFeed) && totalFeed > 0)
                 {
+                    var fcrValue = totalFeed * 1000 / totalWeight;
+                    
+                    // Pomiń wartości powyżej 2.00
+                    if (fcrValue > 2.00m) continue;
+                    
                     var cycle = allSales.First(s => s.CycleId == cycleId).Cycle;
                     chartSeries.Data.Add(new ChartDataPoint
                     {
                         X = $"{cycle.Identifier}/{cycle.Year}",
-                        Y = totalFeed * 1000 / totalWeight
+                        Y = fcrValue
                     });
                 }
             }
@@ -226,9 +231,6 @@ public class GetDashboardChartsQueryHandler : IRequestHandler<GetDashboardCharts
                 if (cycleInsertedHenhousesArea == 0) continue;
 
                 var gasConsumptionValue = Math.Round(consumption.TotalQuantity / cycleInsertedHenhousesArea, 3);
-                
-                // Pomiń wartości powyżej 2.00
-                if (gasConsumptionValue > 2.00m) continue;
 
                 chartSeries.Data.Add(new ChartDataPoint
                 {
