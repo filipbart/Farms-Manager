@@ -291,7 +291,11 @@ public class GetFeedDeliveryPaymentFileQueryHandler : IRequestHandler<GetFeedDel
             });
         }
 
-        string FormatCurrency(decimal amount) => $"{amount:N2} zł";
+        string FormatCurrency(decimal amount)
+        {
+            var formatted = amount.ToString("#,##0.00", new System.Globalization.CultureInfo("pl-PL"));
+            return $"{formatted} zł";
+        }
     }
 
     private static List<FeedInvoiceEntity> SortInvoicesByNumber(List<FeedInvoiceEntity> invoices)

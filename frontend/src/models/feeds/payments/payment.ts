@@ -17,7 +17,7 @@ export interface FeedPaymentListModel extends AuditFields {
   filePath: string;
   fileName: string;
   dateCreatedUtc: string;
-  status: "Niezrealizowany" | "Zrealizowany";
+  status: FeedPaymentStatus;
   comment?: string;
 }
 
