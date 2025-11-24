@@ -15,6 +15,13 @@ public static class AppPermissions
         public const string View = "dashboard:view";
     }
 
+    [PermissionGroup("Księgowość")]
+    public static class Accounting
+    {
+        [Description("Dostęp i zarządzanie fakturami z KSeF")]
+        public const string Manage = "accounting:manage";
+    }
+
     [PermissionGroup("Wstawienia")]
     public static class Insertions
     {

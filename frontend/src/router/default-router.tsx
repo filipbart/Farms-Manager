@@ -41,6 +41,7 @@ import ProductionDataFlockLossPage from "../pages/production-data/flock-loss";
 import UsersPage from "../pages/settings/users/users";
 import UserDetailsPage from "../pages/settings/users/details";
 import ForbiddenPage from "../pages/forbidden-page";
+import AccountingPage from "../pages/accounting";
 
 const DefaultRouter: React.FC = () => {
   const { getRoute } = useRouter();
@@ -49,6 +50,10 @@ const DefaultRouter: React.FC = () => {
       <Route path={getRoute(RouteName.Login)} element={<LoginPage />} />
       <Route path="/" element={<DashboardLayout />}>
         <Route path="" element={<DashboardPage />} />
+        <Route
+          path={getRoute(RouteName.Accounting)}
+          element={<AccountingPage />}
+        />
         <Route
           path={getRoute(RouteName.Insertions)}
           element={<InsertionsPage />}

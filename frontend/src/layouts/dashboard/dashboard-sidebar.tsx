@@ -135,6 +135,13 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       )}
 
       <Typography sx={headingStyles}>Produkcja i Finanse</Typography>
+      {hasPermission("accounting:view") && (
+        <SidebarMenuItem
+          to="/accounting"
+          title="Księgowość"
+          icon={<FaFileInvoiceDollar />}
+        />
+      )}
       {hasPermission("insertions:view") && (
         <SidebarMenuItem
           to="/insertions"

@@ -2,6 +2,7 @@ export enum RouteName {
   Login = "login",
   LogoutConfirm = "logout-confirm",
   Dashboard = "dashboard",
+  Accounting = "accounting",
   Insertions = "insertions",
   SalesList = "sales",
   SalesInvoices = "sales/invoices",
