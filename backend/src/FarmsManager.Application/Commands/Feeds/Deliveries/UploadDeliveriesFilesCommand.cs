@@ -101,22 +101,25 @@ public class UploadDeliveriesFilesCommandHandler : IRequestHandler<UploadDeliver
                 throw new Exception($"Istnieje już dostawa z tym numerem faktury: {existedInvoice.InvoiceNumber}");
             }
 
+            FarmEntity farm = null;
+            if (!string.IsNullOrWhiteSpace(feedDeliveryInvoiceModel.CustomerNip))
+            {
+                farm = await _farmRepository.FirstOrDefaultAsync(
+                    new FarmByNipSpec(feedDeliveryInvoiceModel.CustomerNip?.Replace("-", "")),
+                    cancellationToken);
+            }
+
+            if (farm is null && !string.IsNullOrWhiteSpace(feedDeliveryInvoiceModel.CustomerName))
+            {
+                farm = await _farmRepository.FirstOrDefaultAsync(
+                    new FarmByNameSpec(feedDeliveryInvoiceModel.CustomerName),
+                    cancellationToken);
+            }
+
             var henhouse =
                 await _henhouseRepository.FirstOrDefaultAsync(
-                    new HenhouseByNameSpec(feedDeliveryInvoiceModel.HenhouseName), cancellationToken);
-
-            var farms = await _farmRepository.ListAsync(new FarmsByNipOrNameSpec(
-                feedDeliveryInvoiceModel.CustomerNip.Replace("-", ""),
-                feedDeliveryInvoiceModel.CustomerName), cancellationToken);
-            FarmEntity farm;
-            if (henhouse is not null)
-            {
-                farm = farms.FirstOrDefault(t => t.Id == henhouse.FarmId) ?? farms.FirstOrDefault();
-            }
-            else
-            {
-                farm = farms.FirstOrDefault();
-            }
+                    new HenhouseByNameAndFarmIdSpec(feedDeliveryInvoiceModel.HenhouseName, farm?.Id),
+                    cancellationToken);
 
             var feedContractor = await _feedContractorRepository.FirstOrDefaultAsync(
                 new FeedContractorByNipSpec(feedDeliveryInvoiceModel.VendorNip.Replace("-", "")),
