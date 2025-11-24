@@ -6,7 +6,10 @@ import {
   initialFilters,
   type AnalysisDictionary,
 } from "../../../models/summary/analysis-filters";
-import type { ProductionAnalysisRowModel, ProductionAnalysisSummaryModel } from "../../../models/summary/production-analysis";
+import type {
+  ProductionAnalysisRowModel,
+  ProductionAnalysisSummaryModel,
+} from "../../../models/summary/production-analysis";
 import type { CycleDictModel } from "../../../models/common/dictionaries";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import { SummaryService } from "../../../services/summary-service";
@@ -50,7 +53,8 @@ const SummaryProductionAnalysisPage: React.FC = () => {
     ProductionAnalysisRowModel[]
   >([]);
   const [totalRows, setTotalRows] = useState(0);
-  const [summaryData, setSummaryData] = useState<ProductionAnalysisSummaryModel | null>(null);
+  const [summaryData, setSummaryData] =
+    useState<ProductionAnalysisSummaryModel | null>(null);
 
   const apiRef = useGridApiRef();
   const [savedViews, setSavedViews] = useState<ColumnViewRow[]>([]);
@@ -112,6 +116,14 @@ const SummaryProductionAnalysisPage: React.FC = () => {
 
   useEffect(() => {
     const fetchAnalysisData = async () => {
+      // Nie pobieraj danych, jeśli nie wybrano żadnej fermy
+      if (!filters.farmIds || filters.farmIds.length === 0) {
+        setAnalysisData([]);
+        setTotalRows(0);
+        setSummaryData(null);
+        return;
+      }
+
       setLoading(true);
       try {
         await handleApiResponse(
@@ -221,14 +233,14 @@ const SummaryProductionAnalysisPage: React.FC = () => {
 
   const summaryRow = useMemo(() => {
     if (!summaryData) return null;
-    
+
     return {
-      id: 'sum',
-      cycleText: 'Suma',
-      farmName: '',
-      henhouseName: '',
-      hatcheryName: '',
-      insertionDate: '',
+      id: "sum",
+      cycleText: "Suma",
+      farmName: "",
+      henhouseName: "",
+      hatcheryName: "",
+      insertionDate: "",
       isSummaryRow: true,
       ...summaryData,
       partSaleAvgWeightDeviation: null,
@@ -318,7 +330,10 @@ const SummaryProductionAnalysisPage: React.FC = () => {
           }}
           showToolbar
           getRowClassName={(params) => {
-            if (params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID || params.row.isSummaryRow) {
+            if (
+              params.id === GRID_AGGREGATION_ROOT_FOOTER_ROW_ID ||
+              params.row.isSummaryRow
+            ) {
               return "aggregated-row";
             }
             return "";

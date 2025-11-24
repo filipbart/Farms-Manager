@@ -111,6 +111,13 @@ const SummaryFinancialAnalysisPage: React.FC = () => {
 
   useEffect(() => {
     const fetchAnalysisData = async () => {
+      // Nie pobieraj danych, jeśli nie wybrano żadnej fermy
+      if (!filters.farmIds || filters.farmIds.length === 0) {
+        setAnalysisData([]);
+        setTotalRows(0);
+        return;
+      }
+
       setLoading(true);
       try {
         await handleApiResponse(
