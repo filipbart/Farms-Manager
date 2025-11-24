@@ -38,6 +38,7 @@ webAppBuilder.Host.GetBuilder()
     .AddInfrastructure()
     .AddJwt()
     .AddS3()
+    .AddKsEF()
     .AddAutoMapper(typeof(UserProfile).Assembly)
     .AddMediator(typeof(MeQuery).Assembly, typeof(CreateDevAccountCommand).Assembly)
     .AddSerilog();
