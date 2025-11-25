@@ -1,7 +1,3 @@
-using Amazon;
-using Amazon.S3;
-using Autofac;
-using KSeF.Client.Clients;
 using KSeF.Client.DI;
 using Microsoft.Extensions.Configuration;
 

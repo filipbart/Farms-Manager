@@ -1,7 +1,11 @@
 using FarmsManager.Application.Common;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models.KSeF;
+using FarmsManager.Shared.Extensions;
+using KSeF.Client.Api.Builders.Auth;
+using KSeF.Client.Api.Builders.X509Certificates;
 using KSeF.Client.Core.Interfaces.Clients;
+using KSeF.Client.Core.Interfaces.Services;
 using KSeF.Client.Core.Models.Authorization;
 using KSeF.Client.Core.Models.Invoices;
 using Microsoft.Extensions.Configuration;
@@ -15,62 +19,62 @@ namespace FarmsManager.Application.Services;
 public class KSeFService : IKSeFService, IService
 {
     private readonly IKSeFClient _ksefClient;
+    private readonly ISignatureService _signatureService;
     private readonly IConfiguration _configuration;
     private readonly ILogger<KSeFService> _logger;
-    
+
     // TODO: Implementacja autoryzacji - placeholder na token/sesję
     private string _sessionToken;
-    private string _sessionId;
+    private string _sessionRefreshToken;
+
+    private const string Nip = "7394056953";
 
     public KSeFService(
-        IKSeFClient ksefClient, 
+        IKSeFClient ksefClient,
         IConfiguration configuration,
-        ILogger<KSeFService> logger)
+        ILogger<KSeFService> logger, ISignatureService signatureService)
     {
         _ksefClient = ksefClient;
         _configuration = configuration;
         _logger = logger;
+        _signatureService = signatureService;
     }
 
     /// <summary>
     /// Pobiera faktury z KSeF na podstawie kryteriów wyszukiwania
     /// </summary>
     public async Task<KSeFInvoicesResponse> GetInvoicesAsync(
-        KSeFInvoicesRequest request, 
+        KSeFInvoicesRequest request,
         CancellationToken cancellationToken)
     {
         try
         {
-            // TODO: Implementacja autoryzacji - otwarcie sesji
             await EnsureSessionAsync(cancellationToken);
 
-            // TODO: Implementacja pełnego flow wyszukiwania faktur w KSeF
-            // Wymagane kroki:
-            // 1. Przygotowanie KsefInvoiceQueryStartRequest z kryteriami
-            // 2. Wywołanie _ksefClient.InvoiceQueryStartAsync()
-            // 3. Polling statusu przez InvoiceQueryStatusAsync()
-            // 4. Pobranie wyników przez InvoiceQueryResultAsync()
-            // 5. Parsowanie ZIP i XML-i faktur
-            
-            _logger.LogWarning("Pobieranie faktur z KSeF wymaga pełnej implementacji API calls");
-            
-            var invoices = new List<KSeFInvoiceItem>();
-            
-            var test = _ksefClient.QueryInvoiceMetadataAsync(new InvoiceQueryFilters())
-            
-            // Placeholder - zwróć pustą listę
-            // W pełnej implementacji tutaj będzie logika komunikacji z KSeF API
+            var filters = new InvoiceQueryFilters();
+            var invoicesMetadata =
+                await _ksefClient.QueryInvoiceMetadataAsync(filters, _sessionToken, request.PageNumber, request.PageSize, cancellationToken: cancellationToken);
 
-            // Paginacja lokalna (KSeF zwraca wszystkie wyniki)
-            var paginatedInvoices = invoices
-                .Skip((request.PageNumber - 1) * request.PageSize)
-                .Take(request.PageSize)
-                .ToList();
 
+            var responseList = invoicesMetadata.Invoices.Select(t => new KSeFInvoiceItem
+            {
+                ReferenceNumber = t.KsefNumber,
+                InvoiceNumber = t.InvoiceNumber,
+                InvoiceDate = t.InvoicingDate,
+                GrossAmount = t.GrossAmount,
+                NetAmount = t.NetAmount,
+                VatAmount = t.VatAmount,
+                SellerNip = t.Seller.Nip,
+                SellerName = t.Seller.Name,
+                BuyerNip = t.Buyer.Identifier.Value,
+                BuyerName = t.Buyer.Name,
+                ReceivedDate = t.AcquisitionDate
+            }).ToList();
+            
             return new KSeFInvoicesResponse
             {
-                Invoices = paginatedInvoices,
-                TotalCount = invoices.Count,
+                Invoices = responseList,
+                TotalCount = invoicesMetadata.Invoices.Count,
                 PageNumber = request.PageNumber,
                 PageSize = request.PageSize
             };
@@ -86,7 +90,7 @@ public class KSeFService : IKSeFService, IService
     /// Pobiera szczegóły pojedynczej faktury z KSeF
     /// </summary>
     public async Task<KSeFInvoiceDetails> GetInvoiceDetailsAsync(
-        string invoiceReferenceNumber, 
+        string invoiceReferenceNumber,
         CancellationToken cancellationToken)
     {
         try
@@ -98,10 +102,10 @@ public class KSeFService : IKSeFService, IService
             // 1. Wywołanie _ksefClient.InvoiceGetAsync()
             // 2. Parsowanie XML faktury
             // 3. Mapowanie na KSeFInvoiceDetails
-            
-            _logger.LogWarning("Pobieranie szczegółów faktury {ReferenceNumber} wymaga implementacji", 
+
+            _logger.LogWarning("Pobieranie szczegółów faktury {ReferenceNumber} wymaga implementacji",
                 invoiceReferenceNumber);
-            
+
             return new KSeFInvoiceDetails
             {
                 ReferenceNumber = invoiceReferenceNumber
@@ -109,7 +113,7 @@ public class KSeFService : IKSeFService, IService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Błąd podczas pobierania szczegółów faktury {ReferenceNumber} z KSeF", 
+            _logger.LogError(ex, "Błąd podczas pobierania szczegółów faktury {ReferenceNumber} z KSeF",
                 invoiceReferenceNumber);
             throw;
         }
@@ -119,7 +123,7 @@ public class KSeFService : IKSeFService, IService
     /// Pobiera XML faktury z KSeF
     /// </summary>
     public async Task<string> GetInvoiceXmlAsync(
-        string invoiceReferenceNumber, 
+        string invoiceReferenceNumber,
         CancellationToken cancellationToken)
     {
         try
@@ -127,14 +131,14 @@ public class KSeFService : IKSeFService, IService
             await EnsureSessionAsync(cancellationToken);
 
             // TODO: Implementacja pobierania XML faktury
-            _logger.LogWarning("Pobieranie XML faktury {ReferenceNumber} wymaga implementacji", 
+            _logger.LogWarning("Pobieranie XML faktury {ReferenceNumber} wymaga implementacji",
                 invoiceReferenceNumber);
-            
+
             return string.Empty;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Błąd podczas pobierania XML faktury {ReferenceNumber} z KSeF", 
+            _logger.LogError(ex, "Błąd podczas pobierania XML faktury {ReferenceNumber} z KSeF",
                 invoiceReferenceNumber);
             throw;
         }
@@ -145,36 +149,49 @@ public class KSeFService : IKSeFService, IService
     /// </summary>
     private async Task EnsureSessionAsync(CancellationToken cancellationToken)
     {
-        // TODO: Implementacja pełnej autoryzacji
-        // Na razie placeholder - w produkcji należy:
-        // 1. Sprawdzić czy sesja jest aktywna
-        // 2. Jeśli nie, otworzyć nową sesję z odpowiednimi credentials
-        // 3. Obsłużyć refresh tokena jeśli potrzebny
-        
-        if (string.IsNullOrEmpty(_sessionId))
+        if (_sessionToken.IsEmpty())
         {
-            _logger.LogWarning("Brak aktywnej sesji KSeF - wymagana implementacja autoryzacji");
+            var challenge = await _ksefClient.GetAuthChallengeAsync(cancellationToken);
 
-            var requestToken = new KsefTokenRequest
-            {
-                Permissions =
-                [
-                    KsefTokenPermissionType.InvoiceRead
-                ],
-            };
-            
-            var tokenResponse = await _ksefClient.GenerateKsefTokenAsync(requestToken)
-            
-            // Placeholder - w przyszłości tutaj będzie logika otwierania sesji:
-            // var sessionRequest = new KsefSessionOpenRequest { ... };
-            // var sessionResponse = await _ksefClient.SessionOpenAsync(sessionRequest, cancellationToken);
-            // _sessionId = sessionResponse.SessionId;
-            // _sessionToken = sessionResponse.SessionToken;
-            
-            throw new InvalidOperationException(
-                "Autoryzacja KSeF nie jest jeszcze zaimplementowana. " +
-                "Wymagane jest skonfigurowanie credentials i implementacja otwierania sesji.");
+            // 1. Budowa AuthTokenRequest
+            var authTokenRequest = AuthTokenRequestBuilder
+                .Create()
+                .WithChallenge(challenge.Challenge)
+                .WithContext(AuthenticationTokenContextIdentifierType.Nip, "1234567890")
+                .WithIdentifierType(AuthenticationTokenSubjectIdentifierTypeEnum.CertificateSubject)
+                .Build();
+
+
+            var certificate = SelfSignedCertificateForSealBuilder
+                .Create()
+                .WithOrganizationName("Fermy Drobiu test")
+                .WithOrganizationIdentifier(Nip)
+                .WithCommonName("Fermy Drobiu teścik")
+                .Build();
+// 2. Serializacja do XML
+            var unsignedXml = authTokenRequest.SerializeToXmlString();
+
+// 3. Podpisanie XAdES
+            var signedXml = _signatureService.Sign(unsignedXml, certificate);
+
+// 4. Wysłanie podpisanego XML
+// POST /api/v2/auth/xades-signature
+            var authOperationInfo = await _ksefClient.SubmitXadesAuthRequestAsync(
+                signedXml,
+                verifyCertificateChain: false, cancellationToken: cancellationToken // true dla produkcji
+            );
+
+            var status = await _ksefClient.GetAuthStatusAsync(authOperationInfo.ReferenceNumber,
+                authOperationInfo.AuthenticationToken.Token, cancellationToken);
+
+            if (status.Status.Code != 200)
+                throw new Exception("Bład uwierzytelniania do KSeF");
+
+            var tokens =
+                await _ksefClient.GetAccessTokenAsync(authOperationInfo.AuthenticationToken.Token, cancellationToken);
+
+            _sessionToken = tokens.AccessToken.Token;
+            _sessionRefreshToken = tokens.RefreshToken.Token;
         }
     }
-
 }

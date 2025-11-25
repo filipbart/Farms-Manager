@@ -43,7 +43,7 @@ public class KSeFInvoiceDto
 {
     public string ReferenceNumber { get; set; }
     public string InvoiceNumber { get; set; }
-    public DateTime InvoiceDate { get; set; }
+    public DateTimeOffset InvoiceDate { get; set; }
     public decimal GrossAmount { get; set; }
     public decimal NetAmount { get; set; }
     public decimal VatAmount { get; set; }
@@ -51,7 +51,7 @@ public class KSeFInvoiceDto
     public string SellerName { get; set; }
     public string BuyerNip { get; set; }
     public string BuyerName { get; set; }
-    public DateTime ReceivedDate { get; set; }
+    public DateTimeOffset ReceivedDate { get; set; }
 }
 
 public class GetKSeFInvoicesQueryResponse : PaginationModel<KSeFInvoiceDto>;
