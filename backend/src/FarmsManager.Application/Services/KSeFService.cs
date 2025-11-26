@@ -51,9 +51,20 @@ public class KSeFService : IKSeFService, IService
         {
             await EnsureSessionAsync(cancellationToken);
 
-            var filters = new InvoiceQueryFilters();
+            var now = DateTime.Now;
+            var yearBefore = now.AddYears(-1);
+            var filters = new InvoiceQueryFilters
+            {
+                SubjectType = SubjectType.Subject1,
+                DateRange = new DateRange
+                {
+                    DateType = DateType.Issue,
+                    From = yearBefore
+                }
+            };
             var invoicesMetadata =
-                await _ksefClient.QueryInvoiceMetadataAsync(filters, _sessionToken, request.PageNumber, request.PageSize, cancellationToken: cancellationToken);
+                await _ksefClient.QueryInvoiceMetadataAsync(filters, _sessionToken, request.PageNumber,
+                    request.PageSize, cancellationToken: cancellationToken);
 
 
             var responseList = invoicesMetadata.Invoices.Select(t => new KSeFInvoiceItem
@@ -70,7 +81,7 @@ public class KSeFService : IKSeFService, IService
                 BuyerName = t.Buyer.Name,
                 ReceivedDate = t.AcquisitionDate
             }).ToList();
-            
+
             return new KSeFInvoicesResponse
             {
                 Invoices = responseList,
@@ -160,7 +171,7 @@ public class KSeFService : IKSeFService, IService
                 .WithContext(AuthenticationTokenContextIdentifierType.Nip, Nip)
                 .WithIdentifierType(AuthenticationTokenSubjectIdentifierTypeEnum.CertificateSubject)
                 .Build();
-            
+
             var certificate = SelfSignedCertificateForSealBuilder
                 .Create()
                 .WithOrganizationName("Fermy Drobiu test")
