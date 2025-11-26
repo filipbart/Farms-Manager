@@ -13,6 +13,7 @@ public partial class FmHostBuilder
         {
             var kSeFOptions = ConfigurationRoot.GetSection("KSeF").Get<KSeFClientOptions>();
             services.AddKSeFClient(options => { options.BaseUrl = kSeFOptions?.BaseUrl ?? KsefEnviromentsUris.TEST; });
+            services.AddCryptographyClient(options => { }, null);
         });
 
         return this;
