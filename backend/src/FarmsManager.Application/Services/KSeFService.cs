@@ -164,7 +164,7 @@ public class KSeFService : IKSeFService, IService
             var certificate = SelfSignedCertificateForSealBuilder
                 .Create()
                 .WithOrganizationName("Fermy Drobiu test")
-                .WithOrganizationIdentifier(Nip)
+                .WithOrganizationIdentifier($"VATPL-{Nip}")
                 .WithCommonName("Fermy Drobiu teścik")
                 .Build();
 // 2. Serializacja do XML
