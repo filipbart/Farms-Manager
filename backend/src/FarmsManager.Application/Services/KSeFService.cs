@@ -157,11 +157,10 @@ public class KSeFService : IKSeFService, IService
             var authTokenRequest = AuthTokenRequestBuilder
                 .Create()
                 .WithChallenge(challenge.Challenge)
-                .WithContext(AuthenticationTokenContextIdentifierType.Nip, "1234567890")
+                .WithContext(AuthenticationTokenContextIdentifierType.Nip, Nip)
                 .WithIdentifierType(AuthenticationTokenSubjectIdentifierTypeEnum.CertificateSubject)
                 .Build();
-
-
+            
             var certificate = SelfSignedCertificateForSealBuilder
                 .Create()
                 .WithOrganizationName("Fermy Drobiu test")

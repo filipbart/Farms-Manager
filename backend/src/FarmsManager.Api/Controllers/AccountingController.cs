@@ -4,6 +4,7 @@ using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Permissions;
 using FarmsManager.Application.Queries.Accounting;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FarmsManager.Api.Controllers;
@@ -17,6 +18,7 @@ public class AccountingController(IMediator mediator) : BaseController
     /// <param name="filters"></param>
     /// <returns></returns>
     [HttpGet]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(BaseResponse<GetKSeFInvoicesQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetKSeFInvoices([FromQuery] GetKSeFInvoicesQueryFilters filters)
