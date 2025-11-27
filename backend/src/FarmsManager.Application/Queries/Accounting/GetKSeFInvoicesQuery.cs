@@ -82,7 +82,7 @@ public class GetKSeFInvoicesQueryHandler
             DateFrom = filters.DateFrom,
             DateTo = filters.DateTo,
             InvoiceType = filters.InvoiceType ?? KSeFInvoiceType.Purchase,
-            PageNumber = filters.Page + 1, // Page jest 0-indexed, PageNumber jest 1-indexed
+            PageNumber = filters.Page,
             PageSize = filters.PageSize
         };
 

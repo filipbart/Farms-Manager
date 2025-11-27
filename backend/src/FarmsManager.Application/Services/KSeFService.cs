@@ -1,3 +1,4 @@
+using System.Text;
 using FarmsManager.Application.Common;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models.KSeF;
@@ -8,7 +9,6 @@ using KSeF.Client.Core.Interfaces.Clients;
 using KSeF.Client.Core.Interfaces.Services;
 using KSeF.Client.Core.Models.Authorization;
 using KSeF.Client.Core.Models.Invoices;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace FarmsManager.Application.Services;
@@ -19,8 +19,8 @@ namespace FarmsManager.Application.Services;
 public class KSeFService : IKSeFService, IService
 {
     private readonly IKSeFClient _ksefClient;
+    private readonly ICryptographyService _cryptographyService;
     private readonly ISignatureService _signatureService;
-    private readonly IConfiguration _configuration;
     private readonly ILogger<KSeFService> _logger;
 
     // TODO: Implementacja autoryzacji - placeholder na token/sesję
@@ -31,13 +31,12 @@ public class KSeFService : IKSeFService, IService
 
     public KSeFService(
         IKSeFClient ksefClient,
-        IConfiguration configuration,
-        ILogger<KSeFService> logger, ISignatureService signatureService)
+        ILogger<KSeFService> logger, ISignatureService signatureService, ICryptographyService cryptographyService)
     {
         _ksefClient = ksefClient;
-        _configuration = configuration;
         _logger = logger;
         _signatureService = signatureService;
+        _cryptographyService = cryptographyService;
     }
 
     /// <summary>
@@ -58,7 +57,7 @@ public class KSeFService : IKSeFService, IService
                 SubjectType = SubjectType.Subject1,
                 DateRange = new DateRange
                 {
-                    DateType = DateType.Issue,
+                    DateType = DateType.PermanentStorage,
                     From = yearBefore
                 }
             };
@@ -153,6 +152,53 @@ public class KSeFService : IKSeFService, IService
                 invoiceReferenceNumber);
             throw;
         }
+    }
+
+    public async Task<string> SendTestInvoiceAsync(string fileContent, CancellationToken cancellationToken)
+    {
+        await EnsureSessionAsync(cancellationToken);
+        fileContent = fileContent.Replace("#nip#", Nip);
+        fileContent = fileContent.Replace("#invoice_number#", "1/11/2025");
+
+        var encryptionData = _cryptographyService.GetEncryptionData();
+
+        var openOnlineSessionRequest = OpenOnlineSessionRequestBuilder.Create()
+            .WithFormCode(SystemCodeHelper.GetSystemCode(SystemCodeEnum.FA3),
+                SystemCodeHelper.GetSchemaVersion(SystemCodeEnum.FA3), SystemCodeHelper.GetValue(SystemCodeEnum.FA3))
+            .WithEncryption(encryptionData.EncryptionInfo.EncryptedSymmetricKey,
+                encryptionData.EncryptionInfo.InitializationVector)
+            .Build();
+
+        var openOnlineSessionResponse =
+            await _ksefClient.OpenOnlineSessionAsync(openOnlineSessionRequest, _sessionToken, cancellationToken);
+
+        using var memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(fileContent));
+        var invoiceBytes = memoryStream.ToArray();
+
+        var encryptedInvoice =
+            _cryptographyService.EncryptBytesWithAES256(invoiceBytes, encryptionData.CipherKey,
+                encryptionData.CipherIv);
+        var invoiceMetadata = _cryptographyService.GetMetaData(invoiceBytes);
+        var encryptedInvoiceMetadata = _cryptographyService.GetMetaData(encryptedInvoice);
+
+        var sendOnlineInvoiceRequest = SendInvoiceOnlineSessionRequestBuilder.Create()
+            .WithInvoiceHash(invoiceMetadata.HashSHA, invoiceMetadata.FileSize)
+            .WithEncryptedDocumentHash(encryptedInvoiceMetadata.HashSHA, encryptedInvoiceMetadata.FileSize)
+            .WithEncryptedDocumentContent(Convert.ToBase64String(encryptedInvoice))
+            .Build();
+
+        var sendInvoiceResponse = await _ksefClient.SendOnlineSessionInvoiceAsync(sendOnlineInvoiceRequest,
+            openOnlineSessionResponse.ReferenceNumber, _sessionToken, cancellationToken);
+
+        if (sendInvoiceResponse.ReferenceNumber == null)
+        {
+            throw new Exception("Błąd z wysłaniem faktury do KSeF");
+        }
+
+        await _ksefClient.CloseOnlineSessionAsync(openOnlineSessionResponse.ReferenceNumber, _sessionToken,
+            cancellationToken);
+
+        return sendInvoiceResponse.ReferenceNumber;
     }
 
     /// <summary>

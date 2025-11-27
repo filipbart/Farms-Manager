@@ -9,27 +9,27 @@ public class KSeFInvoicesRequest
     /// NIP podmiotu (kontrahenta) - dla faktur sprzedaży to nabywca, dla zakupu to sprzedawca
     /// </summary>
     public string SubjectNip { get; set; }
-    
+
     /// <summary>
     /// Data początkowa zakresu wyszukiwania (data wystawienia faktury)
     /// </summary>
     public DateTime? DateFrom { get; set; }
-    
+
     /// <summary>
     /// Data końcowa zakresu wyszukiwania (data wystawienia faktury)
     /// </summary>
     public DateTime? DateTo { get; set; }
-    
+
     /// <summary>
     /// Typ faktury: "sales" (sprzedaż) lub "purchase" (zakup)
     /// </summary>
     public KSeFInvoiceType InvoiceType { get; set; }
-    
+
     /// <summary>
     /// Numer strony dla paginacji
     /// </summary>
-    public int PageNumber { get; set; } = 1;
-    
+    public int PageNumber { get; set; }
+
     /// <summary>
     /// Rozmiar strony dla paginacji
     /// </summary>
@@ -45,7 +45,7 @@ public enum KSeFInvoiceType
     /// Faktury sprzedaży (wystawione przez nas)
     /// </summary>
     Sales,
-    
+
     /// <summary>
     /// Faktury zakupu (wystawione dla nas)
     /// </summary>

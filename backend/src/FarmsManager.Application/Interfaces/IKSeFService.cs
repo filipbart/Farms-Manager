@@ -14,7 +14,7 @@ public interface IKSeFService
     /// <param name="cancellationToken">Token anulowania</param>
     /// <returns>Lista faktur spełniających kryteria</returns>
     Task<KSeFInvoicesResponse> GetInvoicesAsync(KSeFInvoicesRequest request, CancellationToken cancellationToken);
-    
+
     /// <summary>
     /// Pobiera szczegóły pojedynczej faktury z KSeF
     /// </summary>
@@ -22,7 +22,7 @@ public interface IKSeFService
     /// <param name="cancellationToken">Token anulowania</param>
     /// <returns>Szczegóły faktury</returns>
     Task<KSeFInvoiceDetails> GetInvoiceDetailsAsync(string invoiceReferenceNumber, CancellationToken cancellationToken);
-    
+
     /// <summary>
     /// Pobiera XML faktury z KSeF
     /// </summary>
@@ -30,4 +30,6 @@ public interface IKSeFService
     /// <param name="cancellationToken">Token anulowania</param>
     /// <returns>XML faktury</returns>
     Task<string> GetInvoiceXmlAsync(string invoiceReferenceNumber, CancellationToken cancellationToken);
+
+    Task<string> SendTestInvoiceAsync(string fileContent, CancellationToken cancellationToken);
 }
