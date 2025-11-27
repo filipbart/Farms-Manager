@@ -1,29 +1,30 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>disable</Nullable>
+        <LangVersion>14</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="AutoMapper" Version="14.0.0" />
-      <PackageReference Include="AWSSDK.Core" Version="4.0.0.16" />
-      <PackageReference Include="AWSSDK.S3" Version="4.0.5.1" />
+      <PackageReference Include="AutoMapper" Version="15.1.0" />
+      <PackageReference Include="AWSSDK.Core" Version="4.0.3.3" />
+      <PackageReference Include="AWSSDK.S3" Version="4.0.13.1" />
       <PackageReference Include="Azure.AI.DocumentIntelligence" Version="1.0.0" />
       <PackageReference Include="ClosedXML" Version="0.105.0" />
-      <PackageReference Include="FluentValidation" Version="12.0.0" />
-      <PackageReference Include="LinqKit" Version="1.3.8" />
+      <PackageReference Include="FluentValidation" Version="12.1.0" />
+      <PackageReference Include="LinqKit" Version="1.3.9" />
       <PackageReference Include="MediatR" Version="12.5.0" />
       <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.0" />
-      <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.1" />
-      <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.1" />
-      <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
-      <PackageReference Include="QuestPDF" Version="2025.7.0" />
+      <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.0" />
+      <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.0" />
+      <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
+      <PackageReference Include="QuestPDF" Version="2025.7.4" />
       <PackageReference Include="Serilog" Version="4.3.0" />
-      <PackageReference Include="SixLabors.ImageSharp" Version="3.1.11" />
+      <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
       <PackageReference Include="Soneta.KSeF.Client" Version="1.0.0" />
-      <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.12.1" />
+      <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
     </ItemGroup>
 
     <ItemGroup>

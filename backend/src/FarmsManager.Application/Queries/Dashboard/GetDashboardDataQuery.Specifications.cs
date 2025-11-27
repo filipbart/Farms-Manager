@@ -14,7 +14,7 @@ namespace FarmsManager.Application.Queries.Dashboard;
 
 public sealed class GetSalesForDashboardSpec : BaseSpecification<SaleEntity>
 {
-    public GetSalesForDashboardSpec(IReadOnlyCollection<Guid>? farmIds = null, IReadOnlyCollection<Guid>? cycles = null,
+    public GetSalesForDashboardSpec(IReadOnlyCollection<Guid> farmIds = null, IReadOnlyCollection<Guid> cycles = null,
         DateOnly? dateSince = null,
         DateOnly? dateTo = null)
     {
@@ -47,8 +47,8 @@ public sealed class GetSalesForDashboardSpec : BaseSpecification<SaleEntity>
 
 public sealed class GetFeedsInvoicesForDashboardSpec : BaseSpecification<FeedInvoiceEntity>
 {
-    public GetFeedsInvoicesForDashboardSpec(IReadOnlyCollection<Guid>? farmIds = null,
-        IReadOnlyCollection<Guid>? cycles = null,
+    public GetFeedsInvoicesForDashboardSpec(IReadOnlyCollection<Guid> farmIds = null,
+        IReadOnlyCollection<Guid> cycles = null,
         DateOnly? dateSince = null,
         DateOnly? dateTo = null)
     {
@@ -82,8 +82,8 @@ public sealed class GetFeedsInvoicesForDashboardSpec : BaseSpecification<FeedInv
 
 public sealed class GetProductionExpensesForDashboardSpec : BaseSpecification<ExpenseProductionEntity>
 {
-    public GetProductionExpensesForDashboardSpec(IReadOnlyCollection<Guid>? farmIds = null,
-        IReadOnlyCollection<Guid>? cycles = null,
+    public GetProductionExpensesForDashboardSpec(IReadOnlyCollection<Guid> farmIds = null,
+        IReadOnlyCollection<Guid> cycles = null,
         DateOnly? dateSince = null, DateOnly? dateTo = null, bool? isGas = null)
     {
         EnsureExists();
