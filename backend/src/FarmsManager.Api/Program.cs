@@ -83,22 +83,11 @@ webAppBuilder.Services
             Scheme = "Bearer"
         });
 
-        options.AddSecurityRequirement(new OpenApiSecurityRequirement 
+        options.AddSecurityRequirement(doc => new OpenApiSecurityRequirement
         {
             {
-                new OpenApiSecurityScheme
-                {
-                    
-                    Reference = new OpenApiReference
-                    {
-                        Type = ReferenceType.SecurityScheme,
-                        Id = "Bearer"
-                    },
-                    Scheme = "oauth2",
-                    Name = "Bearer",
-                    In = ParameterLocation.Header,
-                },
-                new List<string>()
+                new OpenApiSecuritySchemeReference("Bearer", doc),
+                []
             }
         });
     })
