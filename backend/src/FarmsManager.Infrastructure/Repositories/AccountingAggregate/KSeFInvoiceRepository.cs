@@ -2,20 +2,17 @@ using AutoMapper;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Entities;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Interfaces;
 using FarmsManager.Domain.SeedWork;
-using Microsoft.EntityFrameworkCore;
 
 namespace FarmsManager.Infrastructure.Repositories.AccountingAggregate;
 
-public class KSeFSynchronizationLogRepository : AbstractRepository<KSeFSynchronizationLogEntity>,
-    IKSeFSynchronizationLogRepository
+public class KSeFInvoiceRepository : AbstractRepository<KSeFInvoiceEntity>, IKSeFInvoiceRepository
 {
     private readonly FarmsManagerContext _context;
     public IUnitOfWork UnitOfWork => _context;
 
-    public KSeFSynchronizationLogRepository(FarmsManagerContext context, IConfigurationProvider configurationProvider) :
-        base(
-            context,
-            configurationProvider)
+    public KSeFInvoiceRepository(FarmsManagerContext context, IConfigurationProvider configurationProvider) : base(
+        context,
+        configurationProvider)
     {
         _context = context;
     }
