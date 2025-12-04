@@ -39,10 +39,6 @@ public class KSeFInvoiceEntityConfiguration : BaseConfiguration<KSeFInvoiceEntit
             .IsRequired(false)
             .HasMaxLength(300);
 
-        builder.Property(t => t.InvoiceType)
-            .IsRequired()
-            .HasConversion<int>();
-
         builder.Property(t => t.RelatedInvoiceNumber)
             .IsRequired(false)
             .HasMaxLength(100);

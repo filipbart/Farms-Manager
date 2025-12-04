@@ -1,4 +1,5 @@
-﻿using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
+using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
+using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
 using FarmsManager.Domain.Aggregates.UserAggregate.Entities;
 using FarmsManager.Domain.SeedWork;
 using KSeF.Client.Core.Models.Invoices.Common;
@@ -26,6 +27,7 @@ public class KSeFInvoiceEntity : Entity
     /// <param name="paymentStatus">Status płatności</param>
     /// <param name="paymentType">Forma płatności</param>
     /// <param name="vatDeductionType">Typ odliczenia VAT</param>
+    /// <param name="moduleType">Przypisany moduł</param>
     /// <param name="assignedUserId">Id użytkownika przypisanego do faktury</param>
     /// <param name="invoiceXml">Oryginalny XML faktury</param>
     /// <param name="relatedInvoiceNumber">Powiązany numer faktury (opcjonalnie)</param>
@@ -45,6 +47,7 @@ public class KSeFInvoiceEntity : Entity
         KSeFPaymentStatus paymentStatus,
         KSeFInvoicePaymentType paymentType,
         KSeFVatDeductionType vatDeductionType,
+        ModuleType moduleType,
         Guid assignedUserId,
         string invoiceXml,
         string relatedInvoiceNumber = null,
@@ -66,6 +69,7 @@ public class KSeFInvoiceEntity : Entity
             PaymentStatus = paymentStatus,
             PaymentType = paymentType,
             VatDeductionType = vatDeductionType,
+            ModuleType = moduleType,
             RelatedInvoiceNumber = relatedInvoiceNumber,
             RelatedInvoiceId = relatedInvoiceId,
             Comment = comment,
@@ -136,6 +140,11 @@ public class KSeFInvoiceEntity : Entity
     public KSeFVatDeductionType VatDeductionType { get; init; }
 
     /// <summary>
+    /// Przypisany moduł
+    /// </summary>
+    public ModuleType ModuleType { get; init; }
+
+    /// <summary>
     /// Numer powiązanej faktury
     /// </summary>
     public string RelatedInvoiceNumber { get; init; }
@@ -151,17 +160,32 @@ public class KSeFInvoiceEntity : Entity
     public string Comment { get; init; }
 
     /// <summary>
-    /// Identyfikator pracownika przypisanego do faktury 
-    /// </summary>
-    public Guid AssignedUserId { get; init; }
-
-    /// <summary>
     /// Zawartość faktury w formacie XML (oryginał z KSeF)
     /// </summary>
     public string InvoiceXml { get; init; }
 
     /// <summary>
+    /// Identyfikator pracownika przypisanego do faktury 
+    /// </summary>
+    public Guid AssignedUserId { get; init; }
+
+    /// <summary>
+    /// Identyfikator cyklu przypisanego do faktury
+    /// </summary>
+    public Guid? AssignedCycleId { get; init; }
+
+    /// <summary>
+    /// Identyfikator encji faktury
+    /// </summary>
+    public Guid? AssignedEntityInvoiceId { get; init; }
+
+    /// <summary>
     /// Pracownik przypisany do faktury
     /// </summary>
     public virtual UserEntity AssignedUser { get; init; }
+
+    /// <summary>
+    /// Cykl przypisany do faktury
+    /// </summary>
+    public virtual CycleEntity AssignedCycle { get; init; }
 }

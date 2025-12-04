@@ -54,6 +54,7 @@ public class KSeFService : IKSeFService, IService
             var yearBefore = now.AddYears(-1);
             var filters = new InvoiceQueryFilters
             {
+                //Subject1 - Nabywca, Subject2 - Sprzedawca ale sprawdzic
                 SubjectType = SubjectType.Subject1,
                 DateRange = new DateRange
                 {
