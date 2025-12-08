@@ -151,9 +151,13 @@ public class GetFeedDeliveryPaymentFileQueryHandler : IRequestHandler<GetFeedDel
 
                 page.Content().Column(col =>
                 {
-                    col.Item().PaddingBottom(20)
+                    col.Item().PaddingBottom(5)
                         .Text(firstInvoice.Farm.Name)
                         .FontSize(16).Bold().AlignCenter();
+
+                    col.Item().PaddingBottom(20)
+                        .Text($"Specyfikacja - {DateTime.Now:dd.MM.yyyy HH:mm}")
+                        .FontSize(10).AlignCenter();
 
                     // Sekcja: Faktury
                     col.Item().PaddingBottom(10).Text("Faktury").Bold();
