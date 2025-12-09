@@ -106,7 +106,8 @@ export default class ApiUrl {
   public static UploadSalesInvoices = this.SalesInvoices + "/upload";
   public static SaveSalesInvoicesData = this.SalesInvoices + "/save-invoice";
   public static BookSalesInvoicesPayment = this.SalesInvoices + "/book-payment";
-  public static MarkInvoiceAsCompleted = this.SalesInvoices + "/mark-as-completed";
+  public static MarkInvoiceAsCompleted =
+    this.SalesInvoices + "/mark-as-completed";
   public static UpdateSaleInvoice = (id: string) =>
     this.SalesInvoices + "/update/" + id;
   public static DeleteSaveInvoice = (id: string) =>
@@ -138,7 +139,8 @@ export default class ApiUrl {
   public static AddFeedCorrection = this.Feeds + "/add-correction";
   public static DeleteFeedCorrection = this.Feeds + "/delete-correction";
   public static UpdateFeedCorrection = this.Feeds + "/update-correction";
-  public static DownloadFeedsInvoicesZip = this.Feeds + "/download-invoices-zip";
+  public static DownloadFeedsInvoicesZip =
+    this.Feeds + "/download-invoices-zip";
 
   public static Expenses = this.BaseUrl + "expenses";
   public static ExpensesTypes = this.Expenses + "/types";
@@ -338,4 +340,20 @@ export default class ApiUrl {
   public static AddColumnView = this.ColumnsViews + "/add";
   public static DeleteColumnView = (id: string) =>
     this.ColumnsViews + "/delete/" + id;
+
+  // Accounting / KSeF Invoices
+  public static Accounting = this.BaseUrl + "accounting";
+  public static AccountingInvoices = this.Accounting + "/invoices";
+  public static AccountingInvoiceDetails = (id: string) =>
+    this.AccountingInvoices + "/" + id;
+  public static AccountingInvoiceXml = (id: string) =>
+    this.AccountingInvoices + "/" + id + "/xml";
+  public static AccountingInvoicePdf = (id: string) =>
+    this.AccountingInvoices + "/" + id + "/pdf";
+  public static AccountingUploadInvoice = this.AccountingInvoices + "/upload";
+  public static AccountingUpdateInvoice = (id: string) =>
+    this.AccountingInvoices + "/" + id + "/update";
+  public static AccountingDeleteInvoice = (id: string) =>
+    this.AccountingInvoices + "/" + id + "/delete";
+  public static AccountingSyncKSeF = this.Accounting + "/sync-ksef-invoices";
 }

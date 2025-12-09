@@ -22,6 +22,7 @@ public class KSeFService : IKSeFService, IService
     private readonly ICryptographyService _cryptographyService;
     private readonly ISignatureService _signatureService;
     private readonly ILogger<KSeFService> _logger;
+    private readonly KSeFInvoiceXmlParser _xmlParser;
 
     // TODO: Implementacja autoryzacji - placeholder na token/sesję
     private string _sessionToken;
@@ -31,12 +32,16 @@ public class KSeFService : IKSeFService, IService
 
     public KSeFService(
         IKSeFClient ksefClient,
-        ILogger<KSeFService> logger, ISignatureService signatureService, ICryptographyService cryptographyService)
+        ILogger<KSeFService> logger, 
+        ISignatureService signatureService, 
+        ICryptographyService cryptographyService,
+        KSeFInvoiceXmlParser xmlParser)
     {
         _ksefClient = ksefClient;
         _logger = logger;
         _signatureService = signatureService;
         _cryptographyService = cryptographyService;
+        _xmlParser = xmlParser;
     }
 
     /// <summary>
@@ -108,19 +113,28 @@ public class KSeFService : IKSeFService, IService
         {
             await EnsureSessionAsync(cancellationToken);
 
-            // TODO: Implementacja pobierania szczegółów faktury
-            // Wymagane:
-            // 1. Wywołanie _ksefClient.InvoiceGetAsync()
-            // 2. Parsowanie XML faktury
-            // 3. Mapowanie na KSeFInvoiceDetails
+            // Pobierz XML faktury
+            var invoiceXml = await _ksefClient.GetInvoiceAsync(
+                invoiceReferenceNumber, 
+                _sessionToken, 
+                cancellationToken);
 
-            _logger.LogWarning("Pobieranie szczegółów faktury {ReferenceNumber} wymaga implementacji",
-                invoiceReferenceNumber);
-
-            return new KSeFInvoiceDetails
+            if (string.IsNullOrEmpty(invoiceXml))
             {
-                ReferenceNumber = invoiceReferenceNumber
-            };
+                _logger.LogWarning("Nie udało się pobrać XML faktury {ReferenceNumber}", invoiceReferenceNumber);
+                return new KSeFInvoiceDetails { ReferenceNumber = invoiceReferenceNumber };
+            }
+
+            // Parsuj XML do modelu
+            var parsedInvoice = _xmlParser.ParseInvoiceXml(invoiceXml);
+            
+            if (parsedInvoice == null)
+            {
+                _logger.LogWarning("Nie udało się sparsować XML faktury {ReferenceNumber}", invoiceReferenceNumber);
+                return new KSeFInvoiceDetails { ReferenceNumber = invoiceReferenceNumber };
+            }
+
+            return _xmlParser.ToInvoiceDetails(parsedInvoice, invoiceReferenceNumber);
         }
         catch (Exception ex)
         {
@@ -141,11 +155,15 @@ public class KSeFService : IKSeFService, IService
         {
             await EnsureSessionAsync(cancellationToken);
 
-            // TODO: Implementacja pobierania XML faktury
-            _logger.LogWarning("Pobieranie XML faktury {ReferenceNumber} wymaga implementacji",
-                invoiceReferenceNumber);
+            var invoiceXml = await _ksefClient.GetInvoiceAsync(
+                invoiceReferenceNumber, 
+                _sessionToken, 
+                cancellationToken);
 
-            return string.Empty;
+            _logger.LogInformation("Pobrano XML faktury {ReferenceNumber}, rozmiar: {Size} bajtów", 
+                invoiceReferenceNumber, invoiceXml?.Length ?? 0);
+
+            return invoiceXml;
         }
         catch (Exception ex)
         {

@@ -145,6 +145,31 @@ public class KSeFInvoiceEntity : Entity
     public ModuleType ModuleType { get; init; }
 
     /// <summary>
+    /// Kwota brutto faktury
+    /// </summary>
+    public decimal GrossAmount { get; init; }
+
+    /// <summary>
+    /// Kwota netto faktury
+    /// </summary>
+    public decimal NetAmount { get; init; }
+
+    /// <summary>
+    /// Kwota VAT faktury
+    /// </summary>
+    public decimal VatAmount { get; init; }
+
+    /// <summary>
+    /// Kierunek faktury (sprzedaż/zakup)
+    /// </summary>
+    public KSeFInvoiceDirection InvoiceDirection { get; init; }
+
+    /// <summary>
+    /// Źródło faktury (KSeF/Manual)
+    /// </summary>
+    public KSeFInvoiceSource InvoiceSource { get; init; }
+
+    /// <summary>
     /// Numer powiązanej faktury
     /// </summary>
     public string RelatedInvoiceNumber { get; init; }

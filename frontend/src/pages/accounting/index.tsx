@@ -1,197 +1,377 @@
-import { Box, tablePaginationClasses, Typography } from "@mui/material";
-import { useEffect, useMemo, useReducer, useState } from "react";
+import {
+  Box,
+  Button,
+  Tab,
+  Tabs,
+  tablePaginationClasses,
+  Typography,
+} from "@mui/material";
+import React, { useCallback, useMemo, useReducer, useState } from "react";
 import { toast } from "react-toastify";
-import type { CycleDictModel } from "../../models/common/dictionaries";
-import {
-  DataGridPremium,
-  type GridState,
-  useGridApiRef,
-} from "@mui/x-data-grid-premium";
+import { DataGridPremium, type GridState } from "@mui/x-data-grid-premium";
 import NoRowsOverlay from "../../components/datagrid/custom-norows";
+import { MdAdd, MdSync } from "react-icons/md";
+import { AccountingService } from "../../services/accounting-service";
+import { handleApiResponse } from "../../utils/axios/handle-api-response";
+import { downloadFile } from "../../utils/download-file";
+import ApiUrl from "../../common/ApiUrl";
 import {
-  filterReducer,
-  initialFilters,
-  type AnalysisDictionary,
-} from "../../models/summary/analysis-filters";
-import FiltersForm from "../../components/filters/filters-form";
-import { getSummaryAnalysisFiltersConfig } from "../summary/filter-config.summary-analysis";
+  ksefFiltersReducer,
+  initialKSeFFilters,
+  type KSeFInvoicesFilters,
+} from "../../models/accounting/ksef-filters";
+import {
+  KSeFInvoiceType,
+  type KSeFInvoiceListModel,
+} from "../../models/accounting/ksef-invoice";
+import { getKSeFInvoicesColumns } from "./ksef-invoices-columns";
+import InvoiceDetailsModal from "../../components/modals/accounting/invoice-details-modal";
+import UploadInvoiceModal from "../../components/modals/accounting/upload-invoice-modal";
+
+interface TabPanelProps {
+  children: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+const TabPanel: React.FC<TabPanelProps> = ({ children, index, value }) => (
+  <div
+    role="tabpanel"
+    hidden={value !== index}
+    id={`accounting-tabpanel-${index}`}
+    aria-labelledby={`accounting-tab-${index}`}
+  >
+    {value === index && <Box sx={{ pt: 2 }}>{children}</Box>}
+  </div>
+);
 
 const AccountingPage: React.FC = () => {
-  const [filters, dispatch] = useReducer(
-    filterReducer,
-    initialFilters,
+  const [tabValue, setTabValue] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [invoices, setInvoices] = useState<KSeFInvoiceListModel[]>([]);
+  const [totalRows, setTotalRows] = useState(0);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  // Modals
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] =
+    useState<KSeFInvoiceListModel | null>(null);
+
+  // Filters for each tab (all, sales, purchases)
+  const [allFilters, dispatchAllFilters] = useReducer(
+    ksefFiltersReducer,
+    initialKSeFFilters,
     (init) => {
-      const savedPageSize = localStorage.getItem("accountingPageSize");
+      const savedPageSize = localStorage.getItem("accountingAllPageSize");
       return {
         ...init,
-        pageSize: savedPageSize
-          ? parseInt(savedPageSize, 10)
-          : init.pageSize ?? 10,
+        pageSize: savedPageSize ? parseInt(savedPageSize, 10) : init.pageSize,
       };
     }
   );
-  const [dictionary, setDictionary] = useState<AnalysisDictionary>();
-  const [loading, setLoading] = useState(false);
-  const [accountingData, setAccountingData] = useState<any[]>([]);
-  const [totalRows, setTotalRows] = useState(0);
+
+  const [salesFilters, dispatchSalesFilters] = useReducer(
+    ksefFiltersReducer,
+    { ...initialKSeFFilters, invoiceType: KSeFInvoiceType.Sales },
+    (init) => {
+      const savedPageSize = localStorage.getItem("accountingSalesPageSize");
+      return {
+        ...init,
+        pageSize: savedPageSize ? parseInt(savedPageSize, 10) : init.pageSize,
+      };
+    }
+  );
+
+  const [purchaseFilters, dispatchPurchaseFilters] = useReducer(
+    ksefFiltersReducer,
+    { ...initialKSeFFilters, invoiceType: KSeFInvoiceType.Purchase },
+    (init) => {
+      const savedPageSize = localStorage.getItem("accountingPurchasePageSize");
+      return {
+        ...init,
+        pageSize: savedPageSize ? parseInt(savedPageSize, 10) : init.pageSize,
+      };
+    }
+  );
+
+  const getCurrentFilters = useCallback((): {
+    filters: KSeFInvoicesFilters;
+    dispatch: React.Dispatch<any>;
+    storageKey: string;
+  } => {
+    switch (tabValue) {
+      case 1:
+        return {
+          filters: salesFilters,
+          dispatch: dispatchSalesFilters,
+          storageKey: "accountingSalesPageSize",
+        };
+      case 2:
+        return {
+          filters: purchaseFilters,
+          dispatch: dispatchPurchaseFilters,
+          storageKey: "accountingPurchasePageSize",
+        };
+      default:
+        return {
+          filters: allFilters,
+          dispatch: dispatchAllFilters,
+          storageKey: "accountingAllPageSize",
+        };
+    }
+  }, [tabValue, allFilters, salesFilters, purchaseFilters]);
+
+  const fetchInvoices = useCallback(async () => {
+    const { filters } = getCurrentFilters();
+    setLoading(true);
+    try {
+      await handleApiResponse(
+        () => AccountingService.getKSeFInvoices(filters),
+        (data) => {
+          if (data.responseData) {
+            setInvoices(data.responseData.items || []);
+            setTotalRows(data.responseData.totalRows || 0);
+          }
+        },
+        undefined,
+        "Błąd podczas pobierania faktur"
+      );
+    } catch {
+      toast.error("Błąd podczas pobierania faktur");
+    } finally {
+      setLoading(false);
+    }
+  }, [getCurrentFilters]);
+
+  // Fetch data when tab or filters change
+  React.useEffect(() => {
+    fetchInvoices();
+  }, [fetchInvoices]);
+
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue);
+  };
+
+  const handleViewDetails = (invoice: KSeFInvoiceListModel) => {
+    setSelectedInvoice(invoice);
+    setDetailsModalOpen(true);
+  };
+
+  const handleDownloadPdf = async (invoice: KSeFInvoiceListModel) => {
+    await downloadFile({
+      url: ApiUrl.AccountingInvoicePdf(invoice.id),
+      defaultFilename: `Faktura_${invoice.invoiceNumber}`,
+      setLoading: (value) => setDownloadingId(value ? invoice.id : null),
+      errorMessage: "Błąd podczas pobierania PDF faktury",
+      fileExtension: "pdf",
+    });
+  };
+
+  const handleDownloadXml = async (invoice: KSeFInvoiceListModel) => {
+    await downloadFile({
+      url: ApiUrl.AccountingInvoiceXml(invoice.id),
+      defaultFilename: `Faktura_KSeF_${
+        invoice.kSeFNumber || invoice.invoiceNumber
+      }`,
+      setLoading: (value) => setDownloadingId(value ? invoice.id : null),
+      errorMessage: "Błąd podczas pobierania XML faktury",
+      fileExtension: "xml",
+    });
+  };
+
+  const handleSyncKSeF = async () => {
+    setSyncing(true);
+    try {
+      await handleApiResponse(
+        () => AccountingService.syncWithKSeF(),
+        () => {
+          toast.success("Synchronizacja z KSeF została uruchomiona");
+          // Refresh data after a short delay
+          setTimeout(() => fetchInvoices(), 2000);
+        },
+        undefined,
+        "Błąd podczas synchronizacji z KSeF"
+      );
+    } catch {
+      toast.error("Błąd podczas synchronizacji z KSeF");
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const columns = useMemo(
+    () =>
+      getKSeFInvoicesColumns({
+        onViewDetails: handleViewDetails,
+        onDownloadPdf: handleDownloadPdf,
+        onDownloadXml: handleDownloadXml,
+        downloadingId,
+      }),
+    [downloadingId]
+  );
 
   const [initialGridState] = useState(() => {
     const savedState = localStorage.getItem("accountingGridState");
     return savedState
       ? JSON.parse(savedState)
       : {
-          pinnedColumns: {
-            left: ["cycleText", "farmName"],
+          columns: {
+            columnVisibilityModel: { id: false },
           },
         };
   });
 
-  const apiRef = useGridApiRef();
+  const renderDataGrid = () => {
+    const { filters, dispatch, storageKey } = getCurrentFilters();
 
-  const uniqueCycles = useMemo(() => {
-    if (!dictionary) return [];
-    const map = new Map<string, CycleDictModel>();
-    for (const cycle of dictionary.cycles) {
-      const key = `${cycle.identifier}-${cycle.year}`;
-      if (!map.has(key)) {
-        map.set(key, cycle);
-      }
-    }
-    return Array.from(map.values());
-  }, [dictionary]);
-
-  useEffect(() => {
-    const fetchInitialData = async () => {
-      try {
-        // TODO: Replace with actual accounting service when available
-        setDictionary({
-          cycles: [],
-          farms: [],
-          hatcheries: [],
-        });
-      } catch {
-        toast.error("Błąd podczas pobierania danych inicjalizujących.");
-      }
-    };
-    fetchInitialData();
-  }, []);
-
-  useEffect(() => {
-    const fetchAccountingData = async () => {
-      // Don't fetch data if no farms selected
-      if (!filters.farmIds || filters.farmIds.length === 0) {
-        setAccountingData([]);
-        setTotalRows(0);
-        return;
-      }
-
-      setLoading(true);
-      try {
-        // TODO: Replace with actual accounting service when available
-        setAccountingData([]);
-        setTotalRows(0);
-      } catch {
-        toast.error("Błąd podczas pobierania danych księgowych");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAccountingData();
-  }, [filters]);
-
-  const columns = useMemo(
-    () => [
-      {
-        field: "id",
-        headerName: "ID",
-        width: 100,
-      } as const,
-      {
-        field: "description",
-        headerName: "Opis",
-        width: 300,
-        flex: 1,
-      } as const,
-      {
-        field: "amount",
-        headerName: "Kwota",
-        width: 150,
-        type: "number" as const,
-      },
-      {
-        field: "date",
-        headerName: "Data",
-        width: 150,
-      } as const,
-    ],
-    []
-  );
+    return (
+      <DataGridPremium
+        loading={loading}
+        rows={invoices}
+        columns={columns}
+        initialState={initialGridState}
+        onStateChange={(newState: GridState) => {
+          const stateToSave = {
+            columns: newState.columns,
+            sorting: newState.sorting,
+            filter: newState.filter,
+            pinnedColumns: newState.pinnedColumns,
+          };
+          localStorage.setItem(
+            "accountingGridState",
+            JSON.stringify(stateToSave)
+          );
+        }}
+        paginationMode="server"
+        pagination
+        paginationModel={{
+          pageSize: filters.pageSize,
+          page: filters.page,
+        }}
+        onPaginationModelChange={({ page, pageSize }) => {
+          localStorage.setItem(storageKey, pageSize.toString());
+          dispatch({
+            type: "setMultiple",
+            payload: { page, pageSize },
+          });
+        }}
+        rowCount={totalRows}
+        rowSelection={false}
+        pageSizeOptions={[10, 25, 50, 100]}
+        slots={{ noRowsOverlay: NoRowsOverlay }}
+        showToolbar
+        localeText={{
+          paginationRowsPerPage: "Wierszy na stronę:",
+          paginationDisplayedRows: ({ from, to, count }) =>
+            `${from} do ${to} z ${count}`,
+        }}
+        sx={{
+          [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },
+          [`& .${tablePaginationClasses.input}`]: { display: "inline-flex" },
+          minHeight: 400,
+        }}
+        sortingMode="server"
+        onSortModelChange={(model) => {
+          if (model.length > 0) {
+            dispatch({
+              type: "setMultiple",
+              payload: {
+                orderBy: model[0].field,
+                isDescending: model[0].sort === "desc",
+                page: 0,
+              },
+            });
+          }
+        }}
+      />
+    );
+  };
 
   return (
     <Box p={4}>
-      <Box mb={2}>
+      <Box
+        mb={3}
+        display="flex"
+        flexDirection={{ xs: "column", sm: "row" }}
+        justifyContent="space-between"
+        alignItems={{ xs: "flex-start", sm: "center" }}
+        gap={2}
+      >
         <Typography variant="h4">Księgowość</Typography>
+        <Box display="flex" gap={2}>
+          <Button
+            variant="outlined"
+            color="primary"
+            startIcon={<MdSync className={syncing ? "animate-spin" : ""} />}
+            onClick={handleSyncKSeF}
+            disabled={syncing}
+          >
+            Synchronizuj z KSeF
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<MdAdd />}
+            onClick={() => setUploadModalOpen(true)}
+          >
+            Dodaj fakturę
+          </Button>
+        </Box>
       </Box>
 
-      <FiltersForm
-        config={getSummaryAnalysisFiltersConfig(
-          dictionary,
-          uniqueCycles,
-          filters
-        )}
-        filters={filters}
-        dispatch={dispatch}
+      <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+        <Tabs value={tabValue} onChange={handleTabChange} variant="fullWidth">
+          <Tab
+            label={
+              <Typography variant="subtitle1" fontWeight={600}>
+                Wszystkie faktury
+              </Typography>
+            }
+          />
+          <Tab
+            label={
+              <Typography variant="subtitle1" fontWeight={600}>
+                Sprzedaż
+              </Typography>
+            }
+          />
+          <Tab
+            label={
+              <Typography variant="subtitle1" fontWeight={600}>
+                Zakupy
+              </Typography>
+            }
+          />
+        </Tabs>
+      </Box>
+
+      <TabPanel value={tabValue} index={0}>
+        {renderDataGrid()}
+      </TabPanel>
+      <TabPanel value={tabValue} index={1}>
+        {renderDataGrid()}
+      </TabPanel>
+      <TabPanel value={tabValue} index={2}>
+        {renderDataGrid()}
+      </TabPanel>
+
+      {/* Modals */}
+      <InvoiceDetailsModal
+        open={detailsModalOpen}
+        onClose={() => {
+          setDetailsModalOpen(false);
+          setSelectedInvoice(null);
+        }}
+        invoice={selectedInvoice}
       />
 
-      <Box mt={4} sx={{ width: "100%", overflowX: "auto" }}>
-        <DataGridPremium
-          apiRef={apiRef}
-          loading={loading}
-          rows={accountingData}
-          columns={columns}
-          scrollbarSize={17}
-          initialState={initialGridState}
-          onStateChange={(newState: GridState) => {
-            const stateToSave = {
-              columns: newState.columns,
-              sorting: newState.sorting,
-              filter: newState.filter,
-              aggregation: newState.aggregation,
-              pinnedColumns: newState.pinnedColumns,
-              rowGrouping: newState.rowGrouping,
-            };
-            localStorage.setItem(
-              "accountingGridState",
-              JSON.stringify(stateToSave)
-            );
-          }}
-          paginationMode="server"
-          pagination
-          paginationModel={{
-            pageSize: filters.pageSize ?? 10,
-            page: filters.page ?? 0,
-          }}
-          onPaginationModelChange={({ page, pageSize }) => {
-            localStorage.setItem("accountingPageSize", pageSize.toString());
-
-            dispatch({
-              type: "setMultiple",
-              payload: { page, pageSize },
-            });
-          }}
-          rowCount={totalRows}
-          rowSelection={false}
-          pageSizeOptions={[5, 10, 25, { value: -1, label: "Wszystkie" }]}
-          slots={{
-            noRowsOverlay: NoRowsOverlay,
-          }}
-          showToolbar
-          sx={{
-            [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },
-            [`& .${tablePaginationClasses.input}`]: { display: "inline-flex" },
-          }}
-        />
-      </Box>
+      <UploadInvoiceModal
+        open={uploadModalOpen}
+        onClose={() => setUploadModalOpen(false)}
+        onSuccess={fetchInvoices}
+      />
     </Box>
   );
 };
