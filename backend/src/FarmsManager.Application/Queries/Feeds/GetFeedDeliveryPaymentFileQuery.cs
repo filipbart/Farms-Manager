@@ -89,8 +89,13 @@ public class GetFeedDeliveryPaymentFileQueryHandler : IRequestHandler<GetFeedDel
             throw new Exception("Wybrano fakturę, która jest już opłacona");
         }
 
-        var fileBytes = GeneratePdf(invoices, corrections, request.Comment);
-        var fileName = $"Przelew_{DateTime.Now:yyyyMMdd_HHmmss}{Extension}";
+        var today = DateTime.UtcNow.Date;
+        var existingPaymentsCount = await _feedPaymentRepository.CountAsync(
+            new GetFeedPaymentsCountForFarmOnDateSpec(firstInvoice.FarmId, today), cancellationToken);
+        var specificationNumber = existingPaymentsCount + 1;
+
+        var fileBytes = GeneratePdf(invoices, corrections, request.Comment, specificationNumber);
+        var fileName = $"Przelew_Specyfikacja_{specificationNumber}_{DateTime.Now:yyyy-MM-dd}{Extension}";
 
         var filePath =
             await _s3Service.UploadFileAsync(fileBytes, FileType.FeedDeliveryPayment, fileName, cancellationToken);
@@ -119,7 +124,8 @@ public class GetFeedDeliveryPaymentFileQueryHandler : IRequestHandler<GetFeedDel
     private static byte[] GeneratePdf(
         List<FeedInvoiceEntity> invoices,
         List<FeedInvoiceCorrectionEntity> corrections,
-        string comment)
+        string comment,
+        int specificationNumber)
     {
         // Sortowanie faktur po miesiącu, potem po pierwszej liczbie
         invoices = SortInvoicesByNumber(invoices);
@@ -156,7 +162,7 @@ public class GetFeedDeliveryPaymentFileQueryHandler : IRequestHandler<GetFeedDel
                         .FontSize(16).Bold().AlignCenter();
 
                     col.Item().PaddingBottom(20)
-                        .Text($"Specyfikacja - {DateTime.Now:dd.MM.yyyy HH:mm}")
+                        .Text($"Specyfikacja nr {specificationNumber} z dnia {DateTime.Now:dd.MM.yyyy}")
                         .FontSize(10).AlignCenter();
 
                     // Sekcja: Faktury
@@ -379,5 +385,15 @@ public sealed class GetFeedsInvoicesByIdsSpec : BaseSpecification<FeedInvoiceEnt
         Query.Include(t => t.InvoiceCorrection);
         Query.Where(t => ids.Contains(t.Id));
         Query.OrderBy(t => t.InvoiceNumber);
+    }
+}
+
+public sealed class GetFeedPaymentsCountForFarmOnDateSpec : BaseSpecification<FeedPaymentEntity>
+{
+    public GetFeedPaymentsCountForFarmOnDateSpec(Guid farmId, DateTime date)
+    {
+        EnsureExists();
+        var nextDay = date.AddDays(1);
+        Query.Where(t => t.FarmId == farmId && t.DateCreatedUtc >= date && t.DateCreatedUtc < nextDay);
     }
 }
