@@ -1,3 +1,4 @@
+using FarmsManager.Application.Common;
 using FarmsManager.Application.Models.KSeF;
 
 namespace FarmsManager.Application.Interfaces;
@@ -5,7 +6,7 @@ namespace FarmsManager.Application.Interfaces;
 /// <summary>
 /// Serwis do komunikacji z Krajowym Systemem e-Faktur (KSeF)
 /// </summary>
-public interface IKSeFService
+public interface IKSeFService : IService
 {
     /// <summary>
     /// Pobiera faktury z KSeF na podstawie kryteriów wyszukiwania

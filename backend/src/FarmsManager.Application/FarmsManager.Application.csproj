@@ -8,7 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="AutoMapper" Version="15.1.0" />
+      <PackageReference Include="AutoMapper" Version="14.0.0" />
       <PackageReference Include="AWSSDK.Core" Version="4.0.3.3" />
       <PackageReference Include="AWSSDK.S3" Version="4.0.13.1" />
       <PackageReference Include="Azure.AI.DocumentIntelligence" Version="1.0.0" />

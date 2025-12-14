@@ -1,7 +1,7 @@
 using System.Xml;
 using System.Xml.Serialization;
 using AutoMapper;
-using FarmsManager.Application.Common;
+using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models.KSeF;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.XmlModels;
 using Microsoft.Extensions.Logging;
@@ -11,7 +11,7 @@ namespace FarmsManager.Application.Services;
 /// <summary>
 /// Parser XML faktur KSeF
 /// </summary>
-public class KSeFInvoiceXmlParser : IService
+public class KSeFInvoiceXmlParser : IKSeFInvoiceXmlParser
 {
     private readonly ILogger<KSeFInvoiceXmlParser> _logger;
     private readonly IMapper _mapper;
@@ -38,9 +38,9 @@ public class KSeFInvoiceXmlParser : IService
             // KSeF może zwracać różne wersje schemy, próbujemy z różnymi namespace'ami
             var namespaces = new[]
             {
-                "http://crd.gov.pl/wzor/2023/06/29/12648/",  // FA(3)
-                "http://crd.gov.pl/wzor/2021/11/29/11089/",  // FA(2)
-                "http://crd.gov.pl/wzor/2021/11/29/11090/"   // Alternatywny
+                "http://crd.gov.pl/wzor/2023/06/29/12648/", // FA(3)
+                "http://crd.gov.pl/wzor/2021/11/29/11089/", // FA(2)
+                "http://crd.gov.pl/wzor/2021/11/29/11090/" // Alternatywny
             };
 
             foreach (var ns in namespaces)
@@ -83,14 +83,14 @@ public class KSeFInvoiceXmlParser : IService
 
         var details = _mapper.Map<KSeFInvoiceDetails>(invoice);
         details.ReferenceNumber = ksefNumber;
-        
+
         return details;
     }
 
     /// <summary>
     /// Wyciąga podstawowe dane z XML bez pełnego parsowania
     /// </summary>
-    public (decimal GrossAmount, decimal NetAmount, decimal VatAmount, string InvoiceNumber, DateTime? InvoiceDate) 
+    public (decimal GrossAmount, decimal NetAmount, decimal VatAmount, string InvoiceNumber, DateTime? InvoiceDate)
         ExtractBasicData(string xml)
     {
         try
@@ -103,10 +103,10 @@ public class KSeFInvoiceXmlParser : IService
             nsManager.AddNamespace("fa2", "http://crd.gov.pl/wzor/2021/11/29/11089/");
 
             // Próba z różnymi namespace'ami
-            var grossNode = doc.SelectSingleNode("//fa:P_15", nsManager) 
+            var grossNode = doc.SelectSingleNode("//fa:P_15", nsManager)
                             ?? doc.SelectSingleNode("//fa2:P_15", nsManager)
                             ?? doc.SelectSingleNode("//*[local-name()='P_15']");
-            
+
             var invoiceNumberNode = doc.SelectSingleNode("//fa:P_2", nsManager)
                                     ?? doc.SelectSingleNode("//fa2:P_2", nsManager)
                                     ?? doc.SelectSingleNode("//*[local-name()='P_2']");

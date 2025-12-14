@@ -10,8 +10,8 @@
     <ItemGroup>
       <PackageReference Include="Alexinea.Extensions.Configuration.Toml" Version="7.0.0" />
       <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
-      <PackageReference Include="AutoMapper" Version="15.1.0" />
-      <PackageReference Include="AutoMapper.Contrib.Autofac.DependencyInjection" Version="10.0.0" />
+      <PackageReference Include="AutoMapper" Version="14.0.0" />
+      <PackageReference Include="AutoMapper.Contrib.Autofac.DependencyInjection" Version="9.0.0" />
       <PackageReference Include="MediatR" Version="12.5.0" />
       <PackageReference Include="MediatR.Extensions.Autofac.DependencyInjection" Version="12.3.0" />
       <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.0" />

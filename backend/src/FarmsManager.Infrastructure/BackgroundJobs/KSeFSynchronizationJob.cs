@@ -73,7 +73,7 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
     {
         // Utworzenie scope dla scoped services
         using var scope = _serviceProvider.CreateScope();
-        
+
         var syncLogRepository = scope.ServiceProvider.GetRequiredService<IKSeFSynchronizationLogRepository>();
         var ksefService = scope.ServiceProvider.GetRequiredService<IKSeFService>();
 
@@ -91,19 +91,19 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
             // ========================================
             // TODO: TUTAJ DODASZ SWOJĄ LOGIKĘ
             // ========================================
-            
+
             // Przykład:
             // 1. Pobierz faktury z KSeF używając ksefService.GetInvoicesAsync()
             // 2. Zapisz faktury do bazy danych
             // 3. Zlicz pobrane i zapisane faktury
-            
+
             // PLACEHOLDER - symulacja pobierania faktur
             await Task.Delay(1000, cancellationToken);
-            
+
             // PRZYKŁADOWE wartości - zastąp swoją logiką
             int downloadedCount = 0; // Liczba pobranych faktur
             int savedCount = 0; // Liczba zapisanych faktur
-            
+
             // ========================================
             // KONIEC TODO
             // ========================================

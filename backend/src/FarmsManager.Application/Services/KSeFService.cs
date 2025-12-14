@@ -1,5 +1,4 @@
 using System.Text;
-using FarmsManager.Application.Common;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models.KSeF;
 using FarmsManager.Shared.Extensions;
@@ -16,13 +15,13 @@ namespace FarmsManager.Application.Services;
 /// <summary>
 /// Serwis do komunikacji z Krajowym Systemem e-Faktur (KSeF)
 /// </summary>
-public class KSeFService : IKSeFService, IService
+public class KSeFService : IKSeFService
 {
     private readonly IKSeFClient _ksefClient;
     private readonly ICryptographyService _cryptographyService;
     private readonly ISignatureService _signatureService;
     private readonly ILogger<KSeFService> _logger;
-    private readonly KSeFInvoiceXmlParser _xmlParser;
+    private readonly IKSeFInvoiceXmlParser _xmlParser;
 
     // TODO: Implementacja autoryzacji - placeholder na token/sesję
     private string _sessionToken;
@@ -32,10 +31,10 @@ public class KSeFService : IKSeFService, IService
 
     public KSeFService(
         IKSeFClient ksefClient,
-        ILogger<KSeFService> logger, 
-        ISignatureService signatureService, 
+        ILogger<KSeFService> logger,
+        ISignatureService signatureService,
         ICryptographyService cryptographyService,
-        KSeFInvoiceXmlParser xmlParser)
+        IKSeFInvoiceXmlParser xmlParser)
     {
         _ksefClient = ksefClient;
         _logger = logger;
@@ -115,8 +114,8 @@ public class KSeFService : IKSeFService, IService
 
             // Pobierz XML faktury
             var invoiceXml = await _ksefClient.GetInvoiceAsync(
-                invoiceReferenceNumber, 
-                _sessionToken, 
+                invoiceReferenceNumber,
+                _sessionToken,
                 cancellationToken);
 
             if (string.IsNullOrEmpty(invoiceXml))
@@ -127,7 +126,7 @@ public class KSeFService : IKSeFService, IService
 
             // Parsuj XML do modelu
             var parsedInvoice = _xmlParser.ParseInvoiceXml(invoiceXml);
-            
+
             if (parsedInvoice == null)
             {
                 _logger.LogWarning("Nie udało się sparsować XML faktury {ReferenceNumber}", invoiceReferenceNumber);
@@ -156,11 +155,11 @@ public class KSeFService : IKSeFService, IService
             await EnsureSessionAsync(cancellationToken);
 
             var invoiceXml = await _ksefClient.GetInvoiceAsync(
-                invoiceReferenceNumber, 
-                _sessionToken, 
+                invoiceReferenceNumber,
+                _sessionToken,
                 cancellationToken);
 
-            _logger.LogInformation("Pobrano XML faktury {ReferenceNumber}, rozmiar: {Size} bajtów", 
+            _logger.LogInformation("Pobrano XML faktury {ReferenceNumber}, rozmiar: {Size} bajtów",
                 invoiceReferenceNumber, invoiceXml?.Length ?? 0);
 
             return invoiceXml;

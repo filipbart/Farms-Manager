@@ -2,7 +2,6 @@ using AutoMapper;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Entities;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Interfaces;
 using FarmsManager.Domain.SeedWork;
-using Microsoft.EntityFrameworkCore;
 
 namespace FarmsManager.Infrastructure.Repositories.AccountingAggregate;
 
