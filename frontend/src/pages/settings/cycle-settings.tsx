@@ -37,13 +37,23 @@ const SettingsCyclesPage: React.FC = () => {
   const selectedFarmId = watch("farmId");
 
   const currentYear = new Date().getFullYear();
-  const cycleOptions = Array.from({ length: 6 }, (_, i) => {
-    const identifier = i + 1;
-    return {
-      label: `${identifier}/${currentYear}`,
-      value: `${identifier}-${currentYear}`,
-    };
-  });
+  const nextYear = currentYear + 1;
+  const cycleOptions = [
+    ...Array.from({ length: 6 }, (_, i) => {
+      const identifier = i + 1;
+      return {
+        label: `${identifier}/${currentYear}`,
+        value: `${identifier}-${currentYear}`,
+      };
+    }),
+    ...Array.from({ length: 6 }, (_, i) => {
+      const identifier = i + 1;
+      return {
+        label: `${identifier}/${nextYear}`,
+        value: `${identifier}-${nextYear}`,
+      };
+    }),
+  ];
 
   useEffect(() => {
     fetchFarms();

@@ -251,6 +251,7 @@ const FeedsDeliveriesPage: React.FC = () => {
       setLoading: setLoadingPaymentFile,
       errorMessage: "Błąd podczas pobierania pliku przelewu",
     });
+    setSelectedRows({ type: "include", ids: new Set() });
     dispatch({ type: "setMultiple", payload: { page: filters.page } });
     fetchNotifications();
   };
