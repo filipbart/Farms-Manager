@@ -3,11 +3,11 @@ using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models.KSeF;
 using FarmsManager.Shared.Extensions;
 using KSeF.Client.Api.Builders.Auth;
-using KSeF.Client.Api.Builders.X509Certificates;
 using KSeF.Client.Core.Interfaces.Clients;
 using KSeF.Client.Core.Interfaces.Services;
 using KSeF.Client.Core.Models.Authorization;
 using KSeF.Client.Core.Models.Invoices;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace FarmsManager.Application.Services;
@@ -19,28 +19,28 @@ public class KSeFService : IKSeFService
 {
     private readonly IKSeFClient _ksefClient;
     private readonly ICryptographyService _cryptographyService;
-    private readonly ISignatureService _signatureService;
     private readonly ILogger<KSeFService> _logger;
     private readonly IKSeFInvoiceXmlParser _xmlParser;
 
-    // TODO: Implementacja autoryzacji - placeholder na token/sesję
     private string _sessionToken;
     private string _sessionRefreshToken;
 
-    private const string Nip = "7394056953";
+    private readonly string _nip;
+    private readonly string _tokenKSeF;
 
     public KSeFService(
         IKSeFClient ksefClient,
         ILogger<KSeFService> logger,
-        ISignatureService signatureService,
         ICryptographyService cryptographyService,
-        IKSeFInvoiceXmlParser xmlParser)
+        IKSeFInvoiceXmlParser xmlParser,
+        IConfiguration configuration)
     {
         _ksefClient = ksefClient;
         _logger = logger;
-        _signatureService = signatureService;
         _cryptographyService = cryptographyService;
         _xmlParser = xmlParser;
+        _tokenKSeF = configuration.GetSection("KSeFDev").GetValue<string>("Token");
+        _nip = configuration.GetSection("KSeFDev").GetValue<string>("NIP");
     }
 
     /// <summary>
@@ -175,8 +175,8 @@ public class KSeFService : IKSeFService
     public async Task<string> SendTestInvoiceAsync(string fileContent, CancellationToken cancellationToken)
     {
         await EnsureSessionAsync(cancellationToken);
-        fileContent = fileContent.Replace("#nip#", Nip);
-        fileContent = fileContent.Replace("#invoice_number#", "1/11/2025");
+        fileContent = fileContent.Replace("#nip#", _nip);
+        fileContent = fileContent.Replace("#invoice_number#", "1/12/2025");
 
         var encryptionData = _cryptographyService.GetEncryptionData();
 
@@ -228,41 +228,41 @@ public class KSeFService : IKSeFService
         {
             var challenge = await _ksefClient.GetAuthChallengeAsync(cancellationToken);
 
+            var timestamp = challenge.Timestamp.ToUnixTimeMilliseconds();
+
+            var tokenWithTimestamp = $"{_tokenKSeF}|{timestamp}";
+            var tokenBytes = Encoding.UTF8.GetBytes(tokenWithTimestamp);
+            var encryptedBytes = _cryptographyService.EncryptKsefTokenWithRSAUsingPublicKey(tokenBytes);
+
+            var encryptedTokenBase64 = Convert.ToBase64String(encryptedBytes);
+
+
+            var builder = AuthKsefTokenRequestBuilder
+                .Create()
+                .WithChallenge(challenge.Challenge)
+                .WithContext(AuthenticationTokenContextIdentifierType.Nip, _nip)
+                .WithEncryptedToken(encryptedTokenBase64);
+
+
             // 1. Budowa AuthTokenRequest
             var authTokenRequest = AuthTokenRequestBuilder
                 .Create()
                 .WithChallenge(challenge.Challenge)
-                .WithContext(AuthenticationTokenContextIdentifierType.Nip, Nip)
+                .WithContext(AuthenticationTokenContextIdentifierType.Nip, _nip)
                 .WithIdentifierType(AuthenticationTokenSubjectIdentifierTypeEnum.CertificateSubject)
                 .Build();
 
-            var certificate = SelfSignedCertificateForSealBuilder
-                .Create()
-                .WithOrganizationName("Fermy Drobiu test")
-                .WithOrganizationIdentifier($"VATPL-{Nip}")
-                .WithCommonName("Fermy Drobiu teścik")
-                .Build();
-// 2. Serializacja do XML
-            var unsignedXml = authTokenRequest.SerializeToXmlString();
+            var signatureResponse =
+                await _ksefClient.SubmitKsefTokenAuthRequestAsync(builder.Build(), cancellationToken);
 
-// 3. Podpisanie XAdES
-            var signedXml = _signatureService.Sign(unsignedXml, certificate);
-
-// 4. Wysłanie podpisanego XML
-// POST /api/v2/auth/xades-signature
-            var authOperationInfo = await _ksefClient.SubmitXadesAuthRequestAsync(
-                signedXml,
-                verifyCertificateChain: false, cancellationToken: cancellationToken // true dla produkcji
-            );
-
-            var status = await _ksefClient.GetAuthStatusAsync(authOperationInfo.ReferenceNumber,
-                authOperationInfo.AuthenticationToken.Token, cancellationToken);
+            var status = await _ksefClient.GetAuthStatusAsync(signatureResponse.ReferenceNumber,
+                signatureResponse.AuthenticationToken.Token, cancellationToken);
 
             if (status.Status.Code != 200)
                 throw new Exception("Bład uwierzytelniania do KSeF");
 
             var tokens =
-                await _ksefClient.GetAccessTokenAsync(authOperationInfo.AuthenticationToken.Token, cancellationToken);
+                await _ksefClient.GetAccessTokenAsync(signatureResponse.AuthenticationToken.Token, cancellationToken);
 
             _sessionToken = tokens.AccessToken.Token;
             _sessionRefreshToken = tokens.RefreshToken.Token;

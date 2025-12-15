@@ -65,6 +65,7 @@ public class AccountingController : BaseController
         {
             return NotFound(result);
         }
+
         return Ok(result);
     }
 
@@ -78,7 +79,7 @@ public class AccountingController : BaseController
     public async Task<IActionResult> DownloadInvoiceXml(Guid invoiceId)
     {
         var result = await _mediator.Send(new GetKSeFInvoiceXmlQuery(invoiceId));
-        
+
         if (!result.Success)
         {
             return NotFound(new { error = "Faktura lub XML nie zostały znalezione" });
@@ -99,7 +100,7 @@ public class AccountingController : BaseController
     {
         // Sprawdzamy czy faktura istnieje
         var result = await _mediator.Send(new GetKSeFInvoiceDetailsQuery(invoiceId));
-        
+
         if (!result.Success)
         {
             return NotFound(new { error = "Faktura nie została znaleziona" });
@@ -130,7 +131,8 @@ public class AccountingController : BaseController
 
         // TODO: Implementacja parsowania i zapisywania faktur
         // Na razie zwracamy sukces jako placeholder
-        return Ok(new { 
+        return Ok(new
+        {
             message = "Faktury zostały przesłane pomyślnie",
             invoiceId = Guid.NewGuid().ToString(),
             filesCount = files.Count
@@ -162,7 +164,7 @@ public class AccountingController : BaseController
         // TODO: Implementacja soft delete faktury
         return Ok(new { message = "Faktura została usunięta" });
     }
-    
+
     [HttpPost("send-invoice")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
@@ -176,7 +178,7 @@ public class AccountingController : BaseController
             using var reader = new StreamReader(file.OpenReadStream());
             fileContent = await reader.ReadToEndAsync();
         }
-        
+
         return Ok(await _mediator.Send(new SendTestKSeFInvoiceCommand(fileContent)));
     }
 
@@ -193,8 +195,8 @@ public class AccountingController : BaseController
         {
             // Uruchomienie synchronizacji w tle (fire and forget)
             await _ksefSyncJob.ExecuteSynchronizationAsync(isManual: true);
-            
-            return Accepted(new { message = "KSeF synchronization has been triggered successfully" });
+
+            return Ok(new { success = true });
         }
         catch (Exception ex)
         {
@@ -210,4 +212,3 @@ public class UpdateInvoiceRequest
     public string? ModuleType { get; set; }
     public string? Comment { get; set; }
 }
-

@@ -195,7 +195,7 @@ const AccountingPage: React.FC = () => {
         "Błąd podczas synchronizacji z KSeF"
       );
     } catch {
-      toast.error("Błąd podczas synchronizacji z KSeF");
+      toast.error("Wystąpił błąd podczas synchronizacji z KSeF");
     } finally {
       setSyncing(false);
     }

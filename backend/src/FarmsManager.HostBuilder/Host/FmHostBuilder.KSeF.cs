@@ -9,7 +9,7 @@ namespace FarmsManager.HostBuilder.Host;
 
 public partial class FmHostBuilder
 {
-    public FmHostBuilder AddKsEF()
+    public FmHostBuilder AddKsEf()
     {
         CheckAutofacConfiguration();
 
