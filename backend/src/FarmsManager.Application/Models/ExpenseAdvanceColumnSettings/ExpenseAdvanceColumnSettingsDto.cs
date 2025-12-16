@@ -3,7 +3,7 @@ namespace FarmsManager.Application.Models.ExpenseAdvanceColumnSettings;
 public record ExpenseAdvanceColumnSettingsDto
 {
     public Guid UserId { get; init; }
-    public List<string> VisibleColumns { get; init; } = new();
+    public List<string> VisibleColumns { get; init; } = [];
 }
 
 public record AvailableColumnDto
@@ -14,6 +14,6 @@ public record AvailableColumnDto
 
 public record GetExpenseAdvanceColumnSettingsResponse
 {
-    public List<string> VisibleColumns { get; init; } = new();
-    public List<AvailableColumnDto> AvailableColumns { get; init; } = new();
+    public List<string> VisibleColumns { get; init; } = [];
+    public List<AvailableColumnDto> AvailableColumns { get; init; } = [];
 }

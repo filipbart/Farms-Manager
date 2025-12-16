@@ -1,6 +1,8 @@
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models.KSeF;
+using FarmsManager.Application.Specifications.KSeF;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Entities;
+using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -76,6 +78,8 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
 
         var syncLogRepository = scope.ServiceProvider.GetRequiredService<IKSeFSynchronizationLogRepository>();
         var ksefService = scope.ServiceProvider.GetRequiredService<IKSeFService>();
+        var invoiceRepository = scope.ServiceProvider.GetRequiredService<IKSeFInvoiceRepository>();
+        var xmlParser = scope.ServiceProvider.GetRequiredService<IKSeFInvoiceXmlParser>();
 
         var log = new KSeFSynchronizationLogEntity
         {
@@ -88,25 +92,56 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                 "Starting KSeF synchronization. Manual: {IsManual}",
                 isManual);
 
-            // ========================================
-            // TODO: TUTAJ DODASZ SWOJĄ LOGIKĘ
-            // ========================================
+            // 1. Pobierz wszystkie faktury z KSeF
+            var invoices = await ksefService.GetInvoicesForSyncAsync(cancellationToken);
+            var downloadedCount = invoices.Count;
 
-            // Przykład:
-            // 1. Pobierz faktury z KSeF używając ksefService.GetInvoicesAsync()
-            // 2. Zapisz faktury do bazy danych
-            // 3. Zlicz pobrane i zapisane faktury
+            if (downloadedCount == 0)
+            {
+                _logger.LogInformation("No invoices found in KSeF");
+                log.MarkAsCompleted(0, 0);
+                return;
+            }
 
-            // PLACEHOLDER - symulacja pobierania faktur
-            await Task.Delay(1000, cancellationToken);
+            // 2. Sprawdź które faktury już istnieją w bazie
+            var ksefNumbers = invoices.Select(i => i.KsefNumber).ToList();
+            var existingSpec = new GetKSeFInvoicesByNumbersSpec(ksefNumbers);
+            var existingNumbers = await invoiceRepository.ListAsync(existingSpec, cancellationToken);
+            var existingNumbersSet = new HashSet<string>(existingNumbers, StringComparer.OrdinalIgnoreCase);
 
-            // PRZYKŁADOWE wartości - zastąp swoją logiką
-            int downloadedCount = 0; // Liczba pobranych faktur
-            int savedCount = 0; // Liczba zapisanych faktur
+            // 3. Przefiltruj tylko nowe faktury
+            var newInvoices = invoices
+                .Where(i => !existingNumbersSet.Contains(i.KsefNumber))
+                .ToList();
 
-            // ========================================
-            // KONIEC TODO
-            // ========================================
+            _logger.LogInformation(
+                "Found {Total} invoices in KSeF, {Existing} already exist, {New} new to sync",
+                downloadedCount, existingNumbersSet.Count, newInvoices.Count);
+
+            var savedCount = 0;
+
+            // 4. Dla każdej nowej faktury pobierz XML i zapisz do bazy
+            foreach (var invoiceSummary in newInvoices)
+            {
+                try
+                {
+                    var invoiceXml = await ksefService.GetInvoiceXmlAsync(invoiceSummary.KsefNumber, cancellationToken);
+
+                    var invoiceEntity = CreateInvoiceEntity(invoiceSummary, invoiceXml, xmlParser);
+
+                    await invoiceRepository.AddAsync(invoiceEntity, cancellationToken);
+                    savedCount++;
+
+                    _logger.LogDebug("Saved invoice {KsefNumber}", invoiceSummary.KsefNumber);
+                }
+                catch (Exception ex)
+                {
+                    log.ErrorsCount++;
+                    _logger.LogWarning(ex, "Failed to save invoice {KsefNumber}", invoiceSummary.KsefNumber);
+                }
+            }
+
+            await invoiceRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
 
             log.MarkAsCompleted(downloadedCount, savedCount);
 
@@ -131,6 +166,83 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
             await syncLogRepository.AddAsync(log, cancellationToken);
             await syncLogRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
         }
+    }
+
+    /// <summary>
+    /// Tworzy encję faktury na podstawie danych z KSeF
+    /// </summary>
+    private static KSeFInvoiceEntity CreateInvoiceEntity(
+        KSeFInvoiceSyncItem invoiceItem,
+        string invoiceXml,
+        IKSeFInvoiceXmlParser xmlParser)
+    {
+        // Parsuj XML aby wyciągnąć dodatkowe dane
+        var parsedInvoice = xmlParser.ParseInvoiceXml(invoiceXml);
+
+        // Mapuj kierunek faktury
+        var invoiceDirection = invoiceItem.Direction == KSeFInvoiceItemDirection.Sales
+            ? KSeFInvoiceDirection.Sales
+            : KSeFInvoiceDirection.Purchase;
+
+        // Parsuj typ płatności z XML
+        var paymentType = ParsePaymentType(parsedInvoice?.Fa?.Platnosc?.FormaPlatnosci);
+
+        // Sprawdź czy faktura jest opłacona (Zaplacono = "1")
+        var paymentStatus = ParsePaymentStatus(
+            parsedInvoice?.Fa?.Platnosc?.Zaplacono,
+            paymentType);
+
+        return KSeFInvoiceEntity.CreateNew(
+            kSeFNumber: invoiceItem.KsefNumber,
+            invoiceNumber: invoiceItem.InvoiceNumber,
+            invoiceDate: invoiceItem.InvoiceDate,
+            sellerNip: invoiceItem.SellerNip,
+            sellerName: invoiceItem.SellerName,
+            buyerNip: invoiceItem.BuyerNip,
+            buyerName: invoiceItem.BuyerName,
+            invoiceType: invoiceItem.InvoiceType,
+            status: KSeFInvoiceStatus.New,
+            paymentStatus: paymentStatus,
+            paymentType: paymentType,
+            vatDeductionType: KSeFVatDeductionType.Full,
+            moduleType: ModuleType.None,
+            invoiceXml: invoiceXml,
+            invoiceDirection: invoiceDirection,
+            invoiceSource: KSeFInvoiceSource.KSeF,
+            grossAmount: invoiceItem.GrossAmount,
+            netAmount: invoiceItem.NetAmount,
+            vatAmount: invoiceItem.VatAmount,
+            assignedUserId: null // TODO: Przypisanie użytkownika do faktury
+        );
+    }
+
+    /// <summary>
+    /// Parsuje typ płatności z XML KSeF
+    /// Wg schematu FA(3): 1-gotówka, 2-karta, 3-bon, 4-barterowa, 5-sprawdzian, 6-przelew
+    /// </summary>
+    private static KSeFInvoicePaymentType ParsePaymentType(string formaPlatnosci)
+    {
+        return formaPlatnosci switch
+        {
+            "1" => KSeFInvoicePaymentType.Cash, // gotówka
+            _ => KSeFInvoicePaymentType.BankTransfer // przelew i inne
+        };
+    }
+
+    /// <summary>
+    /// Parsuje status płatności na podstawie pola Zaplacono z XML KSeF
+    /// Zaplacono = "1" oznacza że faktura została opłacona
+    /// </summary>
+    private static KSeFPaymentStatus ParsePaymentStatus(string zaplacono, KSeFInvoicePaymentType paymentType)
+    {
+        if (zaplacono == "1")
+        {
+            return paymentType == KSeFInvoicePaymentType.Cash
+                ? KSeFPaymentStatus.PaidCash
+                : KSeFPaymentStatus.PaidTransfer;
+        }
+
+        return KSeFPaymentStatus.Unpaid;
     }
 
     public override void Dispose()

@@ -54,8 +54,8 @@ public class KSeFInvoiceProfile : Profile
             .ForMember(d => d.InvoiceDate, opt => opt.MapFrom(s => s.Fa != null ? s.Fa.P_1 : DateTime.MinValue))
             .ForMember(d => d.SaleDate, opt => opt.MapFrom(s => s.Fa != null ? s.Fa.P_6 : null))
             .ForMember(d => d.DueDate, opt => opt.MapFrom(s => 
-                s.Fa != null && s.Fa.Platnosc != null && s.Fa.Platnosc.TerminPlatnosci != null 
-                    ? s.Fa.Platnosc.TerminPlatnosci.Termin : null))
+                s.Fa != null && s.Fa.Platnosc != null && s.Fa.Platnosc.TerminyPlatnosci != null && s.Fa.Platnosc.TerminyPlatnosci.Count > 0
+                    ? s.Fa.Platnosc.TerminyPlatnosci[0].Termin : null))
             .ForMember(d => d.GrossAmount, opt => opt.MapFrom(s => s.Fa != null ? s.Fa.P_15 : 0))
             .ForMember(d => d.NetAmount, opt => opt.MapFrom<NetAmountResolver>())
             .ForMember(d => d.VatAmount, opt => opt.MapFrom<VatAmountResolver>())

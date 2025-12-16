@@ -10,6 +10,8 @@ public class KSeFInvoiceEntityConfiguration : BaseConfiguration<KSeFInvoiceEntit
     {
         base.Configure(builder);
 
+        builder.ToTable("ksef_invoice");
+
         builder.HasKey(t => t.Id);
 
         builder.Property(t => t.KSeFNumber)

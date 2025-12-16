@@ -58,7 +58,7 @@ public class KSeFService : IKSeFService
             var yearBefore = now.AddYears(-1);
             var filters = new InvoiceQueryFilters
             {
-                //Subject1 - Nabywca, Subject2 - Sprzedawca ale sprawdzic
+                //Subject1 - my jako sprzedawca, Subject2 - my jako kupujący
                 SubjectType = SubjectType.Subject1,
                 DateRange = new DateRange
                 {
@@ -99,6 +99,109 @@ public class KSeFService : IKSeFService
             _logger.LogError(ex, "Błąd podczas pobierania faktur z KSeF");
             throw;
         }
+    }
+
+    /// <summary>
+    /// Pobiera WSZYSTKIE faktury z KSeF do synchronizacji,
+    /// łącząc wyniki dla Subject1 (sprzedawca) i Subject2 (kupujący),
+    /// z pełnym przejściem po stronach.
+    /// </summary>
+    public async Task<List<KSeFInvoiceSyncItem>> GetInvoicesForSyncAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await EnsureSessionAsync(cancellationToken);
+
+            var now = DateTime.Now;
+            var yearBefore = now.AddYears(-1);
+            var dateRange = new DateRange
+            {
+                DateType = DateType.PermanentStorage,
+                From = yearBefore
+            };
+
+            const int pageSize = 100;
+
+            // Pobranie faktur jako sprzedawca (Sales)
+            var salesInvoices = await GetAllInvoicesForSubjectAsync(
+                SubjectType.Subject1, dateRange, pageSize, KSeFInvoiceItemDirection.Sales, cancellationToken);
+
+            // Pobranie faktur jako kupujący (Purchase)
+            var purchaseInvoices = await GetAllInvoicesForSubjectAsync(
+                SubjectType.Subject2, dateRange, pageSize, KSeFInvoiceItemDirection.Purchase, cancellationToken);
+
+            // Połączenie wyników z deduplikacją po KsefNumber
+            var combined = salesInvoices
+                .Concat(purchaseInvoices)
+                .Where(inv => !string.IsNullOrWhiteSpace(inv.KsefNumber))
+                .DistinctBy(inv => inv.KsefNumber, StringComparer.OrdinalIgnoreCase)
+                .OrderByDescending(inv => inv.InvoiceDate)
+                .ToList();
+
+            return combined;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Błąd podczas pobierania faktur z KSeF do synchronizacji");
+            throw;
+        }
+    }
+
+    private async Task<List<KSeFInvoiceSyncItem>> GetAllInvoicesForSubjectAsync(
+        SubjectType subjectType,
+        DateRange dateRange,
+        int pageSize,
+        KSeFInvoiceItemDirection direction,
+        CancellationToken cancellationToken)
+    {
+        var all = new List<KSeFInvoiceSyncItem>();
+        var page = 0;
+        var filters = new InvoiceQueryFilters
+        {
+            SubjectType = subjectType,
+            DateRange = dateRange
+        };
+
+        while (true)
+        {
+            var pageResult = await _ksefClient.QueryInvoiceMetadataAsync(
+                filters,
+                _sessionToken,
+                page,
+                pageSize,
+                cancellationToken: cancellationToken);
+
+            var items = pageResult?.Invoices?.ToList() ?? [];
+
+            if (items.Count == 0)
+                break;
+
+            // Konwertuj InvoiceSummary na KSeFInvoiceSyncItem
+            var syncItems = items.Select(inv => new KSeFInvoiceSyncItem
+            {
+                KsefNumber = inv.KsefNumber,
+                InvoiceNumber = inv.InvoiceNumber,
+                InvoiceDate = DateOnly.FromDateTime(inv.InvoicingDate.LocalDateTime),
+                GrossAmount = inv.GrossAmount,
+                NetAmount = inv.NetAmount,
+                VatAmount = inv.VatAmount,
+                SellerNip = inv.Seller?.Nip ?? string.Empty,
+                SellerName = inv.Seller?.Name ?? string.Empty,
+                BuyerNip = inv.Buyer?.Identifier?.Value ?? string.Empty,
+                BuyerName = inv.Buyer?.Name ?? string.Empty,
+                Direction = direction,
+                InvoiceType = inv.InvoiceType
+            });
+
+            all.AddRange(syncItems);
+
+            if (items.Count < pageSize)
+                break;
+
+            page++;
+        }
+
+        return all;
     }
 
     /// <summary>
@@ -175,27 +278,30 @@ public class KSeFService : IKSeFService
     public async Task<string> SendTestInvoiceAsync(string fileContent, CancellationToken cancellationToken)
     {
         await EnsureSessionAsync(cancellationToken);
-        fileContent = fileContent.Replace("#nip#", _nip);
-        fileContent = fileContent.Replace("#invoice_number#", "1/12/2025");
+
+        var preparedContent = fileContent
+            .Replace("#nip#", _nip)
+            .Replace("#invoice_number#", "1/12/2025");
 
         var encryptionData = _cryptographyService.GetEncryptionData();
 
         var openOnlineSessionRequest = OpenOnlineSessionRequestBuilder.Create()
-            .WithFormCode(SystemCodeHelper.GetSystemCode(SystemCodeEnum.FA3),
-                SystemCodeHelper.GetSchemaVersion(SystemCodeEnum.FA3), SystemCodeHelper.GetValue(SystemCodeEnum.FA3))
-            .WithEncryption(encryptionData.EncryptionInfo.EncryptedSymmetricKey,
+            .WithFormCode(
+                SystemCodeHelper.GetSystemCode(SystemCodeEnum.FA3),
+                SystemCodeHelper.GetSchemaVersion(SystemCodeEnum.FA3),
+                SystemCodeHelper.GetValue(SystemCodeEnum.FA3))
+            .WithEncryption(
+                encryptionData.EncryptionInfo.EncryptedSymmetricKey,
                 encryptionData.EncryptionInfo.InitializationVector)
             .Build();
 
-        var openOnlineSessionResponse =
-            await _ksefClient.OpenOnlineSessionAsync(openOnlineSessionRequest, _sessionToken, cancellationToken);
+        var openOnlineSessionResponse = await _ksefClient.OpenOnlineSessionAsync(
+            openOnlineSessionRequest, _sessionToken, cancellationToken);
 
-        using var memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(fileContent));
-        var invoiceBytes = memoryStream.ToArray();
+        var invoiceBytes = Encoding.UTF8.GetBytes(preparedContent);
+        var encryptedInvoice = _cryptographyService.EncryptBytesWithAES256(
+            invoiceBytes, encryptionData.CipherKey, encryptionData.CipherIv);
 
-        var encryptedInvoice =
-            _cryptographyService.EncryptBytesWithAES256(invoiceBytes, encryptionData.CipherKey,
-                encryptionData.CipherIv);
         var invoiceMetadata = _cryptographyService.GetMetaData(invoiceBytes);
         var encryptedInvoiceMetadata = _cryptographyService.GetMetaData(encryptedInvoice);
 
@@ -205,16 +311,17 @@ public class KSeFService : IKSeFService
             .WithEncryptedDocumentContent(Convert.ToBase64String(encryptedInvoice))
             .Build();
 
-        var sendInvoiceResponse = await _ksefClient.SendOnlineSessionInvoiceAsync(sendOnlineInvoiceRequest,
-            openOnlineSessionResponse.ReferenceNumber, _sessionToken, cancellationToken);
+        var sendInvoiceResponse = await _ksefClient.SendOnlineSessionInvoiceAsync(
+            sendOnlineInvoiceRequest,
+            openOnlineSessionResponse.ReferenceNumber,
+            _sessionToken,
+            cancellationToken);
 
         if (sendInvoiceResponse.ReferenceNumber == null)
-        {
-            throw new Exception("Błąd z wysłaniem faktury do KSeF");
-        }
+            throw new InvalidOperationException("Błąd z wysłaniem faktury do KSeF");
 
-        await _ksefClient.CloseOnlineSessionAsync(openOnlineSessionResponse.ReferenceNumber, _sessionToken,
-            cancellationToken);
+        await _ksefClient.CloseOnlineSessionAsync(
+            openOnlineSessionResponse.ReferenceNumber, _sessionToken, cancellationToken);
 
         return sendInvoiceResponse.ReferenceNumber;
     }
@@ -224,48 +331,38 @@ public class KSeFService : IKSeFService
     /// </summary>
     private async Task EnsureSessionAsync(CancellationToken cancellationToken)
     {
-        if (_sessionToken.IsEmpty())
-        {
-            var challenge = await _ksefClient.GetAuthChallengeAsync(cancellationToken);
+        if (!_sessionToken.IsEmpty())
+            return;
 
-            var timestamp = challenge.Timestamp.ToUnixTimeMilliseconds();
+        var challenge = await _ksefClient.GetAuthChallengeAsync(cancellationToken);
+        var timestamp = challenge.Timestamp.ToUnixTimeMilliseconds();
 
-            var tokenWithTimestamp = $"{_tokenKSeF}|{timestamp}";
-            var tokenBytes = Encoding.UTF8.GetBytes(tokenWithTimestamp);
-            var encryptedBytes = _cryptographyService.EncryptKsefTokenWithRSAUsingPublicKey(tokenBytes);
+        var tokenWithTimestamp = $"{_tokenKSeF}|{timestamp}";
+        var tokenBytes = Encoding.UTF8.GetBytes(tokenWithTimestamp);
+        var encryptedBytes = _cryptographyService.EncryptKsefTokenWithRSAUsingPublicKey(tokenBytes);
+        var encryptedTokenBase64 = Convert.ToBase64String(encryptedBytes);
 
-            var encryptedTokenBase64 = Convert.ToBase64String(encryptedBytes);
+        var authRequest = AuthKsefTokenRequestBuilder
+            .Create()
+            .WithChallenge(challenge.Challenge)
+            .WithContext(AuthenticationTokenContextIdentifierType.Nip, _nip)
+            .WithEncryptedToken(encryptedTokenBase64)
+            .Build();
 
+        var signatureResponse = await _ksefClient.SubmitKsefTokenAuthRequestAsync(authRequest, cancellationToken);
 
-            var builder = AuthKsefTokenRequestBuilder
-                .Create()
-                .WithChallenge(challenge.Challenge)
-                .WithContext(AuthenticationTokenContextIdentifierType.Nip, _nip)
-                .WithEncryptedToken(encryptedTokenBase64);
+        var status = await _ksefClient.GetAuthStatusAsync(
+            signatureResponse.ReferenceNumber,
+            signatureResponse.AuthenticationToken.Token,
+            cancellationToken);
 
+        if (status.Status.Code != 200)
+            throw new InvalidOperationException("Błąd uwierzytelniania do KSeF");
 
-            // 1. Budowa AuthTokenRequest
-            var authTokenRequest = AuthTokenRequestBuilder
-                .Create()
-                .WithChallenge(challenge.Challenge)
-                .WithContext(AuthenticationTokenContextIdentifierType.Nip, _nip)
-                .WithIdentifierType(AuthenticationTokenSubjectIdentifierTypeEnum.CertificateSubject)
-                .Build();
+        var tokens = await _ksefClient.GetAccessTokenAsync(
+            signatureResponse.AuthenticationToken.Token, cancellationToken);
 
-            var signatureResponse =
-                await _ksefClient.SubmitKsefTokenAuthRequestAsync(builder.Build(), cancellationToken);
-
-            var status = await _ksefClient.GetAuthStatusAsync(signatureResponse.ReferenceNumber,
-                signatureResponse.AuthenticationToken.Token, cancellationToken);
-
-            if (status.Status.Code != 200)
-                throw new Exception("Bład uwierzytelniania do KSeF");
-
-            var tokens =
-                await _ksefClient.GetAccessTokenAsync(signatureResponse.AuthenticationToken.Token, cancellationToken);
-
-            _sessionToken = tokens.AccessToken.Token;
-            _sessionRefreshToken = tokens.RefreshToken.Token;
-        }
+        _sessionToken = tokens.AccessToken.Token;
+        _sessionRefreshToken = tokens.RefreshToken.Token;
     }
 }

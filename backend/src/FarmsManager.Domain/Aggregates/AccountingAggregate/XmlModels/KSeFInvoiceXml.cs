@@ -3,9 +3,10 @@ using System.Xml.Serialization;
 namespace FarmsManager.Domain.Aggregates.AccountingAggregate.XmlModels;
 
 /// <summary>
-/// Model faktury KSeF zgodny ze schematem FA(3)
+/// Model faktury KSeF zgodny ze schematami FA(2), FA(3) i FA(4)
+/// Namespace jest nadpisywany dynamicznie w parserze KSeFInvoiceXmlParser
 /// </summary>
-[XmlRoot("Faktura", Namespace = "http://crd.gov.pl/wzor/2023/06/29/12648/")]
+[XmlRoot("Faktura")]
 public class KSeFInvoiceXml
 {
     [XmlElement("Naglowek")]
@@ -339,22 +340,52 @@ public class FaWiersz
 public class Platnosc
 {
     /// <summary>
-    /// Termin płatności
+    /// Znacznik że zapłacono (1 = zapłacono)
     /// </summary>
-    [XmlElement("TerminPlatnosci")]
-    public TerminPlatnosci TerminPlatnosci { get; set; }
+    [XmlElement("Zaplacono")]
+    public string Zaplacono { get; set; }
 
     /// <summary>
-    /// Forma płatności (1 - gotówka, 2 - przelew, etc.)
+    /// Data zapłaty
+    /// </summary>
+    [XmlElement("DataZaplaty")]
+    public DateTime? DataZaplaty { get; set; }
+
+    /// <summary>
+    /// Terminy płatności (może być wiele)
+    /// </summary>
+    [XmlElement("TerminPlatnosci")]
+    public List<TerminPlatnosci> TerminyPlatnosci { get; set; } = new();
+
+    /// <summary>
+    /// Forma płatności (1 - gotówka, 2 - przelew, 3 - karta, 4 - bon, 5 - barterowa, 6 - inna)
     /// </summary>
     [XmlElement("FormaPlatnosci")]
     public string FormaPlatnosci { get; set; }
 
     /// <summary>
-    /// Rachunek bankowy
+    /// Znacznik innej formy płatności
+    /// </summary>
+    [XmlElement("PlatnoscInna")]
+    public string PlatnoscInna { get; set; }
+
+    /// <summary>
+    /// Opis innej formy płatności
+    /// </summary>
+    [XmlElement("OpisPlatnosci")]
+    public string OpisPlatnosci { get; set; }
+
+    /// <summary>
+    /// Rachunki bankowe (może być wiele)
     /// </summary>
     [XmlElement("RachunekBankowy")]
     public List<RachunekBankowy> RachunkiBankowe { get; set; } = new();
+
+    /// <summary>
+    /// Rachunki bankowe faktora
+    /// </summary>
+    [XmlElement("RachunekBankowyFaktora")]
+    public List<RachunekBankowy> RachunkiBankoweFaktora { get; set; } = new();
 }
 
 public class TerminPlatnosci
@@ -363,7 +394,19 @@ public class TerminPlatnosci
     public DateTime? Termin { get; set; }
 
     [XmlElement("TerminOpis")]
-    public string TerminOpis { get; set; }
+    public TerminOpis TerminOpis { get; set; }
+}
+
+public class TerminOpis
+{
+    [XmlElement("Ilosc")]
+    public int? Ilosc { get; set; }
+
+    [XmlElement("Jednostka")]
+    public string Jednostka { get; set; }
+
+    [XmlElement("ZdarzeniePoczatkowe")]
+    public string ZdarzeniePoczatkowe { get; set; }
 }
 
 public class RachunekBankowy

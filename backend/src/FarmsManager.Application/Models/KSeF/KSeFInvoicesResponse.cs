@@ -8,7 +8,7 @@ public class KSeFInvoicesResponse
     /// <summary>
     /// Lista faktur
     /// </summary>
-    public List<KSeFInvoiceItem> Invoices { get; set; } = new();
+    public List<KSeFInvoiceItem> Invoices { get; set; } = [];
 
     /// <summary>
     /// Całkowita liczba faktur spełniających kryteria
@@ -24,6 +24,34 @@ public class KSeFInvoicesResponse
     /// Rozmiar strony
     /// </summary>
     public int PageSize { get; set; }
+}
+
+/// <summary>
+/// Kierunek faktury dla synchronizacji
+/// </summary>
+public enum KSeFInvoiceItemDirection
+{
+    Sales,
+    Purchase
+}
+
+/// <summary>
+/// Model faktury do synchronizacji z KSeF
+/// </summary>
+public class KSeFInvoiceSyncItem
+{
+    public string KsefNumber { get; set; }
+    public string InvoiceNumber { get; set; }
+    public DateOnly InvoiceDate { get; set; }
+    public decimal GrossAmount { get; set; }
+    public decimal NetAmount { get; set; }
+    public decimal VatAmount { get; set; }
+    public string SellerNip { get; set; }
+    public string SellerName { get; set; }
+    public string BuyerNip { get; set; }
+    public string BuyerName { get; set; }
+    public KSeFInvoiceItemDirection Direction { get; set; }
+    public global::KSeF.Client.Core.Models.Invoices.Common.InvoiceType InvoiceType { get; set; }
 }
 
 /// <summary>

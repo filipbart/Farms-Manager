@@ -88,7 +88,7 @@ public class KSeFInvoiceDetails
     /// <summary>
     /// Pozycje faktury
     /// </summary>
-    public List<KSeFInvoiceLineItem> LineItems { get; set; } = new();
+    public List<KSeFInvoiceLineItem> LineItems { get; set; } = [];
 }
 
 /// <summary>

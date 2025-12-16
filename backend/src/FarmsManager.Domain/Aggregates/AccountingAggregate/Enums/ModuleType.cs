@@ -4,6 +4,8 @@ namespace FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
 
 public enum ModuleType
 {
+    [Description("Brak przypisanego")] None,
+
     [Description("Pasze")] Feeds,
 
     [Description("Koszty produkcyjne")] ProductionExpenses,

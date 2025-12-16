@@ -74,12 +74,12 @@ public record GetKSeFInvoicesFromDbQueryFilters : OrderedPaginationParams<KSeFIn
     /// <summary>
     /// Data początkowa zakresu wyszukiwania
     /// </summary>
-    public DateTime? DateFrom { get; init; }
+    public DateOnly? DateFrom { get; init; }
     
     /// <summary>
     /// Data końcowa zakresu wyszukiwania
     /// </summary>
-    public DateTime? DateTo { get; init; }
+    public DateOnly? DateTo { get; init; }
     
     /// <summary>
     /// Wyszukiwanie po tekście (numer faktury, NIP, nazwa kontrahenta)

@@ -5,6 +5,7 @@ using FarmsManager.Domain.Aggregates.UserAggregate.Models;
 using FarmsManager.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -13,9 +14,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FarmsManager.Infrastructure.Migrations
 {
     [DbContext(typeof(FarmsManagerContext))]
-    partial class FarmsManagerContextModelSnapshot : ModelSnapshot
+    [Migration("20251216174035_AdjustKsefInvoiceDateField")]
+    partial class AdjustKsefInvoiceDateField
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -175,10 +178,6 @@ namespace FarmsManager.Infrastructure.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("status");
 
-                    b.Property<Guid?>("TaxBusinessEntityId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("tax_business_entity_id");
-
                     b.Property<decimal>("VatAmount")
                         .HasColumnType("numeric")
                         .HasColumnName("vat_amount");
@@ -216,9 +215,6 @@ namespace FarmsManager.Infrastructure.Migrations
 
                     b.HasIndex("ModifiedBy")
                         .HasDatabaseName("ix_ksef_invoice_modified_by");
-
-                    b.HasIndex("TaxBusinessEntityId")
-                        .HasDatabaseName("ix_ksef_invoice_tax_business_entity_id");
 
                     b.ToTable("ksef_invoice", "farms_manager");
                 });
@@ -319,80 +315,6 @@ namespace FarmsManager.Infrastructure.Migrations
                         .HasDatabaseName("ix_ksef_synchronization_log_status");
 
                     b.ToTable("ksef_synchronization_log", "farms_manager");
-                });
-
-            modelBuilder.Entity("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.TaxBusinessEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<string>("BusinessType")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)")
-                        .HasColumnName("business_type");
-
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTime>("DateCreatedUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("date_created_utc");
-
-                    b.Property<DateTime?>("DateDeletedUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("date_deleted_utc");
-
-                    b.Property<DateTime?>("DateModifiedUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("date_modified_utc");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("deleted_by");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)")
-                        .HasColumnName("description");
-
-                    b.Property<Guid?>("ModifiedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("modified_by");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(512)
-                        .HasColumnType("character varying(512)")
-                        .HasColumnName("name");
-
-                    b.Property<string>("Nip")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("nip");
-
-                    b.HasKey("Id")
-                        .HasName("pk_tax_business_entity");
-
-                    b.HasIndex("CreatedBy")
-                        .HasDatabaseName("ix_tax_business_entity_created_by");
-
-                    b.HasIndex("DeletedBy")
-                        .HasDatabaseName("ix_tax_business_entity_deleted_by");
-
-                    b.HasIndex("ModifiedBy")
-                        .HasDatabaseName("ix_tax_business_entity_modified_by");
-
-                    b.HasIndex("Nip")
-                        .HasDatabaseName("ix_tax_business_entity_nip");
-
-                    b.HasIndex("Nip", "Name")
-                        .HasDatabaseName("ix_tax_business_entity_nip_name");
-
-                    b.ToTable("tax_business_entity", "farms_manager");
                 });
 
             modelBuilder.Entity("FarmsManager.Domain.Aggregates.EmployeeAggregate.Entities.EmployeeEntity", b =>
@@ -1566,10 +1488,6 @@ namespace FarmsManager.Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("producer_number");
 
-                    b.Property<Guid?>("TaxBusinessEntityId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("tax_business_entity_id");
-
                     b.HasKey("Id")
                         .HasName("pk_farm");
 
@@ -1584,9 +1502,6 @@ namespace FarmsManager.Infrastructure.Migrations
 
                     b.HasIndex("ModifiedBy")
                         .HasDatabaseName("ix_farm_modified_by");
-
-                    b.HasIndex("TaxBusinessEntityId")
-                        .HasDatabaseName("ix_farm_tax_business_entity_id");
 
                     b.ToTable("farm", "farms_manager");
                 });
@@ -4028,12 +3943,6 @@ namespace FarmsManager.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_ksef_invoice_user_modified_by");
 
-                    b.HasOne("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.TaxBusinessEntity", "TaxBusinessEntity")
-                        .WithMany("Invoices")
-                        .HasForeignKey("TaxBusinessEntityId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("fk_ksef_invoice_tax_business_entity_tax_business_entity_id");
-
                     b.Navigation("AssignedCycle");
 
                     b.Navigation("AssignedUser");
@@ -4043,8 +3952,6 @@ namespace FarmsManager.Infrastructure.Migrations
                     b.Navigation("Deleter");
 
                     b.Navigation("Modifier");
-
-                    b.Navigation("TaxBusinessEntity");
                 });
 
             modelBuilder.Entity("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.KSeFSynchronizationLogEntity", b =>
@@ -4066,33 +3973,6 @@ namespace FarmsManager.Infrastructure.Migrations
                         .HasForeignKey("ModifiedBy")
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_ksef_synchronization_log_user_entity_modified_by");
-
-                    b.Navigation("Creator");
-
-                    b.Navigation("Deleter");
-
-                    b.Navigation("Modifier");
-                });
-
-            modelBuilder.Entity("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.TaxBusinessEntity", b =>
-                {
-                    b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Creator")
-                        .WithMany()
-                        .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_tax_business_entity_user_created_by");
-
-                    b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Deleter")
-                        .WithMany()
-                        .HasForeignKey("DeletedBy")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_tax_business_entity_user_deleted_by");
-
-                    b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Modifier")
-                        .WithMany()
-                        .HasForeignKey("ModifiedBy")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_tax_business_entity_user_modified_by");
 
                     b.Navigation("Creator");
 
@@ -4725,12 +4605,6 @@ namespace FarmsManager.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_farm_user_modified_by");
 
-                    b.HasOne("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.TaxBusinessEntity", "TaxBusinessEntity")
-                        .WithMany("Farms")
-                        .HasForeignKey("TaxBusinessEntityId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("fk_farm_tax_business_entity_tax_business_entity_id");
-
                     b.Navigation("ActiveCycle");
 
                     b.Navigation("Creator");
@@ -4738,8 +4612,6 @@ namespace FarmsManager.Infrastructure.Migrations
                     b.Navigation("Deleter");
 
                     b.Navigation("Modifier");
-
-                    b.Navigation("TaxBusinessEntity");
                 });
 
             modelBuilder.Entity("FarmsManager.Domain.Aggregates.FarmAggregate.Entities.HenhouseEntity", b =>
@@ -6023,13 +5895,6 @@ namespace FarmsManager.Infrastructure.Migrations
                     b.Navigation("Deleter");
 
                     b.Navigation("Modifier");
-                });
-
-            modelBuilder.Entity("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.TaxBusinessEntity", b =>
-                {
-                    b.Navigation("Farms");
-
-                    b.Navigation("Invoices");
                 });
 
             modelBuilder.Entity("FarmsManager.Domain.Aggregates.EmployeeAggregate.Entities.EmployeeEntity", b =>

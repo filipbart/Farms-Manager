@@ -9,6 +9,9 @@ public class KSeFSynchronizationLogEntityConfiguration : BaseConfiguration<KSeFS
     public override void Configure(EntityTypeBuilder<KSeFSynchronizationLogEntity> builder)
     {
         base.Configure(builder);
+
+        builder.ToTable("ksef_synchronization_log");
+
         builder.HasKey(t => t.Id);
 
         builder.Property(t => t.StartedAt)

@@ -35,6 +35,7 @@ export enum InvoiceSource {
 
 // Typ modułu
 export enum ModuleType {
+  None = "None",
   Feeds = "Feeds",
   ProductionExpenses = "ProductionExpenses",
   Gas = "Gas",
@@ -110,6 +111,7 @@ export const InvoiceSourceLabels: Record<InvoiceSource, string> = {
 };
 
 export const ModuleTypeLabels: Record<ModuleType, string> = {
+  [ModuleType.None]: "Brak",
   [ModuleType.Feeds]: "Pasze",
   [ModuleType.ProductionExpenses]: "Koszty produkcyjne",
   [ModuleType.Gas]: "Gaz",

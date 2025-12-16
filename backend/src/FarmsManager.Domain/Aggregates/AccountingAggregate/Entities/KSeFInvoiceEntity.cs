@@ -28,8 +28,13 @@ public class KSeFInvoiceEntity : Entity
     /// <param name="paymentType">Forma płatności</param>
     /// <param name="vatDeductionType">Typ odliczenia VAT</param>
     /// <param name="moduleType">Przypisany moduł</param>
-    /// <param name="assignedUserId">Id użytkownika przypisanego do faktury</param>
     /// <param name="invoiceXml">Oryginalny XML faktury</param>
+    /// <param name="invoiceDirection">Kierunek faktury (sprzedaż/zakup)</param>
+    /// <param name="invoiceSource">Źródło faktury (KSeF/Manual)</param>
+    /// <param name="grossAmount">Kwota brutto</param>
+    /// <param name="netAmount">Kwota netto</param>
+    /// <param name="vatAmount">Kwota VAT</param>
+    /// <param name="assignedUserId">Id użytkownika przypisanego do faktury (opcjonalnie)</param>
     /// <param name="relatedInvoiceNumber">Powiązany numer faktury (opcjonalnie)</param>
     /// <param name="relatedInvoiceId">Powiązana faktura w systemie (opcjonalnie)</param>
     /// <param name="comment">Komentarz (opcjonalnie)</param>
@@ -37,7 +42,7 @@ public class KSeFInvoiceEntity : Entity
     public static KSeFInvoiceEntity CreateNew(
         string kSeFNumber,
         string invoiceNumber,
-        DateTime invoiceDate,
+        DateOnly invoiceDate,
         string sellerNip,
         string sellerName,
         string buyerNip,
@@ -48,8 +53,13 @@ public class KSeFInvoiceEntity : Entity
         KSeFInvoicePaymentType paymentType,
         KSeFVatDeductionType vatDeductionType,
         ModuleType moduleType,
-        Guid assignedUserId,
         string invoiceXml,
+        KSeFInvoiceDirection invoiceDirection,
+        KSeFInvoiceSource invoiceSource,
+        decimal grossAmount,
+        decimal netAmount,
+        decimal vatAmount,
+        Guid? assignedUserId = null,
         string relatedInvoiceNumber = null,
         Guid? relatedInvoiceId = null,
         string comment = null,
@@ -70,11 +80,16 @@ public class KSeFInvoiceEntity : Entity
             PaymentType = paymentType,
             VatDeductionType = vatDeductionType,
             ModuleType = moduleType,
+            InvoiceXml = invoiceXml,
+            InvoiceDirection = invoiceDirection,
+            InvoiceSource = invoiceSource,
+            GrossAmount = grossAmount,
+            NetAmount = netAmount,
+            VatAmount = vatAmount,
+            AssignedUserId = assignedUserId,
             RelatedInvoiceNumber = relatedInvoiceNumber,
             RelatedInvoiceId = relatedInvoiceId,
             Comment = comment,
-            AssignedUserId = assignedUserId,
-            InvoiceXml = invoiceXml,
             CreatedBy = userId
         };
     }
@@ -92,7 +107,7 @@ public class KSeFInvoiceEntity : Entity
     /// <summary>
     /// Data wystawienia faktury
     /// </summary>
-    public DateTime InvoiceDate { get; init; }
+    public DateOnly InvoiceDate { get; init; }
 
     /// <summary>
     /// NIP sprzedawcy
@@ -192,7 +207,7 @@ public class KSeFInvoiceEntity : Entity
     /// <summary>
     /// Identyfikator pracownika przypisanego do faktury 
     /// </summary>
-    public Guid AssignedUserId { get; init; }
+    public Guid? AssignedUserId { get; init; }
 
     /// <summary>
     /// Identyfikator cyklu przypisanego do faktury
@@ -213,4 +228,14 @@ public class KSeFInvoiceEntity : Entity
     /// Cykl przypisany do faktury
     /// </summary>
     public virtual CycleEntity AssignedCycle { get; init; }
+
+    /// <summary>
+    /// Identyfikator podmiotu gospodarczego przypisanego do faktury
+    /// </summary>
+    public Guid? TaxBusinessEntityId { get; init; }
+
+    /// <summary>
+    /// Podmiot gospodarczy przypisany do faktury
+    /// </summary>
+    public virtual TaxBusinessEntity TaxBusinessEntity { get; init; }
 }

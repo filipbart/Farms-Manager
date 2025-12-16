@@ -38,6 +38,7 @@ public class KSeFInvoiceXmlParser : IKSeFInvoiceXmlParser
             // KSeF może zwracać różne wersje schemy, próbujemy z różnymi namespace'ami
             var namespaces = new[]
             {
+                "http://crd.gov.pl/wzor/2025/06/25/13775/", // FA(4) - najnowszy
                 "http://crd.gov.pl/wzor/2023/06/29/12648/", // FA(3)
                 "http://crd.gov.pl/wzor/2021/11/29/11089/", // FA(2)
                 "http://crd.gov.pl/wzor/2021/11/29/11090/" // Alternatywny
@@ -47,7 +48,9 @@ public class KSeFInvoiceXmlParser : IKSeFInvoiceXmlParser
             {
                 try
                 {
-                    var serializer = new XmlSerializer(typeof(KSeFInvoiceXml), ns);
+                    // Nadpisanie XmlRoot z dynamicznym namespace
+                    var rootAttribute = new XmlRootAttribute("Faktura") { Namespace = ns };
+                    var serializer = new XmlSerializer(typeof(KSeFInvoiceXml), rootAttribute);
                     using var reader = new StringReader(xml);
                     var result = serializer.Deserialize(reader) as KSeFInvoiceXml;
                     if (result != null)
@@ -99,19 +102,23 @@ public class KSeFInvoiceXmlParser : IKSeFInvoiceXmlParser
             doc.LoadXml(xml);
 
             var nsManager = new XmlNamespaceManager(doc.NameTable);
+            nsManager.AddNamespace("fa4", "http://crd.gov.pl/wzor/2025/06/25/13775/");
             nsManager.AddNamespace("fa", "http://crd.gov.pl/wzor/2023/06/29/12648/");
             nsManager.AddNamespace("fa2", "http://crd.gov.pl/wzor/2021/11/29/11089/");
 
             // Próba z różnymi namespace'ami
-            var grossNode = doc.SelectSingleNode("//fa:P_15", nsManager)
+            var grossNode = doc.SelectSingleNode("//fa4:P_15", nsManager)
+                            ?? doc.SelectSingleNode("//fa:P_15", nsManager)
                             ?? doc.SelectSingleNode("//fa2:P_15", nsManager)
                             ?? doc.SelectSingleNode("//*[local-name()='P_15']");
 
-            var invoiceNumberNode = doc.SelectSingleNode("//fa:P_2", nsManager)
+            var invoiceNumberNode = doc.SelectSingleNode("//fa4:P_2", nsManager)
+                                    ?? doc.SelectSingleNode("//fa:P_2", nsManager)
                                     ?? doc.SelectSingleNode("//fa2:P_2", nsManager)
                                     ?? doc.SelectSingleNode("//*[local-name()='P_2']");
 
-            var invoiceDateNode = doc.SelectSingleNode("//fa:P_1", nsManager)
+            var invoiceDateNode = doc.SelectSingleNode("//fa4:P_1", nsManager)
+                                  ?? doc.SelectSingleNode("//fa:P_1", nsManager)
                                   ?? doc.SelectSingleNode("//fa2:P_1", nsManager)
                                   ?? doc.SelectSingleNode("//*[local-name()='P_1']");
 
@@ -139,7 +146,8 @@ public class KSeFInvoiceXmlParser : IKSeFInvoiceXmlParser
 
         foreach (var field in netFields)
         {
-            var node = doc.SelectSingleNode($"//fa:{field}", nsManager)
+            var node = doc.SelectSingleNode($"//fa4:{field}", nsManager)
+                       ?? doc.SelectSingleNode($"//fa:{field}", nsManager)
                        ?? doc.SelectSingleNode($"//fa2:{field}", nsManager)
                        ?? doc.SelectSingleNode($"//*[local-name()='{field}']");
 

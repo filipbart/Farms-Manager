@@ -17,6 +17,13 @@ public interface IKSeFService : IService
     Task<KSeFInvoicesResponse> GetInvoicesAsync(KSeFInvoicesRequest request, CancellationToken cancellationToken);
 
     /// <summary>
+    /// Pobiera wszystkie faktury z KSeF do synchronizacji
+    /// </summary>
+    /// <param name="cancellationToken">Token anulowania</param>
+    /// <returns>Lista faktur do synchronizacji</returns>
+    Task<List<KSeFInvoiceSyncItem>> GetInvoicesForSyncAsync(CancellationToken cancellationToken);
+
+    /// <summary>
     /// Pobiera szczegóły pojedynczej faktury z KSeF
     /// </summary>
     /// <param name="invoiceReferenceNumber">Numer referencyjny faktury w KSeF</param>

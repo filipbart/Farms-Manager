@@ -15,7 +15,7 @@ public class KSeFInvoiceDetailsDto
     public string Source { get; set; }
     public string Location { get; set; }
     public string InvoiceNumber { get; set; }
-    public DateTime InvoiceDate { get; set; }
+    public DateOnly InvoiceDate { get; set; }
     public string ModuleType { get; set; }
     public string Status { get; set; }
     public string PaymentStatus { get; set; }
