@@ -27,6 +27,8 @@ import {
 import { getKSeFInvoicesColumns } from "./ksef-invoices-columns";
 import InvoiceDetailsModal from "../../components/modals/accounting/invoice-details-modal";
 import UploadInvoiceModal from "../../components/modals/accounting/upload-invoice-modal";
+import SaveAccountingInvoiceModal from "../../components/modals/accounting/save-accounting-invoice-modal";
+import type { DraftAccountingInvoice } from "../../services/accounting-service";
 
 interface TabPanelProps {
   children: React.ReactNode;
@@ -56,8 +58,12 @@ const AccountingPage: React.FC = () => {
   // Modals
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] =
     useState<KSeFInvoiceListModel | null>(null);
+  const [draftInvoices, setDraftInvoices] = useState<DraftAccountingInvoice[]>(
+    []
+  );
 
   // Filters for each tab (all, sales, purchases)
   const [allFilters, dispatchAllFilters] = useReducer(
@@ -370,7 +376,29 @@ const AccountingPage: React.FC = () => {
       <UploadInvoiceModal
         open={uploadModalOpen}
         onClose={() => setUploadModalOpen(false)}
-        onSuccess={fetchInvoices}
+        onUpload={(files) => {
+          setDraftInvoices(files);
+          setUploadModalOpen(false);
+          setSaveModalOpen(true);
+        }}
+      />
+
+      <SaveAccountingInvoiceModal
+        open={saveModalOpen}
+        onClose={() => {
+          setSaveModalOpen(false);
+          setDraftInvoices([]);
+        }}
+        draftInvoices={draftInvoices}
+        onSave={(savedInvoice) => {
+          setDraftInvoices((prev) =>
+            prev.filter((d) => d.draftId !== savedInvoice.draftId)
+          );
+          if (draftInvoices.length <= 1) {
+            setSaveModalOpen(false);
+            fetchInvoices();
+          }
+        }}
       />
     </Box>
   );

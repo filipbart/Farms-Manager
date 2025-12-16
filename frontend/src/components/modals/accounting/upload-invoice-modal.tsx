@@ -12,7 +12,6 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  TextField,
   IconButton,
 } from "@mui/material";
 import { toast } from "react-toastify";
@@ -20,32 +19,33 @@ import { MdFileUpload, MdDelete } from "react-icons/md";
 import LoadingButton from "../../common/loading-button";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import AppDialog from "../../common/app-dialog";
-import { AccountingService } from "../../../services/accounting-service";
+import {
+  AccountingService,
+  type DraftAccountingInvoice,
+} from "../../../services/accounting-service";
 import {
   KSeFInvoiceType,
   KSeFInvoiceTypeLabels,
 } from "../../../models/accounting/ksef-invoice";
-import dayjs from "dayjs";
 
 interface UploadInvoiceModalProps {
   open: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onUpload: (files: DraftAccountingInvoice[]) => void;
 }
 
 const UploadInvoiceModal: React.FC<UploadInvoiceModalProps> = ({
   open,
   onClose,
-  onSuccess,
+  onUpload,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [invoiceType, setInvoiceType] = useState<KSeFInvoiceType>(
     KSeFInvoiceType.Purchase
   );
-  const [invoiceNumber, setInvoiceNumber] = useState("");
-  const [invoiceDate, setInvoiceDate] = useState(dayjs().format("YYYY-MM-DD"));
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -69,37 +69,50 @@ const UploadInvoiceModal: React.FC<UploadInvoiceModalProps> = ({
     }
 
     setLoading(true);
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     try {
       await handleApiResponse(
         () =>
-          AccountingService.uploadManualInvoice(selectedFiles, {
+          AccountingService.uploadInvoices(
+            selectedFiles,
             invoiceType,
-            invoiceNumber: invoiceNumber || undefined,
-            invoiceDate: invoiceDate || undefined,
-          }),
-        () => {
-          toast.success("Faktura została wgrana pomyślnie");
-          onSuccess();
-          handleClose();
+            controller.signal
+          ),
+        (data) => {
+          if (data && data.responseData) {
+            onUpload(data.responseData.files);
+          }
+          toast.success("Faktury zostały wgrane pomyślnie");
         },
         undefined,
-        "Błąd podczas wgrywania faktury"
+        "Błąd podczas wgrywania faktur"
       );
-    } catch {
-      toast.error("Błąd podczas wgrywania faktury");
+    } catch (error: any) {
+      if (error.name !== "CanceledError") {
+        toast.error("Błąd podczas wgrywania faktur");
+      }
     } finally {
       setLoading(false);
+      abortControllerRef.current = null;
+      handleClose();
     }
   };
 
   const handleClose = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+      toast.info("Przesyłanie zostało anulowane.");
+    }
+
     setSelectedFiles([]);
-    setInvoiceNumber("");
-    setInvoiceDate(dayjs().format("YYYY-MM-DD"));
     setInvoiceType(KSeFInvoiceType.Purchase);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+    setLoading(false);
     onClose();
   };
 
@@ -124,25 +137,6 @@ const UploadInvoiceModal: React.FC<UploadInvoiceModalProps> = ({
               ))}
             </Select>
           </FormControl>
-
-          <TextField
-            label="Numer faktury"
-            value={invoiceNumber}
-            onChange={(e) => setInvoiceNumber(e.target.value)}
-            placeholder="np. FV/2024/001"
-            fullWidth
-          />
-
-          <TextField
-            label="Data wystawienia"
-            type="date"
-            value={invoiceDate}
-            onChange={(e) => setInvoiceDate(e.target.value)}
-            fullWidth
-            slotProps={{
-              inputLabel: { shrink: true },
-            }}
-          />
 
           <Box>
             <input

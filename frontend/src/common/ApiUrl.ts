@@ -359,6 +359,7 @@ export default class ApiUrl {
   public static AccountingInvoicePdf = (id: string) =>
     this.AccountingInvoices + "/" + id + "/pdf";
   public static AccountingUploadInvoice = this.AccountingInvoices + "/upload";
+  public static AccountingSaveInvoice = this.AccountingInvoices + "/save";
   public static AccountingUpdateInvoice = (id: string) =>
     this.AccountingInvoices + "/" + id + "/update";
   public static AccountingDeleteInvoice = (id: string) =>

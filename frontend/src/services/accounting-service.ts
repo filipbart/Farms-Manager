@@ -7,9 +7,49 @@ import type {
 import type { KSeFInvoicesFilters } from "../models/accounting/ksef-filters";
 import AxiosWrapper from "../utils/axios/wrapper";
 
-export interface UploadKSeFInvoiceResponse {
-  invoiceId: string;
-  message: string;
+export interface AccountingInvoiceExtractedData {
+  invoiceNumber: string;
+  invoiceDate: string;
+  dueDate: string;
+  sellerName: string;
+  sellerNip: string;
+  sellerAddress: string;
+  buyerName: string;
+  buyerNip: string;
+  buyerAddress: string;
+  grossAmount: number | null;
+  netAmount: number | null;
+  vatAmount: number | null;
+  bankAccountNumber: string;
+  invoiceType: string;
+}
+
+export interface DraftAccountingInvoice {
+  draftId: string;
+  fileUrl: string;
+  filePath: string;
+  extractedFields: AccountingInvoiceExtractedData;
+}
+
+export interface UploadAccountingInvoicesResponse {
+  files: DraftAccountingInvoice[];
+}
+
+export interface SaveAccountingInvoiceData {
+  draftId: string;
+  filePath: string;
+  invoiceNumber: string;
+  invoiceDate: string;
+  dueDate?: string;
+  sellerName: string;
+  sellerNip: string;
+  buyerName: string;
+  buyerNip: string;
+  grossAmount: number;
+  netAmount: number;
+  vatAmount: number;
+  invoiceType: string;
+  comment?: string;
 }
 
 export class AccountingService {
@@ -33,37 +73,36 @@ export class AccountingService {
   }
 
   /**
-   * Upload manualnej faktury (poza KSeF)
+   * Upload faktur z zaczytywaniem danych przez AI
    */
-  public static async uploadManualInvoice(
+  public static async uploadInvoices(
     files: File[],
-    metadata: {
-      invoiceType: string;
-      invoiceNumber?: string;
-      invoiceDate?: string;
-    }
+    invoiceType: string,
+    signal?: AbortSignal
   ) {
     const formData = new FormData();
     files.forEach((file) => {
       formData.append("files", file);
     });
-    formData.append("invoiceType", metadata.invoiceType);
-    if (metadata.invoiceNumber) {
-      formData.append("invoiceNumber", metadata.invoiceNumber);
-    }
-    if (metadata.invoiceDate) {
-      formData.append("invoiceDate", metadata.invoiceDate);
-    }
+    formData.append("invoiceType", invoiceType);
 
-    return await AxiosWrapper.post<UploadKSeFInvoiceResponse>(
+    return await AxiosWrapper.post<UploadAccountingInvoicesResponse>(
       ApiUrl.AccountingUploadInvoice,
       formData,
       {
         headers: {
           "Content-Type": "multipart/form-data",
         },
+        signal,
       }
     );
+  }
+
+  /**
+   * Zapisuje fakturę po zaczytaniu przez AI
+   */
+  public static async saveInvoice(data: SaveAccountingInvoiceData) {
+    return await AxiosWrapper.post<string>(ApiUrl.AccountingSaveInvoice, data);
   }
 
   /**

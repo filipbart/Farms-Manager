@@ -112,31 +112,42 @@ public class AccountingController : BaseController
     }
 
     /// <summary>
-    /// Upload manualnej faktury (poza KSeF)
+    /// Upload faktur z zaczytywaniem danych przez AI
     /// </summary>
     [HttpPost("invoices/upload")]
     [AllowAnonymous]
-    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(BaseResponse<UploadAccountingInvoicesCommandResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> UploadManualInvoice(
+    public async Task<IActionResult> UploadInvoices(
         [FromForm] List<IFormFile> files,
-        [FromForm] string invoiceType,
-        [FromForm] string? invoiceNumber,
-        [FromForm] string? invoiceDate)
+        [FromForm] string invoiceType)
     {
         if (files == null || files.Count == 0)
         {
             return BadRequest(new { error = "Nie przesłano żadnych plików" });
         }
 
-        // TODO: Implementacja parsowania i zapisywania faktur
-        // Na razie zwracamy sukces jako placeholder
-        return Ok(new
-        {
-            message = "Faktury zostały przesłane pomyślnie",
-            invoiceId = Guid.NewGuid().ToString(),
-            filesCount = files.Count
-        });
+        var result = await _mediator.Send(new UploadAccountingInvoicesCommand(
+            new UploadAccountingInvoicesCommandDto
+            {
+                Files = files,
+                InvoiceType = invoiceType
+            }));
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Zapisuje fakturę po zaczytaniu przez AI
+    /// </summary>
+    [HttpPost("invoices/save")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(BaseResponse<Guid>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> SaveInvoice([FromBody] SaveAccountingInvoiceDto data)
+    {
+        var result = await _mediator.Send(new SaveAccountingInvoiceCommand(data));
+        return Ok(result);
     }
 
     /// <summary>
