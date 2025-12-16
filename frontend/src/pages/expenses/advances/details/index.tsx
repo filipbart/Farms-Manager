@@ -42,6 +42,7 @@ import {
 import { getPriorityClassName } from "../../../../utils/priority-helper";
 import { useAuth } from "../../../../auth/useAuth";
 import { useUserExpenseAdvancePermissions } from "../../../../hooks/expenses/advances/useUserExpenseAdvancePermissions";
+import { ExpenseAdvancePermissionsService } from "../../../../services/expense-advance-permissions-service";
 
 const generateYearOptions = () => {
   const currentYear = new Date().getFullYear();
@@ -89,6 +90,10 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
     null
   );
   const nav = useNavigate();
+
+  // Ustawienia kolumn dla zalogowanego użytkownika
+  const [visibleColumns, setVisibleColumns] = useState<string[]>([]);
+  const [columnSettingsLoaded, setColumnSettingsLoaded] = useState(false);
 
   const [initialGridState] = useState(() => {
     const savedState = localStorage.getItem(
@@ -168,32 +173,78 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
     });
   }, [selectedMonths, selectedYears]);
 
-  const deleteAdvance = useCallback(async (id: string) => {
-    await handleApiResponse(
-      () => ExpensesAdvancesService.deleteExpenseAdvance(id),
-      () => {
-        toast.success("Ewidencja została usunięta");
-        fetchExpenseAdvances();
-      },
-      undefined,
-      "Błąd podczas usuwania ewidencji"
-    );
-  }, [fetchExpenseAdvances]);
+  // Pobieranie ustawień kolumn dla zalogowanego użytkownika
+  useEffect(() => {
+    const fetchColumnSettings = async () => {
+      try {
+        const response =
+          await ExpenseAdvancePermissionsService.getCurrentUserColumnSettings();
+        if (response.success && response.responseData) {
+          setVisibleColumns(response.responseData.visibleColumns);
+        }
+      } catch (err) {
+        console.error("Błąd podczas pobierania ustawień kolumn", err);
+      } finally {
+        setColumnSettingsLoaded(true);
+      }
+    };
+    fetchColumnSettings();
+  }, []);
 
-  const columns = useMemo(
-    () =>
-      getAdvancesColumns({
-        setSelectedAdvance,
-        deleteAdvance,
-        setIsEditModalOpen: setOpenEditModal,
-        isAdmin,
-        downloadAdvanceFile: downloadExpenseAdvanceFile,
-        downloadingFilePath,
-        hasEditPermission,
-        employeeId: employeeId || "",
-      }),
-    [isAdmin, downloadingFilePath, deleteAdvance, hasEditPermission, employeeId]
+  const deleteAdvance = useCallback(
+    async (id: string) => {
+      await handleApiResponse(
+        () => ExpensesAdvancesService.deleteExpenseAdvance(id),
+        () => {
+          toast.success("Ewidencja została usunięta");
+          fetchExpenseAdvances();
+        },
+        undefined,
+        "Błąd podczas usuwania ewidencji"
+      );
+    },
+    [fetchExpenseAdvances]
   );
+
+  const columns = useMemo(() => {
+    const allColumns = getAdvancesColumns({
+      setSelectedAdvance,
+      deleteAdvance,
+      setIsEditModalOpen: setOpenEditModal,
+      isAdmin,
+      downloadAdvanceFile: downloadExpenseAdvanceFile,
+      downloadingFilePath,
+      hasEditPermission,
+      employeeId: employeeId || "",
+    });
+
+    // Admin widzi wszystkie kolumny
+    if (isAdmin) {
+      return allColumns;
+    }
+
+    // Jeśli nie załadowano jeszcze ustawień, pokaż wszystkie kolumny
+    if (!columnSettingsLoaded || visibleColumns.length === 0) {
+      return allColumns;
+    }
+
+    // Filtruj kolumny na podstawie ustawień użytkownika
+    // Kolumna "actions" jest zawsze widoczna jeśli użytkownik ma uprawnienia do edycji
+    return allColumns.filter(
+      (col) =>
+        visibleColumns.includes(col.field) ||
+        col.field === "actions" ||
+        col.type === "actions"
+    );
+  }, [
+    isAdmin,
+    downloadingFilePath,
+    deleteAdvance,
+    hasEditPermission,
+    employeeId,
+    visibleColumns,
+    columnSettingsLoaded,
+  ]);
 
   if (loading && !employeeFullName) {
     return (

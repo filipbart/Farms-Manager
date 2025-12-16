@@ -106,7 +106,8 @@ export default class ApiUrl {
   public static UploadSalesInvoices = this.SalesInvoices + "/upload";
   public static SaveSalesInvoicesData = this.SalesInvoices + "/save-invoice";
   public static BookSalesInvoicesPayment = this.SalesInvoices + "/book-payment";
-  public static MarkInvoiceAsCompleted = this.SalesInvoices + "/mark-as-completed";
+  public static MarkInvoiceAsCompleted =
+    this.SalesInvoices + "/mark-as-completed";
   public static UpdateSaleInvoice = (id: string) =>
     this.SalesInvoices + "/update/" + id;
   public static DeleteSaveInvoice = (id: string) =>
@@ -138,7 +139,8 @@ export default class ApiUrl {
   public static AddFeedCorrection = this.Feeds + "/add-correction";
   public static DeleteFeedCorrection = this.Feeds + "/delete-correction";
   public static UpdateFeedCorrection = this.Feeds + "/update-correction";
-  public static DownloadFeedsInvoicesZip = this.Feeds + "/download-invoices-zip";
+  public static DownloadFeedsInvoicesZip =
+    this.Feeds + "/download-invoices-zip";
 
   public static Expenses = this.BaseUrl + "expenses";
   public static ExpensesTypes = this.Expenses + "/types";
@@ -189,6 +191,14 @@ export default class ApiUrl {
     this.ExpensesAdvances + "/permissions/update";
   public static RemoveExpenseAdvancePermission = (permissionId: string) =>
     this.ExpensesAdvances + "/permissions/" + permissionId;
+
+  // Expense Advance Column Settings
+  public static UserExpenseAdvanceColumnSettings = (userId: string) =>
+    this.ExpensesAdvances + "/column-settings/user/" + userId;
+  public static UpdateExpenseAdvanceColumnSettings =
+    this.ExpensesAdvances + "/column-settings";
+  public static CurrentUserExpenseAdvanceColumnSettings =
+    this.ExpensesAdvances + "/column-settings/current";
 
   public static ProductionData = this.BaseUrl + "production-data";
   public static ProductionDataDictionary = this.ProductionData + "/dictionary";

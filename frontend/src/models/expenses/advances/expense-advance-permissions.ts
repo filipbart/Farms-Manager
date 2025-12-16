@@ -39,3 +39,25 @@ export interface UserExpenseAdvancePermissions {
   userId: string;
   permissions: ExpenseAdvancePermission[];
 }
+
+// Column Settings
+export interface AvailableColumn {
+  key: string;
+  description: string;
+}
+
+export interface ExpenseAdvanceColumnSettingsResponse {
+  visibleColumns: string[];
+  availableColumns: AvailableColumn[];
+}
+
+export interface CurrentUserColumnSettingsResponse {
+  visibleColumns: string[];
+  isAdmin: boolean;
+  hasAllPermissions: boolean;
+}
+
+export interface UpdateExpenseAdvanceColumnSettingsRequest {
+  userId: string;
+  visibleColumns: string[];
+}

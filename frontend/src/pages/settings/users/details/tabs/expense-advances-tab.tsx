@@ -6,6 +6,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Divider,
   FormControl,
   FormControlLabel,
   FormGroup,
@@ -28,6 +29,7 @@ import { toast } from "react-toastify";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
+import SaveIcon from "@mui/icons-material/Save";
 import type { UserDetailsModel } from "../../../../../models/users/users";
 import {
   ExpenseAdvancePermissionType,
@@ -35,6 +37,7 @@ import {
   type UpdateExpenseAdvancePermissionRequest,
   type ExpenseAdvancePermission,
   type ExpenseAdvanceEntity,
+  type AvailableColumn,
 } from "../../../../../models/expenses/advances/expense-advance-permissions";
 import { ExpenseAdvancePermissionsService } from "../../../../../services/expense-advance-permissions-service";
 import { handleApiResponse } from "../../../../../utils/axios/handle-api-response";
@@ -65,16 +68,25 @@ const ExpenseAdvancesTab: React.FC<ExpenseAdvancesTabProps> = ({
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // Stan dla ustawień kolumn
+  const [availableColumns, setAvailableColumns] = useState<AvailableColumn[]>(
+    []
+  );
+  const [visibleColumns, setVisibleColumns] = useState<string[]>([]);
+  const [savingColumns, setSavingColumns] = useState(false);
+
   // Pobieranie danych
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [advancesResponse, permissionsResponse] = await Promise.all([
-        ExpenseAdvancePermissionsService.getAllExpenseAdvances(),
-        ExpenseAdvancePermissionsService.getUserExpenseAdvancePermissions(
-          user.id
-        ),
-      ]);
+      const [advancesResponse, permissionsResponse, columnSettingsResponse] =
+        await Promise.all([
+          ExpenseAdvancePermissionsService.getAllExpenseAdvances(),
+          ExpenseAdvancePermissionsService.getUserExpenseAdvancePermissions(
+            user.id
+          ),
+          ExpenseAdvancePermissionsService.getUserColumnSettings(user.id),
+        ]);
 
       if (advancesResponse.success) {
         const data = advancesResponse.responseData as any;
@@ -88,12 +100,61 @@ const ExpenseAdvancesTab: React.FC<ExpenseAdvancesTabProps> = ({
       if (permissionsResponse.success) {
         setPermissions(permissionsResponse.responseData?.permissions || []);
       }
+
+      if (
+        columnSettingsResponse.success &&
+        columnSettingsResponse.responseData
+      ) {
+        setAvailableColumns(
+          columnSettingsResponse.responseData.availableColumns || []
+        );
+        setVisibleColumns(
+          columnSettingsResponse.responseData.visibleColumns || []
+        );
+      }
     } catch (err) {
       console.error("Błąd podczas pobierania danych", err);
       toast.error("Nie udało się pobrać danych");
     } finally {
       setLoading(false);
     }
+  };
+
+  // Zapisywanie ustawień kolumn
+  const handleSaveColumnSettings = async () => {
+    if (visibleColumns.length === 0) {
+      toast.error("Musisz wybrać co najmniej jedną kolumnę");
+      return;
+    }
+
+    setSavingColumns(true);
+    try {
+      await handleApiResponse(
+        () =>
+          ExpenseAdvancePermissionsService.updateUserColumnSettings({
+            userId: user.id,
+            visibleColumns,
+          }),
+        () => {
+          toast.success("Ustawienia kolumn zostały zapisane");
+        },
+        undefined,
+        "Nie udało się zapisać ustawień kolumn"
+      );
+    } catch {
+      toast.error("Wystąpił błąd podczas zapisu ustawień kolumn");
+    } finally {
+      setSavingColumns(false);
+    }
+  };
+
+  // Toggle widoczności kolumny
+  const handleColumnToggle = (columnKey: string) => {
+    setVisibleColumns((prev) =>
+      prev.includes(columnKey)
+        ? prev.filter((c) => c !== columnKey)
+        : [...prev, columnKey]
+    );
   };
 
   useEffect(() => {
@@ -232,6 +293,57 @@ const ExpenseAdvancesTab: React.FC<ExpenseAdvancesTabProps> = ({
 
   return (
     <Box mt={2}>
+      {/* Sekcja ustawień kolumn */}
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={2}
+      >
+        <Typography variant="h6">
+          Widoczność kolumn w ewidencji zaliczek
+        </Typography>
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<SaveIcon />}
+          onClick={handleSaveColumnSettings}
+          disabled={savingColumns || visibleColumns.length === 0}
+        >
+          {savingColumns ? (
+            <CircularProgress size={24} />
+          ) : (
+            "Zapisz ustawienia kolumn"
+          )}
+        </Button>
+      </Box>
+
+      <Paper sx={{ p: 2 }}>
+        <Typography variant="body2" color="text.secondary" mb={2}>
+          Wybierz kolumny, które użytkownik będzie widział w ewidencji zaliczek.
+          Administrator oraz osoby ze wszystkimi uprawnieniami zawsze widzą
+          wszystkie kolumny.
+        </Typography>
+        <FormGroup row>
+          {availableColumns.map((column) => (
+            <FormControlLabel
+              key={column.key}
+              control={
+                <Checkbox
+                  checked={visibleColumns.includes(column.key)}
+                  onChange={() => handleColumnToggle(column.key)}
+                />
+              }
+              label={column.description}
+              sx={{ minWidth: 180 }}
+            />
+          ))}
+        </FormGroup>
+      </Paper>
+
+      <Divider sx={{ my: 4 }} />
+
+      {/* Sekcja uprawnień */}
       <Box
         display="flex"
         justifyContent="space-between"
@@ -339,11 +451,12 @@ const ExpenseAdvancesTab: React.FC<ExpenseAdvancesTabProps> = ({
                 <MenuItem value="" disabled>
                   Wybierz pracownika...
                 </MenuItem>
-                {Array.isArray(expenseAdvances) && expenseAdvances.map((ea) => (
-                  <MenuItem key={ea.id} value={ea.id}>
-                    {ea.employeeName}
-                  </MenuItem>
-                ))}
+                {Array.isArray(expenseAdvances) &&
+                  expenseAdvances.map((ea) => (
+                    <MenuItem key={ea.id} value={ea.id}>
+                      {ea.employeeName}
+                    </MenuItem>
+                  ))}
               </Select>
             </FormControl>
 
