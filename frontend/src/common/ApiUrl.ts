@@ -192,6 +192,14 @@ export default class ApiUrl {
   public static RemoveExpenseAdvancePermission = (permissionId: string) =>
     this.ExpensesAdvances + "/permissions/" + permissionId;
 
+  // Expense Advance Column Settings
+  public static UserExpenseAdvanceColumnSettings = (userId: string) =>
+    this.ExpensesAdvances + "/column-settings/user/" + userId;
+  public static UpdateExpenseAdvanceColumnSettings =
+    this.ExpensesAdvances + "/column-settings";
+  public static CurrentUserExpenseAdvanceColumnSettings =
+    this.ExpensesAdvances + "/column-settings/current";
+
   public static ProductionData = this.BaseUrl + "production-data";
   public static ProductionDataDictionary = this.ProductionData + "/dictionary";
   public static CalculateRemainingFeedValue =

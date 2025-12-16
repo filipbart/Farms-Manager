@@ -1,7 +1,10 @@
 using FarmsManager.Api.Controllers.Base;
+using FarmsManager.Application.Commands.ExpenseAdvanceColumnSettings;
 using FarmsManager.Application.Commands.ExpenseAdvancePermissions;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Models.ExpenseAdvanceColumnSettings;
 using FarmsManager.Application.Models.ExpenseAdvancePermissions;
+using FarmsManager.Application.Queries.ExpenseAdvanceColumnSettings;
 using FarmsManager.Application.Queries.ExpenseAdvancePermissions;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -81,5 +84,46 @@ public class ExpenseAdvancePermissionsController(IMediator mediator) : BaseContr
     public async Task<IActionResult> DeletePermission([FromRoute] Guid permissionId)
     {
         return Ok(await mediator.Send(new DeleteExpenseAdvancePermissionCommand(permissionId)));
+    }
+
+    /// <summary>
+    /// Pobiera ustawienia widoczności kolumn dla użytkownika (panel administracyjny)
+    /// </summary>
+    /// <param name="userId">ID użytkownika</param>
+    /// <returns></returns>
+    [HttpGet("column-settings/user/{userId:guid}")]
+    [ProducesResponseType(typeof(BaseResponse<GetExpenseAdvanceColumnSettingsResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetUserColumnSettings([FromRoute] Guid userId)
+    {
+        return Ok(await mediator.Send(new GetUserExpenseAdvanceColumnSettingsQuery(userId)));
+    }
+
+    /// <summary>
+    /// Aktualizuje ustawienia widoczności kolumn dla użytkownika
+    /// </summary>
+    /// <param name="data">Dane ustawień kolumn</param>
+    /// <returns></returns>
+    [HttpPut("column-settings")]
+    [ProducesResponseType(typeof(BaseResponse<ExpenseAdvanceColumnSettingsDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> UpdateUserColumnSettings([FromBody] UpdateUserExpenseAdvanceColumnSettingsData data)
+    {
+        return Ok(await mediator.Send(new UpdateUserExpenseAdvanceColumnSettingsCommand(data)));
+    }
+
+    /// <summary>
+    /// Pobiera ustawienia widoczności kolumn dla aktualnie zalogowanego użytkownika
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet("column-settings/current")]
+    [ProducesResponseType(typeof(BaseResponse<GetCurrentUserExpenseAdvanceColumnSettingsResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetCurrentUserColumnSettings()
+    {
+        return Ok(await mediator.Send(new GetCurrentUserExpenseAdvanceColumnSettingsQuery()));
     }
 }

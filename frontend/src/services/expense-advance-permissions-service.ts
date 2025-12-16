@@ -6,6 +6,9 @@ import type {
   UpdateExpenseAdvancePermissionRequest,
   RemoveExpenseAdvancePermissionRequest,
   UserExpenseAdvancePermissions,
+  ExpenseAdvanceColumnSettingsResponse,
+  CurrentUserColumnSettingsResponse,
+  UpdateExpenseAdvanceColumnSettingsRequest,
 } from "../models/expenses/advances/expense-advance-permissions";
 import AxiosWrapper from "../utils/axios/wrapper";
 
@@ -60,6 +63,36 @@ export class ExpenseAdvancePermissionsService {
   ) {
     return await AxiosWrapper.delete<void>(
       ApiUrl.RemoveExpenseAdvancePermission(request.permissionId)
+    );
+  }
+
+  /**
+   * Pobiera ustawienia widoczności kolumn dla użytkownika (panel administracyjny)
+   */
+  public static async getUserColumnSettings(userId: string) {
+    return await AxiosWrapper.get<ExpenseAdvanceColumnSettingsResponse>(
+      ApiUrl.UserExpenseAdvanceColumnSettings(userId)
+    );
+  }
+
+  /**
+   * Aktualizuje ustawienia widoczności kolumn dla użytkownika
+   */
+  public static async updateUserColumnSettings(
+    request: UpdateExpenseAdvanceColumnSettingsRequest
+  ) {
+    return await AxiosWrapper.put<{ userId: string; visibleColumns: string[] }>(
+      ApiUrl.UpdateExpenseAdvanceColumnSettings,
+      request
+    );
+  }
+
+  /**
+   * Pobiera ustawienia widoczności kolumn dla aktualnie zalogowanego użytkownika
+   */
+  public static async getCurrentUserColumnSettings() {
+    return await AxiosWrapper.get<CurrentUserColumnSettingsResponse>(
+      ApiUrl.CurrentUserExpenseAdvanceColumnSettings
     );
   }
 }
