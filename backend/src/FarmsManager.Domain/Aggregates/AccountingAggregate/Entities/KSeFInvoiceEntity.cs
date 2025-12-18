@@ -39,6 +39,7 @@ public class KSeFInvoiceEntity : Entity
     /// <param name="relatedInvoiceId">Powiązana faktura w systemie (opcjonalnie)</param>
     /// <param name="comment">Komentarz (opcjonalnie)</param>
     /// <param name="userId">Identyfikator użytkownika tworzącego rekord (audit) (opcjonalnie)</param>
+    /// <param name="taxBusinessEntityId">Identyfikator podmiotu gospodarczego (opcjonalnie)</param>
     public static KSeFInvoiceEntity CreateNew(
         string kSeFNumber,
         string invoiceNumber,
@@ -63,7 +64,8 @@ public class KSeFInvoiceEntity : Entity
         string relatedInvoiceNumber = null,
         Guid? relatedInvoiceId = null,
         string comment = null,
-        Guid? userId = null)
+        Guid? userId = null,
+        Guid? taxBusinessEntityId = null)
     {
         return new KSeFInvoiceEntity
         {
@@ -90,7 +92,8 @@ public class KSeFInvoiceEntity : Entity
             RelatedInvoiceNumber = relatedInvoiceNumber,
             RelatedInvoiceId = relatedInvoiceId,
             Comment = comment,
-            CreatedBy = userId
+            CreatedBy = userId,
+            TaxBusinessEntityId = taxBusinessEntityId
         };
     }
 

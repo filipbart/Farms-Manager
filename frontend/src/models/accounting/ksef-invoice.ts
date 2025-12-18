@@ -124,3 +124,83 @@ export const KSeFInvoiceTypeLabels: Record<KSeFInvoiceType, string> = {
   [KSeFInvoiceType.Sales]: "Sprzedaż",
   [KSeFInvoiceType.Purchase]: "Zakup",
 };
+
+// Parsed XML data interfaces
+export interface KSeFParsedXmlData {
+  header?: {
+    formCode?: string;
+    formVariant?: number;
+    createdDate?: string;
+    systemInfo?: string;
+  };
+  seller?: KSeFPartyData;
+  buyer?: KSeFPartyData;
+  thirdParty?: KSeFPartyData & { role?: string };
+  invoiceData?: {
+    invoiceType?: string;
+    issueDate?: string;
+    issuePlace?: string;
+    invoiceNumber?: string;
+    saleDate?: string;
+    currency?: string;
+    grossTotal?: number;
+    vatBreakdown?: KSeFVatBreakdown[];
+  };
+  lineItems?: KSeFLineItem[];
+  payment?: KSeFPaymentData;
+  footer?: string;
+}
+
+export interface KSeFPartyData {
+  nip?: string;
+  name?: string;
+  vatEuNumber?: string;
+  idNumber?: string;
+  address?: {
+    countryCode?: string;
+    addressLine1?: string;
+    addressLine2?: string;
+    gln?: string;
+  };
+  contact?: {
+    email?: string;
+    phone?: string;
+  };
+}
+
+export interface KSeFVatBreakdown {
+  rate: string;
+  netAmount: number;
+  vatAmount?: number;
+}
+
+export interface KSeFLineItem {
+  lineNumber: number;
+  name?: string;
+  unit?: string;
+  quantity?: number;
+  unitPriceNet?: number;
+  unitPriceGross?: number;
+  netAmount?: number;
+  grossAmount?: number;
+  vatRate?: number;
+  pkwiu?: string;
+  cn?: string;
+  gtu?: string;
+}
+
+export interface KSeFPaymentData {
+  isPaid?: boolean;
+  paymentDate?: string;
+  dueDate?: string;
+  paymentMethod?: string;
+  paymentMethodOther?: string;
+  paymentDescription?: string;
+  bankAccounts?: KSeFBankAccount[];
+}
+
+export interface KSeFBankAccount {
+  accountNumber?: string;
+  bankName?: string;
+  description?: string;
+}

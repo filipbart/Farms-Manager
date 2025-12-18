@@ -4,6 +4,7 @@ using FarmsManager.Application.Specifications.KSeF;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Entities;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -80,6 +81,13 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
         var ksefService = scope.ServiceProvider.GetRequiredService<IKSeFService>();
         var invoiceRepository = scope.ServiceProvider.GetRequiredService<IKSeFInvoiceRepository>();
         var xmlParser = scope.ServiceProvider.GetRequiredService<IKSeFInvoiceXmlParser>();
+        var dbContext = scope.ServiceProvider.GetRequiredService<FarmsManagerContext>();
+
+        // Pobierz wszystkie podmioty gospodarcze do dopasowania
+        var taxBusinessEntities = await dbContext.Set<TaxBusinessEntity>()
+            .Where(t => t.DateDeletedUtc == null)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
 
         var log = new KSeFSynchronizationLogEntity
         {
@@ -127,7 +135,10 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                 {
                     var invoiceXml = await ksefService.GetInvoiceXmlAsync(invoiceSummary.KsefNumber, cancellationToken);
 
-                    var invoiceEntity = CreateInvoiceEntity(invoiceSummary, invoiceXml, xmlParser);
+                    // Dopasuj podmiot gospodarczy po NIP lub nazwie
+                    var taxBusinessEntityId = MatchTaxBusinessEntity(invoiceSummary, taxBusinessEntities);
+
+                    var invoiceEntity = CreateInvoiceEntity(invoiceSummary, invoiceXml, xmlParser, taxBusinessEntityId);
 
                     await invoiceRepository.AddAsync(invoiceEntity, cancellationToken);
                     savedCount++;
@@ -169,12 +180,61 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
     }
 
     /// <summary>
+    /// Dopasowuje podmiot gospodarczy do faktury na podstawie NIP lub nazwy
+    /// </summary>
+    private static Guid? MatchTaxBusinessEntity(
+        KSeFInvoiceSyncItem invoiceItem,
+        List<TaxBusinessEntity> taxBusinessEntities)
+    {
+        if (taxBusinessEntities.Count == 0)
+            return null;
+
+        // Normalizuj NIP-y z faktury
+        var sellerNip = NormalizeNip(invoiceItem.SellerNip);
+        var buyerNip = NormalizeNip(invoiceItem.BuyerNip);
+
+        // Szukaj po NIP sprzedawcy lub nabywcy (dokładne dopasowanie)
+        var matchedByNip = taxBusinessEntities.FirstOrDefault(t =>
+            t.Nip == sellerNip || t.Nip == buyerNip);
+
+        if (matchedByNip != null)
+            return matchedByNip.Id;
+
+        // Szukaj po nazwie (częściowe dopasowanie - case insensitive)
+        var sellerName = invoiceItem.SellerName?.ToLowerInvariant();
+        var buyerName = invoiceItem.BuyerName?.ToLowerInvariant();
+
+        var matchedByName = taxBusinessEntities.FirstOrDefault(t =>
+        {
+            var entityName = t.Name?.ToLowerInvariant();
+            if (string.IsNullOrEmpty(entityName))
+                return false;
+
+            return (!string.IsNullOrEmpty(sellerName) && sellerName.Contains(entityName)) ||
+                   (!string.IsNullOrEmpty(buyerName) && buyerName.Contains(entityName)) ||
+                   (!string.IsNullOrEmpty(sellerName) && entityName.Contains(sellerName)) ||
+                   (!string.IsNullOrEmpty(buyerName) && entityName.Contains(buyerName));
+        });
+
+        return matchedByName?.Id;
+    }
+
+    /// <summary>
+    /// Normalizuje NIP usuwając prefiks kraju, myślniki i spacje
+    /// </summary>
+    private static string NormalizeNip(string nip)
+    {
+        return nip?.Replace("PL", "").Replace("-", "").Replace(" ", "").Trim();
+    }
+
+    /// <summary>
     /// Tworzy encję faktury na podstawie danych z KSeF
     /// </summary>
     private static KSeFInvoiceEntity CreateInvoiceEntity(
         KSeFInvoiceSyncItem invoiceItem,
         string invoiceXml,
-        IKSeFInvoiceXmlParser xmlParser)
+        IKSeFInvoiceXmlParser xmlParser,
+        Guid? taxBusinessEntityId = null)
     {
         // Parsuj XML aby wyciągnąć dodatkowe dane
         var parsedInvoice = xmlParser.ParseInvoiceXml(invoiceXml);
@@ -212,7 +272,7 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
             grossAmount: invoiceItem.GrossAmount,
             netAmount: invoiceItem.NetAmount,
             vatAmount: invoiceItem.VatAmount,
-            assignedUserId: null // TODO: Przypisanie użytkownika do faktury
+            taxBusinessEntityId: taxBusinessEntityId
         );
     }
 

@@ -8,6 +8,7 @@ using FarmsManager.Domain.Exceptions;
 using FluentValidation;
 using KSeF.Client.Core.Models.Invoices.Common;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace FarmsManager.Application.Commands.Accounting;
 
@@ -37,15 +38,18 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
     private readonly IKSeFInvoiceRepository _invoiceRepository;
     private readonly IUserDataResolver _userDataResolver;
     private readonly IS3Service _s3Service;
+    private readonly DbContext _dbContext;
 
     public SaveAccountingInvoiceCommandHandler(
         IKSeFInvoiceRepository invoiceRepository,
         IUserDataResolver userDataResolver,
-        IS3Service s3Service)
+        IS3Service s3Service,
+        DbContext dbContext)
     {
         _invoiceRepository = invoiceRepository;
         _userDataResolver = userDataResolver;
         _s3Service = s3Service;
+        _dbContext = dbContext;
     }
 
     public async Task<BaseResponse<Guid>> Handle(SaveAccountingInvoiceCommand request, CancellationToken cancellationToken)
@@ -67,6 +71,10 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
         // Przenieś plik z draft do stałej lokalizacji
         var permanentPath = $"accounting/{data.DraftId}{Path.GetExtension(data.FilePath)}";
         await _s3Service.MoveFileAsync(FileType.AccountingInvoice, data.FilePath, permanentPath);
+
+        // Dopasuj podmiot gospodarczy po NIP sprzedawcy lub nabywcy
+        var taxBusinessEntityId = await MatchTaxBusinessEntityAsync(
+            data.SellerNip, data.SellerName, data.BuyerNip, data.BuyerName, cancellationToken);
 
         // Utwórz encję faktury
         var invoice = KSeFInvoiceEntity.CreateNew(
@@ -90,13 +98,64 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
             netAmount: data.NetAmount,
             vatAmount: data.VatAmount,
             comment: data.Comment,
-            userId: userId
+            userId: userId,
+            taxBusinessEntityId: taxBusinessEntityId
         );
 
         await _invoiceRepository.AddAsync(invoice, cancellationToken);
         await _invoiceRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
 
         return BaseResponse.CreateResponse(invoice.Id);
+    }
+
+    /// <summary>
+    /// Dopasowuje podmiot gospodarczy na podstawie NIP lub nazwy
+    /// </summary>
+    private async Task<Guid?> MatchTaxBusinessEntityAsync(
+        string sellerNip, string sellerName, string buyerNip, string buyerName,
+        CancellationToken cancellationToken)
+    {
+        var taxBusinessEntities = await _dbContext.Set<TaxBusinessEntity>()
+            .Where(t => t.DateDeletedUtc == null)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        if (taxBusinessEntities.Count == 0)
+            return null;
+
+        // Normalizuj NIP-y
+        sellerNip = NormalizeNip(sellerNip);
+        buyerNip = NormalizeNip(buyerNip);
+
+        // Szukaj po NIP (dokładne dopasowanie)
+        var matchedByNip = taxBusinessEntities.FirstOrDefault(t =>
+            t.Nip == sellerNip || t.Nip == buyerNip);
+
+        if (matchedByNip != null)
+            return matchedByNip.Id;
+
+        // Szukaj po nazwie (częściowe dopasowanie)
+        var sellerNameLower = sellerName?.ToLowerInvariant();
+        var buyerNameLower = buyerName?.ToLowerInvariant();
+
+        var matchedByName = taxBusinessEntities.FirstOrDefault(t =>
+        {
+            var entityName = t.Name?.ToLowerInvariant();
+            if (string.IsNullOrEmpty(entityName))
+                return false;
+
+            return (!string.IsNullOrEmpty(sellerNameLower) && sellerNameLower.Contains(entityName)) ||
+                   (!string.IsNullOrEmpty(buyerNameLower) && buyerNameLower.Contains(entityName)) ||
+                   (!string.IsNullOrEmpty(sellerNameLower) && entityName.Contains(sellerNameLower)) ||
+                   (!string.IsNullOrEmpty(buyerNameLower) && entityName.Contains(buyerNameLower));
+        });
+
+        return matchedByName?.Id;
+    }
+
+    private static string NormalizeNip(string nip)
+    {
+        return nip?.Replace("PL", "").Replace("-", "").Replace(" ", "").Trim();
     }
 }
 
