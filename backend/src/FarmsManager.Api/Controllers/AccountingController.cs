@@ -227,6 +227,52 @@ public class AccountingController : BaseController
             return StatusCode(500, new { error = ex.Message });
         }
     }
+
+    /// <summary>
+    /// Pobiera listę faktur możliwych do powiązania z daną fakturą
+    /// </summary>
+    [HttpGet("invoices/{invoiceId:guid}/linkable")]
+    [ProducesResponseType(typeof(BaseResponse<List<LinkableInvoiceDto>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetLinkableInvoices(Guid invoiceId, [FromQuery] string searchPhrase = null, [FromQuery] int limit = 20)
+    {
+        var filters = new GetLinkableInvoicesFilters
+        {
+            SourceInvoiceId = invoiceId,
+            SearchPhrase = searchPhrase,
+            Limit = limit
+        };
+        return Ok(await _mediator.Send(new GetLinkableInvoicesQuery(filters)));
+    }
+
+    /// <summary>
+    /// Tworzy powiązania między fakturami
+    /// </summary>
+    [HttpPost("invoices/link")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> LinkInvoices([FromBody] LinkInvoicesDto request)
+    {
+        return Ok(await _mediator.Send(new LinkInvoicesCommand(request)));
+    }
+
+    /// <summary>
+    /// Akceptuje brak powiązania dla faktury
+    /// </summary>
+    [HttpPost("invoices/{invoiceId:guid}/accept-no-linking")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> AcceptNoLinking(Guid invoiceId)
+    {
+        return Ok(await _mediator.Send(new AcceptNoLinkingCommand(invoiceId)));
+    }
+
+    /// <summary>
+    /// Odkłada przypomnienie o powiązaniu faktury
+    /// </summary>
+    [HttpPost("invoices/{invoiceId:guid}/postpone-linking")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> PostponeLinkingReminder(Guid invoiceId, [FromQuery] int days = 3)
+    {
+        return Ok(await _mediator.Send(new PostponeLinkingReminderCommand(invoiceId, days)));
+    }
 }
 
 public class UpdateInvoiceRequest

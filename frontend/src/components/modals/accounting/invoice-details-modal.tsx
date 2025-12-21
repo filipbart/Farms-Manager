@@ -41,6 +41,7 @@ import type {
   KSeFInvoiceDetails,
   KSeFInvoiceListModel,
   KSeFPartyData,
+  LinkableInvoice,
 } from "../../../models/accounting/ksef-invoice";
 import {
   KSeFInvoiceStatusLabels,
@@ -50,10 +51,12 @@ import {
   ModuleTypeLabels,
   KSeFInvoiceTypeLabels,
   VatDeductionTypeLabels,
+  InvoiceRelationTypeLabels,
   KSeFInvoiceStatus,
   KSeFPaymentStatus,
   ModuleType,
   VatDeductionType,
+  InvoiceRelationType,
 } from "../../../models/accounting/ksef-invoice";
 import type FarmRowModel from "../../../models/farms/farm-row-model";
 import type CycleDto from "../../../models/farms/latest-cycle";
@@ -196,6 +199,17 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
   const [cycles, setCycles] = useState<CycleDto[]>([]);
   const [users, setUsers] = useState<UserListModel[]>([]);
 
+  // Linking state
+  const [linkableInvoices, setLinkableInvoices] = useState<LinkableInvoice[]>(
+    []
+  );
+  const [linkingSearch, setLinkingSearch] = useState("");
+  const [selectedLinkIds, setSelectedLinkIds] = useState<string[]>([]);
+  const [relationType, setRelationType] = useState<InvoiceRelationType>(
+    InvoiceRelationType.CorrectionToOriginal
+  );
+  const [linkingLoading, setLinkingLoading] = useState(false);
+
   const parsedXml = useMemo(() => {
     if (!details?.invoiceXml) return null;
     return parseKSeFInvoiceXml(details.invoiceXml);
@@ -322,6 +336,100 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
     },
     [details, onSave]
   );
+
+  // Linking handlers
+  const fetchLinkableInvoices = useCallback(
+    async (search?: string) => {
+      if (!details) return;
+      setLinkingLoading(true);
+      try {
+        const res = await AccountingService.getLinkableInvoices(
+          details.id,
+          search
+        );
+        if (res.success && res.responseData) {
+          setLinkableInvoices(res.responseData);
+        }
+      } catch {
+        // Ignore errors
+      } finally {
+        setLinkingLoading(false);
+      }
+    },
+    [details]
+  );
+
+  const handleLinkInvoices = useCallback(async () => {
+    if (!details || selectedLinkIds.length === 0) return;
+    setSaving(true);
+    try {
+      await handleApiResponse(
+        () =>
+          AccountingService.linkInvoices({
+            sourceInvoiceId: details.id,
+            targetInvoiceIds: selectedLinkIds,
+            relationType: relationType,
+          }),
+        () => {
+          toast.success("Faktury zostały powiązane");
+          setSelectedLinkIds([]);
+          setDetails((prev) =>
+            prev ? { ...prev, status: KSeFInvoiceStatus.New } : null
+          );
+          onSave?.();
+        },
+        undefined,
+        "Błąd podczas powiązywania faktur"
+      );
+    } finally {
+      setSaving(false);
+    }
+  }, [details, selectedLinkIds, relationType, onSave]);
+
+  const handleAcceptNoLinking = useCallback(async () => {
+    if (!details) return;
+    setSaving(true);
+    try {
+      await handleApiResponse(
+        () => AccountingService.acceptNoLinking(details.id),
+        () => {
+          toast.success("Zaakceptowano brak powiązania");
+          setDetails((prev) =>
+            prev ? { ...prev, status: KSeFInvoiceStatus.New } : null
+          );
+          onSave?.();
+        },
+        undefined,
+        "Błąd podczas akceptacji braku powiązania"
+      );
+    } finally {
+      setSaving(false);
+    }
+  }, [details, onSave]);
+
+  const handlePostponeLinking = useCallback(async () => {
+    if (!details) return;
+    setSaving(true);
+    try {
+      await handleApiResponse(
+        () => AccountingService.postponeLinkingReminder(details.id, 3),
+        () => {
+          toast.success("Przypomnienie odłożone o 3 dni");
+        },
+        undefined,
+        "Błąd podczas odkładania przypomnienia"
+      );
+    } finally {
+      setSaving(false);
+    }
+  }, [details]);
+
+  // Fetch linkable invoices when status requires linking
+  useEffect(() => {
+    if (details?.status === KSeFInvoiceStatus.RequiresLinking) {
+      fetchLinkableInvoices();
+    }
+  }, [details?.status, fetchLinkableInvoices]);
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -935,6 +1043,171 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                     </Button>
                   </ButtonGroup>
                 </Box>
+
+                {/* Linking section - shown when invoice requires linking */}
+                {details.status === KSeFInvoiceStatus.RequiresLinking && (
+                  <>
+                    <Divider sx={{ my: 2 }} />
+                    <Box
+                      sx={{
+                        mb: 2,
+                        p: 2,
+                        bgcolor: "warning.light",
+                        borderRadius: 1,
+                      }}
+                    >
+                      <Typography
+                        variant="subtitle2"
+                        fontWeight={600}
+                        sx={{ mb: 1 }}
+                      >
+                        Ta faktura wymaga powiązania
+                      </Typography>
+                      <Typography variant="body2" sx={{ mb: 2 }}>
+                        Wybierz faktury do powiązania lub zaakceptuj brak
+                        powiązania.
+                      </Typography>
+
+                      <TextField
+                        fullWidth
+                        size="small"
+                        placeholder="Szukaj faktur..."
+                        value={linkingSearch}
+                        onChange={(e) => {
+                          setLinkingSearch(e.target.value);
+                          fetchLinkableInvoices(e.target.value);
+                        }}
+                        sx={{ mb: 2, bgcolor: "background.paper" }}
+                      />
+
+                      <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+                        <InputLabel>Typ powiązania</InputLabel>
+                        <Select
+                          value={relationType}
+                          label="Typ powiązania"
+                          onChange={(e) =>
+                            setRelationType(
+                              e.target.value as InvoiceRelationType
+                            )
+                          }
+                          sx={{ bgcolor: "background.paper" }}
+                        >
+                          {Object.entries(InvoiceRelationTypeLabels).map(
+                            ([key, label]) => (
+                              <MenuItem key={key} value={key}>
+                                {label}
+                              </MenuItem>
+                            )
+                          )}
+                        </Select>
+                      </FormControl>
+
+                      {linkingLoading ? (
+                        <Box display="flex" justifyContent="center" py={2}>
+                          <CircularProgress size={24} />
+                        </Box>
+                      ) : linkableInvoices.length > 0 ? (
+                        <TableContainer
+                          component={Paper}
+                          sx={{ maxHeight: 200, mb: 2 }}
+                        >
+                          <Table size="small" stickyHeader>
+                            <TableHead>
+                              <TableRow>
+                                <TableCell padding="checkbox" />
+                                <TableCell>Numer</TableCell>
+                                <TableCell>Data</TableCell>
+                                <TableCell align="right">Kwota</TableCell>
+                              </TableRow>
+                            </TableHead>
+                            <TableBody>
+                              {linkableInvoices.map((inv) => (
+                                <TableRow
+                                  key={inv.id}
+                                  hover
+                                  onClick={() => {
+                                    setSelectedLinkIds((prev) =>
+                                      prev.includes(inv.id)
+                                        ? prev.filter((id) => id !== inv.id)
+                                        : [...prev, inv.id]
+                                    );
+                                  }}
+                                  selected={selectedLinkIds.includes(inv.id)}
+                                  sx={{ cursor: "pointer" }}
+                                >
+                                  <TableCell padding="checkbox">
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedLinkIds.includes(inv.id)}
+                                      readOnly
+                                    />
+                                  </TableCell>
+                                  <TableCell>
+                                    <Typography
+                                      variant="body2"
+                                      fontWeight={500}
+                                    >
+                                      {inv.invoiceNumber}
+                                    </Typography>
+                                    <Typography
+                                      variant="caption"
+                                      color="text.secondary"
+                                    >
+                                      {inv.invoiceTypeDescription}
+                                    </Typography>
+                                  </TableCell>
+                                  <TableCell>{inv.invoiceDate}</TableCell>
+                                  <TableCell align="right">
+                                    {inv.grossAmount.toLocaleString("pl-PL", {
+                                      minimumFractionDigits: 2,
+                                    })}{" "}
+                                    zł
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </TableContainer>
+                      ) : (
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{ mb: 2 }}
+                        >
+                          Brak faktur do powiązania
+                        </Typography>
+                      )}
+
+                      <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          size="small"
+                          onClick={handleLinkInvoices}
+                          disabled={saving || selectedLinkIds.length === 0}
+                        >
+                          Powiąż ({selectedLinkIds.length})
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={handleAcceptNoLinking}
+                          disabled={saving}
+                        >
+                          Akceptuję brak powiązania
+                        </Button>
+                        <Button
+                          variant="text"
+                          size="small"
+                          onClick={handlePostponeLinking}
+                          disabled={saving}
+                        >
+                          Przypomnij później
+                        </Button>
+                      </Box>
+                    </Box>
+                  </>
+                )}
 
                 <Divider sx={{ my: 2 }} />
 

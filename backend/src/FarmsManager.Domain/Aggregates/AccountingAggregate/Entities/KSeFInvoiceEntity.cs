@@ -253,6 +253,36 @@ public class KSeFInvoiceEntity : Entity
     public virtual TaxBusinessEntity TaxBusinessEntity { get; init; }
 
     /// <summary>
+    /// Czy faktura wymaga powiązania z inną fakturą
+    /// </summary>
+    public bool RequiresLinking { get; private set; }
+
+    /// <summary>
+    /// Czy użytkownik zaakceptował brak powiązania
+    /// </summary>
+    public bool LinkingAccepted { get; private set; }
+
+    /// <summary>
+    /// Data następnego przypomnienia o powiązaniu
+    /// </summary>
+    public DateTime? LinkingReminderDate { get; private set; }
+
+    /// <summary>
+    /// Liczba wysłanych przypomnień
+    /// </summary>
+    public int LinkingReminderCount { get; private set; }
+
+    /// <summary>
+    /// Powiązania gdzie ta faktura jest źródłem (np. korekta, zaliczka)
+    /// </summary>
+    public virtual ICollection<KSeFInvoiceRelationEntity> SourceRelations { get; init; } = new List<KSeFInvoiceRelationEntity>();
+
+    /// <summary>
+    /// Powiązania gdzie ta faktura jest celem (np. faktura pierwotna, końcowa)
+    /// </summary>
+    public virtual ICollection<KSeFInvoiceRelationEntity> TargetRelations { get; init; } = new List<KSeFInvoiceRelationEntity>();
+
+    /// <summary>
     /// Aktualizuje edytowalne pola faktury
     /// </summary>
     public void Update(
@@ -292,5 +322,51 @@ public class KSeFInvoiceEntity : Entity
 
         if (relatedInvoiceNumber != null)
             RelatedInvoiceNumber = relatedInvoiceNumber;
+    }
+
+    /// <summary>
+    /// Oznacza fakturę jako wymagającą powiązania
+    /// </summary>
+    public void MarkAsRequiresLinking()
+    {
+        RequiresLinking = true;
+        Status = KSeFInvoiceStatus.RequiresLinking;
+        LinkingReminderDate = DateTime.UtcNow.AddDays(3);
+    }
+
+    /// <summary>
+    /// Oznacza fakturę jako powiązaną (usuwa wymóg powiązania)
+    /// </summary>
+    public void MarkAsLinked()
+    {
+        RequiresLinking = false;
+        LinkingAccepted = false;
+        LinkingReminderDate = null;
+        if (Status == KSeFInvoiceStatus.RequiresLinking)
+        {
+            Status = KSeFInvoiceStatus.New;
+        }
+    }
+
+    /// <summary>
+    /// Akceptuje brak powiązania (użytkownik świadomie rezygnuje z powiązania)
+    /// </summary>
+    public void AcceptNoLinking()
+    {
+        LinkingAccepted = true;
+        LinkingReminderDate = null;
+        if (Status == KSeFInvoiceStatus.RequiresLinking)
+        {
+            Status = KSeFInvoiceStatus.New;
+        }
+    }
+
+    /// <summary>
+    /// Odkłada przypomnienie o powiązaniu
+    /// </summary>
+    public void PostponeLinkingReminder(int days = 3)
+    {
+        LinkingReminderDate = DateTime.UtcNow.AddDays(days);
+        LinkingReminderCount++;
     }
 }

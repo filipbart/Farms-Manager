@@ -10,6 +10,14 @@ export enum KSeFInvoiceStatus {
   Rejected = "Rejected",
   Accepted = "Accepted",
   SentToOffice = "SentToOffice",
+  RequiresLinking = "RequiresLinking",
+}
+
+// Typ powiązania faktur
+export enum InvoiceRelationType {
+  CorrectionToOriginal = "CorrectionToOriginal",
+  AdvanceToFinal = "AdvanceToFinal",
+  FinalToAdvances = "FinalToAdvances",
 }
 
 // Status płatności
@@ -100,6 +108,13 @@ export const KSeFInvoiceStatusLabels: Record<KSeFInvoiceStatus, string> = {
   [KSeFInvoiceStatus.Rejected]: "Odrzucona",
   [KSeFInvoiceStatus.Accepted]: "Zaakceptowana",
   [KSeFInvoiceStatus.SentToOffice]: "Przekazana do biura",
+  [KSeFInvoiceStatus.RequiresLinking]: "Wymaga powiązania",
+};
+
+export const InvoiceRelationTypeLabels: Record<InvoiceRelationType, string> = {
+  [InvoiceRelationType.CorrectionToOriginal]: "Korekta do faktury",
+  [InvoiceRelationType.AdvanceToFinal]: "Zaliczka do faktury końcowej",
+  [InvoiceRelationType.FinalToAdvances]: "Rozliczenie zaliczek",
 };
 
 export const KSeFPaymentStatusLabels: Record<KSeFPaymentStatus, string> = {
@@ -222,4 +237,25 @@ export interface KSeFBankAccount {
   accountNumber?: string;
   bankName?: string;
   description?: string;
+}
+
+// Model faktury możliwej do powiązania
+export interface LinkableInvoice {
+  id: string;
+  invoiceNumber: string;
+  kSeFNumber: string;
+  invoiceDate: string;
+  sellerName: string;
+  sellerNip: string;
+  buyerName: string;
+  buyerNip: string;
+  grossAmount: number;
+  invoiceTypeDescription: string;
+}
+
+// DTO do tworzenia powiązań
+export interface LinkInvoicesRequest {
+  sourceInvoiceId: string;
+  targetInvoiceIds: string[];
+  relationType: InvoiceRelationType;
 }

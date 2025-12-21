@@ -52,7 +52,6 @@ public class KSeFInvoiceEntityConfiguration : BaseConfiguration<KSeFInvoiceEntit
             .IsRequired(false)
             .HasMaxLength(2000);
 
-
         builder.Property(t => t.InvoiceXml)
             .IsRequired()
             .HasColumnType("text");
@@ -61,9 +60,26 @@ public class KSeFInvoiceEntityConfiguration : BaseConfiguration<KSeFInvoiceEntit
             .WithMany()
             .HasForeignKey(t => t.AssignedUserId);
 
+        // Linking fields
+        builder.Property(t => t.RequiresLinking)
+            .IsRequired()
+            .HasDefaultValue(false);
+
+        builder.Property(t => t.LinkingAccepted)
+            .IsRequired()
+            .HasDefaultValue(false);
+
+        builder.Property(t => t.LinkingReminderDate)
+            .IsRequired(false);
+
+        builder.Property(t => t.LinkingReminderCount)
+            .IsRequired()
+            .HasDefaultValue(0);
+
         // Indexes
         builder.HasIndex(t => t.KSeFNumber).IsUnique();
         builder.HasIndex(t => t.InvoiceNumber);
         builder.HasIndex(t => t.InvoiceDate);
+        builder.HasIndex(t => t.RequiresLinking);
     }
 }

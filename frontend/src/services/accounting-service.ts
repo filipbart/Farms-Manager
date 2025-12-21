@@ -3,6 +3,8 @@ import type { PaginateModel } from "../common/interfaces/paginate";
 import type {
   KSeFInvoiceDetails,
   KSeFInvoiceListModel,
+  LinkableInvoice,
+  LinkInvoicesRequest,
 } from "../models/accounting/ksef-invoice";
 import type { KSeFInvoicesFilters } from "../models/accounting/ksef-filters";
 import AxiosWrapper from "../utils/axios/wrapper";
@@ -140,5 +142,49 @@ export class AccountingService {
    */
   public static async syncWithKSeF() {
     return await AxiosWrapper.post(ApiUrl.AccountingSyncKSeF, {});
+  }
+
+  /**
+   * Pobiera listę faktur możliwych do powiązania
+   */
+  public static async getLinkableInvoices(
+    invoiceId: string,
+    searchPhrase?: string,
+    limit: number = 20
+  ) {
+    return await AxiosWrapper.get<LinkableInvoice[]>(
+      ApiUrl.AccountingLinkableInvoices(invoiceId),
+      { searchPhrase, limit }
+    );
+  }
+
+  /**
+   * Tworzy powiązania między fakturami
+   */
+  public static async linkInvoices(data: LinkInvoicesRequest) {
+    return await AxiosWrapper.post(ApiUrl.AccountingLinkInvoices, data);
+  }
+
+  /**
+   * Akceptuje brak powiązania dla faktury
+   */
+  public static async acceptNoLinking(invoiceId: string) {
+    return await AxiosWrapper.post(
+      ApiUrl.AccountingAcceptNoLinking(invoiceId),
+      {}
+    );
+  }
+
+  /**
+   * Odkłada przypomnienie o powiązaniu
+   */
+  public static async postponeLinkingReminder(
+    invoiceId: string,
+    days: number = 3
+  ) {
+    return await AxiosWrapper.post(
+      `${ApiUrl.AccountingPostponeLinking(invoiceId)}?days=${days}`,
+      {}
+    );
   }
 }

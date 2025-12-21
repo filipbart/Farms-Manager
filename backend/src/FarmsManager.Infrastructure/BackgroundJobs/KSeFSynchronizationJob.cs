@@ -140,6 +140,12 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
 
                     var invoiceEntity = CreateInvoiceEntity(invoiceSummary, invoiceXml, xmlParser, taxBusinessEntityId);
 
+                    // Sprawdź czy faktura wymaga powiązania z inną fakturą
+                    if (InvoiceRequiresLinking(invoiceSummary.InvoiceType))
+                    {
+                        invoiceEntity.MarkAsRequiresLinking();
+                    }
+
                     await invoiceRepository.AddAsync(invoiceEntity, cancellationToken);
                     savedCount++;
 
@@ -303,6 +309,24 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
         }
 
         return KSeFPaymentStatus.Unpaid;
+    }
+
+    /// <summary>
+    /// Sprawdza czy typ faktury wymaga powiązania z inną fakturą
+    /// </summary>
+    private static bool InvoiceRequiresLinking(KSeF.Client.Core.Models.Invoices.Common.InvoiceType invoiceType)
+    {
+        return invoiceType switch
+        {
+            KSeF.Client.Core.Models.Invoices.Common.InvoiceType.Zal => true,      // Zaliczkowa
+            KSeF.Client.Core.Models.Invoices.Common.InvoiceType.Roz => true,      // Rozliczeniowa
+            KSeF.Client.Core.Models.Invoices.Common.InvoiceType.Kor => true,      // Korygująca
+            KSeF.Client.Core.Models.Invoices.Common.InvoiceType.KorZal => true,   // Korygująca zaliczkową
+            KSeF.Client.Core.Models.Invoices.Common.InvoiceType.KorRoz => true,   // Korygująca rozliczeniową
+            KSeF.Client.Core.Models.Invoices.Common.InvoiceType.KorPef => true,   // PEF Korygująca
+            KSeF.Client.Core.Models.Invoices.Common.InvoiceType.KorVatRr => true, // RR Korygująca
+            _ => false
+        };
     }
 
     public override void Dispose()

@@ -365,4 +365,11 @@ export default class ApiUrl {
   public static AccountingDeleteInvoice = (id: string) =>
     this.AccountingInvoices + "/" + id + "/delete";
   public static AccountingSyncKSeF = this.Accounting + "/sync-ksef-invoices";
+  public static AccountingLinkableInvoices = (id: string) =>
+    this.AccountingInvoices + "/" + id + "/linkable";
+  public static AccountingLinkInvoices = this.AccountingInvoices + "/link";
+  public static AccountingAcceptNoLinking = (id: string) =>
+    this.AccountingInvoices + "/" + id + "/accept-no-linking";
+  public static AccountingPostponeLinking = (id: string) =>
+    this.AccountingInvoices + "/" + id + "/postpone-linking";
 }
