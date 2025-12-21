@@ -370,6 +370,7 @@ const AccountingPage: React.FC = () => {
           setDetailsModalOpen(false);
           setSelectedInvoice(null);
         }}
+        onSave={fetchInvoices}
         invoice={selectedInvoice}
       />
 

@@ -140,12 +140,12 @@ public class KSeFInvoiceEntity : Entity
     /// <summary>
     /// Status faktury w KSeF
     /// </summary>
-    public KSeFInvoiceStatus Status { get; init; }
+    public KSeFInvoiceStatus Status { get; private set; }
 
     /// <summary>
     /// Status płatności faktury
     /// </summary>
-    public KSeFPaymentStatus PaymentStatus { get; init; }
+    public KSeFPaymentStatus PaymentStatus { get; private set; }
 
     /// <summary>
     /// Forma płatności faktury
@@ -155,12 +155,12 @@ public class KSeFInvoiceEntity : Entity
     /// <summary>
     /// Typ odliczenia VAT
     /// </summary>
-    public KSeFVatDeductionType VatDeductionType { get; init; }
+    public KSeFVatDeductionType VatDeductionType { get; private set; }
 
     /// <summary>
     /// Przypisany moduł
     /// </summary>
-    public ModuleType ModuleType { get; init; }
+    public ModuleType ModuleType { get; private set; }
 
     /// <summary>
     /// Kwota brutto faktury
@@ -190,7 +190,7 @@ public class KSeFInvoiceEntity : Entity
     /// <summary>
     /// Numer powiązanej faktury
     /// </summary>
-    public string RelatedInvoiceNumber { get; init; }
+    public string RelatedInvoiceNumber { get; private set; }
 
     /// <summary>
     /// Identyfikator powiązanej faktury w systemie
@@ -200,7 +200,7 @@ public class KSeFInvoiceEntity : Entity
     /// <summary>
     /// Dodatkowy komentarz do faktury
     /// </summary>
-    public string Comment { get; init; }
+    public string Comment { get; private set; }
 
     /// <summary>
     /// Zawartość faktury w formacie XML (oryginał z KSeF)
@@ -210,12 +210,12 @@ public class KSeFInvoiceEntity : Entity
     /// <summary>
     /// Identyfikator pracownika przypisanego do faktury 
     /// </summary>
-    public Guid? AssignedUserId { get; init; }
+    public Guid? AssignedUserId { get; private set; }
 
     /// <summary>
     /// Identyfikator cyklu przypisanego do faktury
     /// </summary>
-    public Guid? AssignedCycleId { get; init; }
+    public Guid? AssignedCycleId { get; private set; }
 
     /// <summary>
     /// Identyfikator encji faktury
@@ -233,6 +233,16 @@ public class KSeFInvoiceEntity : Entity
     public virtual CycleEntity AssignedCycle { get; init; }
 
     /// <summary>
+    /// Identyfikator fermy (lokalizacji) przypisanej do faktury
+    /// </summary>
+    public Guid? FarmId { get; private set; }
+
+    /// <summary>
+    /// Ferma (lokalizacja) przypisana do faktury
+    /// </summary>
+    public virtual FarmEntity Farm { get; init; }
+
+    /// <summary>
     /// Identyfikator podmiotu gospodarczego przypisanego do faktury
     /// </summary>
     public Guid? TaxBusinessEntityId { get; init; }
@@ -241,4 +251,46 @@ public class KSeFInvoiceEntity : Entity
     /// Podmiot gospodarczy przypisany do faktury
     /// </summary>
     public virtual TaxBusinessEntity TaxBusinessEntity { get; init; }
+
+    /// <summary>
+    /// Aktualizuje edytowalne pola faktury
+    /// </summary>
+    public void Update(
+        KSeFInvoiceStatus? status = null,
+        KSeFPaymentStatus? paymentStatus = null,
+        ModuleType? moduleType = null,
+        KSeFVatDeductionType? vatDeductionType = null,
+        string comment = null,
+        Guid? farmId = null,
+        Guid? cycleId = null,
+        Guid? assignedUserId = null,
+        string relatedInvoiceNumber = null)
+    {
+        if (status.HasValue)
+            Status = status.Value;
+
+        if (paymentStatus.HasValue)
+            PaymentStatus = paymentStatus.Value;
+
+        if (moduleType.HasValue)
+            ModuleType = moduleType.Value;
+
+        if (vatDeductionType.HasValue)
+            VatDeductionType = vatDeductionType.Value;
+
+        if (comment != null)
+            Comment = comment;
+
+        if (farmId.HasValue)
+            FarmId = farmId.Value == Guid.Empty ? null : farmId.Value;
+
+        if (cycleId.HasValue)
+            AssignedCycleId = cycleId.Value == Guid.Empty ? null : cycleId.Value;
+
+        if (assignedUserId.HasValue)
+            AssignedUserId = assignedUserId.Value == Guid.Empty ? null : assignedUserId.Value;
+
+        if (relatedInvoiceNumber != null)
+            RelatedInvoiceNumber = relatedInvoiceNumber;
+    }
 }

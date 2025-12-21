@@ -12,11 +12,14 @@ public class KSeFInvoiceDetailsDto
     public string InvoiceType { get; set; }
     public int? CycleIdentifier { get; set; }
     public int? CycleYear { get; set; }
+    public Guid? CycleId { get; set; }
     public string Source { get; set; }
     public string Location { get; set; }
+    public Guid? FarmId { get; set; }
     public string InvoiceNumber { get; set; }
     public DateOnly InvoiceDate { get; set; }
     public string ModuleType { get; set; }
+    public string VatDeductionType { get; set; }
     public string Status { get; set; }
     public string PaymentStatus { get; set; }
     public string PaymentType { get; set; }
@@ -27,6 +30,7 @@ public class KSeFInvoiceDetailsDto
     public bool HasPdf { get; set; }
     public string InvoiceXml { get; set; }
     public string Comment { get; set; }
+    public Guid? AssignedUserId { get; set; }
     public string AssignedUserName { get; set; }
     public string RelatedInvoiceNumber { get; set; }
     public DateTime CreatedAt { get; set; }

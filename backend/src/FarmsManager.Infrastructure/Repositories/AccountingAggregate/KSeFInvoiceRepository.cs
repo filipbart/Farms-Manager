@@ -7,13 +7,12 @@ namespace FarmsManager.Infrastructure.Repositories.AccountingAggregate;
 
 public class KSeFInvoiceRepository : AbstractRepository<KSeFInvoiceEntity>, IKSeFInvoiceRepository
 {
-    private readonly FarmsManagerContext _context;
-    public IUnitOfWork UnitOfWork => _context;
+    public IUnitOfWork UnitOfWork { get; }
 
     public KSeFInvoiceRepository(FarmsManagerContext context, IConfigurationProvider configurationProvider) : base(
         context,
         configurationProvider)
     {
-        _context = context;
+        UnitOfWork = context;
     }
 }

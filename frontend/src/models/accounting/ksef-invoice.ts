@@ -44,6 +44,13 @@ export enum ModuleType {
   Other = "Other",
 }
 
+// Typ odliczenia VAT
+export enum VatDeductionType {
+  Full = "Full",
+  Half = "Half",
+  None = "None",
+}
+
 // Model faktury KSeF w liście
 export interface KSeFInvoiceListModel {
   id: string;
@@ -61,9 +68,11 @@ export interface KSeFInvoiceListModel {
   invoiceNumber: string;
   invoiceDate: string;
   moduleType: ModuleType | null;
+  vatDeductionType: VatDeductionType | null;
   status: KSeFInvoiceStatus;
   paymentStatus: KSeFPaymentStatus;
   paymentType: KSeFInvoicePaymentType;
+  comment: string | null;
   grossAmount: number;
   netAmount: number;
   vatAmount: number;
@@ -75,6 +84,10 @@ export interface KSeFInvoiceListModel {
 export interface KSeFInvoiceDetails extends KSeFInvoiceListModel {
   invoiceXml: string | null;
   comment: string | null;
+  vatDeductionType: VatDeductionType;
+  farmId: string | null;
+  cycleId: string | null;
+  assignedUserId: string | null;
   assignedUserName: string | null;
   relatedInvoiceNumber: string | null;
   createdAt: string;
@@ -123,6 +136,12 @@ export const ModuleTypeLabels: Record<ModuleType, string> = {
 export const KSeFInvoiceTypeLabels: Record<KSeFInvoiceType, string> = {
   [KSeFInvoiceType.Sales]: "Sprzedaż",
   [KSeFInvoiceType.Purchase]: "Zakup",
+};
+
+export const VatDeductionTypeLabels: Record<VatDeductionType, string> = {
+  [VatDeductionType.Full]: "100% (1/1)",
+  [VatDeductionType.Half]: "50% (1/2)",
+  [VatDeductionType.None]: "Brak",
 };
 
 // Parsed XML data interfaces

@@ -10,8 +10,10 @@ import {
   InvoiceSourceLabels,
   ModuleTypeLabels,
   KSeFInvoiceTypeLabels,
+  VatDeductionTypeLabels,
   KSeFInvoiceStatus,
   KSeFPaymentStatus,
+  VatDeductionType,
 } from "../../models/accounting/ksef-invoice";
 
 interface GetKSeFInvoicesColumnsProps {
@@ -195,6 +197,24 @@ export const getKSeFInvoicesColumns = ({
       ] ||
       value ||
       "—",
+  },
+  {
+    field: "vatDeductionType",
+    headerName: "Odliczenie VAT",
+    width: 120,
+    valueGetter: (value) =>
+      VatDeductionTypeLabels[value as VatDeductionType] || value || "—",
+  },
+  {
+    field: "comment",
+    headerName: "Komentarz",
+    width: 200,
+    valueGetter: (value) => value || "—",
+    renderCell: (params) => (
+      <Tooltip title={params.value || ""}>
+        <span className="truncate">{params.value}</span>
+      </Tooltip>
+    ),
   },
   {
     field: "grossAmount",

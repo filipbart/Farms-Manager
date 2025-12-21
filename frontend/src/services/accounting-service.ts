@@ -114,7 +114,12 @@ export class AccountingService {
       status?: string;
       paymentStatus?: string;
       moduleType?: string;
+      vatDeductionType?: string;
       comment?: string;
+      farmId?: string | null;
+      cycleId?: string | null;
+      assignedUserId?: string | null;
+      relatedInvoiceNumber?: string;
     }
   ) {
     return await AxiosWrapper.patch(

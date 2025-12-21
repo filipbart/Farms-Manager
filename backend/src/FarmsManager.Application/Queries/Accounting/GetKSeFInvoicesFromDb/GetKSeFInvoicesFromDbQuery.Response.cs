@@ -19,9 +19,11 @@ public class KSeFInvoiceFromDbDto
     public string InvoiceNumber { get; set; }
     public DateOnly InvoiceDate { get; set; }
     public string ModuleType { get; set; }
+    public string VatDeductionType { get; set; }
     public string Status { get; set; }
     public string PaymentStatus { get; set; }
     public string PaymentType { get; set; }
+    public string Comment { get; set; }
     public decimal GrossAmount { get; set; }
     public decimal NetAmount { get; set; }
     public decimal VatAmount { get; set; }

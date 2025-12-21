@@ -14,6 +14,7 @@ public sealed class GetKSeFInvoiceByIdSpec : BaseSpecification<KSeFInvoiceEntity
         Query.Where(x => x.Id == invoiceId);
         Query.Include(x => x.AssignedCycle);
         Query.Include(x => x.AssignedUser);
+        Query.Include(x => x.Farm);
         Query.Include(x => x.Creator);
     }
 }

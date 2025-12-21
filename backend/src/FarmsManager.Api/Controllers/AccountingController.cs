@@ -3,6 +3,7 @@ using FarmsManager.Api.Attributes;
 using FarmsManager.Api.Controllers.Base;
 using FarmsManager.Application.Commands.Accounting;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Permissions;
 using FarmsManager.Application.Queries.Accounting;
@@ -155,12 +156,24 @@ public class AccountingController : BaseController
     /// </summary>
     [HttpPatch("invoices/{invoiceId:guid}/update")]
     [AllowAnonymous]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateInvoice(Guid invoiceId, [FromBody] UpdateInvoiceRequest request)
     {
-        // TODO: Implementacja aktualizacji faktury
-        return Ok(new { message = "Faktura została zaktualizowana" });
+        var result = await _mediator.Send(new UpdateKSeFInvoiceCommand(invoiceId, new UpdateKSeFInvoiceDto
+        {
+            Status = request.Status,
+            PaymentStatus = request.PaymentStatus,
+            ModuleType = request.ModuleType,
+            VatDeductionType = request.VatDeductionType,
+            Comment = request.Comment,
+            FarmId = request.FarmId,
+            CycleId = request.CycleId,
+            AssignedUserId = request.AssignedUserId,
+            RelatedInvoiceNumber = request.RelatedInvoiceNumber
+        }));
+
+        return Ok(result);
     }
 
     /// <summary>
@@ -218,8 +231,13 @@ public class AccountingController : BaseController
 
 public class UpdateInvoiceRequest
 {
-    public string? Status { get; set; }
-    public string? PaymentStatus { get; set; }
-    public string? ModuleType { get; set; }
+    public KSeFInvoiceStatus? Status { get; set; }
+    public KSeFPaymentStatus? PaymentStatus { get; set; }
+    public ModuleType? ModuleType { get; set; }
+    public KSeFVatDeductionType? VatDeductionType { get; set; }
     public string? Comment { get; set; }
+    public Guid? FarmId { get; set; }
+    public Guid? CycleId { get; set; }
+    public Guid? AssignedUserId { get; set; }
+    public string? RelatedInvoiceNumber { get; set; }
 }

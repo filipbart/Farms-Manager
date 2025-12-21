@@ -15,6 +15,7 @@ public sealed class GetKSeFInvoicesFromDbSpec : BaseSpecification<KSeFInvoiceEnt
         DisableTracking();
 
         Query.Include(x => x.AssignedCycle);
+        Query.Include(x => x.Farm);
 
         PopulateFilters(filters);
         ApplyOrdering(filters);
