@@ -94,6 +94,10 @@ export default class ApiUrl {
   public static Settings = this.BaseUrl + "settings";
   public static IrzPlusCredentials =
     this.Settings + "/save-irzplus-credentials";
+  public static InvoiceAssignmentRules =
+    this.Settings + "/invoice-assignment-rules";
+  public static ReorderInvoiceAssignmentRules =
+    this.InvoiceAssignmentRules + "/reorder";
 
   public static Sales = this.BaseUrl + "sales";
   public static SalesDict = this.Sales + "/dictionary";

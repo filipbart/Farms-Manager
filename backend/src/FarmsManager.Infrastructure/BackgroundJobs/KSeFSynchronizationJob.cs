@@ -82,6 +82,7 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
         var invoiceRepository = scope.ServiceProvider.GetRequiredService<IKSeFInvoiceRepository>();
         var xmlParser = scope.ServiceProvider.GetRequiredService<IKSeFInvoiceXmlParser>();
         var dbContext = scope.ServiceProvider.GetRequiredService<FarmsManagerContext>();
+        var invoiceAssignmentService = scope.ServiceProvider.GetRequiredService<IInvoiceAssignmentService>();
 
         // Pobierz wszystkie podmioty gospodarcze do dopasowania
         var taxBusinessEntities = await dbContext.Set<TaxBusinessEntity>()
@@ -144,6 +145,14 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                     if (InvoiceRequiresLinking(invoiceSummary.InvoiceType))
                     {
                         invoiceEntity.MarkAsRequiresLinking();
+                    }
+
+                    // Automatyczne przypisanie pracownika na podstawie reguł
+                    var assignedUserId = await invoiceAssignmentService.FindAssignedUserForInvoiceAsync(invoiceEntity, cancellationToken);
+                    if (assignedUserId.HasValue)
+                    {
+                        invoiceEntity.Update(assignedUserId: assignedUserId.Value);
+                        _logger.LogDebug("Invoice {KsefNumber} auto-assigned to user {UserId}", invoiceSummary.KsefNumber, assignedUserId.Value);
                     }
 
                     await invoiceRepository.AddAsync(invoiceEntity, cancellationToken);

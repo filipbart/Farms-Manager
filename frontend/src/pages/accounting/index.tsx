@@ -268,11 +268,6 @@ const AccountingPage: React.FC = () => {
         pageSizeOptions={[10, 25, 50, 100]}
         slots={{ noRowsOverlay: NoRowsOverlay }}
         showToolbar
-        localeText={{
-          paginationRowsPerPage: "Wierszy na stronę:",
-          paginationDisplayedRows: ({ from, to, count }) =>
-            `${from} do ${to} z ${count}`,
-        }}
         sx={{
           [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },
           [`& .${tablePaginationClasses.input}`]: { display: "inline-flex" },
@@ -328,28 +323,15 @@ const AccountingPage: React.FC = () => {
       </Box>
 
       <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-        <Tabs value={tabValue} onChange={handleTabChange} variant="fullWidth">
-          <Tab
-            label={
-              <Typography variant="subtitle1" fontWeight={600}>
-                Wszystkie faktury
-              </Typography>
-            }
-          />
-          <Tab
-            label={
-              <Typography variant="subtitle1" fontWeight={600}>
-                Sprzedaż
-              </Typography>
-            }
-          />
-          <Tab
-            label={
-              <Typography variant="subtitle1" fontWeight={600}>
-                Zakupy
-              </Typography>
-            }
-          />
+        <Tabs
+          value={tabValue}
+          onChange={handleTabChange}
+          variant="scrollable"
+          scrollButtons="auto"
+        >
+          <Tab label="Wszystkie faktury" />
+          <Tab label="Sprzedaż" />
+          <Tab label="Zakupy" />
         </Tabs>
       </Box>
 

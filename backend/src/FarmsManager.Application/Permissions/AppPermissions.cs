@@ -189,5 +189,11 @@ public static class AppPermissions
         {
             [Description("Zarządzanie cyklami")] public const string Manage = "settings:cycles:manage";
         }
+
+        [PermissionGroup("Reguły przypisywania faktur")]
+        public static class InvoiceRules
+        {
+            [Description("Zarządzanie regułami przypisywania faktur")] public const string Manage = "settings:invoicerules:manage";
+        }
     }
 }

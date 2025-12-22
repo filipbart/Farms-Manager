@@ -64,6 +64,134 @@ import type { UserListModel } from "../../../models/users/users";
 import dayjs from "dayjs";
 import { parseKSeFInvoiceXml } from "../../../utils/ksef-xml-parser";
 
+// Funkcja konwertująca liczbę na słowa (po polsku)
+const numberToWords = (num: number): string => {
+  if (num === 0) return "zero";
+
+  const ones = [
+    "",
+    "jeden",
+    "dwa",
+    "trzy",
+    "cztery",
+    "pięć",
+    "sześć",
+    "siedem",
+    "osiem",
+    "dziewięć",
+  ];
+  const teens = [
+    "dziesięć",
+    "jedenaście",
+    "dwanaście",
+    "trzynaście",
+    "czternaście",
+    "piętnaście",
+    "szesnaście",
+    "siedemnaście",
+    "osiemnaście",
+    "dziewiętnaście",
+  ];
+  const tens = [
+    "",
+    "",
+    "dwadzieścia",
+    "trzydzieści",
+    "czterdzieści",
+    "pięćdziesiąt",
+    "sześćdziesiąt",
+    "siedemdziesiąt",
+    "osiemdziesiąt",
+    "dziewięćdziesiąt",
+  ];
+  const hundreds = [
+    "",
+    "sto",
+    "dwieście",
+    "trzysta",
+    "czterysta",
+    "pięćset",
+    "sześćset",
+    "siedemset",
+    "osiemset",
+    "dziewięćset",
+  ];
+
+  const convertGroup = (n: number): string => {
+    if (n === 0) return "";
+    if (n < 10) return ones[n];
+    if (n < 20) return teens[n - 10];
+    if (n < 100)
+      return tens[Math.floor(n / 10)] + (n % 10 ? " " + ones[n % 10] : "");
+    return (
+      hundreds[Math.floor(n / 100)] +
+      (n % 100 ? " " + convertGroup(n % 100) : "")
+    );
+  };
+
+  const intPart = Math.floor(num);
+  const decPart = Math.round((num - intPart) * 100);
+
+  let result = "";
+
+  if (intPart >= 1000000) {
+    const millions = Math.floor(intPart / 1000000);
+    if (millions === 1) result += "milion ";
+    else if (millions >= 2 && millions <= 4)
+      result += convertGroup(millions) + " miliony ";
+    else result += convertGroup(millions) + " milionów ";
+  }
+
+  if (intPart >= 1000) {
+    const thousands = Math.floor((intPart % 1000000) / 1000);
+    if (thousands > 0) {
+      if (thousands === 1) result += "tysiąc ";
+      else if (thousands >= 2 && thousands <= 4)
+        result += convertGroup(thousands) + " tysiące ";
+      else if (thousands >= 5 && thousands <= 21)
+        result += convertGroup(thousands) + " tysięcy ";
+      else {
+        const lastDigit = thousands % 10;
+        if (lastDigit >= 2 && lastDigit <= 4)
+          result += convertGroup(thousands) + " tysiące ";
+        else result += convertGroup(thousands) + " tysięcy ";
+      }
+    }
+  }
+
+  const remainder = intPart % 1000;
+  if (remainder > 0) result += convertGroup(remainder);
+
+  result = result.trim() + " PLN";
+
+  if (decPart > 0) {
+    result += " " + decPart.toString().padStart(2, "0") + "/100";
+  } else {
+    result += " 00/100";
+  }
+
+  return result;
+};
+
+// Funkcja obliczająca kwotę zapłaconą na podstawie statusu płatności
+const calculatePaidAmount = (
+  paymentStatus: KSeFPaymentStatus,
+  isPaidFromXml: boolean | undefined,
+  grossAmount: number
+): number => {
+  if (
+    paymentStatus === KSeFPaymentStatus.PaidCash ||
+    paymentStatus === KSeFPaymentStatus.PaidTransfer ||
+    isPaidFromXml === true
+  ) {
+    return grossAmount;
+  }
+  if (paymentStatus === KSeFPaymentStatus.PartiallyPaid) {
+    return grossAmount * 0.5; // Zakładamy 50% dla częściowej płatności
+  }
+  return 0;
+};
+
 interface InvoiceDetailsModalProps {
   open: boolean;
   onClose: () => void;
@@ -126,39 +254,65 @@ const formatAddress = (party: KSeFPartyData | undefined): string => {
   return parts.length > 0 ? parts.join(", ") : "—";
 };
 
-const PartySection: React.FC<{
-  title: string;
+const formatAddressLines = (party: KSeFPartyData | undefined): string[] => {
+  if (!party?.address) return [];
+  const lines: string[] = [];
+  if (party.address.addressLine1) lines.push(party.address.addressLine1);
+  if (party.address.addressLine2) lines.push(party.address.addressLine2);
+  return lines;
+};
+
+const InvoicePartyBox: React.FC<{
+  label: string;
   party: KSeFPartyData | undefined;
   fallbackName?: string;
   fallbackNip?: string;
-}> = ({ title, party, fallbackName, fallbackNip }) => (
-  <Accordion defaultExpanded sx={{ mb: 1 }}>
-    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-      <Typography fontWeight={600}>{title}</Typography>
-    </AccordionSummary>
-    <AccordionDetails>
-      <Box sx={{ pl: 1 }}>
-        <DetailRow label="Nazwa" value={party?.name || fallbackName} />
-        <DetailRow label="NIP" value={party?.nip || fallbackNip} />
-        {party?.vatEuNumber && (
-          <DetailRow label="NIP UE" value={party.vatEuNumber} />
-        )}
-        {party?.idNumber && (
-          <DetailRow label="Nr identyfikacyjny" value={party.idNumber} />
-        )}
-        <DetailRow label="Adres" value={formatAddress(party)} />
-        {party?.address?.gln && (
-          <DetailRow label="GLN" value={party.address.gln} />
-        )}
-        {party?.contact?.email && (
-          <DetailRow label="Email" value={party.contact.email} />
-        )}
-        {party?.contact?.phone && (
-          <DetailRow label="Telefon" value={party.contact.phone} />
-        )}
-      </Box>
-    </AccordionDetails>
-  </Accordion>
+}> = ({ label, party, fallbackName, fallbackNip }) => (
+  <Box sx={{ flex: 1 }}>
+    <Typography
+      variant="caption"
+      color="text.secondary"
+      sx={{
+        textTransform: "uppercase",
+        fontSize: "0.65rem",
+        letterSpacing: 0.5,
+      }}
+    >
+      {label}:
+    </Typography>
+    <Typography variant="body2" fontWeight={600} sx={{ mt: 0.5 }}>
+      {party?.name || fallbackName || "—"}
+    </Typography>
+    {formatAddressLines(party).map((line, idx) => (
+      <Typography key={idx} variant="body2" color="text.secondary">
+        {line}
+      </Typography>
+    ))}
+    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+      <strong>NIP:</strong> {party?.nip || fallbackNip || "—"}
+    </Typography>
+    {party?.contact?.phone && (
+      <Typography variant="body2" color="text.secondary">
+        <strong>NUMER TELEFONU:</strong> {party.contact.phone}
+      </Typography>
+    )}
+  </Box>
+);
+
+const InvoiceInfoRow: React.FC<{ label: string; value: React.ReactNode }> = ({
+  label,
+  value,
+}) => (
+  <Box sx={{ display: "flex", mb: 0.5 }}>
+    <Typography
+      variant="caption"
+      color="text.secondary"
+      sx={{ minWidth: 140, textTransform: "uppercase", fontSize: "0.65rem" }}
+    >
+      {label}:
+    </Typography>
+    <Typography variant="body2">{value || "—"}</Typography>
+  </Box>
 );
 
 interface EditFormState {
@@ -487,103 +641,524 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
           </Box>
         ) : details ? (
           <Grid container spacing={3} sx={{ mt: 1 }}>
-            {/* Left side - Invoice visualization */}
+            {/* Left side - Invoice visualization (styled like classic invoice) */}
             <Grid size={{ xs: 12, md: 7 }}>
-              <Box
+              <Paper
+                variant="outlined"
                 sx={{
-                  pr: { md: 2 },
-                  borderRight: { md: 1 },
-                  borderColor: { md: "divider" },
+                  p: 3,
+                  mr: { md: 2 },
+                  borderColor: "divider",
+                  backgroundColor: "background.paper",
                 }}
               >
-                {/* Sekcja: Podstawowe informacje */}
-                <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-                  Podstawowe informacje
-                </Typography>
-                <Box sx={{ mb: 3, pl: 2 }}>
-                  <DetailRow
-                    label="Numer faktury"
-                    value={details.invoiceNumber}
+                {/* Invoice Header */}
+                <Box sx={{ mb: 3 }}>
+                  <Typography
+                    variant="h4"
+                    sx={{
+                      color: "primary.main",
+                      fontWeight: 700,
+                      fontStyle: "italic",
+                      mb: 1,
+                    }}
+                  >
+                    Faktura
+                  </Typography>
+                  <Box
+                    sx={{
+                      display: "inline-block",
+                      bgcolor: "grey.200",
+                      px: 1.5,
+                      py: 0.5,
+                      borderRadius: 1,
+                    }}
+                  >
+                    <Typography variant="body2" fontWeight={500}>
+                      Nr {details.invoiceNumber}
+                    </Typography>
+                  </Box>
+                  {details.kSeFNumber && (
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ ml: 2 }}
+                    >
+                      KSeF: {details.kSeFNumber}
+                    </Typography>
+                  )}
+                </Box>
+
+                {/* Seller and Buyer Section - side by side */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: 4,
+                    mb: 3,
+                    pb: 2,
+                    borderBottom: 1,
+                    borderColor: "primary.main",
+                  }}
+                >
+                  <InvoicePartyBox
+                    label="Sprzedawca"
+                    party={parsedXml?.seller}
+                    fallbackName={details.sellerName}
+                    fallbackNip={details.sellerNip}
                   />
-                  <DetailRow
-                    label="Numer KSeF"
-                    value={details.kSeFNumber || "—"}
-                  />
-                  <DetailRow
-                    label="Data wystawienia"
-                    value={
-                      details.invoiceDate
-                        ? dayjs(details.invoiceDate).format("YYYY-MM-DD")
-                        : "—"
-                    }
-                  />
-                  <DetailRow
-                    label="Typ faktury"
-                    value={
-                      KSeFInvoiceTypeLabels[details.invoiceType] ||
-                      details.invoiceType
-                    }
-                  />
-                  <DetailRow
-                    label="Źródło"
-                    value={
-                      <Chip
-                        label={
-                          InvoiceSourceLabels[details.source] || details.source
-                        }
-                        size="small"
-                        color={
-                          details.source === "KSeF" ? "primary" : "default"
-                        }
-                        variant="outlined"
-                      />
-                    }
-                  />
-                  <DetailRow
-                    label="Identyfikator cyklu"
-                    value={
-                      details.cycleIdentifier && details.cycleYear
-                        ? `${details.cycleIdentifier}/${details.cycleYear}`
-                        : "—"
-                    }
+                  <InvoicePartyBox
+                    label="Nabywca"
+                    party={parsedXml?.buyer}
+                    fallbackName={details.buyerName}
+                    fallbackNip={details.buyerNip}
                   />
                 </Box>
 
-                <Divider sx={{ my: 2 }} />
-
-                {/* Sekcja: Strony transakcji */}
-                <Typography
-                  variant="subtitle1"
-                  fontWeight={600}
-                  gutterBottom
-                  sx={{ mb: 2 }}
+                {/* Dates and Payment Info Section - side by side */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: 4,
+                    mb: 3,
+                    pb: 2,
+                    borderBottom: 1,
+                    borderColor: "primary.main",
+                  }}
                 >
-                  Strony transakcji
-                </Typography>
-                <PartySection
-                  title="Sprzedawca"
-                  party={parsedXml?.seller}
-                  fallbackName={details.sellerName}
-                  fallbackNip={details.sellerNip}
-                />
-                <PartySection
-                  title="Nabywca"
-                  party={parsedXml?.buyer}
-                  fallbackName={details.buyerName}
-                  fallbackNip={details.buyerNip}
-                />
-                {parsedXml?.thirdParty && (
-                  <Accordion sx={{ mb: 1 }}>
-                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                      <Typography fontWeight={600}>
-                        Podmiot trzeci{" "}
-                        {parsedXml.thirdParty.role
-                          ? `(${parsedXml.thirdParty.role})`
-                          : ""}
+                  {/* Dates */}
+                  <Box sx={{ flex: 1 }}>
+                    <InvoiceInfoRow
+                      label="Data wystawienia"
+                      value={
+                        details.invoiceDate
+                          ? dayjs(details.invoiceDate).format("YYYY-MM-DD")
+                          : "—"
+                      }
+                    />
+                    {parsedXml?.invoiceData?.saleDate && (
+                      <InvoiceInfoRow
+                        label="Data sprzedaży"
+                        value={dayjs(parsedXml.invoiceData.saleDate).format(
+                          "YYYY-MM-DD"
+                        )}
+                      />
+                    )}
+                    {parsedXml?.payment?.dueDate && (
+                      <InvoiceInfoRow
+                        label="Termin płatności"
+                        value={dayjs(parsedXml.payment.dueDate).format(
+                          "YYYY-MM-DD"
+                        )}
+                      />
+                    )}
+                  </Box>
+                  {/* Payment Info */}
+                  <Box sx={{ flex: 1 }}>
+                    <InvoiceInfoRow
+                      label="Sposób płatności"
+                      value={
+                        parsedXml?.payment?.paymentMethod ||
+                        KSeFInvoicePaymentTypeLabels[details.paymentType] ||
+                        details.paymentType
+                      }
+                    />
+                    {parsedXml?.payment?.bankAccounts?.[0] && (
+                      <>
+                        {parsedXml.payment.bankAccounts[0].bankName && (
+                          <InvoiceInfoRow
+                            label="Bank"
+                            value={parsedXml.payment.bankAccounts[0].bankName}
+                          />
+                        )}
+                        <InvoiceInfoRow
+                          label="Numer konta"
+                          value={
+                            parsedXml.payment.bankAccounts[0].accountNumber
+                          }
+                        />
+                      </>
+                    )}
+                  </Box>
+                </Box>
+
+                {/* Line Items Table */}
+                <TableContainer sx={{ mb: 2 }}>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow
+                        sx={{
+                          bgcolor: "primary.main",
+                          "& th": { color: "white", fontWeight: 600, py: 1 },
+                        }}
+                      >
+                        <TableCell>Lp.</TableCell>
+                        <TableCell>Nazwa</TableCell>
+                        <TableCell align="center">Ilość</TableCell>
+                        <TableCell align="center">Jm</TableCell>
+                        <TableCell align="right">Cena netto</TableCell>
+                        <TableCell align="right">Wartość netto</TableCell>
+                        <TableCell align="center">Stawka VAT</TableCell>
+                        <TableCell align="right">Kwota VAT</TableCell>
+                        <TableCell align="right">Wartość brutto</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {parsedXml?.lineItems &&
+                      parsedXml.lineItems.length > 0 ? (
+                        parsedXml.lineItems.map((item) => (
+                          <TableRow key={item.lineNumber}>
+                            <TableCell>{item.lineNumber}</TableCell>
+                            <TableCell>
+                              <Typography
+                                variant="body2"
+                                sx={{ maxWidth: 180 }}
+                              >
+                                {item.name || "—"}
+                              </Typography>
+                            </TableCell>
+                            <TableCell align="center">
+                              {item.quantity?.toLocaleString("pl-PL") || "—"}
+                            </TableCell>
+                            <TableCell align="center">
+                              {item.unit || "—"}
+                            </TableCell>
+                            <TableCell align="right">
+                              {formatCurrency(item.unitPriceNet)}
+                            </TableCell>
+                            <TableCell align="right">
+                              {formatCurrency(item.netAmount)}
+                            </TableCell>
+                            <TableCell align="center">
+                              {item.vatRate !== undefined
+                                ? `${item.vatRate}%`
+                                : "zw."}
+                            </TableCell>
+                            <TableCell align="right">
+                              {(() => {
+                                // Oblicz VAT: jeśli jest grossAmount, użyj różnicy, w przeciwnym razie oblicz z vatRate
+                                if (
+                                  item.grossAmount !== undefined &&
+                                  item.netAmount !== undefined
+                                ) {
+                                  return formatCurrency(
+                                    item.grossAmount - item.netAmount
+                                  );
+                                }
+                                if (
+                                  item.netAmount !== undefined &&
+                                  item.vatRate !== undefined
+                                ) {
+                                  return formatCurrency(
+                                    item.netAmount * (item.vatRate / 100)
+                                  );
+                                }
+                                return formatCurrency(0);
+                              })()}
+                            </TableCell>
+                            <TableCell align="right">
+                              {(() => {
+                                // Oblicz brutto: jeśli jest grossAmount użyj go, w przeciwnym razie oblicz z netto + VAT
+                                if (item.grossAmount !== undefined) {
+                                  return formatCurrency(item.grossAmount);
+                                }
+                                if (item.netAmount !== undefined) {
+                                  const vatAmount =
+                                    item.vatRate !== undefined
+                                      ? item.netAmount * (item.vatRate / 100)
+                                      : 0;
+                                  return formatCurrency(
+                                    item.netAmount + vatAmount
+                                  );
+                                }
+                                return "—";
+                              })()}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={9} align="center">
+                            <Typography variant="body2" color="text.secondary">
+                              Brak pozycji do wyświetlenia
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+
+                {/* Summary Section */}
+                <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+                  {/* Total to pay box */}
+                  <Box
+                    sx={{
+                      bgcolor: "primary.main",
+                      color: "white",
+                      px: 3,
+                      py: 1.5,
+                      borderRadius: 1,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 2,
+                    }}
+                  >
+                    <Typography variant="body2" fontWeight={500}>
+                      RAZEM DO ZAPŁATY:
+                    </Typography>
+                    <Typography variant="h6" fontWeight={700}>
+                      {formatCurrency(details.grossAmount)}
+                    </Typography>
+                  </Box>
+
+                  {/* VAT Summary Table */}
+                  <Box sx={{ flex: 1 }}>
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow
+                          sx={{ "& th": { py: 0.5, fontSize: "0.75rem" } }}
+                        >
+                          <TableCell></TableCell>
+                          <TableCell align="right">Wartość netto</TableCell>
+                          <TableCell align="center">Stawka</TableCell>
+                          <TableCell align="right">Kwota VAT</TableCell>
+                          <TableCell align="right">Wartość brutto</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        <TableRow
+                          sx={{ "& td": { py: 0.5, fontSize: "0.8rem" } }}
+                        >
+                          <TableCell
+                            sx={{ color: "primary.main", fontWeight: 600 }}
+                          >
+                            Razem:
+                          </TableCell>
+                          <TableCell
+                            align="right"
+                            sx={{ color: "primary.main" }}
+                          >
+                            {formatCurrency(details.netAmount)}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            sx={{ color: "primary.main" }}
+                          >
+                            X
+                          </TableCell>
+                          <TableCell
+                            align="right"
+                            sx={{ color: "primary.main" }}
+                          >
+                            {formatCurrency(details.vatAmount)}
+                          </TableCell>
+                          <TableCell
+                            align="right"
+                            sx={{ color: "primary.main" }}
+                          >
+                            {formatCurrency(details.grossAmount)}
+                          </TableCell>
+                        </TableRow>
+                        {parsedXml?.invoiceData?.vatBreakdown?.map(
+                          (vat, idx) => (
+                            <TableRow
+                              key={idx}
+                              sx={{ "& td": { py: 0.5, fontSize: "0.75rem" } }}
+                            >
+                              <TableCell>W tym:</TableCell>
+                              <TableCell align="right">
+                                {formatCurrency(vat.netAmount)}
+                              </TableCell>
+                              <TableCell align="center">
+                                {vat.rate || "zw."}
+                              </TableCell>
+                              <TableCell align="right">
+                                {vat.vatAmount !== undefined
+                                  ? formatCurrency(vat.vatAmount)
+                                  : formatCurrency(0)}
+                              </TableCell>
+                              <TableCell align="right">
+                                {formatCurrency(
+                                  (vat.netAmount || 0) + (vat.vatAmount || 0)
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          )
+                        )}
+                      </TableBody>
+                    </Table>
+                  </Box>
+                </Box>
+
+                {/* Payment Summary */}
+                <Box sx={{ mb: 2 }}>
+                  {(() => {
+                    const paidAmount = calculatePaidAmount(
+                      details.paymentStatus,
+                      parsedXml?.payment?.isPaid,
+                      details.grossAmount || 0
+                    );
+                    const remainingAmount =
+                      (details.grossAmount || 0) - paidAmount;
+                    return (
+                      <>
+                        <Typography variant="body2">
+                          <strong>Zapłacono:</strong>{" "}
+                          {formatCurrency(paidAmount)}{" "}
+                          <strong style={{ marginLeft: 16 }}>
+                            Pozostało do zapłaty:
+                          </strong>{" "}
+                          {formatCurrency(remainingAmount)}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          <strong>Słownie:</strong>{" "}
+                          {numberToWords(details.grossAmount || 0)}
+                        </Typography>
+                      </>
+                    );
+                  })()}
+                </Box>
+
+                {/* Footer / Notes */}
+                {(parsedXml?.footer || details.comment) && (
+                  <Box
+                    sx={{
+                      mt: 2,
+                      pt: 2,
+                      borderTop: 1,
+                      borderColor: "divider",
+                    }}
+                  >
+                    <Typography variant="body2" color="text.secondary">
+                      <strong>Uwagi:</strong>
+                    </Typography>
+                    {parsedXml?.footer && (
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ whiteSpace: "pre-wrap" }}
+                      >
+                        {parsedXml.footer}
                       </Typography>
-                    </AccordionSummary>
-                    <AccordionDetails>
-                      <Box sx={{ pl: 1 }}>
+                    )}
+                    {details.comment && (
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ whiteSpace: "pre-wrap", mt: 1 }}
+                      >
+                        {details.comment}
+                      </Typography>
+                    )}
+                  </Box>
+                )}
+
+                {/* Additional Info Accordion */}
+                <Accordion sx={{ mt: 2 }}>
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                    <Typography fontWeight={600}>
+                      Dodatkowe informacje
+                    </Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
+                      <Box sx={{ minWidth: 200 }}>
+                        <DetailRow
+                          label="Typ faktury"
+                          value={
+                            KSeFInvoiceTypeLabels[details.invoiceType] ||
+                            details.invoiceType
+                          }
+                        />
+                        <DetailRow
+                          label="Źródło"
+                          value={
+                            <Chip
+                              label={
+                                InvoiceSourceLabels[details.source] ||
+                                details.source
+                              }
+                              size="small"
+                              color={
+                                details.source === "KSeF"
+                                  ? "primary"
+                                  : "default"
+                              }
+                              variant="outlined"
+                            />
+                          }
+                        />
+                        <DetailRow
+                          label="Status faktury"
+                          value={
+                            <Chip
+                              label={
+                                KSeFInvoiceStatusLabels[details.status] ||
+                                details.status
+                              }
+                              size="small"
+                              color={getStatusColor(details.status)}
+                            />
+                          }
+                        />
+                        <DetailRow
+                          label="Status płatności"
+                          value={
+                            <Chip
+                              label={
+                                KSeFPaymentStatusLabels[
+                                  details.paymentStatus
+                                ] || details.paymentStatus
+                              }
+                              size="small"
+                              color={getPaymentStatusColor(
+                                details.paymentStatus
+                              )}
+                              variant="outlined"
+                            />
+                          }
+                        />
+                      </Box>
+                      <Box sx={{ minWidth: 200 }}>
+                        <DetailRow
+                          label="Moduł"
+                          value={
+                            details.moduleType
+                              ? ModuleTypeLabels[details.moduleType] ||
+                                details.moduleType
+                              : "—"
+                          }
+                        />
+                        <DetailRow
+                          label="Lokalizacja"
+                          value={details.location}
+                        />
+                        <DetailRow
+                          label="Przypisany użytkownik"
+                          value={details.assignedUserName}
+                        />
+                        <DetailRow
+                          label="Identyfikator cyklu"
+                          value={
+                            details.cycleIdentifier && details.cycleYear
+                              ? `${details.cycleIdentifier}/${details.cycleYear}`
+                              : "—"
+                          }
+                        />
+                      </Box>
+                    </Box>
+                    {parsedXml?.thirdParty && (
+                      <Box sx={{ mt: 2 }}>
+                        <Typography
+                          variant="body2"
+                          fontWeight={600}
+                          gutterBottom
+                        >
+                          Podmiot trzeci{" "}
+                          {parsedXml.thirdParty.role
+                            ? `(${parsedXml.thirdParty.role})`
+                            : ""}
+                        </Typography>
                         <DetailRow
                           label="Nazwa"
                           value={parsedXml.thirdParty.name}
@@ -597,386 +1172,10 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                           value={formatAddress(parsedXml.thirdParty)}
                         />
                       </Box>
-                    </AccordionDetails>
-                  </Accordion>
-                )}
-
-                <Divider sx={{ my: 2 }} />
-
-                {/* Sekcja: Kwoty */}
-                <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-                  Kwoty
-                </Typography>
-                <Box sx={{ mb: 3, pl: 2 }}>
-                  <DetailRow
-                    label="Kwota brutto"
-                    value={formatCurrency(details.grossAmount)}
-                  />
-                  <DetailRow
-                    label="Kwota netto"
-                    value={formatCurrency(details.netAmount)}
-                  />
-                  <DetailRow
-                    label="Kwota VAT"
-                    value={formatCurrency(details.vatAmount)}
-                  />
-                  {parsedXml?.invoiceData?.currency && (
-                    <DetailRow
-                      label="Waluta"
-                      value={parsedXml.invoiceData.currency}
-                    />
-                  )}
-                  {parsedXml?.invoiceData?.saleDate && (
-                    <DetailRow
-                      label="Data sprzedaży"
-                      value={dayjs(parsedXml.invoiceData.saleDate).format(
-                        "YYYY-MM-DD"
-                      )}
-                    />
-                  )}
-                  {parsedXml?.invoiceData?.issuePlace && (
-                    <DetailRow
-                      label="Miejsce wystawienia"
-                      value={parsedXml.invoiceData.issuePlace}
-                    />
-                  )}
-                </Box>
-
-                {/* Sekcja: Rozbicie VAT */}
-                {parsedXml?.invoiceData?.vatBreakdown &&
-                  parsedXml.invoiceData.vatBreakdown.length > 0 && (
-                    <>
-                      <Divider sx={{ my: 2 }} />
-                      <Typography
-                        variant="subtitle1"
-                        fontWeight={600}
-                        gutterBottom
-                      >
-                        Rozbicie VAT
-                      </Typography>
-                      <TableContainer
-                        component={Paper}
-                        variant="outlined"
-                        sx={{ mb: 2 }}
-                      >
-                        <Table size="small">
-                          <TableHead>
-                            <TableRow>
-                              <TableCell>Stawka</TableCell>
-                              <TableCell align="right">Netto</TableCell>
-                              <TableCell align="right">VAT</TableCell>
-                            </TableRow>
-                          </TableHead>
-                          <TableBody>
-                            {parsedXml.invoiceData.vatBreakdown.map(
-                              (vat, idx) => (
-                                <TableRow key={idx}>
-                                  <TableCell>{vat.rate}</TableCell>
-                                  <TableCell align="right">
-                                    {formatCurrency(vat.netAmount)}
-                                  </TableCell>
-                                  <TableCell align="right">
-                                    {vat.vatAmount !== undefined
-                                      ? formatCurrency(vat.vatAmount)
-                                      : "—"}
-                                  </TableCell>
-                                </TableRow>
-                              )
-                            )}
-                          </TableBody>
-                        </Table>
-                      </TableContainer>
-                    </>
-                  )}
-
-                {/* Sekcja: Pozycje faktury */}
-                {parsedXml?.lineItems && parsedXml.lineItems.length > 0 && (
-                  <>
-                    <Divider sx={{ my: 2 }} />
-                    <Accordion>
-                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                        <Typography fontWeight={600}>
-                          Pozycje faktury ({parsedXml.lineItems.length})
-                        </Typography>
-                      </AccordionSummary>
-                      <AccordionDetails>
-                        <TableContainer component={Paper} variant="outlined">
-                          <Table size="small">
-                            <TableHead>
-                              <TableRow>
-                                <TableCell>Lp.</TableCell>
-                                <TableCell>Nazwa</TableCell>
-                                <TableCell align="right">Ilość</TableCell>
-                                <TableCell>J.m.</TableCell>
-                                <TableCell align="right">Cena netto</TableCell>
-                                <TableCell align="right">Netto</TableCell>
-                                <TableCell align="right">VAT %</TableCell>
-                                <TableCell align="right">Brutto</TableCell>
-                              </TableRow>
-                            </TableHead>
-                            <TableBody>
-                              {parsedXml.lineItems.map((item) => (
-                                <TableRow key={item.lineNumber}>
-                                  <TableCell>{item.lineNumber}</TableCell>
-                                  <TableCell sx={{ maxWidth: 200 }}>
-                                    <Typography
-                                      variant="body2"
-                                      noWrap
-                                      title={item.name}
-                                    >
-                                      {item.name || "—"}
-                                    </Typography>
-                                    {(item.pkwiu || item.gtu) && (
-                                      <Typography
-                                        variant="caption"
-                                        color="text.secondary"
-                                      >
-                                        {item.pkwiu && `PKWiU: ${item.pkwiu}`}
-                                        {item.pkwiu && item.gtu && " | "}
-                                        {item.gtu && `GTU: ${item.gtu}`}
-                                      </Typography>
-                                    )}
-                                  </TableCell>
-                                  <TableCell align="right">
-                                    {item.quantity?.toLocaleString("pl-PL") ||
-                                      "—"}
-                                  </TableCell>
-                                  <TableCell>{item.unit || "—"}</TableCell>
-                                  <TableCell align="right">
-                                    {formatCurrency(item.unitPriceNet)}
-                                  </TableCell>
-                                  <TableCell align="right">
-                                    {formatCurrency(item.netAmount)}
-                                  </TableCell>
-                                  <TableCell align="right">
-                                    {item.vatRate !== undefined
-                                      ? `${item.vatRate}%`
-                                      : "—"}
-                                  </TableCell>
-                                  <TableCell align="right">
-                                    {formatCurrency(item.grossAmount)}
-                                  </TableCell>
-                                </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </TableContainer>
-                      </AccordionDetails>
-                    </Accordion>
-                  </>
-                )}
-
-                {/* Sekcja: Płatność */}
-                {parsedXml?.payment && (
-                  <>
-                    <Divider sx={{ my: 2 }} />
-                    <Typography
-                      variant="subtitle1"
-                      fontWeight={600}
-                      gutterBottom
-                    >
-                      Dane płatności z XML
-                    </Typography>
-                    <Box sx={{ mb: 3, pl: 2 }}>
-                      {parsedXml.payment.paymentMethod && (
-                        <DetailRow
-                          label="Forma płatności"
-                          value={parsedXml.payment.paymentMethod}
-                        />
-                      )}
-                      {parsedXml.payment.dueDate && (
-                        <DetailRow
-                          label="Termin płatności"
-                          value={dayjs(parsedXml.payment.dueDate).format(
-                            "YYYY-MM-DD"
-                          )}
-                        />
-                      )}
-                      {parsedXml.payment.isPaid !== undefined && (
-                        <DetailRow
-                          label="Status zapłaty (XML)"
-                          value={
-                            <Chip
-                              label={
-                                parsedXml.payment.isPaid
-                                  ? "Zapłacono"
-                                  : "Niezapłacono"
-                              }
-                              size="small"
-                              color={
-                                parsedXml.payment.isPaid ? "success" : "default"
-                              }
-                              variant="outlined"
-                            />
-                          }
-                        />
-                      )}
-                      {parsedXml.payment.paymentDate && (
-                        <DetailRow
-                          label="Data zapłaty"
-                          value={dayjs(parsedXml.payment.paymentDate).format(
-                            "YYYY-MM-DD"
-                          )}
-                        />
-                      )}
-                      {parsedXml.payment.paymentDescription && (
-                        <DetailRow
-                          label="Opis płatności"
-                          value={parsedXml.payment.paymentDescription}
-                        />
-                      )}
-                    </Box>
-
-                    {/* Rachunki bankowe */}
-                    {parsedXml.payment.bankAccounts &&
-                      parsedXml.payment.bankAccounts.length > 0 && (
-                        <Box sx={{ pl: 2, mb: 2 }}>
-                          <Typography
-                            variant="body2"
-                            fontWeight={500}
-                            gutterBottom
-                          >
-                            Rachunki bankowe:
-                          </Typography>
-                          {parsedXml.payment.bankAccounts.map(
-                            (account, idx) => (
-                              <Box key={idx} sx={{ pl: 2, mb: 1 }}>
-                                <DetailRow
-                                  label="Nr rachunku"
-                                  value={account.accountNumber}
-                                />
-                                {account.bankName && (
-                                  <DetailRow
-                                    label="Bank"
-                                    value={account.bankName}
-                                  />
-                                )}
-                                {account.description && (
-                                  <DetailRow
-                                    label="Opis"
-                                    value={account.description}
-                                  />
-                                )}
-                              </Box>
-                            )
-                          )}
-                        </Box>
-                      )}
-                  </>
-                )}
-
-                <Divider sx={{ my: 2 }} />
-
-                {/* Sekcja: Statusy */}
-                <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-                  Statusy i płatności
-                </Typography>
-                <Box sx={{ mb: 3, pl: 2 }}>
-                  <DetailRow
-                    label="Status faktury"
-                    value={
-                      <Chip
-                        label={
-                          KSeFInvoiceStatusLabels[details.status] ||
-                          details.status
-                        }
-                        size="small"
-                        color={getStatusColor(details.status)}
-                      />
-                    }
-                  />
-                  <DetailRow
-                    label="Status płatności"
-                    value={
-                      <Chip
-                        label={
-                          KSeFPaymentStatusLabels[details.paymentStatus] ||
-                          details.paymentStatus
-                        }
-                        size="small"
-                        color={getPaymentStatusColor(details.paymentStatus)}
-                        variant="outlined"
-                      />
-                    }
-                  />
-                  <DetailRow
-                    label="Typ płatności"
-                    value={
-                      KSeFInvoicePaymentTypeLabels[details.paymentType] ||
-                      details.paymentType
-                    }
-                  />
-                </Box>
-
-                <Divider sx={{ my: 2 }} />
-
-                {/* Sekcja: Przypisania */}
-                <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-                  Przypisania i dodatkowe
-                </Typography>
-                <Box sx={{ mb: 3, pl: 2 }}>
-                  <DetailRow
-                    label="Moduł"
-                    value={
-                      details.moduleType
-                        ? ModuleTypeLabels[details.moduleType] ||
-                          details.moduleType
-                        : "—"
-                    }
-                  />
-                  <DetailRow label="Lokalizacja" value={details.location} />
-                  <DetailRow
-                    label="Przypisany użytkownik"
-                    value={details.assignedUserName}
-                  />
-                  <DetailRow
-                    label="Powiązana faktura"
-                    value={details.relatedInvoiceNumber}
-                  />
-                </Box>
-
-                {details.comment && (
-                  <>
-                    <Divider sx={{ my: 2 }} />
-                    <Typography
-                      variant="subtitle1"
-                      fontWeight={600}
-                      gutterBottom
-                    >
-                      Komentarz
-                    </Typography>
-                    <Box sx={{ pl: 2 }}>
-                      <Typography
-                        variant="body2"
-                        sx={{ whiteSpace: "pre-wrap" }}
-                      >
-                        {details.comment}
-                      </Typography>
-                    </Box>
-                  </>
-                )}
-
-                {parsedXml?.footer && (
-                  <>
-                    <Divider sx={{ my: 2 }} />
-                    <Typography
-                      variant="subtitle1"
-                      fontWeight={600}
-                      gutterBottom
-                    >
-                      Stopka faktury
-                    </Typography>
-                    <Box sx={{ pl: 2 }}>
-                      <Typography
-                        variant="body2"
-                        sx={{ whiteSpace: "pre-wrap" }}
-                      >
-                        {parsedXml.footer}
-                      </Typography>
-                    </Box>
-                  </>
-                )}
-              </Box>
+                    )}
+                  </AccordionDetails>
+                </Accordion>
+              </Paper>
             </Grid>
 
             {/* Right side - Edit panel */}
