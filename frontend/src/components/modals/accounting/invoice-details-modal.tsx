@@ -31,6 +31,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import CheckIcon from "@mui/icons-material/Check";
 import PauseIcon from "@mui/icons-material/Pause";
 import CloseIcon from "@mui/icons-material/Close";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { toast } from "react-toastify";
 import AppDialog from "../../common/app-dialog";
 import { AccountingService } from "../../../services/accounting-service";
@@ -262,6 +263,48 @@ const formatAddressLines = (party: KSeFPartyData | undefined): string[] => {
   return lines;
 };
 
+const CopyableText: React.FC<{
+  value: string | undefined | null;
+  children?: React.ReactNode;
+}> = ({ value, children }) => {
+  const handleCopy = () => {
+    if (value) {
+      navigator.clipboard.writeText(value);
+      toast.success("Skopiowano do schowka", { autoClose: 1500 });
+    }
+  };
+
+  if (!value) {
+    return <>{children || "—"}</>;
+  }
+
+  return (
+    <Box
+      component="span"
+      onClick={handleCopy}
+      sx={{
+        cursor: "pointer",
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 0.5,
+        "&:hover": {
+          color: "primary.main",
+          "& .copy-icon": {
+            opacity: 1,
+          },
+        },
+      }}
+      title="Kliknij, aby skopiować"
+    >
+      {children || value}
+      <ContentCopyIcon
+        className="copy-icon"
+        sx={{ fontSize: 14, opacity: 0, transition: "opacity 0.2s" }}
+      />
+    </Box>
+  );
+};
+
 const InvoicePartyBox: React.FC<{
   label: string;
   party: KSeFPartyData | undefined;
@@ -281,28 +324,37 @@ const InvoicePartyBox: React.FC<{
       {label}:
     </Typography>
     <Typography variant="body2" fontWeight={600} sx={{ mt: 0.5 }}>
-      {party?.name || fallbackName || "—"}
+      <CopyableText value={party?.name || fallbackName}>
+        {party?.name || fallbackName || "—"}
+      </CopyableText>
     </Typography>
     {formatAddressLines(party).map((line, idx) => (
       <Typography key={idx} variant="body2" color="text.secondary">
-        {line}
+        <CopyableText value={line}>{line}</CopyableText>
       </Typography>
     ))}
     <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-      <strong>NIP:</strong> {party?.nip || fallbackNip || "—"}
+      <strong>NIP:</strong>{" "}
+      <CopyableText value={party?.nip || fallbackNip}>
+        {party?.nip || fallbackNip || "—"}
+      </CopyableText>
     </Typography>
     {party?.contact?.phone && (
       <Typography variant="body2" color="text.secondary">
-        <strong>NUMER TELEFONU:</strong> {party.contact.phone}
+        <strong>NUMER TELEFONU:</strong>{" "}
+        <CopyableText value={party.contact.phone}>
+          {party.contact.phone}
+        </CopyableText>
       </Typography>
     )}
   </Box>
 );
 
-const InvoiceInfoRow: React.FC<{ label: string; value: React.ReactNode }> = ({
-  label,
-  value,
-}) => (
+const InvoiceInfoRow: React.FC<{
+  label: string;
+  value: React.ReactNode;
+  copyValue?: string;
+}> = ({ label, value, copyValue }) => (
   <Box sx={{ display: "flex", mb: 0.5 }}>
     <Typography
       variant="caption"
@@ -311,7 +363,13 @@ const InvoiceInfoRow: React.FC<{ label: string; value: React.ReactNode }> = ({
     >
       {label}:
     </Typography>
-    <Typography variant="body2">{value || "—"}</Typography>
+    <Typography variant="body2">
+      {copyValue ? (
+        <CopyableText value={copyValue}>{value || "—"}</CopyableText>
+      ) : (
+        value || "—"
+      )}
+    </Typography>
   </Box>
 );
 
@@ -642,7 +700,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
         ) : details ? (
           <Grid container spacing={3} sx={{ mt: 1 }}>
             {/* Left side - Invoice visualization (styled like classic invoice) */}
-            <Grid size={{ xs: 12, md: 7 }}>
+            <Grid size={{ xs: 12, md: 8 }}>
               <Paper
                 variant="outlined"
                 sx={{
@@ -675,7 +733,10 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                     }}
                   >
                     <Typography variant="body2" fontWeight={500}>
-                      Nr {details.invoiceNumber}
+                      Nr{" "}
+                      <CopyableText value={details.invoiceNumber}>
+                        {details.invoiceNumber}
+                      </CopyableText>
                     </Typography>
                   </Box>
                   {details.kSeFNumber && (
@@ -684,7 +745,10 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                       color="text.secondary"
                       sx={{ ml: 2 }}
                     >
-                      KSeF: {details.kSeFNumber}
+                      KSeF:{" "}
+                      <CopyableText value={details.kSeFNumber}>
+                        {details.kSeFNumber}
+                      </CopyableText>
                     </Typography>
                   )}
                 </Box>
@@ -734,11 +798,19 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                           ? dayjs(details.invoiceDate).format("YYYY-MM-DD")
                           : "—"
                       }
+                      copyValue={
+                        details.invoiceDate
+                          ? dayjs(details.invoiceDate).format("YYYY-MM-DD")
+                          : undefined
+                      }
                     />
                     {parsedXml?.invoiceData?.saleDate && (
                       <InvoiceInfoRow
                         label="Data sprzedaży"
                         value={dayjs(parsedXml.invoiceData.saleDate).format(
+                          "YYYY-MM-DD"
+                        )}
+                        copyValue={dayjs(parsedXml.invoiceData.saleDate).format(
                           "YYYY-MM-DD"
                         )}
                       />
@@ -747,6 +819,9 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                       <InvoiceInfoRow
                         label="Termin płatności"
                         value={dayjs(parsedXml.payment.dueDate).format(
+                          "YYYY-MM-DD"
+                        )}
+                        copyValue={dayjs(parsedXml.payment.dueDate).format(
                           "YYYY-MM-DD"
                         )}
                       />
@@ -768,11 +843,17 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                           <InvoiceInfoRow
                             label="Bank"
                             value={parsedXml.payment.bankAccounts[0].bankName}
+                            copyValue={
+                              parsedXml.payment.bankAccounts[0].bankName
+                            }
                           />
                         )}
                         <InvoiceInfoRow
                           label="Numer konta"
                           value={
+                            parsedXml.payment.bankAccounts[0].accountNumber
+                          }
+                          copyValue={
                             parsedXml.payment.bankAccounts[0].accountNumber
                           }
                         />
@@ -907,7 +988,9 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                       RAZEM DO ZAPŁATY:
                     </Typography>
                     <Typography variant="h6" fontWeight={700}>
-                      {formatCurrency(details.grossAmount)}
+                      <CopyableText value={details.grossAmount?.toFixed(2)}>
+                        {formatCurrency(details.grossAmount)}
+                      </CopyableText>
                     </Typography>
                   </Box>
 
@@ -938,7 +1021,9 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                             align="right"
                             sx={{ color: "primary.main" }}
                           >
-                            {formatCurrency(details.netAmount)}
+                            <CopyableText value={details.netAmount?.toFixed(2)}>
+                              {formatCurrency(details.netAmount)}
+                            </CopyableText>
                           </TableCell>
                           <TableCell
                             align="center"
@@ -950,13 +1035,19 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                             align="right"
                             sx={{ color: "primary.main" }}
                           >
-                            {formatCurrency(details.vatAmount)}
+                            <CopyableText value={details.vatAmount?.toFixed(2)}>
+                              {formatCurrency(details.vatAmount)}
+                            </CopyableText>
                           </TableCell>
                           <TableCell
                             align="right"
                             sx={{ color: "primary.main" }}
                           >
-                            {formatCurrency(details.grossAmount)}
+                            <CopyableText
+                              value={details.grossAmount?.toFixed(2)}
+                            >
+                              {formatCurrency(details.grossAmount)}
+                            </CopyableText>
                           </TableCell>
                         </TableRow>
                         {parsedXml?.invoiceData?.vatBreakdown?.map(
@@ -1179,7 +1270,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
             </Grid>
 
             {/* Right side - Edit panel */}
-            <Grid size={{ xs: 12, md: 5 }}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <Box sx={{ pl: { md: 2 } }}>
                 <Typography variant="subtitle1" fontWeight={600} gutterBottom>
                   Edycja faktury
