@@ -469,6 +469,11 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
               icon={<MdTimelapse />}
             />
           )}
+          <SidebarMenuItem
+            to="/settings/invoice-assignment-rules"
+            title="Reguły faktur"
+            icon={<FaGear />}
+          />
         </SidebarMenuItem>
       )}
     </List>

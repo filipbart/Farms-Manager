@@ -31,6 +31,7 @@ import EmployeePayslipsPage from "../pages/employees/payslips";
 import UserProfilePage from "../pages/user-profile";
 import SalesInvoicesPage from "../pages/sales/invoices";
 import SettingsCyclesPage from "../pages/settings/cycle-settings";
+import InvoiceAssignmentRulesPage from "../pages/settings/invoice-assignment-rules";
 import ExpenseAdvancesPage from "../pages/expenses/advances";
 import ExpenseAdvanceDetailsPage from "../pages/expenses/advances/details";
 import UtilizationPlantsPage from "../pages/data/utilization-plants";
@@ -184,6 +185,10 @@ const DefaultRouter: React.FC = () => {
         <Route
           path={getRoute(RouteName.SettingsCycles)}
           element={<SettingsCyclesPage />}
+        />
+        <Route
+          path={getRoute(RouteName.SettingsInvoiceAssignmentRules)}
+          element={<InvoiceAssignmentRulesPage />}
         />
         <Route
           path={getRoute(RouteName.Forbidden)}
