@@ -113,6 +113,11 @@ public class KSeFInvoiceEntity : Entity
     public DateOnly InvoiceDate { get; init; }
 
     /// <summary>
+    /// Termin płatności faktury
+    /// </summary>
+    public DateOnly? PaymentDueDate { get; init; }
+
+    /// <summary>
     /// NIP sprzedawcy
     /// </summary>
     public string SellerNip { get; init; }

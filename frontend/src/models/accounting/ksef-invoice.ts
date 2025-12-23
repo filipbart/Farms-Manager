@@ -75,6 +75,7 @@ export interface KSeFInvoiceListModel {
   location: string | null;
   invoiceNumber: string;
   invoiceDate: string;
+  paymentDueDate: string | null;
   moduleType: ModuleType | null;
   vatDeductionType: VatDeductionType | null;
   status: KSeFInvoiceStatus;

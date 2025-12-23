@@ -45,16 +45,48 @@ public sealed class GetKSeFInvoicesFromDbSpec : BaseSpecification<KSeFInvoiceEnt
                 : KSeFInvoiceSource.Manual;
             Query.Where(x => x.InvoiceSource == source);
         }
-
-        // Filtrowanie po dacie
-        if (filters.DateFrom.HasValue)
+        
+        // Filtrowanie po nazwie nabywcy
+        if (filters.BuyerName.IsNotEmpty())
         {
-            Query.Where(x => x.InvoiceDate >= filters.DateFrom.Value);
+            var phrase = $"%{filters.BuyerName}%";
+            Query.Where(x => EF.Functions.ILike(x.BuyerName, phrase));
         }
         
-        if (filters.DateTo.HasValue)
+        // Filtrowanie po nazwie sprzedawcy
+        if (filters.SellerName.IsNotEmpty())
         {
-            Query.Where(x => x.InvoiceDate <= filters.DateTo.Value);
+            var phrase = $"%{filters.SellerName}%";
+            Query.Where(x => EF.Functions.ILike(x.SellerName, phrase));
+        }
+        
+        // Filtrowanie po numerze faktury
+        if (filters.InvoiceNumber.IsNotEmpty())
+        {
+            var phrase = $"%{filters.InvoiceNumber}%";
+            Query.Where(x => EF.Functions.ILike(x.InvoiceNumber, phrase));
+        }
+
+        // Filtrowanie po dacie wystawienia
+        if (filters.InvoiceDateFrom.HasValue)
+        {
+            Query.Where(x => x.InvoiceDate >= filters.InvoiceDateFrom.Value);
+        }
+        
+        if (filters.InvoiceDateTo.HasValue)
+        {
+            Query.Where(x => x.InvoiceDate <= filters.InvoiceDateTo.Value);
+        }
+        
+        // Filtrowanie po terminie płatności
+        if (filters.PaymentDueDateFrom.HasValue)
+        {
+            Query.Where(x => x.PaymentDueDate >= filters.PaymentDueDateFrom.Value);
+        }
+        
+        if (filters.PaymentDueDateTo.HasValue)
+        {
+            Query.Where(x => x.PaymentDueDate <= filters.PaymentDueDateTo.Value);
         }
 
         // Filtrowanie po statusie
@@ -73,7 +105,7 @@ public sealed class GetKSeFInvoicesFromDbSpec : BaseSpecification<KSeFInvoiceEnt
             Query.Where(x => x.ModuleType == filters.ModuleType.Value);
         }
 
-        // Wyszukiwanie tekstowe
+        // Wyszukiwanie tekstowe (ogólne)
         if (filters.SearchQuery.IsNotEmpty())
         {
             var phrase = $"%{filters.SearchQuery}%";
@@ -125,6 +157,11 @@ public sealed class GetKSeFInvoicesFromDbSpec : BaseSpecification<KSeFInvoiceEnt
             case KSeFInvoicesFromDbOrderBy.PaymentStatus:
                 if (isDescending) Query.OrderByDescending(x => x.PaymentStatus);
                 else Query.OrderBy(x => x.PaymentStatus);
+                break;
+                
+            case KSeFInvoicesFromDbOrderBy.PaymentDueDate:
+                if (isDescending) Query.OrderByDescending(x => x.PaymentDueDate);
+                else Query.OrderBy(x => x.PaymentDueDate);
                 break;
                 
             case KSeFInvoicesFromDbOrderBy.InvoiceDate:

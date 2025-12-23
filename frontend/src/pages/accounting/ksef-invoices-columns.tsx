@@ -148,6 +148,13 @@ export const getKSeFInvoicesColumns = ({
       value ? dayjs(value).format("YYYY-MM-DD") : "—",
   },
   {
+    field: "paymentDueDate",
+    headerName: "Termin płatności",
+    width: 140,
+    valueGetter: (value: string | null) =>
+      value ? dayjs(value).format("YYYY-MM-DD") : "—",
+  },
+  {
     field: "moduleType",
     headerName: "Moduł",
     width: 150,
@@ -251,7 +258,7 @@ export const getKSeFInvoicesColumns = ({
             <IconButton
               size="small"
               onClick={() => onDownloadPdf(params.row)}
-              disabled={!params.row.hasPdf || isDownloading}
+              disabled={isDownloading}
               color="error"
             >
               <MdPictureAsPdf />

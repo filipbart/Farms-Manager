@@ -19,6 +19,8 @@ import {
   ksefFiltersReducer,
   initialKSeFFilters,
   type KSeFInvoicesFilters,
+  KSeFInvoicesOrderType,
+  mapKSeFOrderTypeToField,
 } from "../../models/accounting/ksef-filters";
 import {
   KSeFInvoiceType,
@@ -29,6 +31,12 @@ import InvoiceDetailsModal from "../../components/modals/accounting/invoice-deta
 import UploadInvoiceModal from "../../components/modals/accounting/upload-invoice-modal";
 import SaveAccountingInvoiceModal from "../../components/modals/accounting/save-accounting-invoice-modal";
 import type { DraftAccountingInvoice } from "../../services/accounting-service";
+import FiltersForm from "../../components/filters/filters-form";
+import { getAccountingFiltersConfig } from "./filter-config.accounting";
+import {
+  getSortOptionsFromGridModel,
+  initializeFiltersFromLocalStorage,
+} from "../../utils/grid-state-helper";
 
 interface TabPanelProps {
   children: React.ReactNode;
@@ -69,37 +77,40 @@ const AccountingPage: React.FC = () => {
   const [allFilters, dispatchAllFilters] = useReducer(
     ksefFiltersReducer,
     initialKSeFFilters,
-    (init) => {
-      const savedPageSize = localStorage.getItem("accountingAllPageSize");
-      return {
-        ...init,
-        pageSize: savedPageSize ? parseInt(savedPageSize, 10) : init.pageSize,
-      };
-    }
+    (init) =>
+      initializeFiltersFromLocalStorage(
+        init,
+        "accountingAllGridState",
+        "accountingAllPageSize",
+        KSeFInvoicesOrderType,
+        mapKSeFOrderTypeToField
+      )
   );
 
   const [salesFilters, dispatchSalesFilters] = useReducer(
     ksefFiltersReducer,
     { ...initialKSeFFilters, invoiceType: KSeFInvoiceType.Sales },
-    (init) => {
-      const savedPageSize = localStorage.getItem("accountingSalesPageSize");
-      return {
-        ...init,
-        pageSize: savedPageSize ? parseInt(savedPageSize, 10) : init.pageSize,
-      };
-    }
+    (init) =>
+      initializeFiltersFromLocalStorage(
+        { ...init, invoiceType: KSeFInvoiceType.Sales },
+        "accountingSalesGridState",
+        "accountingSalesPageSize",
+        KSeFInvoicesOrderType,
+        mapKSeFOrderTypeToField
+      )
   );
 
   const [purchaseFilters, dispatchPurchaseFilters] = useReducer(
     ksefFiltersReducer,
     { ...initialKSeFFilters, invoiceType: KSeFInvoiceType.Purchase },
-    (init) => {
-      const savedPageSize = localStorage.getItem("accountingPurchasePageSize");
-      return {
-        ...init,
-        pageSize: savedPageSize ? parseInt(savedPageSize, 10) : init.pageSize,
-      };
-    }
+    (init) =>
+      initializeFiltersFromLocalStorage(
+        { ...init, invoiceType: KSeFInvoiceType.Purchase },
+        "accountingPurchaseGridState",
+        "accountingPurchasePageSize",
+        KSeFInvoicesOrderType,
+        mapKSeFOrderTypeToField
+      )
   );
 
   const getCurrentFilters = useCallback((): {
@@ -275,16 +286,18 @@ const AccountingPage: React.FC = () => {
         }}
         sortingMode="server"
         onSortModelChange={(model) => {
-          if (model.length > 0) {
-            dispatch({
-              type: "setMultiple",
-              payload: {
-                orderBy: model[0].field,
-                isDescending: model[0].sort === "desc",
-                page: 0,
-              },
-            });
-          }
+          const sortOptions = getSortOptionsFromGridModel(
+            model,
+            KSeFInvoicesOrderType,
+            mapKSeFOrderTypeToField
+          );
+          const payload =
+            model.length > 0 ? { ...sortOptions, page: 0 } : { ...sortOptions };
+
+          dispatch({
+            type: "setMultiple",
+            payload,
+          });
         }}
       />
     );
@@ -336,13 +349,28 @@ const AccountingPage: React.FC = () => {
       </Box>
 
       <TabPanel value={tabValue} index={0}>
-        {renderDataGrid()}
+        <FiltersForm
+          config={getAccountingFiltersConfig()}
+          filters={allFilters}
+          dispatch={dispatchAllFilters}
+        />
+        <Box mt={3}>{renderDataGrid()}</Box>
       </TabPanel>
       <TabPanel value={tabValue} index={1}>
-        {renderDataGrid()}
+        <FiltersForm
+          config={getAccountingFiltersConfig()}
+          filters={salesFilters}
+          dispatch={dispatchSalesFilters}
+        />
+        <Box mt={3}>{renderDataGrid()}</Box>
       </TabPanel>
       <TabPanel value={tabValue} index={2}>
-        {renderDataGrid()}
+        <FiltersForm
+          config={getAccountingFiltersConfig()}
+          filters={purchaseFilters}
+          dispatch={dispatchPurchaseFilters}
+        />
+        <Box mt={3}>{renderDataGrid()}</Box>
       </TabPanel>
 
       {/* Modals */}

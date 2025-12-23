@@ -9,6 +9,7 @@ using FarmsManager.Application.Permissions;
 using FarmsManager.Application.Queries.Accounting;
 using FarmsManager.Application.Queries.Accounting.GetKSeFInvoiceDetails;
 using FarmsManager.Application.Queries.Accounting.GetKSeFInvoicesFromDb;
+using FarmsManager.Application.Queries.Accounting.GetKSeFInvoicePdf;
 using FarmsManager.Application.Queries.Accounting.GetKSeFInvoiceXml;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -91,7 +92,7 @@ public class AccountingController : BaseController
     }
 
     /// <summary>
-    /// Pobiera PDF faktury (placeholder - wymaga implementacji generowania PDF)
+    /// Pobiera PDF faktury wygenerowany z danych faktury
     /// </summary>
     [HttpGet("invoices/{invoiceId:guid}/pdf")]
     [AllowAnonymous]
@@ -99,17 +100,15 @@ public class AccountingController : BaseController
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DownloadInvoicePdf(Guid invoiceId)
     {
-        // Sprawdzamy czy faktura istnieje
-        var result = await _mediator.Send(new GetKSeFInvoiceDetailsQuery(invoiceId));
-
-        if (!result.Success)
+        try
+        {
+            var result = await _mediator.Send(new GetKSeFInvoicePdfQuery(invoiceId));
+            return File(result.Data, result.ContentType, result.FileName);
+        }
+        catch (Exception ex) when (ex.Message.Contains("nie została znaleziona"))
         {
             return NotFound(new { error = "Faktura nie została znaleziona" });
         }
-
-        // TODO: Implementacja generowania PDF z XML lub przechowywania PDF
-        // Na razie zwracamy błąd że PDF nie jest dostępny
-        return NotFound(new { error = "PDF faktury nie jest jeszcze dostępny. Użyj opcji pobrania XML." });
     }
 
     /// <summary>

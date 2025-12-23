@@ -14,7 +14,8 @@ public enum KSeFInvoicesFromDbOrderBy
     BuyerName,
     KSeFNumber,
     Status,
-    PaymentStatus
+    PaymentStatus,
+    PaymentDueDate
 }
 
 /// <summary>
@@ -72,14 +73,39 @@ public record GetKSeFInvoicesFromDbQueryFilters : OrderedPaginationParams<KSeFIn
     public InvoiceSourceFilter? Source { get; init; }
     
     /// <summary>
-    /// Data początkowa zakresu wyszukiwania
+    /// Filtrowanie po nazwie nabywcy
     /// </summary>
-    public DateOnly? DateFrom { get; init; }
+    public string BuyerName { get; init; }
     
     /// <summary>
-    /// Data końcowa zakresu wyszukiwania
+    /// Filtrowanie po nazwie sprzedawcy
     /// </summary>
-    public DateOnly? DateTo { get; init; }
+    public string SellerName { get; init; }
+    
+    /// <summary>
+    /// Filtrowanie po numerze faktury
+    /// </summary>
+    public string InvoiceNumber { get; init; }
+    
+    /// <summary>
+    /// Data wystawienia - początek zakresu
+    /// </summary>
+    public DateOnly? InvoiceDateFrom { get; init; }
+    
+    /// <summary>
+    /// Data wystawienia - koniec zakresu
+    /// </summary>
+    public DateOnly? InvoiceDateTo { get; init; }
+    
+    /// <summary>
+    /// Termin płatności - początek zakresu
+    /// </summary>
+    public DateOnly? PaymentDueDateFrom { get; init; }
+    
+    /// <summary>
+    /// Termin płatności - koniec zakresu
+    /// </summary>
+    public DateOnly? PaymentDueDateTo { get; init; }
     
     /// <summary>
     /// Wyszukiwanie po tekście (numer faktury, NIP, nazwa kontrahenta)
