@@ -19,6 +19,7 @@ public record AddExpenseProductionData
     public Guid FarmId { get; init; }
     public Guid CycleId { get; init; }
     public Guid ExpenseContractorId { get; init; }
+    public Guid ExpenseTypeId { get; init; }
     public string InvoiceNumber { get; init; }
     public decimal InvoiceTotal { get; init; }
     public decimal SubTotal { get; init; }
@@ -62,8 +63,8 @@ public class AddExpenseProductionCommandHandler : IRequestHandler<AddExpenseProd
                 new GetExpenseContractorByIdSpec(request.Data.ExpenseContractorId), ct);
 
         var newExpenseProduction = ExpenseProductionEntity.CreateNew(farm.Id, cycle.Id, expenseContractor.Id,
-            request.Data.InvoiceNumber, request.Data.InvoiceTotal, request.Data.SubTotal, request.Data.VatAmount,
-            request.Data.InvoiceDate, request.Data.Comment, userId);
+            request.Data.ExpenseTypeId, request.Data.InvoiceNumber, request.Data.InvoiceTotal, request.Data.SubTotal, 
+            request.Data.VatAmount, request.Data.InvoiceDate, request.Data.Comment, userId);
 
         if (request.Data.File != null)
         {
@@ -91,6 +92,7 @@ public class AddExpenseProductionCommandValidator : AbstractValidator<AddExpense
         RuleFor(t => t.Data.FarmId).NotEmpty();
         RuleFor(t => t.Data.CycleId).NotEmpty();
         RuleFor(t => t.Data.ExpenseContractorId).NotEmpty();
+        RuleFor(t => t.Data.ExpenseTypeId).NotEmpty();
         RuleFor(t => t.Data.InvoiceNumber).NotEmpty();
         RuleFor(t => t.Data.Comment).MaximumLength(500);
     }

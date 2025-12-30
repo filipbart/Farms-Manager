@@ -74,6 +74,7 @@ public class
             farm.Id,
             cycle.Id,
             contractor.Id,
+            request.Data.ExpenseTypeId!.Value,
             request.Data.InvoiceNumber!,
             request.Data.InvoiceTotal!.Value,
             request.Data.SubTotal!.Value,
@@ -89,12 +90,6 @@ public class
         await _expenseProductionRepository.AddAsync(newExpenseProduction, ct);
 
         await _s3Service.MoveFileAsync(FileType.ExpenseProduction, request.FilePath, newPath);
-
-        if (contractor.ExpenseTypeId is null)
-        {
-            contractor.SetExpenseType(request.Data.ExpenseTypeId!.Value);
-            await _expenseContractorRepository.UpdateAsync(contractor, ct);
-        }
 
         return response;
     }

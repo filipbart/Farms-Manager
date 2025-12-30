@@ -223,9 +223,9 @@ public class KSeFInvoiceEntity : Entity
     public Guid? AssignedCycleId { get; private set; }
 
     /// <summary>
-    /// Identyfikator encji faktury
+    /// Identyfikator encji faktury w module (np. FeedInvoice, GasDelivery, ExpenseProduction, SaleInvoice)
     /// </summary>
-    public Guid? AssignedEntityInvoiceId { get; init; }
+    public Guid? AssignedEntityInvoiceId { get; private set; }
 
     /// <summary>
     /// Pracownik przypisany do faktury
@@ -373,5 +373,22 @@ public class KSeFInvoiceEntity : Entity
     {
         LinkingReminderDate = DateTime.UtcNow.AddDays(days);
         LinkingReminderCount++;
+    }
+
+    /// <summary>
+    /// Ustawia identyfikator encji w module (np. FeedInvoice, GasDelivery, ExpenseProduction, SaleInvoice)
+    /// </summary>
+    /// <param name="entityId">Identyfikator encji w module lub null aby usunąć powiązanie</param>
+    public void SetAssignedEntityInvoiceId(Guid? entityId)
+    {
+        AssignedEntityInvoiceId = entityId;
+    }
+
+    /// <summary>
+    /// Czyści powiązanie z encją modułową (ustawia AssignedEntityInvoiceId na null)
+    /// </summary>
+    public void ClearAssignedEntityInvoiceId()
+    {
+        AssignedEntityInvoiceId = null;
     }
 }

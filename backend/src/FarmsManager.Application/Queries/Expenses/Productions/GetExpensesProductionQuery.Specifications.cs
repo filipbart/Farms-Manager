@@ -17,7 +17,8 @@ public sealed class GetAllExpenseProductionsSpec : BaseSpecification<ExpenseProd
         PopulateFilters(filters);
         ApplyOrdering(filters);
 
-        Query.Include(t => t.ExpenseContractor).ThenInclude(t => t.ExpenseType);
+        Query.Include(t => t.ExpenseContractor);
+        Query.Include(t => t.ExpenseType);
         Query.Include(t => t.Farm);
         Query.Include(t => t.Creator);
         Query.Include(t => t.Modifier);
@@ -46,9 +47,7 @@ public sealed class GetAllExpenseProductionsSpec : BaseSpecification<ExpenseProd
 
         if (filters.ExpensesTypesIds is not null && filters.ExpensesTypesIds.Count != 0)
         {
-            Query.Where(ep =>
-                ep.ExpenseContractor.ExpenseTypeId.HasValue &&
-                filters.ExpensesTypesIds.Contains(ep.ExpenseContractor.ExpenseTypeId.Value));
+            Query.Where(ep => filters.ExpensesTypesIds.Contains(ep.ExpenseTypeId));
         }
 
         if (filters.CyclesDict is not null && filters.CyclesDict.Count != 0)
@@ -125,11 +124,11 @@ public sealed class GetAllExpenseProductionsSpec : BaseSpecification<ExpenseProd
             case ExpensesProductionsOrderBy.ExpenseType:
                 if (isDescending)
                 {
-                    Query.OrderByDescending(ep => ep.ExpenseContractor.ExpenseType.Name);
+                    Query.OrderByDescending(ep => ep.ExpenseType.Name);
                 }
                 else
                 {
-                    Query.OrderBy(ep => ep.ExpenseContractor.ExpenseType.Name);
+                    Query.OrderBy(ep => ep.ExpenseType.Name);
                 }
 
                 break;

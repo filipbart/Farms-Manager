@@ -39,7 +39,7 @@ public class DeleteExpenseTypeCommandHandler : IRequestHandler<DeleteExpenseType
         {
             foreach (var expenseContractorEntity in contractors)
             {
-                expenseContractorEntity.SetExpenseType(null);
+                expenseContractorEntity.RemoveExpenseType(request.ExpenseTypeId);
                 expenseContractorEntity.SetModified(userId);
             }
 
@@ -68,7 +68,7 @@ public sealed class GetContractorsByExpenseTypeSpec : BaseSpecification<ExpenseC
     public GetContractorsByExpenseTypeSpec(Guid expenseTypeId)
     {
         EnsureExists();
-
-        Query.Where(t => t.ExpenseTypeId == expenseTypeId);
+        Query.Include(t => t.ExpenseTypes);
+        Query.Where(t => t.ExpenseTypes.Any(et => et.ExpenseTypeId == expenseTypeId));
     }
 }

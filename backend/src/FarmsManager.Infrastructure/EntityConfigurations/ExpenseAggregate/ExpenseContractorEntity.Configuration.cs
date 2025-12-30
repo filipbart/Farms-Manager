@@ -11,8 +11,5 @@ public class ExpenseContractorEntityConfiguration : BaseConfiguration<ExpenseCon
         base.Configure(builder);
 
         builder.HasKey(t => t.Id);
-
-        builder.HasOne(t => t.ExpenseType).WithMany().HasForeignKey(t => t.ExpenseTypeId)
-            .OnDelete(DeleteBehavior.Cascade);
     }
 }

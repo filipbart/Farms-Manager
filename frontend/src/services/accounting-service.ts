@@ -1,3 +1,4 @@
+import axios from "axios";
 import ApiUrl from "../common/ApiUrl";
 import type { PaginateModel } from "../common/interfaces/paginate";
 import type {
@@ -187,4 +188,130 @@ export class AccountingService {
       {}
     );
   }
+
+  /**
+   * Tworzy encję w module na podstawie faktury KSeF
+   */
+  public static async createModuleEntity(
+    invoiceId: string,
+    data: CreateModuleEntityRequest
+  ) {
+    return await AxiosWrapper.post<string | null>(
+      ApiUrl.AccountingCreateModuleEntity(invoiceId),
+      data
+    );
+  }
+
+  /**
+   * Wstrzymuje fakturę i przypisuje ją do innego pracownika (nie zmienia statusu)
+   */
+  public static async holdInvoice(invoiceId: string, data: HoldInvoiceData) {
+    return await AxiosWrapper.post(
+      ApiUrl.AccountingHoldInvoice(invoiceId),
+      data
+    );
+  }
+
+  /**
+   * Masowo zmienia status faktur na "Przekazana do biura"
+   */
+  public static async transferToOffice(invoiceIds: string[]) {
+    return await AxiosWrapper.post<TransferToOfficeResponse>(
+      ApiUrl.AccountingTransferToOffice,
+      invoiceIds
+    );
+  }
+
+  /**
+   * Pobiera pliki faktur jako ZIP
+   */
+  public static async downloadInvoicesZip(invoiceIds: string[]): Promise<Blob> {
+    const response = await axios.post(
+      ApiUrl.AccountingDownloadZip,
+      invoiceIds,
+      {
+        responseType: "blob",
+      }
+    );
+    return response.data;
+  }
+}
+
+export interface HoldInvoiceData {
+  newAssignedUserId: string;
+  expectedCurrentAssignedUserId: string | null;
+}
+
+export interface TransferToOfficeResponse {
+  transferredCount: number;
+  errors: string[];
+}
+
+// Types for module entity creation
+export interface CreateFeedInvoiceFromKSeFData {
+  farmId: string;
+  cycleId: string;
+  henhouseId: string;
+  invoiceNumber: string;
+  bankAccountNumber: string;
+  vendorName: string;
+  itemName: string;
+  quantity: number;
+  unitPrice: number;
+  invoiceDate: string;
+  dueDate: string;
+  invoiceTotal: number;
+  subTotal: number;
+  vatAmount: number;
+  comment?: string;
+}
+
+export interface CreateGasDeliveryFromKSeFData {
+  farmId: string;
+  contractorId?: string;
+  contractorNip?: string;
+  contractorName?: string;
+  invoiceNumber: string;
+  invoiceDate: string;
+  invoiceTotal: number;
+  unitPrice: number;
+  quantity: number;
+  comment?: string;
+}
+
+export interface CreateExpenseProductionFromKSeFData {
+  farmId: string;
+  cycleId: string;
+  expenseContractorId?: string;
+  expenseTypeId: string;
+  contractorNip?: string;
+  contractorName?: string;
+  invoiceNumber: string;
+  invoiceTotal: number;
+  subTotal: number;
+  vatAmount: number;
+  invoiceDate: string;
+  comment?: string;
+}
+
+export interface CreateSaleInvoiceFromKSeFData {
+  farmId: string;
+  cycleId: string;
+  slaughterhouseId?: string;
+  slaughterhouseNip?: string;
+  slaughterhouseName?: string;
+  invoiceNumber: string;
+  invoiceDate: string;
+  dueDate: string;
+  invoiceTotal: number;
+  subTotal: number;
+  vatAmount: number;
+}
+
+export interface CreateModuleEntityRequest {
+  moduleType: string;
+  feedData?: CreateFeedInvoiceFromKSeFData;
+  gasData?: CreateGasDeliveryFromKSeFData;
+  expenseData?: CreateExpenseProductionFromKSeFData;
+  saleData?: CreateSaleInvoiceFromKSeFData;
 }

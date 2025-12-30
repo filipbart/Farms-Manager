@@ -16,4 +16,6 @@ public enum ModuleType
     Sales,
 
     [Description("Gospodarstwo rolne")] Farmstead,
+
+    [Description("Inne")] Other,
 }

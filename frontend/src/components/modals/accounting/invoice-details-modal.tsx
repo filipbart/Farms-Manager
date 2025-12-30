@@ -64,6 +64,7 @@ import type CycleDto from "../../../models/farms/latest-cycle";
 import type { UserListModel } from "../../../models/users/users";
 import dayjs from "dayjs";
 import { parseKSeFInvoiceXml } from "../../../utils/ksef-xml-parser";
+import ModuleEntityForm from "./module-entity-form";
 
 // Funkcja konwertująca liczbę na słowa (po polsku)
 const numberToWords = (num: number): string => {
@@ -422,6 +423,17 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
   );
   const [linkingLoading, setLinkingLoading] = useState(false);
 
+  // Module entity form state
+  const [showModuleForm, setShowModuleForm] = useState(false);
+  const [pendingModuleType, setPendingModuleType] = useState<string | null>(
+    null
+  );
+
+  // Hold modal state
+  const [showHoldModal, setShowHoldModal] = useState(false);
+  const [holdUserId, setHoldUserId] = useState<string>("");
+  const [holdSaving, setHoldSaving] = useState(false);
+
   const parsedXml = useMemo(() => {
     if (!details?.invoiceXml) return null;
     return parseKSeFInvoiceXml(details.invoiceXml);
@@ -548,6 +560,36 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
     },
     [details, onSave]
   );
+
+  // Hold invoice handler
+  const handleHoldInvoice = useCallback(async () => {
+    if (!details || !holdUserId) {
+      toast.warning("Wybierz pracownika");
+      return;
+    }
+    setHoldSaving(true);
+    try {
+      await handleApiResponse(
+        () =>
+          AccountingService.holdInvoice(details.id, {
+            newAssignedUserId: holdUserId,
+            expectedCurrentAssignedUserId: details.assignedUserId || null,
+          }),
+        () => {
+          toast.success(
+            "Faktura została wstrzymana i przypisana do innego pracownika"
+          );
+          setShowHoldModal(false);
+          setHoldUserId("");
+          onSave?.();
+        },
+        undefined,
+        "Błąd podczas wstrzymywania faktury"
+      );
+    } finally {
+      setHoldSaving(false);
+    }
+  }, [details, holdUserId, onSave]);
 
   // Linking handlers
   const fetchLinkableInvoices = useCallback(
@@ -1508,9 +1550,23 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                     <Select
                       value={editForm.moduleType}
                       label="Moduł"
-                      onChange={(e) =>
-                        handleFormChange("moduleType", e.target.value)
-                      }
+                      onChange={(e) => {
+                        const newModuleType = e.target.value;
+                        handleFormChange("moduleType", newModuleType);
+                        // Show module form for entity-creating modules
+                        if (
+                          newModuleType === ModuleType.Feeds ||
+                          newModuleType === ModuleType.Gas ||
+                          newModuleType === ModuleType.ProductionExpenses ||
+                          newModuleType === ModuleType.Sales
+                        ) {
+                          setPendingModuleType(newModuleType);
+                          setShowModuleForm(true);
+                        } else {
+                          setShowModuleForm(false);
+                          setPendingModuleType(null);
+                        }
+                      }}
                     >
                       {Object.entries(ModuleTypeLabels).map(([key, label]) => (
                         <MenuItem key={key} value={key}>
@@ -1519,6 +1575,45 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                       ))}
                     </Select>
                   </FormControl>
+
+                  {/* Module Entity Form */}
+                  {showModuleForm && pendingModuleType && details && (
+                    <ModuleEntityForm
+                      invoiceId={details.id}
+                      moduleType={pendingModuleType}
+                      invoiceData={{
+                        invoiceNumber: details.invoiceNumber,
+                        invoiceDate: details.invoiceDate,
+                        dueDate: details.paymentDueDate || undefined,
+                        sellerName: details.sellerName,
+                        sellerNip: details.sellerNip,
+                        buyerName: details.buyerName,
+                        buyerNip: details.buyerNip,
+                        grossAmount: details.grossAmount,
+                        netAmount: details.netAmount,
+                        vatAmount: details.vatAmount,
+                      }}
+                      farms={farms}
+                      selectedFarmId={editForm.farmId}
+                      selectedCycleId={editForm.cycleId}
+                      onSuccess={() => {
+                        setShowModuleForm(false);
+                        setPendingModuleType(null);
+                        onSave?.();
+                      }}
+                      onCancel={() => {
+                        setShowModuleForm(false);
+                        setPendingModuleType(null);
+                        // Reset module type to previous value
+                        if (details) {
+                          setEditForm((prev) => ({
+                            ...prev,
+                            moduleType: details.moduleType || ModuleType.None,
+                          }));
+                        }
+                      }}
+                    />
+                  )}
 
                   <FormControl fullWidth size="small">
                     <InputLabel>Lokalizacja (Ferma)</InputLabel>
@@ -1645,15 +1740,33 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                     }
                   />
 
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={handleSave}
-                    disabled={saving}
-                    sx={{ mt: 1 }}
-                  >
-                    {saving ? <CircularProgress size={24} /> : "Zapisz zmiany"}
-                  </Button>
+                  <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
+                    <Button
+                      variant="outlined"
+                      color="warning"
+                      onClick={() => {
+                        setHoldUserId(editForm.assignedUserId);
+                        setShowHoldModal(true);
+                      }}
+                      disabled={saving}
+                      startIcon={<PauseIcon />}
+                    >
+                      Wstrzymaj
+                    </Button>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={handleSave}
+                      disabled={saving}
+                      sx={{ flex: 1 }}
+                    >
+                      {saving ? (
+                        <CircularProgress size={24} />
+                      ) : (
+                        "Zapisz zmiany"
+                      )}
+                    </Button>
+                  </Box>
                 </Box>
               </Box>
             </Grid>
@@ -1672,6 +1785,53 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
           Zamknij
         </Button>
       </DialogActions>
+
+      {/* Hold Invoice Modal */}
+      <AppDialog
+        open={showHoldModal}
+        onClose={() => setShowHoldModal(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Wstrzymaj fakturę</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Przypisz fakturę do innego pracownika bez zmiany jej statusu.
+            Faktura pozostanie jako "Nowa" do weryfikacji.
+          </Typography>
+          <FormControl fullWidth size="small">
+            <InputLabel>Przypisz do pracownika</InputLabel>
+            <Select
+              value={holdUserId}
+              label="Przypisz do pracownika"
+              onChange={(e) => setHoldUserId(e.target.value)}
+            >
+              {users
+                .filter((u) => u.id !== details?.assignedUserId)
+                .map((user) => (
+                  <MenuItem key={user.id} value={user.id}>
+                    {user.name || user.login}
+                  </MenuItem>
+                ))}
+            </Select>
+          </FormControl>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowHoldModal(false)}>Anuluj</Button>
+          <Button
+            variant="contained"
+            color="warning"
+            onClick={handleHoldInvoice}
+            disabled={holdSaving || !holdUserId}
+          >
+            {holdSaving ? (
+              <CircularProgress size={24} />
+            ) : (
+              "Wstrzymaj i przypisz"
+            )}
+          </Button>
+        </DialogActions>
+      </AppDialog>
     </AppDialog>
   );
 };

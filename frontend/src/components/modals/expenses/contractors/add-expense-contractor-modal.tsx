@@ -5,7 +5,8 @@ import {
   Button,
   TextField,
   Box,
-  MenuItem,
+  Autocomplete,
+  Chip,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -16,7 +17,6 @@ import { ExpensesService } from "../../../../services/expenses-service";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import LoadingButton from "../../../common/loading-button";
 import { useExpensesTypes } from "../../../../hooks/expenses/useExpensesTypes";
-import LoadingTextField from "../../../common/loading-textfield";
 import AppDialog from "../../../common/app-dialog";
 import { isValidNip } from "../../../../utils/validation";
 
@@ -85,24 +85,33 @@ const AddExpenseContractorModal: React.FC<AddExpenseContractorModalProps> = ({
               fullWidth
             />
 
-            <LoadingTextField
-              label="Typ wydatku"
-              select
-              fullWidth
+            <Autocomplete
+              multiple
+              options={expensesTypes}
+              getOptionLabel={(option) => option.name}
               loading={loadingExpensesTypes}
-              value={watch("expenseTypeId") || ""}
-              error={!!errors.expenseTypeId}
-              helperText={errors.expenseTypeId?.message}
-              {...register("expenseTypeId", {
-                required: "Typ jest wymagany",
-              })}
-            >
-              {expensesTypes.map((expenseType) => (
-                <MenuItem key={expenseType.id} value={expenseType.id}>
-                  {expenseType.name}
-                </MenuItem>
-              ))}
-            </LoadingTextField>
+              onChange={(_, newValue) => {
+                const ids = newValue.map((v) => v.id);
+                reset({ ...watch(), expenseTypeIds: ids });
+              }}
+              renderTags={(value, getTagProps) =>
+                value.map((option, index) => (
+                  <Chip
+                    label={option.name}
+                    {...getTagProps({ index })}
+                    key={option.id}
+                  />
+                ))
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Typy wydatków"
+                  error={!!errors.expenseTypeIds}
+                  helperText={errors.expenseTypeIds?.message}
+                />
+              )}
+            />
 
             <TextField
               label="NIP"

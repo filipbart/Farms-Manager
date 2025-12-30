@@ -137,10 +137,13 @@ const AddExpenseProductionModal: React.FC<AddExpenseProductionModalProps> = ({
 
   const handleContractorChange = (contractorId: string) => {
     const selected = expensesContractors.find((c) => c.id === contractorId);
-    if (selected) {
-      setValue("expenseTypeNameDisplay", selected.expenseType || "Brak");
+    if (selected && selected.expenseTypes?.length > 0) {
+      setValue(
+        "expenseTypeNameDisplay",
+        selected.expenseTypes.map((t) => t.name).join(", ")
+      );
     } else {
-      setValue("expenseTypeNameDisplay", "");
+      setValue("expenseTypeNameDisplay", "Brak");
     }
   };
 

@@ -33,8 +33,7 @@ public record ExpenseContractorRow
 {
     public Guid Id { get; init; }
     public string Name { get; init; }
-    public string ExpenseType { get; init; }
-    public Guid? ExpenseTypeId { get; init; }
+    public List<ExpenseTypeSimpleDto> ExpenseTypes { get; init; } = new();
     public string Nip { get; init; }
     public string Address { get; init; }
     public DateTime DateCreatedUtc { get; init; }
@@ -43,6 +42,12 @@ public record ExpenseContractorRow
     public string ModifiedByName { get; init; }
     public DateTime? DateDeletedUtc { get; init; }
     public string DeletedByName { get; init; }
+}
+
+public record ExpenseTypeSimpleDto
+{
+    public Guid Id { get; init; }
+    public string Name { get; init; }
 }
 
 public class GetExpensesContractorsQueryHandler : IRequestHandler<GetExpensesContractorsQuery,
@@ -86,6 +91,7 @@ public sealed class GetAllExpensesContractorsSpec : BaseSpecification<ExpenseCon
         Query.Include(t => t.Creator);
         Query.Include(t => t.Modifier);
         Query.Include(t => t.Deleter);
+        Query.Include(t => t.ExpenseTypes).ThenInclude(et => et.ExpenseType);
         if (filters.SearchPhrase.IsNotEmpty())
         {
             var phrase = $"%{filters.SearchPhrase}%";
@@ -99,7 +105,11 @@ public class ExpensesContractorsProfile : Profile
     public ExpensesContractorsProfile()
     {
         CreateMap<ExpenseContractorEntity, ExpenseContractorRow>()
-            .ForMember(m => m.ExpenseType, opt => opt.MapFrom(t => t.ExpenseType != null ? t.ExpenseType.Name : null))
+            .ForMember(m => m.ExpenseTypes, opt => opt.MapFrom(t => t.ExpenseTypes.Select(et => new ExpenseTypeSimpleDto
+            {
+                Id = et.ExpenseTypeId,
+                Name = et.ExpenseType != null ? et.ExpenseType.Name : ""
+            }).ToList()))
             .ForMember(m => m.CreatedByName, opt => opt.MapFrom(t => t.Creator != null ? t.Creator.Name : null))
             .ForMember(m => m.ModifiedByName, opt => opt.MapFrom(t => t.Modifier != null ? t.Modifier.Name : null))
             .ForMember(m => m.DeletedByName, opt => opt.MapFrom(t => t.Deleter != null ? t.Deleter.Name : null));

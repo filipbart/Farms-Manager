@@ -11,6 +11,7 @@ using FarmsManager.Application.Queries.Accounting.GetKSeFInvoiceDetails;
 using FarmsManager.Application.Queries.Accounting.GetKSeFInvoicesFromDb;
 using FarmsManager.Application.Queries.Accounting.GetKSeFInvoicePdf;
 using FarmsManager.Application.Queries.Accounting.GetKSeFInvoiceXml;
+using FarmsManager.Application.Queries.Accounting.GetInvoicesZip;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -157,21 +158,9 @@ public class AccountingController : BaseController
     [AllowAnonymous]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> UpdateInvoice(Guid invoiceId, [FromBody] UpdateInvoiceRequest request)
+    public async Task<IActionResult> UpdateInvoice(Guid invoiceId, [FromBody] UpdateKSeFInvoiceDto request)
     {
-        var result = await _mediator.Send(new UpdateKSeFInvoiceCommand(invoiceId, new UpdateKSeFInvoiceDto
-        {
-            Status = request.Status,
-            PaymentStatus = request.PaymentStatus,
-            ModuleType = request.ModuleType,
-            VatDeductionType = request.VatDeductionType,
-            Comment = request.Comment,
-            FarmId = request.FarmId,
-            CycleId = request.CycleId,
-            AssignedUserId = request.AssignedUserId,
-            RelatedInvoiceNumber = request.RelatedInvoiceNumber
-        }));
-
+        var result = await _mediator.Send(new UpdateKSeFInvoiceCommand(invoiceId, request));
         return Ok(result);
     }
 
@@ -186,6 +175,46 @@ public class AccountingController : BaseController
     {
         // TODO: Implementacja soft delete faktury
         return Ok(new { message = "Faktura została usunięta" });
+    }
+
+    /// <summary>
+    /// Wstrzymuje fakturę i przypisuje ją do innego pracownika (nie zmienia statusu)
+    /// </summary>
+    [HttpPost("invoices/{invoiceId:guid}/hold")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> HoldInvoice(Guid invoiceId, [FromBody] HoldKSeFInvoiceDto request)
+    {
+        var result = await _mediator.Send(new HoldKSeFInvoiceCommand(invoiceId, request));
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Masowo zmienia status faktur na "Przekazana do biura"
+    /// </summary>
+    [HttpPost("invoices/transfer-to-office")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(TransferInvoicesToOfficeResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> TransferInvoicesToOffice([FromBody] List<Guid> invoiceIds)
+    {
+        var result = await _mediator.Send(new TransferInvoicesToOfficeCommand(invoiceIds));
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Pobiera pliki faktur jako ZIP
+    /// </summary>
+    [HttpPost("invoices/download-zip")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> DownloadInvoicesZip([FromBody] List<Guid> invoiceIds)
+    {
+        var result = await _mediator.Send(new GetInvoicesZipQuery(invoiceIds));
+        return File(result.ZipData, "application/zip", result.FileName);
     }
 
     [HttpPost("send-invoice")]
@@ -272,17 +301,28 @@ public class AccountingController : BaseController
     {
         return Ok(await _mediator.Send(new PostponeLinkingReminderCommand(invoiceId, days)));
     }
-}
 
-public class UpdateInvoiceRequest
-{
-    public KSeFInvoiceStatus? Status { get; set; }
-    public KSeFPaymentStatus? PaymentStatus { get; set; }
-    public ModuleType? ModuleType { get; set; }
-    public KSeFVatDeductionType? VatDeductionType { get; set; }
-    public string? Comment { get; set; }
-    public Guid? FarmId { get; set; }
-    public Guid? CycleId { get; set; }
-    public Guid? AssignedUserId { get; set; }
-    public string? RelatedInvoiceNumber { get; set; }
+    /// <summary>
+    /// Tworzy encję w module na podstawie faktury KSeF
+    /// </summary>
+    [HttpPost("invoices/{invoiceId:guid}/create-module-entity")]
+    [ProducesResponseType(typeof(BaseResponse<Guid?>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> CreateModuleEntityFromInvoice(
+        Guid invoiceId, 
+        [FromBody] CreateModuleEntityFromInvoiceRequest request)
+    {
+        var command = new CreateModuleEntityFromInvoiceCommand
+        {
+            KSeFInvoiceId = invoiceId,
+            ModuleType = request.ModuleType,
+            FeedData = request.FeedData,
+            GasData = request.GasData,
+            ExpenseData = request.ExpenseData,
+            SaleData = request.SaleData
+        };
+
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
 }

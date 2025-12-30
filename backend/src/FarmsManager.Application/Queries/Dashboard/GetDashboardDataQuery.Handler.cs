@@ -260,7 +260,7 @@ public class
         otherExpenses) SplitGasExpenses(IReadOnlyList<ExpenseProductionEntity> allExpenses)
     {
         var gasExpenses = allExpenses.Where(e =>
-            string.Equals(e.ExpenseContractor?.ExpenseType?.Name, "Gaz", StringComparison.OrdinalIgnoreCase)).ToList();
+            string.Equals(e.ExpenseType?.Name, "Gaz", StringComparison.OrdinalIgnoreCase)).ToList();
         var otherExpenses = allExpenses.Except(gasExpenses).ToList();
         return (gasExpenses, otherExpenses);
     }
@@ -505,7 +505,7 @@ public class
 
         foreach (var expense in allExpenses)
         {
-            var expenseType = expense.ExpenseContractor?.ExpenseType?.Name ?? string.Empty;
+            var expenseType = expense.ExpenseType?.Name ?? string.Empty;
             if (string.Equals(expenseType, "Zakup piskląt", StringComparison.OrdinalIgnoreCase))
                 chicksCost += expense.SubTotal;
             else if (string.Equals(expenseType, "Usługa weterynaryjna", StringComparison.OrdinalIgnoreCase))
