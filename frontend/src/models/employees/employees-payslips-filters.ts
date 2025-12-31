@@ -27,11 +27,13 @@ export const loadFiltersFromLocalStorage =
   };
 
 const getInitialFilters = (): EmployeePayslipsFilterPaginationModel => {
+  const currentYear = new Date().getFullYear();
   const defaultFilters: EmployeePayslipsFilterPaginationModel = {
     farmIds: [],
     cycles: [],
     searchPhrase: "",
     payrollPeriod: undefined,
+    year: currentYear,
     showDeleted: false,
     page: 0,
     pageSize: 10,
@@ -121,6 +123,7 @@ export interface EmployeePayslipsFilter {
   cycles: string[];
   searchPhrase?: string;
   payrollPeriod?: PayrollPeriod;
+  year?: number | string;
   showDeleted?: boolean;
 }
 

@@ -33,6 +33,7 @@ public record AddEmployeePayslipCommand : IRequest<EmptyBaseResponse>
     public Guid FarmId { get; init; }
     public Guid CycleId { get; init; }
     public PayrollPeriod PayrollPeriod { get; init; }
+    public int Year { get; init; }
     public List<AddEmployeePayslipEntry> Entries { get; init; } = [];
 }
 
@@ -43,6 +44,7 @@ public class AddEmployeePayslipCommandValidator : AbstractValidator<AddEmployeeP
         RuleFor(x => x.FarmId).NotEmpty().WithMessage("Ferma jest wymagana.");
         RuleFor(x => x.CycleId).NotEmpty().WithMessage("Cykl jest wymagany.");
         RuleFor(x => x.PayrollPeriod).IsInEnum().WithMessage("Okres rozliczeniowy jest wymagany.");
+        RuleFor(x => x.Year).InclusiveBetween(2024, 2100).WithMessage("Rok musi być pomiędzy 2024 a 2100.");
         RuleFor(x => x.Entries).NotEmpty().WithMessage("Należy dodać przynajmniej jednego pracownika.");
 
         RuleForEach(x => x.Entries).SetValidator(new AddEmployeePayslipEntryValidator());
@@ -101,7 +103,7 @@ public class AddEmployeePayslipCommandHandler : IRequestHandler<AddEmployeePaysl
             var employee =
                 await _employeeRepository.GetAsync(new EmployeeByIdSpec(entry.EmployeeId), cancellationToken);
             var existingPayslip = await _employeePayslipRepository.AnyAsync(
-                new GetPayslipByEmployeeAndPeriodSpec(farm.Id, entry.EmployeeId, cycle.Id, request.PayrollPeriod),
+                new GetPayslipByEmployeeAndPeriodSpec(farm.Id, entry.EmployeeId, cycle.Id, request.PayrollPeriod, request.Year),
                 cancellationToken);
 
             if (existingPayslip)
@@ -121,6 +123,7 @@ public class AddEmployeePayslipCommandHandler : IRequestHandler<AddEmployeePaysl
                 cycle.Id,
                 employee.Id,
                 request.PayrollPeriod,
+                request.Year,
                 entry.BaseSalary,
                 entry.BankTransferAmount,
                 entry.BonusAmount,
@@ -144,12 +147,13 @@ public class AddEmployeePayslipCommandHandler : IRequestHandler<AddEmployeePaysl
 public sealed class GetPayslipByEmployeeAndPeriodSpec : BaseSpecification<EmployeePayslipEntity>,
     ISingleResultSpecification<EmployeePayslipEntity>
 {
-    public GetPayslipByEmployeeAndPeriodSpec(Guid farmId, Guid employeeId, Guid cycleId, PayrollPeriod payrollPeriod)
+    public GetPayslipByEmployeeAndPeriodSpec(Guid farmId, Guid employeeId, Guid cycleId, PayrollPeriod payrollPeriod, int year)
     {
         EnsureExists();
         Query.Where(p => p.FarmId == farmId);
         Query.Where(p => p.EmployeeId == employeeId);
         Query.Where(p => p.CycleId == cycleId);
         Query.Where(p => p.PayrollPeriod == payrollPeriod);
+        Query.Where(p => p.Year == year);
     }
 }

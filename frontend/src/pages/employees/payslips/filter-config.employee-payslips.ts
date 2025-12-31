@@ -29,12 +29,28 @@ const getPayrollPeriodOptions = () => {
   }));
 };
 
+const getYearOptions = () => {
+  const currentYear = new Date().getFullYear();
+  const startYear = 2024;
+  const years: { value: string; label: string }[] = [
+    { value: "", label: "Wszystkie lata" },
+  ];
+
+  for (let year = currentYear; year >= startYear; year--) {
+    years.push({ value: year.toString(), label: year.toString() });
+  }
+
+  return years;
+};
+
 export const getEmployeePayslipsFiltersConfig = (
   dictionary: EmployeePayslipsDictionary | undefined,
   uniqueCycles: CycleDictModel[],
   isAdmin: boolean = false
 ): FilterConfig<keyof EmployeePayslipsFilterPaginationModel>[] => {
-  const baseFilters: FilterConfig<keyof EmployeePayslipsFilterPaginationModel>[] = [
+  const baseFilters: FilterConfig<
+    keyof EmployeePayslipsFilterPaginationModel
+  >[] = [
     {
       key: "searchPhrase",
       label: "Szukaj pracownika...",
@@ -66,6 +82,12 @@ export const getEmployeePayslipsFiltersConfig = (
       label: "Okres rozliczeniowy",
       type: "select",
       options: getPayrollPeriodOptions(),
+    },
+    {
+      key: "year",
+      label: "Rok",
+      type: "select",
+      options: getYearOptions(),
     },
   ];
 

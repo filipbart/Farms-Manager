@@ -11,6 +11,7 @@ public class EmployeePayslipEntity : Entity
     public Guid EmployeeId { get; init; }
 
     public PayrollPeriod PayrollPeriod { get; protected internal set; }
+    public int Year { get; protected internal set; }
     public decimal BaseSalary { get; protected internal set; }
     public decimal BankTransferAmount { get; protected internal set; }
     public decimal BonusAmount { get; protected internal set; }
@@ -34,6 +35,7 @@ public class EmployeePayslipEntity : Entity
         Guid cycleId,
         Guid employeeId,
         PayrollPeriod payrollPeriod,
+        int year,
         decimal baseSalary,
         decimal bankTransferAmount,
         decimal bonusAmount,
@@ -51,6 +53,7 @@ public class EmployeePayslipEntity : Entity
             CycleId = cycleId,
             EmployeeId = employeeId,
             PayrollPeriod = payrollPeriod,
+            Year = year,
             BaseSalary = baseSalary,
             BankTransferAmount = bankTransferAmount,
             BonusAmount = bonusAmount,
@@ -68,6 +71,7 @@ public class EmployeePayslipEntity : Entity
         FarmEntity farm,
         CycleEntity cycle,
         PayrollPeriod payrollPeriod,
+        int year,
         decimal baseSalary,
         decimal bankTransferAmount,
         decimal bonusAmount,
@@ -81,6 +85,7 @@ public class EmployeePayslipEntity : Entity
         FarmId = farm.Id;
         CycleId = cycle.Id;
         PayrollPeriod = payrollPeriod;
+        Year = year;
         BaseSalary = baseSalary;
         BankTransferAmount = bankTransferAmount;
         BonusAmount = bonusAmount;

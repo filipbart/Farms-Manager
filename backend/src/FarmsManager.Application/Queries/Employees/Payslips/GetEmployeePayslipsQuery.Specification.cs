@@ -61,6 +61,11 @@ public sealed class GetAllEmployeePayslipsSpec : BaseSpecification<EmployeePaysl
         {
             Query.Where(p => p.PayrollPeriod == filters.PayrollPeriod);
         }
+
+        if (filters.Year is not null)
+        {
+            Query.Where(p => p.Year == filters.Year);
+        }
     }
 
     private void ApplyOrdering(GetEmployeePayslipsQueryFilters filters)
