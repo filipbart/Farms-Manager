@@ -12,7 +12,7 @@ public class ExpenseProductionEntity : Entity
     public Guid FarmId { get; protected internal set; }
     public Guid CycleId { get; protected internal set; }
     public Guid ExpenseContractorId { get; protected internal set; }
-    public Guid ExpenseTypeId { get; protected internal set; }
+    public Guid? ExpenseTypeId { get; protected internal set; }
     public string InvoiceNumber { get; protected internal set; }
     public decimal InvoiceTotal { get; protected internal set; }
     public decimal SubTotal { get; protected internal set; }
@@ -31,7 +31,7 @@ public class ExpenseProductionEntity : Entity
         Guid farmId,
         Guid cycleId,
         Guid expenseContractorId,
-        Guid expenseTypeId,
+        Guid? expenseTypeId,
         string invoiceNumber,
         decimal invoiceTotal,
         decimal subTotal,
@@ -60,7 +60,7 @@ public class ExpenseProductionEntity : Entity
     public void SetFarm(Guid farmId) => FarmId = farmId;
     public void SetCycle(Guid cycleId) => CycleId = cycleId;
     public void SetExpenseContractor(Guid expenseContractorId) => ExpenseContractorId = expenseContractorId;
-    public void SetExpenseType(Guid expenseTypeId) => ExpenseTypeId = expenseTypeId;
+    public void SetExpenseType(Guid? expenseTypeId) => ExpenseTypeId = expenseTypeId;
 
     public void Update(
         string invoiceNumber,

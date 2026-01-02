@@ -153,6 +153,7 @@ public static class AppPermissions
         [Description("Dostęp do danych podstawowych (słowników)")]
         public const string View = "data:view";
 
+        [Description("Zarządzanie podmiotami gospodarczymi")] public const string TaxBusinessEntitiesManage = "data:taxbusinessentities:manage";
         [Description("Zarządzanie fermami")] public const string FarmsManage = "data:farms:manage";
         [Description("Zarządzanie kurnikami")] public const string HousesManage = "data:houses:manage";
 

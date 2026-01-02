@@ -47,7 +47,7 @@ public sealed class GetAllExpenseProductionsSpec : BaseSpecification<ExpenseProd
 
         if (filters.ExpensesTypesIds is not null && filters.ExpensesTypesIds.Count != 0)
         {
-            Query.Where(ep => filters.ExpensesTypesIds.Contains(ep.ExpenseTypeId));
+            Query.Where(ep => ep.ExpenseTypeId.HasValue && filters.ExpensesTypesIds.Contains(ep.ExpenseTypeId.Value));
         }
 
         if (filters.CyclesDict is not null && filters.CyclesDict.Count != 0)

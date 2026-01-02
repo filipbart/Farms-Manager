@@ -6,6 +6,7 @@ import DashboardPage from "../pages/dashboard";
 import InsertionsPage from "../pages/insertions";
 import { useRouter } from "./use-router";
 import { RouteName } from "./route-names";
+import TaxBusinessEntitiesPage from "../pages/data/tax-business-entities";
 import FarmsPage from "../pages/data/farms";
 import HousesPage from "../pages/data/houses";
 import HatcheriesPage from "../pages/data/hatcheries";
@@ -60,6 +61,10 @@ const DefaultRouter: React.FC = () => {
           element={<InsertionsPage />}
         />
         <Route path={getRoute(RouteName.SalesList)} element={<SalesPage />} />
+        <Route
+          path={getRoute(RouteName.TaxBusinessEntities)}
+          element={<TaxBusinessEntitiesPage />}
+        />
         <Route path={getRoute(RouteName.Farms)} element={<FarmsPage />} />
         <Route path={getRoute(RouteName.Houses)} element={<HousesPage />} />
         <Route

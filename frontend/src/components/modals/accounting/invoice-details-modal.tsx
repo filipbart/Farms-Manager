@@ -267,7 +267,8 @@ const formatAddressLines = (party: KSeFPartyData | undefined): string[] => {
 const CopyableText: React.FC<{
   value: string | undefined | null;
   children?: React.ReactNode;
-}> = ({ value, children }) => {
+  hoverColor?: string;
+}> = ({ value, children, hoverColor = "primary.main" }) => {
   const handleCopy = () => {
     if (value) {
       navigator.clipboard.writeText(value);
@@ -289,7 +290,7 @@ const CopyableText: React.FC<{
         alignItems: "center",
         gap: 0.5,
         "&:hover": {
-          color: "primary.main",
+          color: hoverColor,
           "& .copy-icon": {
             opacity: 1,
           },
@@ -1030,7 +1031,10 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                       RAZEM DO ZAPŁATY:
                     </Typography>
                     <Typography variant="h6" fontWeight={700}>
-                      <CopyableText value={details.grossAmount?.toFixed(2)}>
+                      <CopyableText
+                        value={details.grossAmount?.toFixed(2)}
+                        hoverColor="primary.light"
+                      >
                         {formatCurrency(details.grossAmount)}
                       </CopyableText>
                     </Typography>

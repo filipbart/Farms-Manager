@@ -25,6 +25,13 @@ export default class ApiUrl {
   public static GetFile = `${this.Files}/file`;
   public static FilesZip = `${this.Files}/files-zip`;
 
+  public static TaxBusinessEntities = this.BaseUrl + "tax-business-entities";
+  public static AddTaxBusinessEntity = this.TaxBusinessEntities + "/add";
+  public static UpdateTaxBusinessEntity = (id: string) =>
+    this.TaxBusinessEntities + "/update/" + id;
+  public static DeleteTaxBusinessEntity = (id: string) =>
+    this.TaxBusinessEntities + "/delete/" + id;
+
   public static Farms = this.BaseUrl + "farms";
   public static UpdateFarmCycle = this.Farms + "/update-cycle";
   public static AddFarm = this.Farms + "/add";

@@ -7,6 +7,7 @@ export enum RouteName {
   SalesList = "sales",
   SalesInvoices = "sales/invoices",
   SalesFieldsSettings = "sales/settings",
+  TaxBusinessEntities = "data/tax-business-entities",
   Farms = "data/farms",
   Houses = "data/houses",
   Hatcheries = "data/hatcheries",
