@@ -9,6 +9,7 @@ export interface EmployeePayslipListModel extends AuditFields {
   cycleText: string;
   payrollPeriod: PayrollPeriod;
   payrollPeriodDesc: string;
+  year: number;
   employeeFullName: string;
 
   baseSalary: number; // pensja podstawowa
@@ -59,6 +60,7 @@ export interface AddEmployeePayslipData {
   farmId: string;
   cycleId: string;
   payrollPeriod: PayrollPeriod;
+  year: number;
   entries: AddEmployeePayslipEntry[];
 }
 
@@ -80,6 +82,7 @@ export interface UpdateEmployeePayslip {
   farmId: string;
   cycleId: string;
   payrollPeriod: PayrollPeriod;
+  year: number;
   baseSalary: number;
   bankTransferAmount: number;
   bonusAmount: number;

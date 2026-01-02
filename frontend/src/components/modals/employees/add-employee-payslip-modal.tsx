@@ -62,6 +62,7 @@ const initialState: AddEmployeePayslipData = {
   farmId: "",
   cycleId: "",
   payrollPeriod: getPreviousPayrollPeriod(),
+  year: new Date().getFullYear(),
   entries: [],
 };
 
@@ -265,7 +266,7 @@ const AddEmployeePayslipModal: React.FC<AddEmployeePayslipModalProps> = ({
       <DialogTitle>Dodaj rozliczenie wypłat</DialogTitle>
       <DialogContent>
         <Box display="flex" flexDirection="column" gap={2} mt={1}>
-          <Box display="grid" gridTemplateColumns="repeat(3, 1fr)" gap={2}>
+          <Box display="grid" gridTemplateColumns="repeat(4, 1fr)" gap={2}>
             <LoadingTextField
               loading={loadingFarms}
               select
@@ -322,6 +323,28 @@ const AddEmployeePayslipModal: React.FC<AddEmployeePayslipModalProps> = ({
               {Object.values(PayrollPeriod).map((period) => (
                 <MenuItem key={period} value={period}>
                   {polishMonthsMap[period]}
+                </MenuItem>
+              ))}
+            </TextField>
+
+            <TextField
+              select
+              label="Rok"
+              value={form.year}
+              onChange={(e) =>
+                dispatch({
+                  type: "SET_FIELD",
+                  name: "year",
+                  value: Number(e.target.value),
+                })
+              }
+            >
+              {Array.from(
+                { length: new Date().getFullYear() - 2024 + 1 },
+                (_, i) => new Date().getFullYear() - i
+              ).map((year) => (
+                <MenuItem key={year} value={year}>
+                  {year}
                 </MenuItem>
               ))}
             </TextField>

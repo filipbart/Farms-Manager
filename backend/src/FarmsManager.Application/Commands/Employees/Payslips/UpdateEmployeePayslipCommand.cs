@@ -17,6 +17,7 @@ public record UpdateEmployeePayslipData
     public Guid FarmId { get; init; }
     public Guid CycleId { get; init; }
     public PayrollPeriod PayrollPeriod { get; init; }
+    public int Year { get; init; }
     public decimal BaseSalary { get; init; }
     public decimal BankTransferAmount { get; init; }
     public decimal BonusAmount { get; init; }
@@ -39,6 +40,7 @@ public class UpdateEmployeePayslipCommandValidator : AbstractValidator<UpdateEmp
         RuleFor(x => x.Data.FarmId).NotEmpty().WithMessage("Farma jest wymagana.");
         RuleFor(x => x.Data.CycleId).NotEmpty().WithMessage("Cykl jest wymagany.");
         RuleFor(x => x.Data.PayrollPeriod).IsInEnum().WithMessage("Okres wypłaty jest nieprawidłowy.");
+        RuleFor(x => x.Data.Year).InclusiveBetween(2024, 2100).WithMessage("Rok musi być pomiędzy 2024 a 2100.");
 
         RuleFor(x => x.Data.BaseSalary).GreaterThanOrEqualTo(0).WithMessage("Pensja podstawowa nie może być ujemna.");
         RuleFor(x => x.Data.BankTransferAmount).GreaterThanOrEqualTo(0)
@@ -92,6 +94,7 @@ public class UpdateEmployeePayslipCommandHandler : IRequestHandler<UpdateEmploye
             farm,
             cycle,
             request.Data.PayrollPeriod,
+            request.Data.Year,
             request.Data.BaseSalary,
             request.Data.BankTransferAmount,
             request.Data.BonusAmount,

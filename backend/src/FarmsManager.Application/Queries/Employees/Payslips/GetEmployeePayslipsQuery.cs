@@ -30,6 +30,7 @@ public record GetEmployeePayslipsQueryFilters : OrderedPaginationParams<Employee
 
     public string SearchPhrase { get; init; }
     public PayrollPeriod? PayrollPeriod { get; init; }
+    public int? Year { get; init; }
 }
 
 public record GetEmployeePayslipsQuery(GetEmployeePayslipsQueryFilters Filters)

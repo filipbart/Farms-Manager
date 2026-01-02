@@ -38,6 +38,7 @@ interface PayslipFormState {
   farmId: string;
   cycleId: string;
   payrollPeriod: PayrollPeriod | "";
+  year: number;
   baseSalary: string | number;
   bankTransferAmount: string | number;
   bonusAmount: string | number;
@@ -65,6 +66,7 @@ const initialState: PayslipFormState = {
   farmId: "",
   cycleId: "",
   payrollPeriod: "",
+  year: new Date().getFullYear(),
   baseSalary: "",
   bankTransferAmount: "",
   bonusAmount: "",
@@ -130,6 +132,7 @@ const EditEmployeePayslipModal: React.FC<EditEmployeePayslipModalProps> = ({
           farmId: payslipToEdit.farmId,
           cycleId: payslipToEdit.cycleId,
           payrollPeriod: payslipToEdit.payrollPeriod,
+          year: payslipToEdit.year || new Date().getFullYear(),
           baseSalary: payslipToEdit.baseSalary,
           bankTransferAmount: payslipToEdit.bankTransferAmount,
           bonusAmount: payslipToEdit.bonusAmount,
@@ -216,6 +219,7 @@ const EditEmployeePayslipModal: React.FC<EditEmployeePayslipModalProps> = ({
       farmId: form.farmId,
       cycleId: form.cycleId,
       payrollPeriod: form.payrollPeriod as PayrollPeriod,
+      year: form.year,
       baseSalary: Number(form.baseSalary),
       bankTransferAmount: Number(form.bankTransferAmount),
       bonusAmount: Number(form.bonusAmount),
@@ -322,6 +326,30 @@ const EditEmployeePayslipModal: React.FC<EditEmployeePayslipModalProps> = ({
                 {Object.values(PayrollPeriod).map((period) => (
                   <MenuItem key={period} value={period}>
                     {polishMonthsMap[period]}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                select
+                label="Rok"
+                value={form.year}
+                onChange={(e) =>
+                  dispatch({
+                    type: "SET_FIELD",
+                    name: "year",
+                    value: Number(e.target.value),
+                  })
+                }
+                fullWidth
+              >
+                {Array.from(
+                  { length: new Date().getFullYear() - 2024 + 1 },
+                  (_, i) => new Date().getFullYear() - i
+                ).map((year) => (
+                  <MenuItem key={year} value={year}>
+                    {year}
                   </MenuItem>
                 ))}
               </TextField>

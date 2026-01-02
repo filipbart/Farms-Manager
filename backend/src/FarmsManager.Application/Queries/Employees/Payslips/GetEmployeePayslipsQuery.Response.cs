@@ -13,6 +13,7 @@ public class EmployeePayslipRowDto
     public string CycleText { get; init; }
     public PayrollPeriod PayrollPeriod { get; init; }
     public string PayrollPeriodDesc => PayrollPeriod.GetDescription();
+    public int Year { get; init; }
     public string EmployeeFullName { get; init; }
 
     public decimal BaseSalary { get; init; }
