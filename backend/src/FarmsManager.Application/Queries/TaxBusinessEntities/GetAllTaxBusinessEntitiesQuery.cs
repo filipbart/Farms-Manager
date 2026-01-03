@@ -24,6 +24,7 @@ public record TaxBusinessEntityRowDto
     public string Name { get; init; }
     public string BusinessType { get; init; }
     public string Description { get; init; }
+    public bool HasKSeFToken { get; init; }
     public DateTime DateCreatedUtc { get; init; }
     public string CreatedByName { get; init; }
     public DateTime? DateModifiedUtc { get; init; }

@@ -108,6 +108,15 @@ const AddTaxBusinessEntityModal: React.FC<AddTaxBusinessEntityModalProps> = ({
               multiline
               rows={3}
             />
+
+            <TextField
+              label="Token KSeF (opcjonalnie)"
+              {...register("kSeFToken")}
+              fullWidth
+              type="password"
+              placeholder="Token autoryzacyjny KSeF"
+              helperText="Token zostanie zaszyfrowany przed zapisem"
+            />
           </Box>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>

@@ -15,6 +15,7 @@ public record AddTaxBusinessEntityCommand : IRequest<EmptyBaseResponse>
     public string Name { get; init; }
     public string BusinessType { get; init; }
     public string Description { get; init; }
+    public string KSeFToken { get; init; }
 }
 
 public class AddTaxBusinessEntityCommandValidator : AbstractValidator<AddTaxBusinessEntityCommand>
@@ -32,21 +33,32 @@ public class AddTaxBusinessEntityCommandHandler : IRequestHandler<AddTaxBusiness
 {
     private readonly ITaxBusinessEntityRepository _repository;
     private readonly IUserDataResolver _userDataResolver;
+    private readonly IEncryptionService _encryptionService;
 
-    public AddTaxBusinessEntityCommandHandler(ITaxBusinessEntityRepository repository, IUserDataResolver userDataResolver)
+    public AddTaxBusinessEntityCommandHandler(
+        ITaxBusinessEntityRepository repository, 
+        IUserDataResolver userDataResolver,
+        IEncryptionService encryptionService)
     {
         _repository = repository;
         _userDataResolver = userDataResolver;
+        _encryptionService = encryptionService;
     }
 
     public async Task<EmptyBaseResponse> Handle(AddTaxBusinessEntityCommand request, CancellationToken cancellationToken)
     {
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
+        
+        var encryptedToken = !string.IsNullOrWhiteSpace(request.KSeFToken) 
+            ? _encryptionService.Encrypt(request.KSeFToken) 
+            : null;
+        
         var entity = TaxBusinessEntity.CreateNew(
             request.Nip,
             request.Name,
             request.BusinessType,
             request.Description,
+            encryptedToken,
             userId);
         
         await _repository.AddAsync(entity, cancellationToken);

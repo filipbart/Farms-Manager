@@ -5,6 +5,7 @@ using FarmsManager.Domain.Aggregates.UserAggregate.Models;
 using FarmsManager.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -13,9 +14,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FarmsManager.Infrastructure.Migrations
 {
     [DbContext(typeof(FarmsManagerContext))]
-    partial class FarmsManagerContextModelSnapshot : ModelSnapshot
+    [Migration("20260103125815_AddKSeFTokenToTaxBusinessEntity")]
+    partial class AddKSeFTokenToTaxBusinessEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -571,7 +574,7 @@ namespace FarmsManager.Infrastructure.Migrations
 
                     b.Property<string>("KSeFToken")
                         .HasColumnType("text")
-                        .HasColumnName("ksef_token");
+                        .HasColumnName("k_se_f_token");
 
                     b.Property<Guid?>("ModifiedBy")
                         .HasColumnType("uuid")

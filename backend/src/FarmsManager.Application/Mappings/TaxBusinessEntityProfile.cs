@@ -8,6 +8,7 @@ public class TaxBusinessEntityProfile : Profile
 {
     public TaxBusinessEntityProfile()
     {
-        CreateMap<TaxBusinessEntity, TaxBusinessEntityRowDto>();
+        CreateMap<TaxBusinessEntity, TaxBusinessEntityRowDto>()
+            .ForMember(d => d.HasKSeFToken, opt => opt.MapFrom(s => !string.IsNullOrEmpty(s.KSeFToken)));
     }
 }

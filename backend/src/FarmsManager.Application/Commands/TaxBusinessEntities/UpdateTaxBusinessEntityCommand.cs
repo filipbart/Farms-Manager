@@ -15,6 +15,7 @@ public record UpdateTaxBusinessEntityDto
     public string Name { get; init; }
     public string BusinessType { get; init; }
     public string Description { get; init; }
+    public string KSeFToken { get; init; }
 }
 
 public class UpdateTaxBusinessEntityDtoValidator : AbstractValidator<UpdateTaxBusinessEntityDto>
@@ -30,11 +31,16 @@ public class UpdateTaxBusinessEntityCommandHandler : IRequestHandler<UpdateTaxBu
 {
     private readonly ITaxBusinessEntityRepository _repository;
     private readonly IUserDataResolver _userDataResolver;
+    private readonly IEncryptionService _encryptionService;
 
-    public UpdateTaxBusinessEntityCommandHandler(ITaxBusinessEntityRepository repository, IUserDataResolver userDataResolver)
+    public UpdateTaxBusinessEntityCommandHandler(
+        ITaxBusinessEntityRepository repository, 
+        IUserDataResolver userDataResolver,
+        IEncryptionService encryptionService)
     {
         _repository = repository;
         _userDataResolver = userDataResolver;
+        _encryptionService = encryptionService;
     }
 
     public async Task<EmptyBaseResponse> Handle(UpdateTaxBusinessEntityCommand request, CancellationToken cancellationToken)
@@ -43,7 +49,11 @@ public class UpdateTaxBusinessEntityCommandHandler : IRequestHandler<UpdateTaxBu
         var entity = await _repository.GetAsync(new TaxBusinessEntityByIdSpec(request.Id), cancellationToken)
             ?? throw DomainException.RecordNotFound("Podmiot gospodarczy");
 
-        entity.Update(request.Data.Name, request.Data.BusinessType, request.Data.Description);
+        var encryptedToken = !string.IsNullOrWhiteSpace(request.Data.KSeFToken) 
+            ? _encryptionService.Encrypt(request.Data.KSeFToken) 
+            : null;
+
+        entity.Update(request.Data.Name, request.Data.BusinessType, request.Data.Description, encryptedToken);
         entity.SetModified(userId);
         
         await _repository.UpdateAsync(entity, cancellationToken);

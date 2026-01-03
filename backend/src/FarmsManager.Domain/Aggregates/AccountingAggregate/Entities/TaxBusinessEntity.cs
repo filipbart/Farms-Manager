@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
 using FarmsManager.Domain.SeedWork;
 
@@ -34,6 +35,12 @@ public class TaxBusinessEntity : Entity
     public string Description { get; protected internal set; }
 
     /// <summary>
+    /// Token KSeF (przechowywany zaszyfrowany)
+    /// </summary>
+    [Column("ksef_token")]
+    public string KSeFToken { get; protected internal set; }
+
+    /// <summary>
     /// Faktury KSeF przypisane do tego podmiotu
     /// </summary>
     private readonly List<KSeFInvoiceEntity> _invoices = [];
@@ -53,6 +60,7 @@ public class TaxBusinessEntity : Entity
         string name,
         string businessType,
         string description = null,
+        string ksefToken = null,
         Guid? createdBy = null)
     {
         return new TaxBusinessEntity
@@ -61,6 +69,7 @@ public class TaxBusinessEntity : Entity
             Name = name,
             BusinessType = businessType,
             Description = description,
+            KSeFToken = ksefToken,
             CreatedBy = createdBy
         };
     }
@@ -68,10 +77,11 @@ public class TaxBusinessEntity : Entity
     /// <summary>
     /// Aktualizuje dane podmiotu
     /// </summary>
-    public void Update(string name, string businessType, string description = null)
+    public void Update(string name, string businessType, string description = null, string ksefToken = null)
     {
         Name = name;
         BusinessType = businessType;
         Description = description;
+        KSeFToken = ksefToken;
     }
 }

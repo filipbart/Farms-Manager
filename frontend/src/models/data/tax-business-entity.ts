@@ -6,6 +6,7 @@ export interface TaxBusinessEntityRowModel extends AuditFields {
   name: string;
   businessType: string;
   description: string | null;
+  hasKSeFToken: boolean;
 }
 
 export interface AddTaxBusinessEntityFormData {
@@ -13,10 +14,12 @@ export interface AddTaxBusinessEntityFormData {
   name: string;
   businessType: string;
   description: string;
+  kSeFToken: string;
 }
 
 export interface UpdateTaxBusinessEntityFormData {
   name: string;
   businessType: string;
   description: string;
+  kSeFToken: string;
 }

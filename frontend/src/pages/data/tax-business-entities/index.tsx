@@ -69,6 +69,12 @@ const TaxBusinessEntitiesPage: React.FC = () => {
       { field: "businessType", headerName: "Typ działalności", flex: 1 },
       { field: "description", headerName: "Opis", flex: 1 },
       {
+        field: "hasKSeFToken",
+        headerName: "Token KSeF",
+        width: 120,
+        renderCell: (params) => (params.value ? "✓ Skonfigurowany" : "—"),
+      },
+      {
         field: "dateCreatedUtc",
         headerName: "Data utworzenia",
         type: "dateTime",

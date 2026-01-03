@@ -48,6 +48,7 @@ const EditTaxBusinessEntityModal: React.FC<EditTaxBusinessEntityModalProps> = ({
         name: entityData.name,
         businessType: entityData.businessType,
         description: entityData.description || "",
+        kSeFToken: "",
       });
     }
   }, [entityData, reset]);
@@ -107,6 +108,23 @@ const EditTaxBusinessEntityModal: React.FC<EditTaxBusinessEntityModalProps> = ({
             {...register("description")}
             multiline
             rows={3}
+          />
+          <TextField
+            fullWidth
+            margin="normal"
+            label="Token KSeF"
+            {...register("kSeFToken")}
+            type="password"
+            placeholder={
+              entityData?.hasKSeFToken
+                ? "Token jest ustawiony - zostaw puste aby nie zmieniać"
+                : "Wprowadź token KSeF"
+            }
+            helperText={
+              entityData?.hasKSeFToken
+                ? "Token jest już skonfigurowany. Wprowadź nowy aby zmienić."
+                : "Token zostanie zaszyfrowany przed zapisem"
+            }
           />
 
           <Box
