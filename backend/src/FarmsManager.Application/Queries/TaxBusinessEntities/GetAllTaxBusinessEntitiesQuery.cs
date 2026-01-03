@@ -3,7 +3,6 @@ using FarmsManager.Application.Common;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Extensions;
 using FarmsManager.Application.Interfaces;
-using FarmsManager.Application.Specifications;
 using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Entities;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Interfaces;

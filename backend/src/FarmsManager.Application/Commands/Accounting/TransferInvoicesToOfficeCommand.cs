@@ -1,5 +1,4 @@
 using Ardalis.Specification;
-using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Entities;

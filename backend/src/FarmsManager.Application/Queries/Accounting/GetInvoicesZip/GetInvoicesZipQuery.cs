@@ -1,5 +1,4 @@
 using System.IO.Compression;
-using System.Text;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Queries.Accounting.GetKSeFInvoicePdf;
 using FarmsManager.Domain.Exceptions;

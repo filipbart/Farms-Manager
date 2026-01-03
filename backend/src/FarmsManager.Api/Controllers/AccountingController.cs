@@ -3,7 +3,6 @@ using FarmsManager.Api.Attributes;
 using FarmsManager.Api.Controllers.Base;
 using FarmsManager.Application.Commands.Accounting;
 using FarmsManager.Application.Common.Responses;
-using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Permissions;
 using FarmsManager.Application.Queries.Accounting;

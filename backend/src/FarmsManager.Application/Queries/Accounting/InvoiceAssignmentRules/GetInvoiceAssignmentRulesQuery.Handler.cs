@@ -1,7 +1,6 @@
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Interfaces;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 namespace FarmsManager.Application.Queries.Accounting.InvoiceAssignmentRules;
 

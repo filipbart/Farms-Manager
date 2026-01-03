@@ -1,5 +1,4 @@
-﻿using FarmsManager.Application.Commands.Expenses.Types;
-using FarmsManager.Application.Common.Responses;
+﻿using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Common.Validators;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
