@@ -52,6 +52,7 @@ export interface SaveAccountingInvoiceData {
   netAmount: number;
   vatAmount: number;
   invoiceType: string;
+  moduleType: string;
   comment?: string;
 }
 

@@ -27,6 +27,7 @@ public record SaveAccountingInvoiceDto
     public decimal NetAmount { get; init; }
     public decimal VatAmount { get; init; }
     public string InvoiceType { get; init; }
+    public ModuleType ModuleType { get; init; }
     public string Comment { get; init; }
 }
 
@@ -90,7 +91,7 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
             paymentStatus: KSeFPaymentStatus.Unpaid,
             paymentType: KSeFInvoicePaymentType.BankTransfer,
             vatDeductionType: KSeFVatDeductionType.Full,
-            moduleType: ModuleType.None,
+            moduleType: data.ModuleType,
             invoiceXml: string.Empty, // Brak XML dla manualnych faktur
             invoiceDirection: invoiceDirection,
             invoiceSource: KSeFInvoiceSource.Manual,

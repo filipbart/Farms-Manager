@@ -83,6 +83,15 @@ const AccountingPage: React.FC = () => {
   });
   const [transferring, setTransferring] = useState(false);
 
+  const handleUploadedInvoices = (files: DraftAccountingInvoice[]) => {
+    if (!files || files.length === 0) {
+      toast.error("Brak plików do przetworzenia");
+      return;
+    }
+    setDraftInvoices(files);
+    setSaveModalOpen(true);
+  };
+
   // Filters for each tab (all, sales, purchases)
   const [allFilters, dispatchAllFilters] = useReducer(
     ksefFiltersReducer,
@@ -460,30 +469,28 @@ const AccountingPage: React.FC = () => {
       <UploadInvoiceModal
         open={uploadModalOpen}
         onClose={() => setUploadModalOpen(false)}
-        onUpload={(files) => {
-          setDraftInvoices(files);
-          setUploadModalOpen(false);
-          setSaveModalOpen(true);
-        }}
+        onUpload={handleUploadedInvoices}
       />
 
-      <SaveAccountingInvoiceModal
-        open={saveModalOpen}
-        onClose={() => {
-          setSaveModalOpen(false);
-          setDraftInvoices([]);
-        }}
-        draftInvoices={draftInvoices}
-        onSave={(savedInvoice) => {
-          setDraftInvoices((prev) =>
-            prev.filter((d) => d.draftId !== savedInvoice.draftId)
-          );
-          if (draftInvoices.length <= 1) {
+      {draftInvoices.length > 0 && (
+        <SaveAccountingInvoiceModal
+          open={saveModalOpen}
+          onClose={() => {
             setSaveModalOpen(false);
-            fetchInvoices();
-          }
-        }}
-      />
+            setDraftInvoices([]);
+          }}
+          draftInvoices={draftInvoices}
+          onSave={(savedInvoice) => {
+            setDraftInvoices((prev) =>
+              prev.filter((d) => d.draftId !== savedInvoice.draftId)
+            );
+            if (draftInvoices.length <= 1) {
+              setSaveModalOpen(false);
+              fetchInvoices();
+            }
+          }}
+        />
+      )}
     </Box>
   );
 };

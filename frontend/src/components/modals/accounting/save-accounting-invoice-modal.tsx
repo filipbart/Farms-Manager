@@ -9,6 +9,11 @@ import {
   useTheme,
   useMediaQuery,
   TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  FormHelperText,
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import { MdSave } from "react-icons/md";
@@ -22,6 +27,10 @@ import dayjs from "dayjs";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import { toast } from "react-toastify";
 import AppDialog from "../../common/app-dialog";
+import {
+  ModuleType,
+  ModuleTypeLabels,
+} from "../../../models/accounting/ksef-invoice";
 
 interface SaveAccountingInvoiceFormData {
   invoiceNumber: string;
@@ -34,6 +43,7 @@ interface SaveAccountingInvoiceFormData {
   grossAmount: number;
   netAmount: number;
   vatAmount: number;
+  moduleType: ModuleType;
   comment: string;
 }
 
@@ -63,7 +73,10 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
     control,
     formState: { errors },
     reset,
+    watch,
   } = useForm<SaveAccountingInvoiceFormData>();
+
+  const watchedModuleType = watch("moduleType");
 
   const draftInvoice = draftInvoices[currentIndex];
 
@@ -92,6 +105,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
         grossAmount: currentDraft.extractedFields.grossAmount || 0,
         netAmount: currentDraft.extractedFields.netAmount || 0,
         vatAmount: currentDraft.extractedFields.vatAmount || 0,
+        moduleType: ModuleType.None,
         comment: "",
       });
     }
@@ -117,6 +131,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
           netAmount: formData.netAmount,
           vatAmount: formData.vatAmount,
           invoiceType: draftInvoice.extractedFields.invoiceType,
+          moduleType: formData.moduleType,
           comment: formData.comment || undefined,
         }),
       () => {
@@ -352,6 +367,41 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                     })}
                     fullWidth
                   />
+                </Grid>
+
+                <Grid size={12}>
+                  <Divider>
+                    <Typography variant="caption">Przypisanie</Typography>
+                  </Divider>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <FormControl fullWidth error={!!errors.moduleType} required>
+                    <InputLabel id="module-type-label">Moduł</InputLabel>
+                    <Select
+                      labelId="module-type-label"
+                      label="Moduł"
+                      value={watchedModuleType || ""}
+                      {...register("moduleType", {
+                        required: "Moduł jest wymagany",
+                        validate: (value) =>
+                          value !== ModuleType.None || "Wybierz moduł",
+                      })}
+                    >
+                      {Object.entries(ModuleTypeLabels)
+                        .filter(([key]) => key !== ModuleType.None)
+                        .map(([key, label]) => (
+                          <MenuItem key={key} value={key}>
+                            {label}
+                          </MenuItem>
+                        ))}
+                    </Select>
+                    {errors.moduleType && (
+                      <FormHelperText>
+                        {errors.moduleType.message}
+                      </FormHelperText>
+                    )}
+                  </FormControl>
                 </Grid>
 
                 <Grid size={12}>
