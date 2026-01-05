@@ -1,9 +1,25 @@
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.FileSystem;
 using FarmsManager.Application.Interfaces;
+using FarmsManager.Application.Specifications.Expenses;
+using FarmsManager.Application.Specifications.Gas;
+using FarmsManager.Application.Specifications.Cycle;
+using FarmsManager.Application.Specifications.Farms;
+using FarmsManager.Application.Specifications.Feeds;
+using FarmsManager.Application.Specifications.Sales;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Entities;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities;
+using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
+using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.GasAggregate.Entities;
+using FarmsManager.Domain.Aggregates.GasAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
+using FarmsManager.Domain.Aggregates.SaleAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.SlaughterhouseAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
 using FluentValidation;
 using KSeF.Client.Core.Models.Invoices.Common;
@@ -29,7 +45,52 @@ public record SaveAccountingInvoiceDto
     public string InvoiceType { get; init; }
     public ModuleType ModuleType { get; init; }
     public string Comment { get; init; }
+    
+    // Module-specific data
+    public SaveFeedInvoiceDto FeedData { get; init; }
+    public SaveGasDeliveryDto GasData { get; init; }
+    public SaveExpenseProductionDto ExpenseData { get; init; }
+    public SaveSaleInvoiceDto SaleData { get; init; }
 }
+
+#region Module DTOs
+
+public record SaveFeedInvoiceDto
+{
+    public Guid FarmId { get; init; }
+    public Guid CycleId { get; init; }
+    public Guid HenhouseId { get; init; }
+    public string BankAccountNumber { get; init; }
+    public string VendorName { get; init; }
+    public string ItemName { get; init; }
+    public decimal Quantity { get; init; }
+    public decimal UnitPrice { get; init; }
+}
+
+public record SaveGasDeliveryDto
+{
+    public Guid FarmId { get; init; }
+    public Guid? ContractorId { get; init; }
+    public decimal UnitPrice { get; init; }
+    public decimal Quantity { get; init; }
+}
+
+public record SaveExpenseProductionDto
+{
+    public Guid FarmId { get; init; }
+    public Guid CycleId { get; init; }
+    public Guid? ExpenseContractorId { get; init; }
+    public Guid ExpenseTypeId { get; init; }
+}
+
+public record SaveSaleInvoiceDto
+{
+    public Guid FarmId { get; init; }
+    public Guid CycleId { get; init; }
+    public Guid? SlaughterhouseId { get; init; }
+}
+
+#endregion
 
 public record SaveAccountingInvoiceCommand(SaveAccountingInvoiceDto Data)
     : IRequest<BaseResponse<Guid>>;
@@ -40,17 +101,53 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
     private readonly IUserDataResolver _userDataResolver;
     private readonly IS3Service _s3Service;
     private readonly DbContext _dbContext;
+    private readonly IFarmRepository _farmRepository;
+    private readonly ICycleRepository _cycleRepository;
+    private readonly IHenhouseRepository _henhouseRepository;
+    private readonly IFeedNameRepository _feedNameRepository;
+    private readonly IFeedInvoiceRepository _feedInvoiceRepository;
+    private readonly IFeedPriceRepository _feedPriceRepository;
+    private readonly IGasDeliveryRepository _gasDeliveryRepository;
+    private readonly IGasContractorRepository _gasContractorRepository;
+    private readonly IExpenseProductionRepository _expenseProductionRepository;
+    private readonly IExpenseContractorRepository _expenseContractorRepository;
+    private readonly ISaleInvoiceRepository _saleInvoiceRepository;
+    private readonly ISlaughterhouseRepository _slaughterhouseRepository;
 
     public SaveAccountingInvoiceCommandHandler(
         IKSeFInvoiceRepository invoiceRepository,
         IUserDataResolver userDataResolver,
         IS3Service s3Service,
-        DbContext dbContext)
+        DbContext dbContext,
+        IFarmRepository farmRepository,
+        ICycleRepository cycleRepository,
+        IHenhouseRepository henhouseRepository,
+        IFeedNameRepository feedNameRepository,
+        IFeedInvoiceRepository feedInvoiceRepository,
+        IFeedPriceRepository feedPriceRepository,
+        IGasDeliveryRepository gasDeliveryRepository,
+        IGasContractorRepository gasContractorRepository,
+        IExpenseProductionRepository expenseProductionRepository,
+        IExpenseContractorRepository expenseContractorRepository,
+        ISaleInvoiceRepository saleInvoiceRepository,
+        ISlaughterhouseRepository slaughterhouseRepository)
     {
         _invoiceRepository = invoiceRepository;
         _userDataResolver = userDataResolver;
         _s3Service = s3Service;
         _dbContext = dbContext;
+        _farmRepository = farmRepository;
+        _cycleRepository = cycleRepository;
+        _henhouseRepository = henhouseRepository;
+        _feedNameRepository = feedNameRepository;
+        _feedInvoiceRepository = feedInvoiceRepository;
+        _feedPriceRepository = feedPriceRepository;
+        _gasDeliveryRepository = gasDeliveryRepository;
+        _gasContractorRepository = gasContractorRepository;
+        _expenseProductionRepository = expenseProductionRepository;
+        _expenseContractorRepository = expenseContractorRepository;
+        _saleInvoiceRepository = saleInvoiceRepository;
+        _slaughterhouseRepository = slaughterhouseRepository;
     }
 
     public async Task<BaseResponse<Guid>> Handle(SaveAccountingInvoiceCommand request, CancellationToken cancellationToken)
@@ -102,6 +199,9 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
             userId: userId,
             taxBusinessEntityId: taxBusinessEntityId
         );
+
+        // Encja modułowa zostanie utworzona dopiero przy akceptacji faktury (AcceptKSeFInvoiceCommand)
+        // Faktura jest zapisywana ze statusem "New" bez tworzenia encji modułowej
 
         await _invoiceRepository.AddAsync(invoice, cancellationToken);
         await _invoiceRepository.UnitOfWork.SaveChangesAsync(cancellationToken);

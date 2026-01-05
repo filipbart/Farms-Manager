@@ -54,6 +54,42 @@ export interface SaveAccountingInvoiceData {
   invoiceType: string;
   moduleType: string;
   comment?: string;
+  // Module-specific data
+  feedData?: SaveFeedInvoiceData;
+  gasData?: SaveGasDeliveryData;
+  expenseData?: SaveExpenseProductionData;
+  saleData?: SaveSaleInvoiceData;
+}
+
+export interface SaveFeedInvoiceData {
+  farmId: string;
+  cycleId: string;
+  henhouseId: string;
+  bankAccountNumber?: string;
+  vendorName?: string;
+  itemName: string;
+  quantity: number;
+  unitPrice: number;
+}
+
+export interface SaveGasDeliveryData {
+  farmId: string;
+  contractorId?: string;
+  unitPrice: number;
+  quantity: number;
+}
+
+export interface SaveExpenseProductionData {
+  farmId: string;
+  cycleId: string;
+  expenseContractorId?: string;
+  expenseTypeId: string;
+}
+
+export interface SaveSaleInvoiceData {
+  farmId: string;
+  cycleId: string;
+  slaughterhouseId?: string;
 }
 
 export class AccountingService {
@@ -204,6 +240,20 @@ export class AccountingService {
   }
 
   /**
+   * Akceptuje fakturę i tworzy encję w odpowiednim module.
+   * Zmienia status faktury na "Accepted" i wymaga podania danych modułowych (jeśli moduł tego wymaga).
+   */
+  public static async acceptInvoice(
+    invoiceId: string,
+    data: AcceptInvoiceRequest
+  ) {
+    return await AxiosWrapper.post<string | null>(
+      ApiUrl.AccountingAcceptInvoice(invoiceId),
+      data
+    );
+  }
+
+  /**
    * Wstrzymuje fakturę i przypisuje ją do innego pracownika (nie zmienia statusu)
    */
   public static async holdInvoice(invoiceId: string, data: HoldInvoiceData) {
@@ -310,6 +360,14 @@ export interface CreateSaleInvoiceFromKSeFData {
 }
 
 export interface CreateModuleEntityRequest {
+  moduleType: string;
+  feedData?: CreateFeedInvoiceFromKSeFData;
+  gasData?: CreateGasDeliveryFromKSeFData;
+  expenseData?: CreateExpenseProductionFromKSeFData;
+  saleData?: CreateSaleInvoiceFromKSeFData;
+}
+
+export interface AcceptInvoiceRequest {
   moduleType: string;
   feedData?: CreateFeedInvoiceFromKSeFData;
   gasData?: CreateGasDeliveryFromKSeFData;

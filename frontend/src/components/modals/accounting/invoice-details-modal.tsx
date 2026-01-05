@@ -435,6 +435,9 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
   const [holdUserId, setHoldUserId] = useState<string>("");
   const [holdSaving, setHoldSaving] = useState(false);
 
+  // Accept modal state
+  const [showAcceptModal, setShowAcceptModal] = useState(false);
+
   const parsedXml = useMemo(() => {
     if (!details?.invoiceXml) return null;
     return parseKSeFInvoiceXml(details.invoiceXml);
@@ -591,6 +594,31 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
       setHoldSaving(false);
     }
   }, [details, holdUserId, onSave]);
+
+  // Check if module requires entity creation
+  const moduleRequiresEntity = useCallback((moduleType: string) => {
+    return [
+      ModuleType.Feeds,
+      ModuleType.Gas,
+      ModuleType.ProductionExpenses,
+      ModuleType.Sales,
+    ].includes(moduleType as ModuleType);
+  }, []);
+
+  // Handle accept button click - opens modal if module requires entity, otherwise accepts directly
+  const handleAcceptClick = useCallback(() => {
+    if (!details) return;
+
+    const currentModule = editForm.moduleType || ModuleType.None;
+    if (moduleRequiresEntity(currentModule)) {
+      // Show accept modal with module form
+      setPendingModuleType(currentModule);
+      setShowAcceptModal(true);
+    } else {
+      // For modules that don't require entity (Farmstead, Other, None), accept directly
+      handleStatusChange(KSeFInvoiceStatus.Accepted);
+    }
+  }, [details, editForm.moduleType, moduleRequiresEntity, handleStatusChange]);
 
   // Linking handlers
   const fetchLinkableInvoices = useCallback(
@@ -1340,24 +1368,21 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                           : "outlined"
                       }
                       startIcon={<CheckIcon />}
-                      onClick={() =>
-                        handleStatusChange(KSeFInvoiceStatus.Accepted)
+                      onClick={handleAcceptClick}
+                      disabled={
+                        saving || details.status === KSeFInvoiceStatus.Accepted
                       }
-                      disabled={saving}
                     >
                       Zaakceptuj
                     </Button>
                     <Button
-                      color="info"
-                      variant={
-                        details.status === KSeFInvoiceStatus.SentToOffice
-                          ? "contained"
-                          : "outlined"
-                      }
+                      color="warning"
+                      variant="outlined"
                       startIcon={<PauseIcon />}
-                      onClick={() =>
-                        handleStatusChange(KSeFInvoiceStatus.SentToOffice)
-                      }
+                      onClick={() => {
+                        setHoldUserId(editForm.assignedUserId);
+                        setShowHoldModal(true);
+                      }}
                       disabled={saving}
                     >
                       Wstrzymaj
@@ -1835,6 +1860,59 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
             )}
           </Button>
         </DialogActions>
+      </AppDialog>
+
+      {/* Accept Invoice Modal */}
+      <AppDialog
+        open={showAcceptModal}
+        onClose={() => {
+          setShowAcceptModal(false);
+          setPendingModuleType(null);
+        }}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Zaakceptuj fakturę</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Aby zaakceptować fakturę, wypełnij formularz danych modułowych. Po
+            akceptacji zostanie utworzony wpis w wybranym module.
+          </Typography>
+          {pendingModuleType && details && (
+            <ModuleEntityForm
+              invoiceId={details.id}
+              moduleType={pendingModuleType}
+              invoiceData={{
+                invoiceNumber: details.invoiceNumber,
+                invoiceDate: details.invoiceDate,
+                dueDate: details.paymentDueDate || undefined,
+                sellerName: details.sellerName,
+                sellerNip: details.sellerNip,
+                buyerName: details.buyerName,
+                buyerNip: details.buyerNip,
+                grossAmount: details.grossAmount,
+                netAmount: details.netAmount,
+                vatAmount: details.vatAmount,
+              }}
+              farms={farms}
+              selectedFarmId={editForm.farmId}
+              selectedCycleId={editForm.cycleId}
+              mode="accept"
+              onSuccess={() => {
+                setShowAcceptModal(false);
+                setPendingModuleType(null);
+                setDetails((prev) =>
+                  prev ? { ...prev, status: KSeFInvoiceStatus.Accepted } : null
+                );
+                onSave?.();
+              }}
+              onCancel={() => {
+                setShowAcceptModal(false);
+                setPendingModuleType(null);
+              }}
+            />
+          )}
+        </DialogContent>
       </AppDialog>
     </AppDialog>
   );

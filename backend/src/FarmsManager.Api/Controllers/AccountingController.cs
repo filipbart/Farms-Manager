@@ -6,6 +6,7 @@ using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Permissions;
 using FarmsManager.Application.Queries.Accounting;
+using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
 using FarmsManager.Application.Queries.Accounting.GetKSeFInvoiceDetails;
 using FarmsManager.Application.Queries.Accounting.GetKSeFInvoicesFromDb;
 using FarmsManager.Application.Queries.Accounting.GetKSeFInvoicePdf;
@@ -324,4 +325,42 @@ public class AccountingController : BaseController
         var result = await _mediator.Send(command);
         return Ok(result);
     }
+
+    /// <summary>
+    /// Akceptuje fakturę i tworzy encję w odpowiednim module.
+    /// Zmienia status faktury na "Accepted" i wymaga podania danych modułowych (jeśli moduł tego wymaga).
+    /// </summary>
+    [HttpPost("invoices/{invoiceId:guid}/accept")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(BaseResponse<Guid?>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> AcceptInvoice(
+        Guid invoiceId, 
+        [FromBody] AcceptKSeFInvoiceRequest request)
+    {
+        var command = new AcceptKSeFInvoiceCommand
+        {
+            InvoiceId = invoiceId,
+            ModuleType = request.ModuleType,
+            FeedData = request.FeedData,
+            GasData = request.GasData,
+            ExpenseData = request.ExpenseData,
+            SaleData = request.SaleData
+        };
+
+        var result = await _mediator.Send(command);
+        return Ok(result);
+    }
+}
+
+/// <summary>
+/// Request do akceptacji faktury
+/// </summary>
+public class AcceptKSeFInvoiceRequest
+{
+    public ModuleType ModuleType { get; set; }
+    public CreateFeedInvoiceFromKSeFDto? FeedData { get; set; }
+    public CreateGasDeliveryFromKSeFDto? GasData { get; set; }
+    public CreateExpenseProductionFromKSeFDto? ExpenseData { get; set; }
+    public CreateSaleInvoiceFromKSeFDto? SaleData { get; set; }
 }

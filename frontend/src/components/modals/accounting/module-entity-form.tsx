@@ -16,6 +16,7 @@ import { toast } from "react-toastify";
 import {
   AccountingService,
   type CreateModuleEntityRequest,
+  type AcceptInvoiceRequest,
 } from "../../../services/accounting-service";
 import { FarmsService } from "../../../services/farms-service";
 import { FeedsService } from "../../../services/feeds-service";
@@ -52,6 +53,11 @@ interface ModuleEntityFormProps {
   selectedCycleId?: string;
   onSuccess: () => void;
   onCancel: () => void;
+  /**
+   * Mode: 'create' - creates module entity without changing status
+   * Mode: 'accept' - creates module entity AND changes status to Accepted
+   */
+  mode?: "create" | "accept";
 }
 
 interface FeedFormData {
@@ -117,6 +123,7 @@ const ModuleEntityForm: React.FC<ModuleEntityFormProps> = ({
   selectedCycleId,
   onSuccess,
   onCancel,
+  mode = "create",
 }) => {
   const [loading, setLoading] = useState(false);
   const [cycles, setCycles] = useState<CycleDto[]>([]);
@@ -331,7 +338,9 @@ const ModuleEntityForm: React.FC<ModuleEntityFormProps> = ({
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      const request: CreateModuleEntityRequest = { moduleType };
+      const request: CreateModuleEntityRequest | AcceptInvoiceRequest = {
+        moduleType,
+      };
 
       switch (moduleType) {
         case ModuleType.Feeds: {
@@ -408,15 +417,35 @@ const ModuleEntityForm: React.FC<ModuleEntityFormProps> = ({
         }
       }
 
-      await handleApiResponse(
-        () => AccountingService.createModuleEntity(invoiceId, request),
-        () => {
-          toast.success("Pomyślnie utworzono wpis w module");
-          onSuccess();
-        },
-        undefined,
-        "Wystąpił błąd podczas tworzenia wpisu w module"
-      );
+      if (mode === "accept") {
+        // Accept mode: changes status to Accepted AND creates module entity
+        await handleApiResponse(
+          () =>
+            AccountingService.acceptInvoice(
+              invoiceId,
+              request as AcceptInvoiceRequest
+            ),
+          () => {
+            toast.success(
+              "Faktura została zaakceptowana i utworzono wpis w module"
+            );
+            onSuccess();
+          },
+          undefined,
+          "Wystąpił błąd podczas akceptacji faktury"
+        );
+      } else {
+        // Create mode: only creates module entity without changing status
+        await handleApiResponse(
+          () => AccountingService.createModuleEntity(invoiceId, request),
+          () => {
+            toast.success("Pomyślnie utworzono wpis w module");
+            onSuccess();
+          },
+          undefined,
+          "Wystąpił błąd podczas tworzenia wpisu w module"
+        );
+      }
     } finally {
       setLoading(false);
     }
