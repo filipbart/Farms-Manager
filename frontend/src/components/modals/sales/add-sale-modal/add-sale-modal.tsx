@@ -223,6 +223,8 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
     onClose();
     setErrors({});
     setHenhouses([]);
+    setEntriesTableReady([]);
+    setSendToIrz(false);
     dispatch({ type: "RESET" });
   };
 
