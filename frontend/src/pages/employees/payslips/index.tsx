@@ -2,7 +2,6 @@ import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
 import {
   DataGridPremium,
   GRID_AGGREGATION_ROOT_FOOTER_ROW_ID,
-  type GridState,
 } from "@mui/x-data-grid-premium";
 import { useReducer, useState, useMemo, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
@@ -24,27 +23,13 @@ import {
 import { getEmployeePayslipsFiltersConfig } from "./filter-config.employee-payslips";
 import AddEmployeePayslipModal from "../../../components/modals/employees/add-employee-payslip-modal";
 import EditEmployeePayslipModal from "../../../components/modals/employees/edit-employee-payslip-modal";
-import {
-  getSortOptionsFromGridModel,
-  initializeFiltersFromLocalStorage,
-} from "../../../utils/grid-state-helper";
+import { getSortOptionsFromGridModel } from "../../../utils/grid-state-helper";
 import { useAuth } from "../../../auth/useAuth";
 
 const EmployeePayslipsPage: React.FC = () => {
   const { userData } = useAuth();
   const isAdmin = userData?.isAdmin ?? false;
-  const [filters, dispatch] = useReducer(
-    filterReducer,
-    initialFilters,
-    (init) =>
-      initializeFiltersFromLocalStorage(
-        init,
-        "employeePayslipsGridState",
-        "employeePayslipsPageSize",
-        EmployeePayslipsOrderType,
-        mapEmployeePayslipOrderTypeToField
-      )
-  );
+  const [filters, dispatch] = useReducer(filterReducer, initialFilters);
   const [dictionary, setDictionary] = useState<EmployeePayslipsDictionary>();
   const [openAddPayslipModal, setOpenAddPayslipModal] = useState(false);
   const [selectedPayslip, setSelectedPayslip] =
@@ -54,29 +39,24 @@ const EmployeePayslipsPage: React.FC = () => {
   const { payslips, totalRows, loading, fetchPayslips } =
     useEmployeePayslips(filters);
 
-  const [initialGridState] = useState(() => {
-    const savedState = localStorage.getItem("employeePayslipsGridState");
-    return savedState
-      ? JSON.parse(savedState)
-      : {
-          columns: {
-            columnVisibilityModel: { dateCreatedUtc: false },
-          },
-          aggregation: {
-            model: {
-              baseSalary: "sum",
-              bankTransferAmount: "sum",
-              bonusAmount: "sum",
-              overtimePay: "sum",
-              overtimeHours: "sum",
-              deductions: "sum",
-              otherAllowances: "sum",
-              netPay: "sum",
-              totalAmount: "sum",
-            },
-          },
-        };
-  });
+  const initialGridState = {
+    columns: {
+      columnVisibilityModel: { dateCreatedUtc: false },
+    },
+    aggregation: {
+      model: {
+        baseSalary: "sum",
+        bankTransferAmount: "sum",
+        bonusAmount: "sum",
+        overtimePay: "sum",
+        overtimeHours: "sum",
+        deductions: "sum",
+        otherAllowances: "sum",
+        netPay: "sum",
+        totalAmount: "sum",
+      },
+    },
+  };
 
   const uniqueCycles = useMemo(() => {
     if (!dictionary?.cycles) return [];
@@ -159,7 +139,11 @@ const EmployeePayslipsPage: React.FC = () => {
       </Box>
 
       <FiltersForm
-        config={getEmployeePayslipsFiltersConfig(dictionary, uniqueCycles, isAdmin)}
+        config={getEmployeePayslipsFiltersConfig(
+          dictionary,
+          uniqueCycles,
+          isAdmin
+        )}
         filters={filters}
         dispatch={dispatch}
       />
@@ -170,20 +154,6 @@ const EmployeePayslipsPage: React.FC = () => {
           columns={columns}
           rows={payslips}
           initialState={initialGridState}
-          onStateChange={(newState: GridState) => {
-            const stateToSave = {
-              columns: newState.columns,
-              sorting: newState.sorting,
-              filter: newState.filter,
-              aggregation: newState.aggregation,
-              pinnedColumns: newState.pinnedColumns,
-              rowGrouping: newState.rowGrouping,
-            };
-            localStorage.setItem(
-              "employeePayslipsGridState",
-              JSON.stringify(stateToSave)
-            );
-          }}
           scrollbarSize={17}
           pagination
           paginationMode="server"
@@ -192,11 +162,6 @@ const EmployeePayslipsPage: React.FC = () => {
             page: filters.page ?? 0,
           }}
           onPaginationModelChange={({ page, pageSize }) => {
-            localStorage.setItem(
-              "employeePayslipsPageSize",
-              pageSize.toString()
-            );
-
             dispatch({
               type: "setMultiple",
               payload: { page, pageSize },

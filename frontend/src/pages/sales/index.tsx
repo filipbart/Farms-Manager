@@ -25,45 +25,25 @@ import { downloadFile } from "../../utils/download-file";
 import {
   DataGridPremium,
   GRID_AGGREGATION_ROOT_FOOTER_ROW_ID,
-  type GridState,
 } from "@mui/x-data-grid-premium";
-import {
-  getSortOptionsFromGridModel,
-  initializeFiltersFromLocalStorage,
-} from "../../utils/grid-state-helper";
+import { getSortOptionsFromGridModel } from "../../utils/grid-state-helper";
 import { useAuth } from "../../auth/useAuth";
 
 const SalesPage: React.FC = () => {
   const { userData } = useAuth();
   const isAdmin = userData?.isAdmin ?? false;
-  const [filters, dispatch] = useReducer(
-    filterReducer,
-    initialFilters,
-    (init) =>
-      initializeFiltersFromLocalStorage(
-        init,
-        "salesGridState",
-        "salesPageSize",
-        SalesOrderType,
-        mapSaleOrderTypeToField
-      )
-  );
+  const [filters, dispatch] = useReducer(filterReducer, initialFilters);
   const [dictionary, setDictionary] = useState<SalesDictionary>();
   const [openModal, setOpenModal] = useState(false);
   const [selectedSale, setSelectedSale] = useState<SaleListModel | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { sales, totalRows, loading, refetch: fetchSales } = useSales(filters);
 
-  const [initialGridState] = useState(() => {
-    const savedState = localStorage.getItem("salesGridState");
-    return savedState
-      ? JSON.parse(savedState)
-      : {
-          columns: {
-            columnVisibilityModel: { dateCreatedUtc: false },
-          },
-        };
-  });
+  const initialGridState = {
+    columns: {
+      columnVisibilityModel: { dateCreatedUtc: false },
+    },
+  };
 
   const [downloadDirectoryPath, setDownloadDirectoryPath] = useState<
     string | null
@@ -204,17 +184,6 @@ const SalesPage: React.FC = () => {
           rows={transformedRows}
           columns={columns}
           initialState={initialGridState}
-          onStateChange={(newState: GridState) => {
-            const stateToSave = {
-              columns: newState.columns,
-              sorting: newState.sorting,
-              filter: newState.filter,
-              aggregation: newState.aggregation,
-              pinnedColumns: newState.pinnedColumns,
-              rowGrouping: newState.rowGrouping,
-            };
-            localStorage.setItem("salesGridState", JSON.stringify(stateToSave));
-          }}
           pagination
           paginationMode="server"
           paginationModel={{
@@ -222,8 +191,6 @@ const SalesPage: React.FC = () => {
             page: filters.page ?? 0,
           }}
           onPaginationModelChange={({ page, pageSize }) => {
-            localStorage.setItem("salesPageSize", pageSize.toString());
-
             dispatch({
               type: "setMultiple",
               payload: { page, pageSize },

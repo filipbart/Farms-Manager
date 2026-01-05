@@ -22,29 +22,14 @@ import EditProductionDataTransferFeedModal from "../../../components/modals/prod
 import {
   DataGridPremium,
   GRID_AGGREGATION_ROOT_FOOTER_ROW_ID,
-  type GridState,
 } from "@mui/x-data-grid-premium";
-import {
-  getSortOptionsFromGridModel,
-  initializeFiltersFromLocalStorage,
-} from "../../../utils/grid-state-helper";
+import { getSortOptionsFromGridModel } from "../../../utils/grid-state-helper";
 import { useAuth } from "../../../auth/useAuth";
 
 const ProductionDataTransferFeedPage: React.FC = () => {
   const { userData } = useAuth();
   const isAdmin = userData?.isAdmin ?? false;
-  const [filters, dispatch] = useReducer(
-    filterReducer,
-    initialFilters,
-    (init) =>
-      initializeFiltersFromLocalStorage(
-        init,
-        "productionDataTransferFeedGridState",
-        "productionDataTransferFeedPageSize",
-        ProductionDataOrderType,
-        mapProductionDataOrderTypeToField
-      )
-  );
+  const [filters, dispatch] = useReducer(filterReducer, initialFilters);
   const [dictionary, setDictionary] = useState<ProductionDataDictionary>();
   const [openModal, setOpenModal] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -56,18 +41,11 @@ const ProductionDataTransferFeedPage: React.FC = () => {
     useState<ProductionDataTransferFeedListModel | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  const [initialGridState] = useState(() => {
-    const savedState = localStorage.getItem(
-      "productionDataTransferFeedGridState"
-    );
-    return savedState
-      ? JSON.parse(savedState)
-      : {
-          columns: {
-            columnVisibilityModel: { dateCreatedUtc: false },
-          },
-        };
-  });
+  const initialGridState = {
+    columns: {
+      columnVisibilityModel: { dateCreatedUtc: false },
+    },
+  };
 
   const uniqueCycles = useMemo(() => {
     if (!dictionary) return [];
@@ -191,20 +169,6 @@ const ProductionDataTransferFeedPage: React.FC = () => {
           columns={columns}
           columnGroupingModel={columnGroupingModel}
           initialState={initialGridState}
-          onStateChange={(newState: GridState) => {
-            const stateToSave = {
-              columns: newState.columns,
-              sorting: newState.sorting,
-              filter: newState.filter,
-              aggregation: newState.aggregation,
-              pinnedColumns: newState.pinnedColumns,
-              rowGrouping: newState.rowGrouping,
-            };
-            localStorage.setItem(
-              "productionDataTransferFeedGridState",
-              JSON.stringify(stateToSave)
-            );
-          }}
           paginationMode="server"
           pagination
           paginationModel={{
@@ -212,11 +176,6 @@ const ProductionDataTransferFeedPage: React.FC = () => {
             page: filters.page ?? 0,
           }}
           onPaginationModelChange={({ page, pageSize }) => {
-            localStorage.setItem(
-              "productionDataTransferFeedPageSize",
-              pageSize.toString()
-            );
-
             dispatch({
               type: "setMultiple",
               payload: { page, pageSize },

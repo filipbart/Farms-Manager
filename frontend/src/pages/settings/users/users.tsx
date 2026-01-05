@@ -16,43 +16,24 @@ import {
 import { getUsersFiltersConfig } from "./filter-config.users";
 import { UsersService } from "../../../services/users-service";
 import AddUserModal from "../../../components/modals/users/add-user-modal";
-import { DataGridPremium, type GridState } from "@mui/x-data-grid-premium";
+import { DataGridPremium } from "@mui/x-data-grid-premium";
 import { useAuth } from "../../../auth/useAuth";
-import {
-  getSortOptionsFromGridModel,
-  initializeFiltersFromLocalStorage,
-} from "../../../utils/grid-state-helper";
+import { getSortOptionsFromGridModel } from "../../../utils/grid-state-helper";
 
 const UsersPage: React.FC = () => {
   const { userData } = useAuth();
   const isAdmin = userData?.isAdmin ?? false;
-  const [filters, dispatch] = useReducer(
-    filterReducer,
-    initialFilters,
-    (init) =>
-      initializeFiltersFromLocalStorage(
-        init,
-        "settingsUsersGridState",
-        "usersPageSize",
-        UsersOrderType,
-        mapUserOrderTypeToField
-      )
-  );
+  const [filters, dispatch] = useReducer(filterReducer, initialFilters);
   const [openAddUserModal, setOpenAddUserModal] = useState(false);
 
   const { users, totalRows, loading, fetchUsers } = useUsers(filters);
   const nav = useNavigate();
 
-  const [initialGridState] = useState(() => {
-    const savedState = localStorage.getItem("settingsUsersGridState");
-    return savedState
-      ? JSON.parse(savedState)
-      : {
-          columns: {
-            columnVisibilityModel: { dateCreatedUtc: false },
-          },
-        };
-  });
+  const initialGridState = {
+    columns: {
+      columnVisibilityModel: { dateCreatedUtc: false },
+    },
+  };
 
   const deleteUser = useCallback(
     async (id: string) => {
@@ -73,7 +54,10 @@ const UsersPage: React.FC = () => {
     fetchUsers();
   }, [fetchUsers]);
 
-  const columns = useMemo(() => getUsersColumns({ deleteUser, isAdmin }), [deleteUser, isAdmin]);
+  const columns = useMemo(
+    () => getUsersColumns({ deleteUser, isAdmin }),
+    [deleteUser, isAdmin]
+  );
 
   return (
     <Box p={4}>
@@ -109,20 +93,6 @@ const UsersPage: React.FC = () => {
           rows={users}
           columns={columns}
           initialState={initialGridState}
-          onStateChange={(newState: GridState) => {
-            const stateToSave = {
-              columns: newState.columns,
-              sorting: newState.sorting,
-              filter: newState.filter,
-              aggregation: newState.aggregation,
-              pinnedColumns: newState.pinnedColumns,
-              rowGrouping: newState.rowGrouping,
-            };
-            localStorage.setItem(
-              "settingsUsersGridState",
-              JSON.stringify(stateToSave)
-            );
-          }}
           onRowClick={(params) => {
             nav(`/settings/users/${params.id}`);
           }}
@@ -133,8 +103,6 @@ const UsersPage: React.FC = () => {
             page: filters.page ?? 0,
           }}
           onPaginationModelChange={({ page, pageSize }) => {
-            localStorage.setItem("usersPageSize", pageSize.toString());
-
             dispatch({
               type: "setMultiple",
               payload: { page, pageSize },

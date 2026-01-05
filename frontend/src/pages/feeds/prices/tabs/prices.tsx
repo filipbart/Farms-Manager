@@ -22,30 +22,15 @@ import EditFeedPriceModal from "../../../../components/modals/feeds/prices/edit-
 import {
   DataGridPremium,
   GRID_AGGREGATION_ROOT_FOOTER_ROW_ID,
-  type GridState,
 } from "@mui/x-data-grid-premium";
-import {
-  getSortOptionsFromGridModel,
-  initializeFiltersFromLocalStorage,
-} from "../../../../utils/grid-state-helper";
+import { getSortOptionsFromGridModel } from "../../../../utils/grid-state-helper";
 import { useFeedsNames } from "../../../../hooks/feeds/useFeedsNames";
 import { useAuth } from "../../../../auth/useAuth";
 
 const FeedsPricesTab: React.FC = () => {
   const { userData } = useAuth();
   const isAdmin = userData?.isAdmin ?? false;
-  const [filters, dispatch] = useReducer(
-    filterReducer,
-    initialFilters,
-    (init) =>
-      initializeFiltersFromLocalStorage(
-        init,
-        "feedPricesGridState",
-        "feedsPricesPageSize",
-        FeedsPricesOrderType,
-        mapFeedsPricesOrderTypeToField
-      )
-  );
+  const [filters, dispatch] = useReducer(filterReducer, initialFilters);
   const [dictionary, setDictionary] = useState<FeedsDictionary>();
   const { feedsNames, fetchFeedsNames } = useFeedsNames();
 
@@ -57,16 +42,11 @@ const FeedsPricesTab: React.FC = () => {
   const [selectedFeedPrice, setSelectedFeedPrice] = useState<null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  const [initialGridState] = useState(() => {
-    const savedState = localStorage.getItem("feedPricesGridState");
-    return savedState
-      ? JSON.parse(savedState)
-      : {
-          columns: {
-            columnVisibilityModel: { dateCreatedUtc: false },
-          },
-        };
-  });
+  const initialGridState = {
+    columns: {
+      columnVisibilityModel: { dateCreatedUtc: false },
+    },
+  };
 
   const deleteFeedPrice = async (id: string) => {
     try {
@@ -191,20 +171,6 @@ const FeedsPricesTab: React.FC = () => {
           rows={feedsPrices}
           columns={columns}
           initialState={initialGridState}
-          onStateChange={(newState: GridState) => {
-            const stateToSave = {
-              columns: newState.columns,
-              sorting: newState.sorting,
-              filter: newState.filter,
-              aggregation: newState.aggregation,
-              pinnedColumns: newState.pinnedColumns,
-              rowGrouping: newState.rowGrouping,
-            };
-            localStorage.setItem(
-              "feedPricesGridState",
-              JSON.stringify(stateToSave)
-            );
-          }}
           scrollbarSize={17}
           paginationMode="server"
           pagination
@@ -213,8 +179,6 @@ const FeedsPricesTab: React.FC = () => {
             page: filters.page ?? 0,
           }}
           onPaginationModelChange={({ page, pageSize }) => {
-            localStorage.setItem("feedsPricesPageSize", pageSize.toString());
-
             dispatch({
               type: "setMultiple",
               payload: { page, pageSize },

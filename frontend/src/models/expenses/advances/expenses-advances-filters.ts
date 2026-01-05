@@ -1,39 +1,11 @@
 import type { OrderedPaginationParams } from "../../common/pagination-params";
 
-const LOCAL_STORAGE_KEY = "expensesAdvancesFilters";
-
-const saveFiltersToLocalStorage = (filters: ExpensesAdvancesFilterPaginationModel) => {
-  try {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(filters));
-  } catch (error) {
-    console.error("Failed to save filters to localStorage", error);
-  }
-};
-
-export const loadFiltersFromLocalStorage =
-  (): ExpensesAdvancesFilterPaginationModel | null => {
-    try {
-      const savedFilters = localStorage.getItem(LOCAL_STORAGE_KEY);
-      return savedFilters ? JSON.parse(savedFilters) : null;
-    } catch (error) {
-      console.error("Failed to load filters from localStorage", error);
-      return null;
-    }
-  };
-
-export const defaultFilters: ExpensesAdvancesFilterPaginationModel = {
+export const initialFilters: ExpensesAdvancesFilterPaginationModel = {
   dateSince: "",
   dateTo: "",
   showDeleted: false,
   page: 0,
   pageSize: 10,
-};
-
-const savedFilters = loadFiltersFromLocalStorage();
-
-export const initialFilters: ExpensesAdvancesFilterPaginationModel = {
-  ...defaultFilters,
-  ...savedFilters,
 };
 
 export function filterReducer(
@@ -60,7 +32,6 @@ export function filterReducer(
     default:
       return state;
   }
-  saveFiltersToLocalStorage(newState);
   return newState;
 }
 

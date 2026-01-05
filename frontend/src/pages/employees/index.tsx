@@ -18,32 +18,14 @@ import NoRowsOverlay from "../../components/datagrid/custom-norows";
 import { useNavigate } from "react-router-dom";
 import AddEmployeeModal from "../../components/modals/employees/add-employee-modal";
 import type { EmployeeListModel } from "../../models/employees/employees";
-import {
-  DataGridPremium,
-  type GridRowParams,
-  type GridState,
-} from "@mui/x-data-grid-premium";
-import {
-  getSortOptionsFromGridModel,
-  initializeFiltersFromLocalStorage,
-} from "../../utils/grid-state-helper";
+import { DataGridPremium, type GridRowParams } from "@mui/x-data-grid-premium";
+import { getSortOptionsFromGridModel } from "../../utils/grid-state-helper";
 import { useAuth } from "../../auth/useAuth";
 
 const EmployeesPage: React.FC = () => {
   const { userData } = useAuth();
   const isAdmin = userData?.isAdmin ?? false;
-  const [filters, dispatch] = useReducer(
-    filterReducer,
-    initialFilters,
-    (init) =>
-      initializeFiltersFromLocalStorage(
-        init,
-        "employeesGridState",
-        "employeesPageSize",
-        EmployeesOrderType,
-        mapEmployeeOrderTypeToField
-      )
-  );
+  const [filters, dispatch] = useReducer(filterReducer, initialFilters);
   const [dictionary, setDictionary] = useState<EmployeesDictionary>();
   const [openAddEmployeeModal, setOpenAddEmployeeModal] = useState(false);
 
@@ -51,16 +33,11 @@ const EmployeesPage: React.FC = () => {
     useEmployees(filters);
   const nav = useNavigate();
 
-  const [initialGridState] = useState(() => {
-    const savedState = localStorage.getItem("employeesGridState");
-    return savedState
-      ? JSON.parse(savedState)
-      : {
-          columns: {
-            columnVisibilityModel: { dateCreatedUtc: false },
-          },
-        };
-  });
+  const initialGridState = {
+    columns: {
+      columnVisibilityModel: { dateCreatedUtc: false },
+    },
+  };
 
   const deleteEmployee = useCallback(
     async (id: string) => {
@@ -143,20 +120,6 @@ const EmployeesPage: React.FC = () => {
           rows={employees}
           columns={columns}
           initialState={initialGridState}
-          onStateChange={(newState: GridState) => {
-            const stateToSave = {
-              columns: newState.columns,
-              sorting: newState.sorting,
-              filter: newState.filter,
-              aggregation: newState.aggregation,
-              pinnedColumns: newState.pinnedColumns,
-              rowGrouping: newState.rowGrouping,
-            };
-            localStorage.setItem(
-              "employeesGridState",
-              JSON.stringify(stateToSave)
-            );
-          }}
           onRowClick={(params) => {
             nav(`/employees/${params.id}`);
           }}
@@ -167,8 +130,6 @@ const EmployeesPage: React.FC = () => {
             page: filters.page ?? 0,
           }}
           onPaginationModelChange={({ page, pageSize }) => {
-            localStorage.setItem("employeesPageSize", pageSize.toString());
-
             dispatch({
               type: "setMultiple",
               payload: { page, pageSize },

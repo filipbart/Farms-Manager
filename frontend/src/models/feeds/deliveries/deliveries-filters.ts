@@ -1,56 +1,18 @@
 import type { CycleDictModel } from "../../common/dictionaries";
 import type { OrderedPaginationParams } from "../../common/pagination-params";
 
-const LOCAL_STORAGE_KEY = "feedsDeliveriesFilters";
-
-const saveFiltersToLocalStorage = (filters: FeedsDeliveriesFilterPaginationModel) => {
-  try {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(filters));
-  } catch (error) {
-    console.error("Failed to save filters to localStorage", error);
-  }
+export const initialFilters: FeedsDeliveriesFilterPaginationModel = {
+  farmIds: [],
+  henhouseIds: [],
+  feedNames: [],
+  invoiceNumber: "",
+  cycles: [],
+  dateSince: "",
+  dateTo: "",
+  showDeleted: false,
+  page: 0,
+  pageSize: 10,
 };
-
-export const loadFiltersFromLocalStorage =
-  (): Partial<FeedsDeliveriesFilterPaginationModel> | null => {
-    try {
-      const savedFilters = localStorage.getItem(LOCAL_STORAGE_KEY);
-      return savedFilters ? JSON.parse(savedFilters) : null;
-    } catch (error) {
-      console.error("Failed to load filters from localStorage", error);
-      return null;
-    }
-  };
-
-const getInitialFilters = (): FeedsDeliveriesFilterPaginationModel => {
-  const defaultFilters: FeedsDeliveriesFilterPaginationModel = {
-    farmIds: [],
-    henhouseIds: [],
-    feedNames: [],
-    invoiceNumber: "",
-    cycles: [],
-    dateSince: "",
-    dateTo: "",
-    showDeleted: false,
-    page: 0,
-    pageSize: 10,
-  };
-
-  const savedFilters = loadFiltersFromLocalStorage();
-
-  if (savedFilters) {
-    return {
-      ...defaultFilters,
-      ...savedFilters,
-
-      page: 0,
-    };
-  }
-
-  return defaultFilters;
-};
-
-export const initialFilters = getInitialFilters();
 
 export function filterReducer(
   state: FeedsDeliveriesFilterPaginationModel,
@@ -78,7 +40,6 @@ export function filterReducer(
       return state;
   }
 
-  saveFiltersToLocalStorage(newState);
   return newState;
 }
 

@@ -22,29 +22,14 @@ import EditGasConsumptionModal from "../../../components/modals/gas/consumptions
 import {
   DataGridPremium,
   GRID_AGGREGATION_ROOT_FOOTER_ROW_ID,
-  type GridState,
 } from "@mui/x-data-grid-premium";
-import {
-  getSortOptionsFromGridModel,
-  initializeFiltersFromLocalStorage,
-} from "../../../utils/grid-state-helper";
+import { getSortOptionsFromGridModel } from "../../../utils/grid-state-helper";
 import { useAuth } from "../../../auth/useAuth";
 
 const GasConsumptionsPage: React.FC = () => {
   const { userData } = useAuth();
   const isAdmin = userData?.isAdmin ?? false;
-  const [filters, dispatch] = useReducer(
-    filterReducer,
-    initialFilters,
-    (init) =>
-      initializeFiltersFromLocalStorage(
-        init,
-        "gasConsumptionsGridState",
-        "gasConsumptionsPageSize",
-        GasConsumptionsOrderType,
-        mapGasConsumptionOrderTypeToField
-      )
-  );
+  const [filters, dispatch] = useReducer(filterReducer, initialFilters);
   const [dictionary, setDictionary] = useState<GasConsumptionsDictionary>();
   const [openAddModal, setOpenAddModal] = useState(false);
   const [selectedGasConsumption, setSelectedGasConsumption] =
@@ -58,16 +43,11 @@ const GasConsumptionsPage: React.FC = () => {
     refetch: fetchGasConsumptions,
   } = useGasConsumptions(filters);
 
-  const [initialGridState] = useState(() => {
-    const savedState = localStorage.getItem("gasConsumptionsGridState");
-    return savedState
-      ? JSON.parse(savedState)
-      : {
-          columns: {
-            columnVisibilityModel: { dateCreatedUtc: false },
-          },
-        };
-  });
+  const initialGridState = {
+    columns: {
+      columnVisibilityModel: { dateCreatedUtc: false },
+    },
+  };
 
   const uniqueCycles = useMemo(() => {
     if (!dictionary?.cycles) return [];
@@ -149,7 +129,11 @@ const GasConsumptionsPage: React.FC = () => {
       </Box>
 
       <FiltersForm
-        config={getGasConsumptionsFiltersConfig(dictionary, uniqueCycles, isAdmin)}
+        config={getGasConsumptionsFiltersConfig(
+          dictionary,
+          uniqueCycles,
+          isAdmin
+        )}
         filters={filters}
         dispatch={dispatch}
       />
@@ -160,20 +144,6 @@ const GasConsumptionsPage: React.FC = () => {
           rows={gasConsumptions}
           columns={columns}
           initialState={initialGridState}
-          onStateChange={(newState: GridState) => {
-            const stateToSave = {
-              columns: newState.columns,
-              sorting: newState.sorting,
-              filter: newState.filter,
-              aggregation: newState.aggregation,
-              pinnedColumns: newState.pinnedColumns,
-              rowGrouping: newState.rowGrouping,
-            };
-            localStorage.setItem(
-              "gasConsumptionsGridState",
-              JSON.stringify(stateToSave)
-            );
-          }}
           paginationMode="server"
           pagination
           paginationModel={{
@@ -181,11 +151,6 @@ const GasConsumptionsPage: React.FC = () => {
             page: filters.page ?? 0,
           }}
           onPaginationModelChange={({ page, pageSize }) => {
-            localStorage.setItem(
-              "gasConsumptionsPageSize",
-              pageSize.toString()
-            );
-
             dispatch({
               type: "setMultiple",
               payload: { page, pageSize },
