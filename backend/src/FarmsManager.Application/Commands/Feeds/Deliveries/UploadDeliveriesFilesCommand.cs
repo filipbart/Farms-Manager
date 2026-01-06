@@ -22,7 +22,7 @@ namespace FarmsManager.Application.Commands.Feeds.Deliveries;
 
 public record UploadDeliveriesFilesCommandDto
 {
-    public List<IFormFile> Files { get; init; }
+    public List<IFormFile> Files { get; set; } = [];
 }
 
 public record UploadDeliveryFileData

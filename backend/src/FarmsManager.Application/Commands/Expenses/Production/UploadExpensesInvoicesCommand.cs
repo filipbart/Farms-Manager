@@ -20,7 +20,7 @@ namespace FarmsManager.Application.Commands.Expenses.Production;
 
 public record UploadExpensesInvoicesDto
 {
-    public List<IFormFile> Files { get; init; }
+    public List<IFormFile> Files { get; set; } = [];
 }
 
 public record UploadExpensesInvoicesData
