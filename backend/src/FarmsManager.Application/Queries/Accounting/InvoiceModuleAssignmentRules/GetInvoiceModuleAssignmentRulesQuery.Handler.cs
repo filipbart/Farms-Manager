@@ -1,5 +1,4 @@
 using FarmsManager.Application.Common.Responses;
-using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Interfaces;
 using FarmsManager.Application.Extensions;
 using MediatR;
