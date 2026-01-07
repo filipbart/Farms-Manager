@@ -32,12 +32,8 @@ import { NotificationContext } from "../../../context/notification-context";
 import {
   DataGridPremium,
   GRID_AGGREGATION_ROOT_FOOTER_ROW_ID,
-  type GridState,
 } from "@mui/x-data-grid-premium";
-import {
-  getSortOptionsFromGridModel,
-  initializeFiltersFromLocalStorage,
-} from "../../../utils/grid-state-helper";
+import { getSortOptionsFromGridModel } from "../../../utils/grid-state-helper";
 import { useFeedsNames } from "../../../hooks/feeds/useFeedsNames";
 import { getDueDateClassName } from "../../../utils/due-date-helper";
 import { useAuth } from "../../../auth/useAuth";
@@ -45,18 +41,7 @@ import { useAuth } from "../../../auth/useAuth";
 const FeedsDeliveriesPage: React.FC = () => {
   const { userData } = useAuth();
   const isAdmin = userData?.isAdmin ?? false;
-  const [filters, dispatch] = useReducer(
-    filterReducer,
-    initialFilters,
-    (init) =>
-      initializeFiltersFromLocalStorage(
-        init,
-        "feedsDeliveriesGridState",
-        "feedsDeliveriesPageSize",
-        FeedsDeliveriesOrderType,
-        mapFeedsDeliveriesOrderTypeToField
-      )
-  );
+  const [filters, dispatch] = useReducer(filterReducer, initialFilters);
   const [dictionary, setDictionary] = useState<FeedsDictionary>();
   const { fetchNotifications } = useContext(NotificationContext);
   const { feedsNames, fetchFeedsNames } = useFeedsNames();
@@ -85,14 +70,9 @@ const FeedsDeliveriesPage: React.FC = () => {
     ids: new Set(),
   });
 
-  const [initialGridState] = useState(() => {
-    const savedState = localStorage.getItem("feedsDeliveriesGridState");
-    return savedState
-      ? JSON.parse(savedState)
-      : {
-          columns: { columnVisibilityModel: { dateCreatedUtc: false } },
-        };
-  });
+  const initialGridState = {
+    columns: { columnVisibilityModel: { dateCreatedUtc: false } },
+  };
 
   const [openPaymentModal, setOpenPaymentModal] = useState(false);
   const [loadingPaymentFile, setLoadingPaymentFile] = useState(false);
@@ -450,20 +430,6 @@ const FeedsDeliveriesPage: React.FC = () => {
           rows={feedsDeliveries}
           columns={columns}
           initialState={initialGridState}
-          onStateChange={(newState: GridState) => {
-            const stateToSave = {
-              columns: newState.columns,
-              sorting: newState.sorting,
-              filter: newState.filter,
-              aggregation: newState.aggregation,
-              pinnedColumns: newState.pinnedColumns,
-              rowGrouping: newState.rowGrouping,
-            };
-            localStorage.setItem(
-              "feedsDeliveriesGridState",
-              JSON.stringify(stateToSave)
-            );
-          }}
           checkboxSelection
           disableRowSelectionOnClick
           isRowSelectable={(params) =>
@@ -480,11 +446,6 @@ const FeedsDeliveriesPage: React.FC = () => {
             page: filters.page ?? 0,
           }}
           onPaginationModelChange={({ page, pageSize }) => {
-            localStorage.setItem(
-              "feedsDeliveriesPageSize",
-              pageSize.toString()
-            );
-
             dispatch({
               type: "setMultiple",
               payload: { page, pageSize },

@@ -1,43 +1,7 @@
-const LOCAL_STORAGE_KEY = "expensesContractorsFilters";
-
-const saveFiltersToLocalStorage = (filters: ExpensesContractorsFilters) => {
-  try {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(filters));
-  } catch (error) {
-    console.error("Failed to save filters to localStorage", error);
-  }
+export const initialFilters: ExpensesContractorsFilters = {
+  searchPhrase: "",
+  showDeleted: false,
 };
-
-export const loadFiltersFromLocalStorage =
-  (): Partial<ExpensesContractorsFilters> | null => {
-    try {
-      const savedFilters = localStorage.getItem(LOCAL_STORAGE_KEY);
-      return savedFilters ? JSON.parse(savedFilters) : null;
-    } catch (error) {
-      console.error("Failed to load filters from localStorage", error);
-      return null;
-    }
-  };
-
-const getInitialFilters = (): ExpensesContractorsFilters => {
-  const defaultFilters: ExpensesContractorsFilters = {
-    searchPhrase: "",
-    showDeleted: false,
-  };
-
-  const savedFilters = loadFiltersFromLocalStorage();
-
-  if (savedFilters) {
-    return {
-      ...defaultFilters,
-      ...savedFilters,
-    };
-  }
-
-  return defaultFilters;
-};
-
-export const initialFilters = getInitialFilters();
 
 export function filterReducer(
   state: ExpensesContractorsFilters,
@@ -65,7 +29,6 @@ export function filterReducer(
       return state;
   }
 
-  saveFiltersToLocalStorage(newState);
   return newState;
 }
 

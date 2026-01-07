@@ -32,12 +32,8 @@ import { NotificationContext } from "../../../context/notification-context";
 import {
   DataGridPremium,
   GRID_AGGREGATION_ROOT_FOOTER_ROW_ID,
-  type GridState,
 } from "@mui/x-data-grid-premium";
-import {
-  getSortOptionsFromGridModel,
-  initializeFiltersFromLocalStorage,
-} from "../../../utils/grid-state-helper";
+import { getSortOptionsFromGridModel } from "../../../utils/grid-state-helper";
 import { getDueDateClassName } from "../../../utils/due-date-helper";
 import { useAuth } from "../../../auth/useAuth";
 
@@ -45,18 +41,7 @@ const SalesInvoicesPage: React.FC = () => {
   const { userData } = useAuth();
   const isAdmin = userData?.isAdmin ?? false;
 
-  const [filters, dispatch] = useReducer(
-    filterReducer,
-    initialFilters,
-    (init) =>
-      initializeFiltersFromLocalStorage(
-        init,
-        "saleInvoicesGridState",
-        "salesInvoicesPageSize",
-        SalesInvoicesOrderType,
-        mapSalesInvoiceOrderTypeToField
-      )
-  );
+  const [filters, dispatch] = useReducer(filterReducer, initialFilters);
   const [dictionary, setDictionary] = useState<SalesDictionary>();
   const { fetchNotifications } = useContext(NotificationContext);
   const [selectedSalesInvoice, setSelectedSalesInvoice] =
@@ -74,22 +59,20 @@ const SalesInvoicesPage: React.FC = () => {
   });
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isBookingPayment, setIsBookingPayment] = useState(false);
-  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
-  const [isMarkCompletedModalOpen, setIsMarkCompletedModalOpen] = useState(false);
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(
+    null
+  );
+  const [isMarkCompletedModalOpen, setIsMarkCompletedModalOpen] =
+    useState(false);
 
   const { salesInvoices, totalRows, loading, fetchSalesInvoices } =
     useSalesInvoices(filters);
 
-  const [initialGridState] = useState(() => {
-    const savedState = localStorage.getItem("saleInvoicesGridState");
-    return savedState
-      ? JSON.parse(savedState)
-      : {
-          columns: {
-            columnVisibilityModel: { dateCreatedUtc: false },
-          },
-        };
-  });
+  const initialGridState = {
+    columns: {
+      columnVisibilityModel: { dateCreatedUtc: false },
+    },
+  };
 
   const [downloadingFilePath, setDownloadFilePath] = useState<string | null>(
     null
@@ -287,7 +270,12 @@ const SalesInvoicesPage: React.FC = () => {
       </Box>
 
       <FiltersForm
-        config={getSalesInvoicesFiltersConfig(dictionary, uniqueCycles, filters, isAdmin)}
+        config={getSalesInvoicesFiltersConfig(
+          dictionary,
+          uniqueCycles,
+          filters,
+          isAdmin
+        )}
         filters={filters}
         dispatch={dispatch}
       />
@@ -298,20 +286,6 @@ const SalesInvoicesPage: React.FC = () => {
           rows={salesInvoices}
           columns={columns}
           initialState={initialGridState}
-          onStateChange={(newState: GridState) => {
-            const stateToSave = {
-              columns: newState.columns,
-              sorting: newState.sorting,
-              filter: newState.filter,
-              aggregation: newState.aggregation,
-              pinnedColumns: newState.pinnedColumns,
-              rowGrouping: newState.rowGrouping,
-            };
-            localStorage.setItem(
-              "saleInvoicesGridState",
-              JSON.stringify(stateToSave)
-            );
-          }}
           localeText={{
             footerRowSelected: (count) => {
               if (count === 1) return "1 wiersz zaznaczony";
@@ -331,8 +305,6 @@ const SalesInvoicesPage: React.FC = () => {
             page: filters.page ?? 0,
           }}
           onPaginationModelChange={({ page, pageSize }) => {
-            localStorage.setItem("salesInvoicesPageSize", pageSize.toString());
-
             dispatch({
               type: "setMultiple",
               payload: { page, pageSize },

@@ -19,7 +19,7 @@ namespace FarmsManager.Application.Commands.Gas.Deliveries;
 
 public record UploadGasDeliveriesInvoicesDto
 {
-    public List<IFormFile> Files { get; init; }
+    public List<IFormFile> Files { get; set; } = [];
 }
 
 public record UploadGasDeliveriesInvoicesData

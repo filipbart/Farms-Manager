@@ -33,12 +33,8 @@ import EditExpenseAdvanceModal from "../../../../components/modals/expenses/adva
 import {
   DataGridPremium,
   GRID_AGGREGATION_ROOT_FOOTER_ROW_ID,
-  type GridState,
 } from "@mui/x-data-grid-premium";
-import {
-  getSortOptionsFromGridModel,
-  initializeFiltersFromLocalStorage,
-} from "../../../../utils/grid-state-helper";
+import { getSortOptionsFromGridModel } from "../../../../utils/grid-state-helper";
 import { getPriorityClassName } from "../../../../utils/priority-helper";
 import { useAuth } from "../../../../auth/useAuth";
 import { useUserExpenseAdvancePermissions } from "../../../../hooks/expenses/advances/useUserExpenseAdvancePermissions";
@@ -95,18 +91,11 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
   const [visibleColumns, setVisibleColumns] = useState<string[]>([]);
   const [columnSettingsLoaded, setColumnSettingsLoaded] = useState(false);
 
-  const [initialGridState] = useState(() => {
-    const savedState = localStorage.getItem(
-      "expensesProductionAdvancesGridState"
-    );
-    return savedState
-      ? JSON.parse(savedState)
-      : {
-          columns: {
-            columnVisibilityModel: { dateCreatedUtc: false },
-          },
-        };
-  });
+  const initialGridState = {
+    columns: {
+      columnVisibilityModel: { dateCreatedUtc: false },
+    },
+  };
 
   const [selectedMonths, setSelectedMonths] = useState<number[]>([
     new Date().getMonth() + 1,
@@ -131,22 +120,11 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
     });
   };
 
-  const [filters, dispatch] = useReducer(
-    filterReducer,
-    {
-      ...initialFilters,
-      years: [new Date().getFullYear()],
-      months: [new Date().getMonth() + 1],
-    },
-    (init) =>
-      initializeFiltersFromLocalStorage(
-        init,
-        "expensesProductionAdvancesGridState",
-        "expenseAdvancesPageSize",
-        ExpensesAdvancesOrderType,
-        mapExpensesAdvancesOrderTypeToField
-      )
-  );
+  const [filters, dispatch] = useReducer(filterReducer, {
+    ...initialFilters,
+    years: [new Date().getFullYear()],
+    months: [new Date().getMonth() + 1],
+  });
 
   const { response, loading, fetchExpenseAdvances } = useExpenseAdvances(
     employeeId,
@@ -415,20 +393,6 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
           columns={columns}
           rowCount={totalRows}
           initialState={initialGridState}
-          onStateChange={(newState: GridState) => {
-            const stateToSave = {
-              columns: newState.columns,
-              sorting: newState.sorting,
-              filter: newState.filter,
-              aggregation: newState.aggregation,
-              pinnedColumns: newState.pinnedColumns,
-              rowGrouping: newState.rowGrouping,
-            };
-            localStorage.setItem(
-              "expensesProductionAdvancesGridState",
-              JSON.stringify(stateToSave)
-            );
-          }}
           scrollbarSize={17}
           pagination
           paginationMode="server"
@@ -437,11 +401,6 @@ const ExpenseAdvanceDetailsPage: React.FC = () => {
             page: filters.page ?? 0,
           }}
           onPaginationModelChange={({ page, pageSize }) => {
-            localStorage.setItem(
-              "expenseAdvancesPageSize",
-              pageSize.toString()
-            );
-
             dispatch({
               type: "setMultiple",
               payload: { page, pageSize },

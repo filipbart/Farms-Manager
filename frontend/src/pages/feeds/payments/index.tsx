@@ -23,29 +23,14 @@ import { getFeedsPaymentsFiltersConfig } from "./filter-config.feeds-payments";
 import {
   DataGridPremium,
   GRID_AGGREGATION_ROOT_FOOTER_ROW_ID,
-  type GridState,
 } from "@mui/x-data-grid-premium";
-import {
-  getSortOptionsFromGridModel,
-  initializeFiltersFromLocalStorage,
-} from "../../../utils/grid-state-helper";
+import { getSortOptionsFromGridModel } from "../../../utils/grid-state-helper";
 import { useAuth } from "../../../auth/useAuth";
 
 const FeedsPaymentsPage: React.FC = () => {
   const { userData } = useAuth();
   const isAdmin = userData?.isAdmin ?? false;
-  const [filters, dispatch] = useReducer(
-    filterReducer,
-    initialFilters,
-    (init) =>
-      initializeFiltersFromLocalStorage(
-        init,
-        "feedPaymentsGridState",
-        "feedsPaymentsPageSize",
-        FeedsPaymentsOrderType,
-        mapFeedsPaymentsOrderTypeToField
-      )
-  );
+  const [filters, dispatch] = useReducer(filterReducer, initialFilters);
   const [dictionary, setDictionary] = useState<FeedsDictionary>();
 
   const [loading, setLoading] = useState(false);
@@ -55,19 +40,17 @@ const FeedsPaymentsPage: React.FC = () => {
   const [totalRows, setTotalRows] = useState(0);
 
   const [downloadFilePath, setDownloadFilePath] = useState<string | null>(null);
-  const [selectedPaymentId, setSelectedPaymentId] = useState<string | null>(null);
-  const [isMarkCompletedModalOpen, setIsMarkCompletedModalOpen] = useState(false);
+  const [selectedPaymentId, setSelectedPaymentId] = useState<string | null>(
+    null
+  );
+  const [isMarkCompletedModalOpen, setIsMarkCompletedModalOpen] =
+    useState(false);
 
-  const [initialGridState] = useState(() => {
-    const savedState = localStorage.getItem("feedPaymentsGridState");
-    return savedState
-      ? JSON.parse(savedState)
-      : {
-          columns: {
-            columnVisibilityModel: { dateCreatedUtc: false },
-          },
-        };
-  });
+  const initialGridState = {
+    columns: {
+      columnVisibilityModel: { dateCreatedUtc: false },
+    },
+  };
 
   const fetchFeedsPayments = async () => {
     try {
@@ -134,7 +117,8 @@ const FeedsPaymentsPage: React.FC = () => {
     try {
       setLoading(true);
       await handleApiResponse(
-        () => FeedsService.markPaymentAsCompleted(selectedPaymentId, { comment }),
+        () =>
+          FeedsService.markPaymentAsCompleted(selectedPaymentId, { comment }),
         async () => {
           toast.success("Przelew został oznaczony jako zrealizowany");
           setIsMarkCompletedModalOpen(false);
@@ -209,7 +193,12 @@ const FeedsPaymentsPage: React.FC = () => {
       </Box>
 
       <FiltersForm
-        config={getFeedsPaymentsFiltersConfig(dictionary, uniqueCycles, filters, isAdmin)}
+        config={getFeedsPaymentsFiltersConfig(
+          dictionary,
+          uniqueCycles,
+          filters,
+          isAdmin
+        )}
         filters={filters}
         dispatch={dispatch}
       />
@@ -220,20 +209,6 @@ const FeedsPaymentsPage: React.FC = () => {
           rows={feedsPayments}
           columns={columns}
           initialState={initialGridState}
-          onStateChange={(newState: GridState) => {
-            const stateToSave = {
-              columns: newState.columns,
-              sorting: newState.sorting,
-              filter: newState.filter,
-              aggregation: newState.aggregation,
-              pinnedColumns: newState.pinnedColumns,
-              rowGrouping: newState.rowGrouping,
-            };
-            localStorage.setItem(
-              "feedPaymentsGridState",
-              JSON.stringify(stateToSave)
-            );
-          }}
           scrollbarSize={17}
           paginationMode="server"
           pagination
@@ -242,8 +217,6 @@ const FeedsPaymentsPage: React.FC = () => {
             page: filters.page ?? 0,
           }}
           onPaginationModelChange={({ page, pageSize }) => {
-            localStorage.setItem("feedsPaymentsPageSize", pageSize.toString());
-
             dispatch({
               type: "setMultiple",
               payload: { page, pageSize },

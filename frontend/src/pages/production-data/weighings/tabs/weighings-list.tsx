@@ -21,29 +21,14 @@ import { getWeighingsFiltersConfig } from "./filter-config.production-data-weigh
 import {
   DataGridPremium,
   GRID_AGGREGATION_ROOT_FOOTER_ROW_ID,
-  type GridState,
 } from "@mui/x-data-grid-premium";
-import {
-  getSortOptionsFromGridModel,
-  initializeFiltersFromLocalStorage,
-} from "../../../../utils/grid-state-helper";
+import { getSortOptionsFromGridModel } from "../../../../utils/grid-state-helper";
 import { useAuth } from "../../../../auth/useAuth";
 
 const ProductionDataWeighingsTab: React.FC = () => {
   const { userData } = useAuth();
   const isAdmin = userData?.isAdmin ?? false;
-  const [filters, dispatch] = useReducer(
-    filterReducer,
-    initialFilters,
-    (init) =>
-      initializeFiltersFromLocalStorage(
-        init,
-        "productionDataWeighingsGridState",
-        "productionDataWeighingsPageSize",
-        ProductionDataWeighingsOrderType,
-        mapProductionDataWeighingsOrderTypeToField
-      )
-  );
+  const [filters, dispatch] = useReducer(filterReducer, initialFilters);
   const [dictionary, setDictionary] =
     useState<ProductionDataWeighingsDictionary>();
   const [openModal, setOpenModal] = useState(false);
@@ -56,16 +41,11 @@ const ProductionDataWeighingsTab: React.FC = () => {
     useState<ProductionDataWeighingListModel | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  const [initialGridState] = useState(() => {
-    const savedState = localStorage.getItem("productionDataWeighingsGridState");
-    return savedState
-      ? JSON.parse(savedState)
-      : {
-          columns: {
-            columnVisibilityModel: { dateCreatedUtc: false },
-          },
-        };
-  });
+  const initialGridState = {
+    columns: {
+      columnVisibilityModel: { dateCreatedUtc: false },
+    },
+  };
 
   const uniqueCycles = useMemo(() => {
     if (!dictionary) return [];
@@ -206,20 +186,6 @@ const ProductionDataWeighingsTab: React.FC = () => {
           rows={weighings}
           columns={columns}
           initialState={initialGridState}
-          onStateChange={(newState: GridState) => {
-            const stateToSave = {
-              columns: newState.columns,
-              sorting: newState.sorting,
-              filter: newState.filter,
-              aggregation: newState.aggregation,
-              pinnedColumns: newState.pinnedColumns,
-              rowGrouping: newState.rowGrouping,
-            };
-            localStorage.setItem(
-              "productionDataWeighingsGridState",
-              JSON.stringify(stateToSave)
-            );
-          }}
           paginationMode="server"
           pagination
           paginationModel={{
@@ -227,11 +193,6 @@ const ProductionDataWeighingsTab: React.FC = () => {
             page: filters.page ?? 0,
           }}
           onPaginationModelChange={({ page, pageSize }) => {
-            localStorage.setItem(
-              "productionDataWeighingsPageSize",
-              pageSize.toString()
-            );
-
             dispatch({
               type: "setMultiple",
               payload: { page, pageSize },

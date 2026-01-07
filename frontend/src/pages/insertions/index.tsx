@@ -34,30 +34,15 @@ import {
   DataGridPremium,
   GRID_AGGREGATION_ROOT_FOOTER_ROW_ID,
   type GridRowSelectionModel,
-  type GridState,
 } from "@mui/x-data-grid-premium";
 import LoadingButton from "../../components/common/loading-button";
-import {
-  getSortOptionsFromGridModel,
-  initializeFiltersFromLocalStorage,
-} from "../../utils/grid-state-helper";
+import { getSortOptionsFromGridModel } from "../../utils/grid-state-helper";
 import { useAuth } from "../../auth/useAuth";
 
 const InsertionsPage: React.FC = () => {
   const { userData } = useAuth();
   const isAdmin = userData?.isAdmin ?? false;
-  const [filters, dispatch] = useReducer(
-    filterReducer,
-    initialFilters,
-    (init) =>
-      initializeFiltersFromLocalStorage(
-        init,
-        "insertionsGridState",
-        "insertionsPageSize",
-        InsertionOrderType,
-        mapInsertionOrderTypeToField
-      )
-  );
+  const [filters, dispatch] = useReducer(filterReducer, initialFilters);
   const [dictionary, setDictionary] = useState<InsertionDictionary>();
   const [openModal, setOpenModal] = useState(false);
   const [openCycleModal, setOpenCycleModal] = useState(false);
@@ -77,16 +62,11 @@ const InsertionsPage: React.FC = () => {
   const [isIrzModalOpen, setIsIrzModalOpen] = useState(false);
   const [irzComment, setIrzComment] = useState("");
 
-  const [initialGridState] = useState(() => {
-    const savedState = localStorage.getItem("insertionsGridState");
-    return savedState
-      ? JSON.parse(savedState)
-      : {
-          columns: {
-            columnVisibilityModel: { dateCreatedUtc: false },
-          },
-        };
-  });
+  const initialGridState = {
+    columns: {
+      columnVisibilityModel: { dateCreatedUtc: false },
+    },
+  };
 
   const uniqueCycles = useMemo(() => {
     if (!dictionary) return [];
@@ -281,7 +261,12 @@ const InsertionsPage: React.FC = () => {
       </Box>
 
       <FiltersForm
-        config={getInsertionFiltersConfig(dictionary, uniqueCycles, filters, isAdmin)}
+        config={getInsertionFiltersConfig(
+          dictionary,
+          uniqueCycles,
+          filters,
+          isAdmin
+        )}
         filters={filters}
         dispatch={dispatch}
       />
@@ -292,20 +277,6 @@ const InsertionsPage: React.FC = () => {
           rows={insertions}
           columns={columns}
           initialState={initialGridState}
-          onStateChange={(newState: GridState) => {
-            const stateToSave = {
-              columns: newState.columns,
-              sorting: newState.sorting,
-              filter: newState.filter,
-              aggregation: newState.aggregation,
-              pinnedColumns: newState.pinnedColumns,
-              rowGrouping: newState.rowGrouping,
-            };
-            localStorage.setItem(
-              "insertionsGridState",
-              JSON.stringify(stateToSave)
-            );
-          }}
           scrollbarSize={17}
           paginationMode="server"
           pagination
@@ -314,8 +285,6 @@ const InsertionsPage: React.FC = () => {
             page: filters.page ?? 0,
           }}
           onPaginationModelChange={({ page, pageSize }) => {
-            localStorage.setItem("insertionsPageSize", pageSize.toString());
-
             dispatch({
               type: "setMultiple",
               payload: { page, pageSize },

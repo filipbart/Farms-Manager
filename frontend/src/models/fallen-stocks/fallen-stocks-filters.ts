@@ -1,46 +1,10 @@
 import type { FarmDictModel, CycleDictModel } from "../common/dictionaries";
 
-const LOCAL_STORAGE_KEY = "fallenStocksFilters";
-
-const saveFiltersToLocalStorage = (filters: FallenStockFilterModel) => {
-  try {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(filters));
-  } catch (error) {
-    console.error("Failed to save filters to localStorage", error);
-  }
+export const initialFilters: FallenStockFilterModel = {
+  farmId: undefined,
+  cycle: undefined,
+  showDeleted: false,
 };
-
-export const loadFiltersFromLocalStorage =
-  (): Partial<FallenStockFilterModel> | null => {
-    try {
-      const savedFilters = localStorage.getItem(LOCAL_STORAGE_KEY);
-      return savedFilters ? JSON.parse(savedFilters) : null;
-    } catch (error) {
-      console.error("Failed to load filters from localStorage", error);
-      return null;
-    }
-  };
-
-const getInitialFilters = (): FallenStockFilterModel => {
-  const defaultFilters: FallenStockFilterModel = {
-    farmId: undefined,
-    cycle: undefined,
-    showDeleted: false,
-  };
-
-  const savedFilters = loadFiltersFromLocalStorage();
-
-  if (savedFilters) {
-    return {
-      ...defaultFilters,
-      ...savedFilters,
-    };
-  }
-
-  return defaultFilters;
-};
-
-export const initialFilters = getInitialFilters();
 
 export function filterReducer(
   state: FallenStockFilterModel,
@@ -61,7 +25,6 @@ export function filterReducer(
       return state;
   }
 
-  saveFiltersToLocalStorage(newState);
   return newState;
 }
 

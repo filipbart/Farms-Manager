@@ -22,29 +22,14 @@ import EditHatcheryPriceModal from "../../components/modals/hatcheries/edit-hatc
 import {
   DataGridPremium,
   GRID_AGGREGATION_ROOT_FOOTER_ROW_ID,
-  type GridState,
 } from "@mui/x-data-grid-premium";
-import {
-  getSortOptionsFromGridModel,
-  initializeFiltersFromLocalStorage,
-} from "../../utils/grid-state-helper";
+import { getSortOptionsFromGridModel } from "../../utils/grid-state-helper";
 import { useAuth } from "../../auth/useAuth";
 
 const HatcheriesPricesPanel: React.FC = () => {
   const { userData } = useAuth();
   const isAdmin = userData?.isAdmin ?? false;
-  const [filters, dispatch] = useReducer(
-    filterReducer,
-    initialFilters,
-    (init) =>
-      initializeFiltersFromLocalStorage(
-        init,
-        "hatcheriesPricesGridState",
-        "hatcheriesPricesPageSize",
-        HatcheriesPricesOrderType,
-        mapHatcheriesPricesOrderTypeToField
-      )
-  );
+  const [filters, dispatch] = useReducer(filterReducer, initialFilters);
   const [dictionary, setDictionary] = useState<HatcheriesNames>();
 
   const [loading, setLoading] = useState(false);
@@ -77,16 +62,11 @@ const HatcheriesPricesPanel: React.FC = () => {
     }
   };
 
-  const [initialGridState] = useState(() => {
-    const savedState = localStorage.getItem("hatcheriesPricesGridState");
-    return savedState
-      ? JSON.parse(savedState)
-      : {
-          columns: {
-            columnVisibilityModel: { dateCreatedUtc: false },
-          },
-        };
-  });
+  const initialGridState = {
+    columns: {
+      columnVisibilityModel: { dateCreatedUtc: false },
+    },
+  };
 
   const columns = useMemo(
     () =>
@@ -173,20 +153,6 @@ const HatcheriesPricesPanel: React.FC = () => {
           rows={hatcheriesPrices}
           columns={columns}
           initialState={initialGridState}
-          onStateChange={(newState: GridState) => {
-            const stateToSave = {
-              columns: newState.columns,
-              sorting: newState.sorting,
-              filter: newState.filter,
-              aggregation: newState.aggregation,
-              pinnedColumns: newState.pinnedColumns,
-              rowGrouping: newState.rowGrouping,
-            };
-            localStorage.setItem(
-              "hatcheriesPricesGridState",
-              JSON.stringify(stateToSave)
-            );
-          }}
           scrollbarSize={17}
           paginationMode="server"
           pagination
@@ -195,11 +161,6 @@ const HatcheriesPricesPanel: React.FC = () => {
             page: filters.page ?? 0,
           }}
           onPaginationModelChange={({ page, pageSize }) => {
-            localStorage.setItem(
-              "hatcheriesPricesPageSize",
-              pageSize.toString()
-            );
-
             dispatch({
               type: "setMultiple",
               payload: { page, pageSize },

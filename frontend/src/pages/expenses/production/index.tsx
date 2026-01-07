@@ -31,29 +31,14 @@ import SaveExpensesInvoicesModal from "../../../components/modals/expenses/produ
 import {
   DataGridPremium,
   GRID_AGGREGATION_ROOT_FOOTER_ROW_ID,
-  type GridState,
 } from "@mui/x-data-grid-premium";
-import {
-  getSortOptionsFromGridModel,
-  initializeFiltersFromLocalStorage,
-} from "../../../utils/grid-state-helper";
+import { getSortOptionsFromGridModel } from "../../../utils/grid-state-helper";
 import { useAuth } from "../../../auth/useAuth";
 
 const ExpenseProductionPage: React.FC = () => {
   const { userData } = useAuth();
   const isAdmin = userData?.isAdmin ?? false;
-  const [filters, dispatch] = useReducer(
-    filterReducer,
-    initialFilters,
-    (init) =>
-      initializeFiltersFromLocalStorage(
-        init,
-        "expensesProductionGridState",
-        "expensesProductionPageSize",
-        ExpensesProductionsOrderType,
-        mapExpenseProductionOrderTypeToField
-      )
-  );
+  const [filters, dispatch] = useReducer(filterReducer, initialFilters);
   const [dictionary, setDictionary] = useState<ExpensesProductionsDictionary>();
   const [openAddExpenseProductionModal, setOpenAddExpenseProductionModal] =
     useState(false);
@@ -74,16 +59,11 @@ const ExpenseProductionPage: React.FC = () => {
     refetch: fetchExpenseProductions,
   } = useExpenseProductions(filters);
 
-  const [initialGridState] = useState(() => {
-    const savedState = localStorage.getItem("expensesProductionGridState");
-    return savedState
-      ? JSON.parse(savedState)
-      : {
-          columns: {
-            columnVisibilityModel: { dateCreatedUtc: false },
-          },
-        };
-  });
+  const initialGridState = {
+    columns: {
+      columnVisibilityModel: { dateCreatedUtc: false },
+    },
+  };
 
   const [downloadingFilePath, setDownloadFilePath] = useState<string | null>(
     null
@@ -322,20 +302,6 @@ const ExpenseProductionPage: React.FC = () => {
           rows={expenseProductions}
           columns={columns}
           initialState={initialGridState}
-          onStateChange={(newState: GridState) => {
-            const stateToSave = {
-              columns: newState.columns,
-              sorting: newState.sorting,
-              filter: newState.filter,
-              aggregation: newState.aggregation,
-              pinnedColumns: newState.pinnedColumns,
-              rowGrouping: newState.rowGrouping,
-            };
-            localStorage.setItem(
-              "expensesProductionGridState",
-              JSON.stringify(stateToSave)
-            );
-          }}
           scrollbarSize={17}
           paginationMode="server"
           pagination
@@ -344,11 +310,6 @@ const ExpenseProductionPage: React.FC = () => {
             page: filters.page ?? 0,
           }}
           onPaginationModelChange={({ page, pageSize }) => {
-            localStorage.setItem(
-              "expensesProductionPageSize",
-              pageSize.toString()
-            );
-
             dispatch({
               type: "setMultiple",
               payload: { page, pageSize },

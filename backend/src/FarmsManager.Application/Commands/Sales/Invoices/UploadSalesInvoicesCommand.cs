@@ -22,7 +22,7 @@ namespace FarmsManager.Application.Commands.Sales.Invoices;
 
 public record UploadSalesInvoicesDto
 {
-    public List<IFormFile> Files { get; init; }
+    public List<IFormFile> Files { get; set; } = [];
 }
 
 public record UploadSalesInvoicesData

@@ -28,7 +28,7 @@ public record AddNewSaleCommandDto
     public DateOnly SaleDate { get; init; }
     public Guid SlaughterhouseId { get; init; }
     public string Entries { get; init; }
-    public List<IFormFile> Files { get; init; }
+    public List<IFormFile> Files { get; set; } = [];
 }
 
 public record AddNewSaleCommand : IRequest<BaseResponse<AddNewSaleCommandResponse>>
@@ -39,7 +39,7 @@ public record AddNewSaleCommand : IRequest<BaseResponse<AddNewSaleCommandRespons
     public DateOnly SaleDate { get; init; }
     public Guid SlaughterhouseId { get; init; }
     public List<Entry> Entries { get; init; }
-    public List<IFormFile> Files { get; init; }
+    public List<IFormFile> Files { get; set; } = [];
 
     public class Entry
     {
