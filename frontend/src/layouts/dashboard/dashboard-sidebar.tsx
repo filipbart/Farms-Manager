@@ -478,7 +478,12 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           )}
           <SidebarMenuItem
             to="/settings/invoice-assignment-rules"
-            title="Reguły faktur"
+            title="Reguły faktur (pracownicy)"
+            icon={<FaGear />}
+          />
+          <SidebarMenuItem
+            to="/settings/invoice-module-assignment-rules"
+            title="Reguły faktur (moduły)"
             icon={<FaGear />}
           />
         </SidebarMenuItem>

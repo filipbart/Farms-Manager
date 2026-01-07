@@ -41,6 +41,7 @@ export enum RouteName {
   UserDetails = "settings/users/:userId",
   SettingsCycles = "settings/cycles",
   SettingsInvoiceAssignmentRules = "settings/invoice-assignment-rules",
+  SettingsInvoiceModuleAssignmentRules = "settings/invoice-module-assignment-rules",
   Users = "users",
   UserProfile = "user-profile",
   NotFound = "not-found",
