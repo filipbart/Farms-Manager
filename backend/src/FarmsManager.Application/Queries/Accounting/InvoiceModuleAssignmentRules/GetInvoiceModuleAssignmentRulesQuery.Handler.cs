@@ -1,7 +1,7 @@
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Interfaces;
-using FarmsManager.Shared.Extensions;
+using FarmsManager.Application.Extensions;
 using MediatR;
 
 namespace FarmsManager.Application.Queries.Accounting.InvoiceModuleAssignmentRules;
