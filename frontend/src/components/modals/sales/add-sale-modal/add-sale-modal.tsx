@@ -61,6 +61,7 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
   const [errors, setErrors] = useState<SaleFormErrors>({});
   const [sendToIrz, setSendToIrz] = useState(false);
   const [entriesTableReady, setEntriesTableReady] = useState<number[]>([]);
+  const [files, setFiles] = useState<File[]>([]);
   const [activePreviewFile, setActivePreviewFile] = useState<File | null>(null);
 
   const isMd = useMediaQuery(theme.breakpoints.up("md"));
@@ -83,10 +84,7 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
       }
 
       if (newFiles.length > 0) {
-        dispatch({
-          type: "SET_FILES",
-          files: [...form.files, ...newFiles],
-        });
+        setFiles((prev) => [...prev, ...newFiles]);
         setActivePreviewFile(newFiles[0]);
       }
     };
@@ -98,7 +96,7 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
     return () => {
       window.removeEventListener("paste", handlePaste);
     };
-  }, [open, form.files]);
+  }, [open, files]);
 
   useEffect(() => {
     fetchFarms();
@@ -184,7 +182,7 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
             deadWeight: Number(entry.deadWeight),
             farmerWeight: Number(entry.farmerWeight),
           })),
-          files: form.files,
+          files: files,
         }),
       async (data) => {
         if (!data || !data.responseData || !data.responseData.internalGroupId) {
@@ -220,6 +218,7 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
 
   const handleClose = () => {
     setActivePreviewFile(null);
+    setFiles([]);
     onClose();
     setErrors({});
     setHenhouses([]);
@@ -436,19 +435,9 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
                   onClick={() => {
                     const lastIndex = form.entries.length - 1;
                     const lastEntry = form.entries[lastIndex];
-                    const validation = validateEntry(lastEntry);
 
-                    const isValid =
-                      !validation || Object.keys(validation).length === 0;
-
-                    if (!entriesTableReady.includes(lastIndex) && isValid) {
-                      setEntriesTableReady((prev) => [...prev, lastIndex]);
-                      setErrors((prev) => {
-                        const newEntriesErrors = { ...(prev.entries || {}) };
-                        delete newEntriesErrors[lastIndex];
-                        return { ...prev, entries: newEntriesErrors };
-                      });
-                    } else if (entriesTableReady.includes(lastIndex)) {
+                    // Jeśli nie ma żadnych pozycji lub wszystkie są w tabeli - dodaj nową
+                    if (!lastEntry || entriesTableReady.includes(lastIndex)) {
                       dispatch({ type: "ADD_ENTRY" });
                       setErrors((prev) => {
                         const newEntriesErrors = { ...(prev.entries || {}) };
@@ -459,6 +448,20 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
                           entries: newEntriesErrors,
                           entriesGeneral: undefined,
                         };
+                      });
+                      return;
+                    }
+
+                    const validation = validateEntry(lastEntry);
+                    const isValid =
+                      !validation || Object.keys(validation).length === 0;
+
+                    if (isValid) {
+                      setEntriesTableReady((prev) => [...prev, lastIndex]);
+                      setErrors((prev) => {
+                        const newEntriesErrors = { ...(prev.entries || {}) };
+                        delete newEntriesErrors[lastIndex];
+                        return { ...prev, entries: newEntriesErrors };
                       });
                     } else {
                       setEntryErrors(lastIndex, validation);
@@ -482,16 +485,16 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
                     multiple
                     hidden
                     onChange={(e) => {
-                      const files = Array.from(e.target.files || []);
-                      dispatch({ type: "SET_FILES", files });
-                      setActivePreviewFile(files[0] || null);
+                      const newFiles = Array.from(e.target.files || []);
+                      setFiles((prev) => [...prev, ...newFiles]);
+                      setActivePreviewFile(newFiles[0] || null);
                     }}
                   />
                 </Button>
 
-                {form.files.length > 0 && (
+                {files.length > 0 && (
                   <Grid container spacing={1} mt={1}>
-                    {form.files.map((file, idx) => (
+                    {files.map((file, idx) => (
                       <Grid
                         container
                         key={idx}
@@ -515,11 +518,9 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({
                             size="small"
                             color="error"
                             onClick={() => {
-                              dispatch({
-                                type: "SET_FILES",
-                                files: form.files.filter((_, i) => i !== idx),
-                              });
-
+                              setFiles((prev) =>
+                                prev.filter((_, i) => i !== idx)
+                              );
                               if (activePreviewFile?.name === file.name) {
                                 setActivePreviewFile(null);
                               }
