@@ -3,7 +3,6 @@ using FarmsManager.Api.Attributes;
 using FarmsManager.Api.Controllers.Base;
 using FarmsManager.Application.Commands.Accounting;
 using FarmsManager.Application.Common.Responses;
-using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Permissions;
 using FarmsManager.Application.Queries.Accounting;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
@@ -22,12 +21,10 @@ namespace FarmsManager.Api.Controllers;
 public class AccountingController : BaseController
 {
     private readonly IMediator _mediator;
-    private readonly IKSeFSynchronizationJob _ksefSyncJob;
 
-    public AccountingController(IMediator mediator, IKSeFSynchronizationJob ksefSyncJob)
+    public AccountingController(IMediator mediator)
     {
         _mediator = mediator;
-        _ksefSyncJob = ksefSyncJob;
     }
 
     /// <summary>
@@ -278,22 +275,12 @@ public class AccountingController : BaseController
     /// Ręczne uruchomienie synchronizacji faktur z KSeF
     /// </summary>
     [HttpPost("sync-ksef-invoices")]
-    [AllowAnonymous]
-    [ProducesResponseType(StatusCodes.Status202Accepted)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> TriggerKSeFSynchronization()
     {
-        try
-        {
-            // Uruchomienie synchronizacji w tle (fire and forget)
-            await _ksefSyncJob.ExecuteSynchronizationAsync(isManual: true);
-
-            return Ok(new { success = true });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { error = ex.Message });
-        }
+        var result = await _mediator.Send(new SyncKSeFInvoicesCommand());
+        return Ok(result);
     }
 
     /// <summary>

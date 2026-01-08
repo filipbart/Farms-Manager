@@ -326,18 +326,27 @@ const AccountingPage: React.FC = () => {
   const handleSyncKSeF = async () => {
     setSyncing(true);
     try {
-      await handleApiResponse(
-        () => AccountingService.syncWithKSeF(),
-        () => {
-          toast.success("Synchronizacja z KSeF została uruchomiona");
-          // Refresh data after a short delay
-          setTimeout(() => fetchInvoices(), 2000);
-        },
-        undefined,
-        "Błąd podczas synchronizacji z KSeF"
+      const response = await AccountingService.syncWithKSeF();
+      if (response.success) {
+        toast.success("Synchronizacja z KSeF została uruchomiona");
+        // Refresh data after a short delay
+        setTimeout(() => fetchInvoices(), 2000);
+      } else {
+        // Handle error response (including 500 errors)
+        const errorMessage =
+          response.domainException?.errorDescription ||
+          (response.errors && typeof response.errors === "object"
+            ? Object.values(response.errors).flat().join(", ")
+            : null) ||
+          `Błąd podczas synchronizacji z KSeF (kod: ${response.statusCode})`;
+        toast.error(errorMessage);
+      }
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Nieznany błąd";
+      toast.error(
+        `Wystąpił błąd podczas synchronizacji z KSeF: ${errorMessage}`
       );
-    } catch {
-      toast.error("Wystąpił błąd podczas synchronizacji z KSeF");
     } finally {
       setSyncing(false);
     }
