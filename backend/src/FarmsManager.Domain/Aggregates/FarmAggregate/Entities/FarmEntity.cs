@@ -57,12 +57,13 @@ public class FarmEntity : Entity
         };
     }
 
-    public void Update(string name, string producerNumber, string nip, string address)
+    public void Update(string name, string producerNumber, string nip, string address, Guid? taxBusinessEntityId = null)
     {
         Name = name;
         ProducerNumber = producerNumber.Replace(" ", "").Trim();
         Nip = nip.Replace("PL", "").Replace("-", "").Replace(" ", "").Trim();
         Address = address;
+        TaxBusinessEntityId = taxBusinessEntityId;
     }
 
 

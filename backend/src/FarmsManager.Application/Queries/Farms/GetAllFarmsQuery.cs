@@ -62,6 +62,7 @@ public sealed class GetAllFarmsSpec : BaseSpecification<FarmEntity>
 
         Query.Include(t => t.Henhouses);
         Query.Include(t => t.ActiveCycle);
+        Query.Include(t => t.TaxBusinessEntity);
         Query.OrderBy(t => t.Name);
     }
 }

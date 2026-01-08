@@ -256,12 +256,26 @@ const ModuleEntityForm: React.FC<ModuleEntityFormProps> = ({
         (data) => {
           const contractors = data.responseData?.contractors ?? [];
           setGasContractors(contractors);
-          // Auto-select contractor by NIP
-          const contractor = contractors.find(
-            (c) =>
-              c.nip?.replace(/\D/g, "") ===
-              invoiceData.sellerNip?.replace(/\D/g, "")
+
+          // Auto-select contractor by NIP first
+          const normalizedInvoiceNip = invoiceData.sellerNip?.replace(
+            /\D/g,
+            ""
           );
+          let contractor = contractors.find(
+            (c) => c.nip?.replace(/\D/g, "") === normalizedInvoiceNip
+          );
+
+          // Fallback: match by name (case-insensitive, partial match)
+          if (!contractor && invoiceData.sellerName) {
+            const sellerNameLower = invoiceData.sellerName.toLowerCase();
+            contractor = contractors.find(
+              (c) =>
+                c.name?.toLowerCase().includes(sellerNameLower) ||
+                sellerNameLower.includes(c.name?.toLowerCase() || "")
+            );
+          }
+
           if (contractor) {
             gasForm.setValue("contractorId", contractor.id);
           }
@@ -269,7 +283,7 @@ const ModuleEntityForm: React.FC<ModuleEntityFormProps> = ({
         () => setGasContractors([])
       );
     }
-  }, [moduleType, invoiceData.sellerNip, gasForm]);
+  }, [moduleType, invoiceData.sellerNip, invoiceData.sellerName, gasForm]);
 
   // Load expense contractors
   useEffect(() => {
@@ -279,12 +293,26 @@ const ModuleEntityForm: React.FC<ModuleEntityFormProps> = ({
         (data) => {
           const contractors = data.responseData?.contractors ?? [];
           setExpenseContractors(contractors);
-          // Auto-select contractor by NIP
-          const contractor = contractors.find(
-            (c) =>
-              c.nip?.replace(/\D/g, "") ===
-              invoiceData.sellerNip?.replace(/\D/g, "")
+
+          // Auto-select contractor by NIP first
+          const normalizedInvoiceNip = invoiceData.sellerNip?.replace(
+            /\D/g,
+            ""
           );
+          let contractor = contractors.find(
+            (c) => c.nip?.replace(/\D/g, "") === normalizedInvoiceNip
+          );
+
+          // Fallback: match by name (case-insensitive, partial match)
+          if (!contractor && invoiceData.sellerName) {
+            const sellerNameLower = invoiceData.sellerName.toLowerCase();
+            contractor = contractors.find(
+              (c) =>
+                c.name?.toLowerCase().includes(sellerNameLower) ||
+                sellerNameLower.includes(c.name?.toLowerCase() || "")
+            );
+          }
+
           if (contractor) {
             expenseForm.setValue("expenseContractorId", contractor.id);
           }
@@ -292,7 +320,7 @@ const ModuleEntityForm: React.FC<ModuleEntityFormProps> = ({
         () => setExpenseContractors([])
       );
     }
-  }, [moduleType, invoiceData.sellerNip, expenseForm]);
+  }, [moduleType, invoiceData.sellerNip, invoiceData.sellerName, expenseForm]);
 
   // Load slaughterhouses
   useEffect(() => {
@@ -302,12 +330,23 @@ const ModuleEntityForm: React.FC<ModuleEntityFormProps> = ({
         (data) => {
           const items = data.responseData?.items ?? [];
           setSlaughterhouses(items);
-          // Auto-select slaughterhouse by NIP (buyer for sales)
-          const slaughterhouse = items.find(
-            (s) =>
-              s.nip?.replace(/\D/g, "") ===
-              invoiceData.buyerNip?.replace(/\D/g, "")
+
+          // Auto-select slaughterhouse by NIP first (buyer for sales)
+          const normalizedInvoiceNip = invoiceData.buyerNip?.replace(/\D/g, "");
+          let slaughterhouse = items.find(
+            (s) => s.nip?.replace(/\D/g, "") === normalizedInvoiceNip
           );
+
+          // Fallback: match by name (case-insensitive, partial match)
+          if (!slaughterhouse && invoiceData.buyerName) {
+            const buyerNameLower = invoiceData.buyerName.toLowerCase();
+            slaughterhouse = items.find(
+              (s) =>
+                s.name?.toLowerCase().includes(buyerNameLower) ||
+                buyerNameLower.includes(s.name?.toLowerCase() || "")
+            );
+          }
+
           if (slaughterhouse) {
             saleForm.setValue("slaughterhouseId", slaughterhouse.id);
           }
@@ -315,7 +354,7 @@ const ModuleEntityForm: React.FC<ModuleEntityFormProps> = ({
         () => setSlaughterhouses([])
       );
     }
-  }, [moduleType, invoiceData.buyerNip, saleForm]);
+  }, [moduleType, invoiceData.buyerNip, invoiceData.buyerName, saleForm]);
 
   // Load expense types
   useEffect(() => {

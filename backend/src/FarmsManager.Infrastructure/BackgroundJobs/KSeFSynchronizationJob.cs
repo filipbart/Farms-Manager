@@ -84,8 +84,9 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
         var dbContext = scope.ServiceProvider.GetRequiredService<FarmsManagerContext>();
         var invoiceAssignmentService = scope.ServiceProvider.GetRequiredService<IInvoiceAssignmentService>();
 
-        // Pobierz wszystkie podmioty gospodarcze do dopasowania
+        // Pobierz wszystkie podmioty gospodarcze do dopasowania (wraz z fermami)
         var taxBusinessEntities = await dbContext.Set<TaxBusinessEntity>()
+            .Include(t => t.Farms.Where(f => f.DateDeletedUtc == null))
             .Where(t => t.DateDeletedUtc == null)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
@@ -137,9 +138,9 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                     var invoiceXml = await ksefService.GetInvoiceXmlAsync(invoiceSummary.KsefNumber, cancellationToken);
 
                     // Dopasuj podmiot gospodarczy po NIP lub nazwie
-                    var taxBusinessEntityId = MatchTaxBusinessEntity(invoiceSummary, taxBusinessEntities);
+                    var (taxBusinessEntityId, farmId) = MatchTaxBusinessEntityAndFarm(invoiceSummary, taxBusinessEntities);
 
-                    var invoiceEntity = CreateInvoiceEntity(invoiceSummary, invoiceXml, xmlParser, taxBusinessEntityId);
+                    var invoiceEntity = CreateInvoiceEntity(invoiceSummary, invoiceXml, xmlParser, taxBusinessEntityId, farmId);
 
                     // Sprawdź czy faktura wymaga powiązania z inną fakturą
                     if (InvoiceRequiresLinking(invoiceSummary.InvoiceType))
@@ -203,14 +204,14 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
     }
 
     /// <summary>
-    /// Dopasowuje podmiot gospodarczy do faktury na podstawie NIP lub nazwy
+    /// Dopasowuje podmiot gospodarczy i fermę do faktury na podstawie NIP lub nazwy
     /// </summary>
-    private static Guid? MatchTaxBusinessEntity(
+    private static (Guid? TaxBusinessEntityId, Guid? FarmId) MatchTaxBusinessEntityAndFarm(
         KSeFInvoiceSyncItem invoiceItem,
         List<TaxBusinessEntity> taxBusinessEntities)
     {
         if (taxBusinessEntities.Count == 0)
-            return null;
+            return (null, null);
 
         // Normalizuj NIP-y z faktury
         var sellerNip = NormalizeNip(invoiceItem.SellerNip);
@@ -221,7 +222,10 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
             t.Nip == sellerNip || t.Nip == buyerNip);
 
         if (matchedByNip != null)
-            return matchedByNip.Id;
+        {
+            var farmId = matchedByNip.Farms.FirstOrDefault()?.Id;
+            return (matchedByNip.Id, farmId);
+        }
 
         // Szukaj po nazwie (częściowe dopasowanie - case insensitive)
         var sellerName = invoiceItem.SellerName?.ToLowerInvariant();
@@ -239,7 +243,13 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                    (!string.IsNullOrEmpty(buyerName) && entityName.Contains(buyerName));
         });
 
-        return matchedByName?.Id;
+        if (matchedByName != null)
+        {
+            var farmId = matchedByName.Farms.FirstOrDefault()?.Id;
+            return (matchedByName.Id, farmId);
+        }
+
+        return (null, null);
     }
 
     /// <summary>
@@ -257,7 +267,8 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
         KSeFInvoiceSyncItem invoiceItem,
         string invoiceXml,
         IKSeFInvoiceXmlParser xmlParser,
-        Guid? taxBusinessEntityId = null)
+        Guid? taxBusinessEntityId = null,
+        Guid? farmId = null)
     {
         // Parsuj XML aby wyciągnąć dodatkowe dane
         var parsedInvoice = xmlParser.ParseInvoiceXml(invoiceXml);
@@ -295,7 +306,8 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
             grossAmount: invoiceItem.GrossAmount,
             netAmount: invoiceItem.NetAmount,
             vatAmount: invoiceItem.VatAmount,
-            taxBusinessEntityId: taxBusinessEntityId
+            taxBusinessEntityId: taxBusinessEntityId,
+            farmId: farmId
         );
     }
 

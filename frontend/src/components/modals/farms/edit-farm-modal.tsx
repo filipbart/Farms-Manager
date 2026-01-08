@@ -1,11 +1,20 @@
-import { Box, Button, Modal, TextField, Typography } from "@mui/material";
-import { useEffect } from "react";
+import {
+  Autocomplete,
+  Box,
+  Button,
+  Modal,
+  TextField,
+  Typography,
+} from "@mui/material";
+import { useEffect, useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { FarmsService } from "../../../services/farms-service";
+import { TaxBusinessEntitiesService } from "../../../services/tax-business-entities-service";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import { MdSave } from "react-icons/md";
 import LoadingButton from "../../common/loading-button";
 import { isValidProducerNumber } from "../../../utils/validation";
+import type { TaxBusinessEntityRowModel } from "../../../models/data/tax-business-entity";
 
 export interface FarmData {
   id: string;
@@ -13,6 +22,7 @@ export interface FarmData {
   nip: string;
   producerNumber: string;
   address: string;
+  taxBusinessEntityId: string | null;
 }
 
 export type FarmFormValues = {
@@ -20,6 +30,7 @@ export type FarmFormValues = {
   nip: string;
   producerNumber: string;
   address: string;
+  taxBusinessEntityId: string | null;
 };
 
 interface EditFarmModalProps {
@@ -47,18 +58,43 @@ const EditFarmModal: React.FC<EditFarmModalProps> = ({
   onSave,
   farmData,
 }) => {
+  const [taxBusinessEntities, setTaxBusinessEntities] = useState<
+    TaxBusinessEntityRowModel[]
+  >([]);
+  const [selectedEntity, setSelectedEntity] =
+    useState<TaxBusinessEntityRowModel | null>(null);
+
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<FarmFormValues>();
+
+  // Load tax business entities
+  useEffect(() => {
+    handleApiResponse(
+      () => TaxBusinessEntitiesService.getAllAsync(),
+      (data) => setTaxBusinessEntities(data.responseData?.items ?? []),
+      () => setTaxBusinessEntities([])
+    );
+  }, []);
 
   useEffect(() => {
     if (farmData) {
       reset(farmData);
+      // Set selected entity based on farmData.taxBusinessEntityId
+      if (farmData.taxBusinessEntityId && taxBusinessEntities.length > 0) {
+        const entity = taxBusinessEntities.find(
+          (e) => e.id === farmData.taxBusinessEntityId
+        );
+        setSelectedEntity(entity || null);
+      } else {
+        setSelectedEntity(null);
+      }
     }
-  }, [farmData, reset]);
+  }, [farmData, reset, taxBusinessEntities]);
 
   const onSubmit: SubmitHandler<FarmFormValues> = async (data) => {
     if (!farmData) return;
@@ -109,7 +145,8 @@ const EditFarmModal: React.FC<EditFarmModalProps> = ({
             {...register("producerNumber", {
               required: "To pole jest wymagane",
               validate: (value) =>
-                isValidProducerNumber(value) || "Numer producenta musi mieć format: liczba-liczba (np. 000111222-012)",
+                isValidProducerNumber(value) ||
+                "Numer producenta musi mieć format: liczba-liczba (np. 000111222-012)",
             })}
             error={!!errors.producerNumber}
             helperText={errors.producerNumber?.message}
@@ -119,6 +156,27 @@ const EditFarmModal: React.FC<EditFarmModalProps> = ({
             margin="normal"
             label="Adres"
             {...register("address")}
+          />
+
+          <Autocomplete
+            options={taxBusinessEntities}
+            getOptionLabel={(option) =>
+              `${option.name} (${option.nip}) - ${option.businessType}`
+            }
+            value={selectedEntity}
+            onChange={(_, value) => {
+              setSelectedEntity(value);
+              setValue("taxBusinessEntityId", value?.id || null);
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Podmiot gospodarczy"
+                margin="normal"
+                fullWidth
+              />
+            )}
+            isOptionEqualToValue={(option, value) => option.id === value.id}
           />
 
           <Box

@@ -14,7 +14,9 @@ public class FarmProfile : Profile
                 opt => opt.MapFrom(t => t.Henhouses.Count(h => h.DateDeletedUtc.HasValue == false)))
             .ForMember(m => m.Henhouses,
                 opt => opt.MapFrom(t =>
-                    t.Henhouses.Where(h => h.DateDeletedUtc.HasValue == false).OrderBy(h => h.Name)));
+                    t.Henhouses.Where(h => h.DateDeletedUtc.HasValue == false).OrderBy(h => h.Name)))
+            .ForMember(m => m.TaxBusinessEntityName,
+                opt => opt.MapFrom(t => t.TaxBusinessEntity != null ? t.TaxBusinessEntity.Name : null));
 
         CreateMap<FarmEntity, FarmDictModel>()
             .ForMember(t => t.Henhouses,
