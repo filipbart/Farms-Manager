@@ -4,6 +4,7 @@ using FarmsManager.Application.Specifications.KSeF;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Entities;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -91,6 +92,12 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
+        // Pobierz wszystkie fermy do niezależnego wyszukiwania
+        var allFarms = await dbContext.Set<FarmEntity>()
+            .Where(f => f.DateDeletedUtc == null)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
         var log = new KSeFSynchronizationLogEntity
         {
             IsManual = isManual
@@ -138,7 +145,7 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                     var invoiceXml = await ksefService.GetInvoiceXmlAsync(invoiceSummary.KsefNumber, cancellationToken);
 
                     // Dopasuj podmiot gospodarczy po NIP lub nazwie
-                    var (taxBusinessEntityId, farmId) = MatchTaxBusinessEntityAndFarm(invoiceSummary, taxBusinessEntities);
+                    var (taxBusinessEntityId, farmId) = MatchTaxBusinessEntityAndFarm(invoiceSummary, taxBusinessEntities, allFarms);
 
                     var invoiceEntity = CreateInvoiceEntity(invoiceSummary, invoiceXml, xmlParser, taxBusinessEntityId, farmId);
 
@@ -205,51 +212,87 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
 
     /// <summary>
     /// Dopasowuje podmiot gospodarczy i fermę do faktury na podstawie NIP lub nazwy
+    /// Logika przypisywania fermy:
+    /// 1. Jeśli podmiot ma przypisane fermy - użyj pierwszej
+    /// 2. Jeśli podmiot nie ma ferm - szukaj fermy po NIP
+    /// 3. Jeśli nie znaleziono po NIP - szukaj fermy po nazwie
     /// </summary>
     private static (Guid? TaxBusinessEntityId, Guid? FarmId) MatchTaxBusinessEntityAndFarm(
         KSeFInvoiceSyncItem invoiceItem,
-        List<TaxBusinessEntity> taxBusinessEntities)
+        List<TaxBusinessEntity> taxBusinessEntities,
+        List<FarmEntity> allFarms)
     {
-        if (taxBusinessEntities.Count == 0)
-            return (null, null);
-
         // Normalizuj NIP-y z faktury
         var sellerNip = NormalizeNip(invoiceItem.SellerNip);
         var buyerNip = NormalizeNip(invoiceItem.BuyerNip);
-
-        // Szukaj po NIP sprzedawcy lub nabywcy (dokładne dopasowanie)
-        var matchedByNip = taxBusinessEntities.FirstOrDefault(t =>
-            t.Nip == sellerNip || t.Nip == buyerNip);
-
-        if (matchedByNip != null)
-        {
-            var farmId = matchedByNip.Farms.FirstOrDefault()?.Id;
-            return (matchedByNip.Id, farmId);
-        }
-
-        // Szukaj po nazwie (częściowe dopasowanie - case insensitive)
         var sellerName = invoiceItem.SellerName?.ToLowerInvariant();
         var buyerName = invoiceItem.BuyerName?.ToLowerInvariant();
 
-        var matchedByName = taxBusinessEntities.FirstOrDefault(t =>
-        {
-            var entityName = t.Name?.ToLowerInvariant();
-            if (string.IsNullOrEmpty(entityName))
-                return false;
+        Guid? taxBusinessEntityId = null;
+        Guid? farmId = null;
 
-            return (!string.IsNullOrEmpty(sellerName) && sellerName.Contains(entityName)) ||
-                   (!string.IsNullOrEmpty(buyerName) && buyerName.Contains(entityName)) ||
-                   (!string.IsNullOrEmpty(sellerName) && entityName.Contains(sellerName)) ||
-                   (!string.IsNullOrEmpty(buyerName) && entityName.Contains(buyerName));
-        });
+        // 1. Szukaj podmiotu po NIP
+        var matchedEntity = taxBusinessEntities.FirstOrDefault(t =>
+            t.Nip == sellerNip || t.Nip == buyerNip);
 
-        if (matchedByName != null)
+        // 2. Jeśli nie znaleziono po NIP, szukaj po nazwie
+        if (matchedEntity == null)
         {
-            var farmId = matchedByName.Farms.FirstOrDefault()?.Id;
-            return (matchedByName.Id, farmId);
+            matchedEntity = taxBusinessEntities.FirstOrDefault(t =>
+            {
+                var entityName = t.Name?.ToLowerInvariant();
+                if (string.IsNullOrEmpty(entityName))
+                    return false;
+
+                return (!string.IsNullOrEmpty(sellerName) && sellerName.Contains(entityName)) ||
+                       (!string.IsNullOrEmpty(buyerName) && buyerName.Contains(entityName)) ||
+                       (!string.IsNullOrEmpty(sellerName) && entityName.Contains(sellerName)) ||
+                       (!string.IsNullOrEmpty(buyerName) && entityName.Contains(buyerName));
+            });
         }
 
-        return (null, null);
+        if (matchedEntity != null)
+        {
+            taxBusinessEntityId = matchedEntity.Id;
+
+            // Sprawdź czy podmiot ma przypisane fermy
+            if (matchedEntity.Farms.Count > 0)
+            {
+                farmId = matchedEntity.Farms.First().Id;
+                return (taxBusinessEntityId, farmId);
+            }
+        }
+
+        // Jeśli podmiot nie ma ferm lub nie znaleziono podmiotu - szukaj fermy niezależnie
+        // 3. Szukaj fermy po NIP
+        var matchedFarm = allFarms.FirstOrDefault(f =>
+        {
+            var farmNip = NormalizeNip(f.Nip);
+            return farmNip == sellerNip || farmNip == buyerNip;
+        });
+
+        // 4. Jeśli nie znaleziono po NIP, szukaj po nazwie
+        if (matchedFarm == null)
+        {
+            matchedFarm = allFarms.FirstOrDefault(f =>
+            {
+                var farmName = f.Name?.ToLowerInvariant();
+                if (string.IsNullOrEmpty(farmName))
+                    return false;
+
+                return (!string.IsNullOrEmpty(sellerName) && sellerName.Contains(farmName)) ||
+                       (!string.IsNullOrEmpty(buyerName) && buyerName.Contains(farmName)) ||
+                       (!string.IsNullOrEmpty(sellerName) && farmName.Contains(sellerName)) ||
+                       (!string.IsNullOrEmpty(buyerName) && farmName.Contains(buyerName));
+            });
+        }
+
+        if (matchedFarm != null)
+        {
+            farmId = matchedFarm.Id;
+        }
+
+        return (taxBusinessEntityId, farmId);
     }
 
     /// <summary>
