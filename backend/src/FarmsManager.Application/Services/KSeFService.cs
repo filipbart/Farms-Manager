@@ -113,7 +113,7 @@ public class KSeFService : IKSeFService
             await EnsureSessionAsync(cancellationToken);
 
             var now = DateTime.Now;
-            var yearBefore = now.AddYears(-1);
+            var yearBefore = now.AddMonths(-2);
             var dateRange = new DateRange
             {
                 DateType = DateType.PermanentStorage,
