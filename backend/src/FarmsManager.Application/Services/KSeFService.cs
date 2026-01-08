@@ -356,6 +356,16 @@ public class KSeFService : IKSeFService
             signatureResponse.AuthenticationToken.Token,
             cancellationToken);
 
+        // Status 100 oznacza, że uwierzytelnianie jest w toku - czekamy w pętli
+        while (status.Status.Code == 100)
+        {
+            await Task.Delay(1000, cancellationToken);
+            status = await _ksefClient.GetAuthStatusAsync(
+                signatureResponse.ReferenceNumber,
+                signatureResponse.AuthenticationToken.Token,
+                cancellationToken);
+        }
+
         if (status.Status.Code != 200)
             throw new InvalidOperationException("Błąd uwierzytelniania do KSeF");
 
