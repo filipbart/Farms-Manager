@@ -504,41 +504,15 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
   const handleFormChange = useCallback(
     (field: keyof EditFormState, value: string) => {
       setEditForm((prev) => ({ ...prev, [field]: value }));
-      // Clear cycle when farm changes
+      // Auto-select active cycle when farm changes
       if (field === "farmId") {
-        setEditForm((prev) => ({ ...prev, cycleId: "" }));
+        const selectedFarm = farms.find((f) => f.id === value);
+        const activeCycleId = selectedFarm?.activeCycle?.id || "";
+        setEditForm((prev) => ({ ...prev, cycleId: activeCycleId }));
       }
     },
-    []
+    [farms]
   );
-
-  const handleSave = useCallback(async () => {
-    if (!details) return;
-    setSaving(true);
-    try {
-      await handleApiResponse(
-        () =>
-          AccountingService.updateInvoice(details.id, {
-            moduleType: editForm.moduleType || undefined,
-            vatDeductionType: editForm.vatDeductionType,
-            paymentStatus: editForm.paymentStatus,
-            farmId: editForm.farmId || null,
-            cycleId: editForm.cycleId || null,
-            assignedUserId: editForm.assignedUserId || null,
-            comment: editForm.comment,
-            relatedInvoiceNumber: editForm.relatedInvoiceNumber,
-          }),
-        () => {
-          toast.success("Faktura została zaktualizowana");
-          onSave?.();
-        },
-        undefined,
-        "Błąd podczas zapisywania faktury"
-      );
-    } finally {
-      setSaving(false);
-    }
-  }, [details, editForm, onSave]);
 
   const handleStatusChange = useCallback(
     async (newStatus: KSeFInvoiceStatus) => {
@@ -605,9 +579,21 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
     ].includes(moduleType as ModuleType);
   }, []);
 
-  // Handle accept button click - opens modal if module requires entity, otherwise accepts directly
+  // Handle accept button click - validates farm/cycle and opens modal if module requires entity
   const handleAcceptClick = useCallback(() => {
     if (!details) return;
+
+    // Validate farm and cycle are selected
+    if (!editForm.farmId) {
+      toast.warning(
+        "Wybierz lokalizację (fermę) przed zaakceptowaniem faktury"
+      );
+      return;
+    }
+    if (!editForm.cycleId) {
+      toast.warning("Wybierz cykl przed zaakceptowaniem faktury");
+      return;
+    }
 
     const currentModule = editForm.moduleType || ModuleType.None;
     if (moduleRequiresEntity(currentModule)) {
@@ -618,7 +604,14 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
       // For modules that don't require entity (Farmstead, Other, None), accept directly
       handleStatusChange(KSeFInvoiceStatus.Accepted);
     }
-  }, [details, editForm.moduleType, moduleRequiresEntity, handleStatusChange]);
+  }, [
+    details,
+    editForm.farmId,
+    editForm.cycleId,
+    editForm.moduleType,
+    moduleRequiresEntity,
+    handleStatusChange,
+  ]);
 
   // Linking handlers
   const fetchLinkableInvoices = useCallback(
@@ -1626,6 +1619,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                       farms={farms}
                       selectedFarmId={editForm.farmId}
                       selectedCycleId={editForm.cycleId}
+                      comment={editForm.comment}
                       onSuccess={() => {
                         setShowModuleForm(false);
                         setPendingModuleType(null);
@@ -1769,34 +1763,6 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                       handleFormChange("comment", e.target.value)
                     }
                   />
-
-                  <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
-                    <Button
-                      variant="outlined"
-                      color="warning"
-                      onClick={() => {
-                        setHoldUserId(editForm.assignedUserId);
-                        setShowHoldModal(true);
-                      }}
-                      disabled={saving}
-                      startIcon={<PauseIcon />}
-                    >
-                      Wstrzymaj
-                    </Button>
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      onClick={handleSave}
-                      disabled={saving}
-                      sx={{ flex: 1 }}
-                    >
-                      {saving ? (
-                        <CircularProgress size={24} />
-                      ) : (
-                        "Zapisz zmiany"
-                      )}
-                    </Button>
-                  </Box>
                 </Box>
               </Box>
             </Grid>
@@ -1899,6 +1865,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
               farms={farms}
               selectedFarmId={editForm.farmId}
               selectedCycleId={editForm.cycleId}
+              comment={editForm.comment}
               mode="accept"
               onSuccess={() => {
                 setShowAcceptModal(false);

@@ -72,23 +72,67 @@ const UploadInvoiceModal: React.FC<UploadInvoiceModalProps> = ({
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
+    // Rozdziel pliki na XML i pozostałe
+    const xmlFiles = selectedFiles.filter((f) =>
+      f.name.toLowerCase().endsWith(".xml")
+    );
+    const otherFiles = selectedFiles.filter(
+      (f) => !f.name.toLowerCase().endsWith(".xml")
+    );
+
     try {
-      await handleApiResponse(
-        () =>
-          AccountingService.uploadInvoices(
-            selectedFiles,
-            invoiceType,
-            controller.signal
-          ),
-        (data) => {
-          if (data && data.responseData) {
-            onUpload(data.responseData.files);
-          }
-          toast.success("Faktury zostały wgrane pomyślnie");
-        },
-        undefined,
-        "Błąd podczas wgrywania faktur"
-      );
+      // Przetwórz pliki XML jako faktury KSeF (bezpośredni import)
+      if (xmlFiles.length > 0) {
+        await handleApiResponse(
+          () =>
+            AccountingService.uploadXmlInvoices(
+              xmlFiles,
+              invoiceType,
+              controller.signal
+            ),
+          (data) => {
+            if (data && data.responseData) {
+              const { importedCount, skippedCount, errors } = data.responseData;
+              if (importedCount > 0) {
+                toast.success(
+                  `Zaimportowano ${importedCount} faktur KSeF z XML`
+                );
+              }
+              if (skippedCount > 0) {
+                toast.warning(`Pominięto ${skippedCount} faktur (duplikaty)`);
+              }
+              errors.forEach((err) => toast.error(err));
+            }
+          },
+          undefined,
+          "Błąd podczas importowania faktur XML"
+        );
+      }
+
+      // Przetwórz pozostałe pliki przez AI
+      if (otherFiles.length > 0) {
+        await handleApiResponse(
+          () =>
+            AccountingService.uploadInvoices(
+              otherFiles,
+              invoiceType,
+              controller.signal
+            ),
+          (data) => {
+            if (data && data.responseData) {
+              onUpload(data.responseData.files);
+            }
+            toast.success("Faktury zostały wgrane pomyślnie");
+          },
+          undefined,
+          "Błąd podczas wgrywania faktur"
+        );
+      } else if (xmlFiles.length > 0) {
+        // Jeśli były tylko pliki XML, zamknij modal i odśwież listę
+        handleClose();
+        // Trigger parent refresh via empty callback
+        onUpload([]);
+      }
     } catch (error: any) {
       if (error.name !== "CanceledError") {
         toast.error("Błąd podczas wgrywania faktur");
@@ -96,7 +140,9 @@ const UploadInvoiceModal: React.FC<UploadInvoiceModalProps> = ({
     } finally {
       setLoading(false);
       abortControllerRef.current = null;
-      handleClose();
+      if (otherFiles.length > 0) {
+        handleClose();
+      }
     }
   };
 

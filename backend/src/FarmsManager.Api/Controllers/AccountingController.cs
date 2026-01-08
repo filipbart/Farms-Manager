@@ -139,6 +139,44 @@ public class AccountingController : BaseController
     }
 
     /// <summary>
+    /// Upload faktur KSeF z plików XML (bez AI, bezpośredni import)
+    /// </summary>
+    [HttpPost("invoices/upload-xml")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(BaseResponse<UploadKSeFXmlInvoicesCommandResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> UploadKSeFXmlInvoices(
+        [FromForm] List<IFormFile> files,
+        [FromForm] string invoiceType)
+    {
+        if (files == null || files.Count == 0)
+        {
+            return BadRequest(new { error = "Nie przesłano żadnych plików XML" });
+        }
+
+        var result = await _mediator.Send(new UploadKSeFXmlInvoicesCommand(
+            new UploadKSeFXmlInvoicesCommandDto
+            {
+                Files = files,
+                InvoiceType = invoiceType
+            }));
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Usuwa wszystkie faktury KSeF (tylko do testów!)
+    /// </summary>
+    [HttpDelete("invoices/delete-all")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(BaseResponse<DeleteAllKSeFInvoicesCommandResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> DeleteAllInvoices()
+    {
+        var result = await _mediator.Send(new DeleteAllKSeFInvoicesCommand());
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Zapisuje fakturę po zaczytaniu przez AI
     /// </summary>
     [HttpPost("invoices/save")]

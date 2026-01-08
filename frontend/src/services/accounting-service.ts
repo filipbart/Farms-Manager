@@ -38,6 +38,16 @@ export interface UploadAccountingInvoicesResponse {
   files: DraftAccountingInvoice[];
 }
 
+export interface UploadXmlInvoicesResponse {
+  importedCount: number;
+  skippedCount: number;
+  errors: string[];
+}
+
+export interface DeleteAllInvoicesResponse {
+  deletedCount: number;
+}
+
 export interface SaveAccountingInvoiceData {
   draftId: string;
   filePath: string;
@@ -135,6 +145,41 @@ export class AccountingService {
         },
         signal,
       }
+    );
+  }
+
+  /**
+   * Upload faktur KSeF z plików XML (bezpośredni import, bez AI)
+   */
+  public static async uploadXmlInvoices(
+    files: File[],
+    invoiceType: string,
+    signal?: AbortSignal
+  ) {
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append("files", file);
+    });
+    formData.append("invoiceType", invoiceType);
+
+    return await AxiosWrapper.post<UploadXmlInvoicesResponse>(
+      ApiUrl.AccountingUploadXmlInvoice,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        signal,
+      }
+    );
+  }
+
+  /**
+   * Usuwa wszystkie faktury KSeF (tylko do testów!)
+   */
+  public static async deleteAllInvoices() {
+    return await AxiosWrapper.delete<DeleteAllInvoicesResponse>(
+      ApiUrl.AccountingDeleteAllInvoices
     );
   }
 

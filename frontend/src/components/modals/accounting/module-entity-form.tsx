@@ -18,7 +18,6 @@ import {
   type CreateModuleEntityRequest,
   type AcceptInvoiceRequest,
 } from "../../../services/accounting-service";
-import { FarmsService } from "../../../services/farms-service";
 import { FeedsService } from "../../../services/feeds-service";
 import { GasService } from "../../../services/gas-service";
 import { ExpensesService } from "../../../services/expenses-service";
@@ -29,7 +28,6 @@ import {
   type KSeFLineItem,
 } from "../../../models/accounting/ksef-invoice";
 import type FarmRowModel from "../../../models/farms/farm-row-model";
-import type CycleDto from "../../../models/farms/latest-cycle";
 import type { GasContractorRow } from "../../../models/gas/gas-contractors";
 import type { ExpenseContractorRow } from "../../../models/expenses/expenses-contractors";
 import type { SlaughterhouseRowModel } from "../../../models/slaughterhouses/slaughterhouse-row-model";
@@ -53,8 +51,9 @@ interface ModuleEntityFormProps {
     lineItems?: KSeFLineItem[];
   };
   farms: FarmRowModel[];
-  selectedFarmId?: string;
-  selectedCycleId?: string;
+  selectedFarmId: string;
+  selectedCycleId: string;
+  comment?: string;
   onSuccess: () => void;
   onCancel: () => void;
   /**
@@ -125,12 +124,12 @@ const ModuleEntityForm: React.FC<ModuleEntityFormProps> = ({
   farms,
   selectedFarmId,
   selectedCycleId,
+  comment,
   onSuccess,
   onCancel,
   mode = "create",
 }) => {
   const [loading, setLoading] = useState(false);
-  const [cycles, setCycles] = useState<CycleDto[]>([]);
   const [henhouses, setHenhouses] = useState<{ id: string; name: string }[]>(
     []
   );
@@ -210,41 +209,15 @@ const ModuleEntityForm: React.FC<ModuleEntityFormProps> = ({
     },
   });
 
-  const watchedFeedFarmId = feedForm.watch("farmId");
-  const watchedGasFarmId = gasForm.watch("farmId");
-  const watchedExpenseFarmId = expenseForm.watch("farmId");
-  const watchedSaleFarmId = saleForm.watch("farmId");
-
-  // Load cycles when farm changes
-  useEffect(() => {
-    const farmId =
-      watchedFeedFarmId ||
-      watchedGasFarmId ||
-      watchedExpenseFarmId ||
-      watchedSaleFarmId;
-    if (farmId) {
-      handleApiResponse(
-        () => FarmsService.getFarmCycles(farmId),
-        (data) => setCycles(data.responseData ?? []),
-        () => setCycles([])
-      );
-    }
-  }, [
-    watchedFeedFarmId,
-    watchedGasFarmId,
-    watchedExpenseFarmId,
-    watchedSaleFarmId,
-  ]);
-
   // Load henhouses for feed module
   useEffect(() => {
-    if (moduleType === ModuleType.Feeds && watchedFeedFarmId) {
-      const farm = farms.find((f) => f.id === watchedFeedFarmId);
+    if (moduleType === ModuleType.Feeds && selectedFarmId) {
+      const farm = farms.find((f) => f.id === selectedFarmId);
       if (farm?.henhouses) {
         setHenhouses(farm.henhouses);
       }
     }
-  }, [moduleType, watchedFeedFarmId, farms]);
+  }, [moduleType, selectedFarmId, farms]);
 
   // Load feed names
   useEffect(() => {
@@ -395,8 +368,8 @@ const ModuleEntityForm: React.FC<ModuleEntityFormProps> = ({
         case ModuleType.Feeds: {
           const data = feedForm.getValues();
           request.feedData = {
-            farmId: data.farmId,
-            cycleId: data.cycleId,
+            farmId: selectedFarmId,
+            cycleId: selectedCycleId,
             henhouseId: data.henhouseId,
             invoiceNumber: data.invoiceNumber,
             bankAccountNumber: data.bankAccountNumber,
@@ -409,14 +382,14 @@ const ModuleEntityForm: React.FC<ModuleEntityFormProps> = ({
             invoiceTotal: data.invoiceTotal,
             subTotal: data.subTotal,
             vatAmount: data.vatAmount,
-            comment: data.comment,
+            comment: comment || "",
           };
           break;
         }
         case ModuleType.Gas: {
           const data = gasForm.getValues();
           request.gasData = {
-            farmId: data.farmId,
+            farmId: selectedFarmId,
             contractorId: data.contractorId || undefined,
             contractorNip: invoiceData.sellerNip,
             contractorName: invoiceData.sellerName,
@@ -425,15 +398,15 @@ const ModuleEntityForm: React.FC<ModuleEntityFormProps> = ({
             invoiceTotal: data.invoiceTotal,
             unitPrice: data.unitPrice,
             quantity: data.quantity,
-            comment: data.comment,
+            comment: comment || "",
           };
           break;
         }
         case ModuleType.ProductionExpenses: {
           const data = expenseForm.getValues();
           request.expenseData = {
-            farmId: data.farmId,
-            cycleId: data.cycleId,
+            farmId: selectedFarmId,
+            cycleId: selectedCycleId,
             expenseContractorId: data.expenseContractorId || undefined,
             expenseTypeId: data.expenseTypeId,
             contractorNip: invoiceData.sellerNip,
@@ -443,15 +416,15 @@ const ModuleEntityForm: React.FC<ModuleEntityFormProps> = ({
             subTotal: data.subTotal,
             vatAmount: data.vatAmount,
             invoiceDate: data.invoiceDate,
-            comment: data.comment,
+            comment: comment || "",
           };
           break;
         }
         case ModuleType.Sales: {
           const data = saleForm.getValues();
           request.saleData = {
-            farmId: data.farmId,
-            cycleId: data.cycleId,
+            farmId: selectedFarmId,
+            cycleId: selectedCycleId,
             slaughterhouseId: data.slaughterhouseId || undefined,
             slaughterhouseNip: invoiceData.buyerNip,
             slaughterhouseName: invoiceData.buyerName,
@@ -507,46 +480,7 @@ const ModuleEntityForm: React.FC<ModuleEntityFormProps> = ({
       </Typography>
 
       <FormControl fullWidth size="small" required>
-        <InputLabel>Ferma</InputLabel>
-        <Select
-          value={feedForm.watch("farmId")}
-          label="Ferma"
-          onChange={(e) => feedForm.setValue("farmId", e.target.value)}
-        >
-          {farms.map((farm) => (
-            <MenuItem key={farm.id} value={farm.id}>
-              {farm.name}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-
-      <FormControl
-        fullWidth
-        size="small"
-        required
-        disabled={!watchedFeedFarmId}
-      >
-        <InputLabel>Cykl</InputLabel>
-        <Select
-          value={feedForm.watch("cycleId")}
-          label="Cykl"
-          onChange={(e) => feedForm.setValue("cycleId", e.target.value)}
-        >
-          {cycles.map((cycle) => (
-            <MenuItem key={cycle.id} value={cycle.id}>
-              {cycle.identifier}/{cycle.year}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-
-      <FormControl
-        fullWidth
-        size="small"
-        required
-        disabled={!watchedFeedFarmId}
-      >
+        {" "}
         <InputLabel>Kurnik</InputLabel>
         <Select
           value={feedForm.watch("henhouseId")}
@@ -656,15 +590,6 @@ const ModuleEntityForm: React.FC<ModuleEntityFormProps> = ({
         value={feedForm.watch("bankAccountNumber")}
         onChange={(e) => feedForm.setValue("bankAccountNumber", e.target.value)}
       />
-
-      <TextField
-        label="Komentarz"
-        size="small"
-        multiline
-        rows={2}
-        value={feedForm.watch("comment")}
-        onChange={(e) => feedForm.setValue("comment", e.target.value)}
-      />
     </Box>
   );
 
@@ -673,21 +598,6 @@ const ModuleEntityForm: React.FC<ModuleEntityFormProps> = ({
       <Typography variant="subtitle2" fontWeight={600}>
         Formularz dostawy gazu
       </Typography>
-
-      <FormControl fullWidth size="small" required>
-        <InputLabel>Ferma</InputLabel>
-        <Select
-          value={gasForm.watch("farmId")}
-          label="Ferma"
-          onChange={(e) => gasForm.setValue("farmId", e.target.value)}
-        >
-          {farms.map((farm) => (
-            <MenuItem key={farm.id} value={farm.id}>
-              {farm.name}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
 
       <Autocomplete
         options={gasContractors}
@@ -749,15 +659,6 @@ const ModuleEntityForm: React.FC<ModuleEntityFormProps> = ({
           gasForm.setValue("invoiceTotal", parseFloat(e.target.value) || 0)
         }
       />
-
-      <TextField
-        label="Komentarz"
-        size="small"
-        multiline
-        rows={2}
-        value={gasForm.watch("comment")}
-        onChange={(e) => gasForm.setValue("comment", e.target.value)}
-      />
     </Box>
   );
 
@@ -766,41 +667,6 @@ const ModuleEntityForm: React.FC<ModuleEntityFormProps> = ({
       <Typography variant="subtitle2" fontWeight={600}>
         Formularz kosztu produkcyjnego
       </Typography>
-
-      <FormControl fullWidth size="small" required>
-        <InputLabel>Ferma</InputLabel>
-        <Select
-          value={expenseForm.watch("farmId")}
-          label="Ferma"
-          onChange={(e) => expenseForm.setValue("farmId", e.target.value)}
-        >
-          {farms.map((farm) => (
-            <MenuItem key={farm.id} value={farm.id}>
-              {farm.name}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-
-      <FormControl
-        fullWidth
-        size="small"
-        required
-        disabled={!watchedExpenseFarmId}
-      >
-        <InputLabel>Cykl</InputLabel>
-        <Select
-          value={expenseForm.watch("cycleId")}
-          label="Cykl"
-          onChange={(e) => expenseForm.setValue("cycleId", e.target.value)}
-        >
-          {cycles.map((cycle) => (
-            <MenuItem key={cycle.id} value={cycle.id}>
-              {cycle.identifier}/{cycle.year}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
 
       <Autocomplete
         options={expenseContractors}
@@ -895,15 +761,6 @@ const ModuleEntityForm: React.FC<ModuleEntityFormProps> = ({
           sx={{ flex: 1 }}
         />
       </Box>
-
-      <TextField
-        label="Komentarz"
-        size="small"
-        multiline
-        rows={2}
-        value={expenseForm.watch("comment")}
-        onChange={(e) => expenseForm.setValue("comment", e.target.value)}
-      />
     </Box>
   );
 
@@ -912,41 +769,6 @@ const ModuleEntityForm: React.FC<ModuleEntityFormProps> = ({
       <Typography variant="subtitle2" fontWeight={600}>
         Formularz faktury sprzedaży
       </Typography>
-
-      <FormControl fullWidth size="small" required>
-        <InputLabel>Ferma</InputLabel>
-        <Select
-          value={saleForm.watch("farmId")}
-          label="Ferma"
-          onChange={(e) => saleForm.setValue("farmId", e.target.value)}
-        >
-          {farms.map((farm) => (
-            <MenuItem key={farm.id} value={farm.id}>
-              {farm.name}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-
-      <FormControl
-        fullWidth
-        size="small"
-        required
-        disabled={!watchedSaleFarmId}
-      >
-        <InputLabel>Cykl</InputLabel>
-        <Select
-          value={saleForm.watch("cycleId")}
-          label="Cykl"
-          onChange={(e) => saleForm.setValue("cycleId", e.target.value)}
-        >
-          {cycles.map((cycle) => (
-            <MenuItem key={cycle.id} value={cycle.id}>
-              {cycle.identifier}/{cycle.year}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
 
       <Autocomplete
         options={slaughterhouses}
