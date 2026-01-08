@@ -174,7 +174,7 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
             buyerNip: data.BuyerNip?.Replace("PL", "").Replace("-", "").Replace(" ", "").Trim(),
             buyerName: data.BuyerName,
             invoiceType: InvoiceType.Vat,
-            status: KSeFInvoiceStatus.New,
+            status: KSeFInvoiceStatus.Accepted,
             paymentStatus: KSeFPaymentStatus.Unpaid,
             paymentType: KSeFInvoicePaymentType.BankTransfer,
             vatDeductionType: KSeFVatDeductionType.Full,
