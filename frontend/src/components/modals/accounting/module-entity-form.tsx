@@ -24,7 +24,10 @@ import { GasService } from "../../../services/gas-service";
 import { ExpensesService } from "../../../services/expenses-service";
 import { SlaughterhousesService } from "../../../services/slaughterhouses-service";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
-import { ModuleType } from "../../../models/accounting/ksef-invoice";
+import {
+  ModuleType,
+  type KSeFLineItem,
+} from "../../../models/accounting/ksef-invoice";
 import type FarmRowModel from "../../../models/farms/farm-row-model";
 import type CycleDto from "../../../models/farms/latest-cycle";
 import type { GasContractorRow } from "../../../models/gas/gas-contractors";
@@ -47,6 +50,7 @@ interface ModuleEntityFormProps {
     grossAmount: number;
     netAmount: number;
     vatAmount: number;
+    lineItems?: KSeFLineItem[];
   };
   farms: FarmRowModel[];
   selectedFarmId?: string;
@@ -335,9 +339,54 @@ const ModuleEntityForm: React.FC<ModuleEntityFormProps> = ({
     }
   }, [moduleType]);
 
+  // Calculate quantity and unit price from invoice line items
+  useEffect(() => {
+    if (!invoiceData.lineItems || invoiceData.lineItems.length === 0) return;
+
+    const totalQuantity = invoiceData.lineItems.reduce(
+      (sum, item) => sum + (item.quantity || 0),
+      0
+    );
+
+    switch (moduleType) {
+      case ModuleType.Feeds:
+        // For feeds: sum quantity, unit price = 1
+        feedForm.setValue("quantity", totalQuantity);
+        feedForm.setValue("unitPrice", 1);
+        break;
+      case ModuleType.Gas:
+        // For gas: sum quantity, unit price = grossAmount / quantity
+        gasForm.setValue("quantity", totalQuantity);
+        if (totalQuantity > 0) {
+          gasForm.setValue(
+            "unitPrice",
+            invoiceData.grossAmount / totalQuantity
+          );
+        }
+        break;
+      case ModuleType.ProductionExpenses:
+        // For expenses: no quantity/unitPrice fields, only set invoiceTotal
+        expenseForm.setValue("invoiceTotal", invoiceData.grossAmount);
+        break;
+      case ModuleType.Sales:
+        // For sales: no quantity/unitPrice fields, only set invoiceTotal
+        saleForm.setValue("invoiceTotal", invoiceData.grossAmount);
+        break;
+    }
+  }, [
+    moduleType,
+    invoiceData.lineItems,
+    invoiceData.grossAmount,
+    feedForm,
+    gasForm,
+    expenseForm,
+    saleForm,
+  ]);
+
   const handleSubmit = async () => {
     setLoading(true);
     try {
+      // ...
       const request: CreateModuleEntityRequest | AcceptInvoiceRequest = {
         moduleType,
       };

@@ -1,7 +1,7 @@
 import type { GridColDef } from "@mui/x-data-grid";
 import dayjs from "dayjs";
 import { Chip, IconButton, Tooltip } from "@mui/material";
-import { MdPictureAsPdf, MdCode, MdVisibility } from "react-icons/md";
+import { MdPictureAsPdf, MdCode } from "react-icons/md";
 import type { KSeFInvoiceListModel } from "../../models/accounting/ksef-invoice";
 import {
   KSeFInvoiceStatusLabels,
@@ -17,7 +17,6 @@ import {
 } from "../../models/accounting/ksef-invoice";
 
 interface GetKSeFInvoicesColumnsProps {
-  onViewDetails: (invoice: KSeFInvoiceListModel) => void;
   onDownloadPdf: (invoice: KSeFInvoiceListModel) => void;
   onDownloadXml: (invoice: KSeFInvoiceListModel) => void;
   downloadingId: string | null;
@@ -53,7 +52,6 @@ const getPaymentStatusColor = (status: KSeFPaymentStatus) => {
 };
 
 export const getKSeFInvoicesColumns = ({
-  onViewDetails,
   onDownloadPdf,
   onDownloadXml,
   downloadingId,
@@ -240,19 +238,10 @@ export const getKSeFInvoicesColumns = ({
     field: "actions",
     type: "actions",
     headerName: "Akcje",
-    width: 150,
+    width: 100,
     getActions: (params) => {
       const isDownloading = downloadingId === params.row.id;
       return [
-        <Tooltip title="Szczegóły" key="details">
-          <IconButton
-            size="small"
-            onClick={() => onViewDetails(params.row)}
-            color="primary"
-          >
-            <MdVisibility />
-          </IconButton>
-        </Tooltip>,
         <Tooltip title="Pobierz PDF" key="pdf">
           <span>
             <IconButton

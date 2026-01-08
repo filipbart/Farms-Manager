@@ -290,7 +290,6 @@ const AccountingPage: React.FC = () => {
   const columns = useMemo(
     () =>
       getKSeFInvoicesColumns({
-        onViewDetails: handleViewDetails,
         onDownloadPdf: handleDownloadPdf,
         onDownloadXml: handleDownloadXml,
         downloadingId,
@@ -349,6 +348,10 @@ const AccountingPage: React.FC = () => {
         onRowSelectionModelChange={(newSelection) => {
           setSelectedRowIds(newSelection);
         }}
+        onRowClick={(params) => {
+          handleViewDetails(params.row);
+        }}
+        disableRowSelectionOnClick
         pageSizeOptions={[10, 25, 50, 100]}
         slots={{ noRowsOverlay: NoRowsOverlay }}
         showToolbar
@@ -356,6 +359,9 @@ const AccountingPage: React.FC = () => {
           [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },
           [`& .${tablePaginationClasses.input}`]: { display: "inline-flex" },
           minHeight: 400,
+          "& .MuiDataGrid-row:hover": {
+            cursor: "pointer",
+          },
         }}
         sortingMode="server"
         onSortModelChange={(model) => {

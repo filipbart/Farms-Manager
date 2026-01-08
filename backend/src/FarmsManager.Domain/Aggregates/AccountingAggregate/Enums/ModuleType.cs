@@ -17,5 +17,9 @@ public enum ModuleType
 
     [Description("Gospodarstwo rolne")] Farmstead,
 
+    [Description("Inwestycje")] Investments,
+
+    [Description("Nieruchomości")] RealEstate,
+
     [Description("Inne")] Other,
 }

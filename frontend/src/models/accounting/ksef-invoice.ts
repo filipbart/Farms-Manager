@@ -49,6 +49,8 @@ export enum ModuleType {
   Gas = "Gas",
   Sales = "Sales",
   Farmstead = "Farmstead",
+  Investments = "Investments",
+  RealEstate = "RealEstate",
   Other = "Other",
 }
 
@@ -146,6 +148,8 @@ export const ModuleTypeLabels: Record<ModuleType, string> = {
   [ModuleType.Gas]: "Gaz",
   [ModuleType.Sales]: "Sprzedaże",
   [ModuleType.Farmstead]: "Gospodarstwo rolne",
+  [ModuleType.Investments]: "Inwestycje",
+  [ModuleType.RealEstate]: "Nieruchomości",
   [ModuleType.Other]: "Inne",
 };
 
