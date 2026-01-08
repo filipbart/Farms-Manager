@@ -26,6 +26,7 @@ import LoadingTextField from "../../common/loading-textfield";
 import type {
   InvoiceAssignmentRule,
   CreateInvoiceAssignmentRuleDto,
+  UpdateInvoiceAssignmentRuleDto,
 } from "../../../models/settings/invoice-assignment-rule";
 import type { UserListModel } from "../../../models/users/users";
 import type FarmRowModel from "../../../models/farms/farm-row-model";
@@ -175,19 +176,23 @@ const InvoiceAssignmentRuleModal: React.FC<InvoiceAssignmentRuleModalProps> = ({
 
     setLoading(true);
 
-    const payload: CreateInvoiceAssignmentRuleDto = {
-      name: data.name,
-      description: data.description || undefined,
-      assignedUserId: data.assignedUserId,
-      includeKeywords,
-      excludeKeywords,
-      taxBusinessEntityId: data.taxBusinessEntityId || undefined,
-      farmId: data.farmId || undefined,
-    };
+    console.log("Saving rule with includeKeywords:", includeKeywords);
+    console.log("Saving rule with excludeKeywords:", excludeKeywords);
 
     if (rule) {
+      const updatePayload: UpdateInvoiceAssignmentRuleDto = {
+        name: data.name,
+        description: data.description || undefined,
+        assignedUserId: data.assignedUserId,
+        includeKeywords,
+        excludeKeywords,
+        taxBusinessEntityId: data.taxBusinessEntityId || undefined,
+        farmId: data.farmId || undefined,
+      };
+
       await handleApiResponse(
-        () => SettingsService.updateInvoiceAssignmentRule(rule.id, payload),
+        () =>
+          SettingsService.updateInvoiceAssignmentRule(rule.id, updatePayload),
         () => {
           toast.success("Reguła została zaktualizowana");
           handleClose();
@@ -197,8 +202,18 @@ const InvoiceAssignmentRuleModal: React.FC<InvoiceAssignmentRuleModalProps> = ({
         "Błąd podczas aktualizacji reguły"
       );
     } else {
+      const createPayload: CreateInvoiceAssignmentRuleDto = {
+        name: data.name,
+        description: data.description || undefined,
+        assignedUserId: data.assignedUserId,
+        includeKeywords,
+        excludeKeywords,
+        taxBusinessEntityId: data.taxBusinessEntityId || undefined,
+        farmId: data.farmId || undefined,
+      };
+
       await handleApiResponse(
-        () => SettingsService.createInvoiceAssignmentRule(payload),
+        () => SettingsService.createInvoiceAssignmentRule(createPayload),
         () => {
           toast.success("Reguła została utworzona");
           handleClose();
