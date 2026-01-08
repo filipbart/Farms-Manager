@@ -58,6 +58,7 @@ export interface SaveAccountingInvoiceData {
   sellerNip: string;
   buyerName: string;
   buyerNip: string;
+  paymentStatus?: string;
   grossAmount: number;
   netAmount: number;
   vatAmount: number;
@@ -128,6 +129,7 @@ export class AccountingService {
   public static async uploadInvoices(
     files: File[],
     invoiceType: string,
+    paymentStatus: string,
     signal?: AbortSignal
   ) {
     const formData = new FormData();
@@ -135,6 +137,7 @@ export class AccountingService {
       formData.append("files", file);
     });
     formData.append("invoiceType", invoiceType);
+    formData.append("paymentStatus", paymentStatus);
 
     return await AxiosWrapper.post<UploadAccountingInvoicesResponse>(
       ApiUrl.AccountingUploadInvoice,
@@ -154,6 +157,7 @@ export class AccountingService {
   public static async uploadXmlInvoices(
     files: File[],
     invoiceType: string,
+    paymentStatus: string,
     signal?: AbortSignal
   ) {
     const formData = new FormData();
@@ -161,6 +165,7 @@ export class AccountingService {
       formData.append("files", file);
     });
     formData.append("invoiceType", invoiceType);
+    formData.append("paymentStatus", paymentStatus);
 
     return await AxiosWrapper.post<UploadXmlInvoicesResponse>(
       ApiUrl.AccountingUploadXmlInvoice,

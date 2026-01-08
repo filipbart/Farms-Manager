@@ -11,13 +11,13 @@ public record CreateInvoiceAssignmentRuleCommand(CreateInvoiceAssignmentRuleDto 
 
 public record CreateInvoiceAssignmentRuleDto
 {
-    public string Name { get; init; } = string.Empty;
-    public string Description { get; init; }
-    public Guid AssignedUserId { get; init; }
-    public string[] IncludeKeywords { get; init; } = Array.Empty<string>();
-    public string[] ExcludeKeywords { get; init; } = Array.Empty<string>();
-    public Guid? TaxBusinessEntityId { get; init; }
-    public Guid? FarmId { get; init; }
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; }
+    public Guid AssignedUserId { get; set; }
+    public string[] IncludeKeywords { get; set; } = Array.Empty<string>();
+    public string[] ExcludeKeywords { get; set; } = Array.Empty<string>();
+    public Guid? TaxBusinessEntityId { get; set; }
+    public Guid? FarmId { get; set; }
 }
 
 public class CreateInvoiceAssignmentRuleCommandHandler : IRequestHandler<CreateInvoiceAssignmentRuleCommand, BaseResponse<Guid>>

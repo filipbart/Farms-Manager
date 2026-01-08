@@ -15,6 +15,7 @@ public record UploadKSeFXmlInvoicesCommandDto
 {
     public List<IFormFile> Files { get; init; }
     public string InvoiceType { get; init; } // Purchase or Sales
+    public string PaymentStatus { get; init; } // Unpaid, PaidCash, PaidTransfer, etc.
 }
 
 public record UploadKSeFXmlInvoicesCommandResponse
@@ -132,7 +133,7 @@ public class UploadKSeFXmlInvoicesCommandHandler : IRequestHandler<UploadKSeFXml
 
                 // Parsuj typ płatności
                 var paymentType = ParsePaymentType(parsedInvoice.Fa?.Platnosc?.FormaPlatnosci);
-                var paymentStatus = ParsePaymentStatus(parsedInvoice.Fa?.Platnosc?.Zaplacono, paymentType);
+                var paymentStatus = ParsePaymentStatusFromRequest(request.Data.PaymentStatus);
 
                 // Utwórz encję faktury
                 var invoiceEntity = KSeFInvoiceEntity.CreateNew(
@@ -233,6 +234,19 @@ public class UploadKSeFXmlInvoicesCommandHandler : IRequestHandler<UploadKSeFXml
                 : KSeFPaymentStatus.PaidTransfer;
         }
         return KSeFPaymentStatus.Unpaid;
+    }
+
+    private static KSeFPaymentStatus ParsePaymentStatusFromRequest(string paymentStatus)
+    {
+        return paymentStatus switch
+        {
+            "Unpaid" => KSeFPaymentStatus.Unpaid,
+            "PartiallyPaid" => KSeFPaymentStatus.PartiallyPaid,
+            "Suspended" => KSeFPaymentStatus.Suspended,
+            "PaidCash" => KSeFPaymentStatus.PaidCash,
+            "PaidTransfer" => KSeFPaymentStatus.PaidTransfer,
+            _ => KSeFPaymentStatus.Unpaid
+        };
     }
 }
 

@@ -37,6 +37,8 @@ import AppDialog from "../../common/app-dialog";
 import {
   ModuleType,
   ModuleTypeLabels,
+  KSeFPaymentStatus,
+  KSeFPaymentStatusLabels,
 } from "../../../models/accounting/ksef-invoice";
 import type FarmRowModel from "../../../models/farms/farm-row-model";
 import type CycleDto from "../../../models/farms/latest-cycle";
@@ -58,6 +60,7 @@ interface SaveAccountingInvoiceFormData {
   netAmount: number;
   vatAmount: number;
   moduleType: ModuleType;
+  paymentStatus: KSeFPaymentStatus;
   comment: string;
   // Feed module fields
   feedFarmId: string;
@@ -259,6 +262,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
         netAmount: currentDraft.extractedFields.netAmount || 0,
         vatAmount: currentDraft.extractedFields.vatAmount || 0,
         moduleType: ModuleType.None,
+        paymentStatus: KSeFPaymentStatus.Unpaid,
         comment: "",
       });
     }
@@ -335,6 +339,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
           vatAmount: formData.vatAmount,
           invoiceType: draftInvoice.extractedFields.invoiceType,
           moduleType: formData.moduleType,
+          paymentStatus: formData.paymentStatus,
           comment: formData.comment || undefined,
           feedData,
           gasData,
@@ -608,6 +613,28 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                         {errors.moduleType.message}
                       </FormHelperText>
                     )}
+                  </FormControl>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <FormControl fullWidth>
+                    <InputLabel id="payment-status-label">
+                      Status płatności
+                    </InputLabel>
+                    <Select
+                      labelId="payment-status-label"
+                      label="Status płatności"
+                      defaultValue={KSeFPaymentStatus.Unpaid}
+                      {...register("paymentStatus")}
+                    >
+                      {Object.entries(KSeFPaymentStatusLabels).map(
+                        ([key, label]) => (
+                          <MenuItem key={key} value={key}>
+                            {label}
+                          </MenuItem>
+                        )
+                      )}
+                    </Select>
                   </FormControl>
                 </Grid>
 

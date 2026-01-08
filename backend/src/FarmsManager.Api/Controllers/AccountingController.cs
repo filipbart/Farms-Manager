@@ -147,7 +147,8 @@ public class AccountingController : BaseController
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> UploadKSeFXmlInvoices(
         [FromForm] List<IFormFile> files,
-        [FromForm] string invoiceType)
+        [FromForm] string invoiceType,
+        [FromForm] string paymentStatus)
     {
         if (files == null || files.Count == 0)
         {
@@ -158,7 +159,8 @@ public class AccountingController : BaseController
             new UploadKSeFXmlInvoicesCommandDto
             {
                 Files = files,
-                InvoiceType = invoiceType
+                InvoiceType = invoiceType,
+                PaymentStatus = paymentStatus
             }));
 
         return Ok(result);

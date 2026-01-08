@@ -35,6 +35,7 @@ public record SaveAccountingInvoiceDto
     public string InvoiceType { get; init; }
     public ModuleType ModuleType { get; init; }
     public string Comment { get; init; }
+    public string PaymentStatus { get; init; }
     
     // Module-specific data
     public SaveFeedInvoiceDto FeedData { get; init; }
@@ -175,7 +176,7 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
             buyerName: data.BuyerName,
             invoiceType: InvoiceType.Vat,
             status: KSeFInvoiceStatus.Accepted,
-            paymentStatus: KSeFPaymentStatus.Unpaid,
+            paymentStatus: ParsePaymentStatus(data.PaymentStatus),
             paymentType: KSeFInvoicePaymentType.BankTransfer,
             vatDeductionType: KSeFVatDeductionType.Full,
             moduleType: data.ModuleType,
@@ -247,6 +248,19 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
     private static string NormalizeNip(string nip)
     {
         return nip?.Replace("PL", "").Replace("-", "").Replace(" ", "").Trim();
+    }
+
+    private static KSeFPaymentStatus ParsePaymentStatus(string paymentStatus)
+    {
+        return paymentStatus switch
+        {
+            "Unpaid" => KSeFPaymentStatus.Unpaid,
+            "PartiallyPaid" => KSeFPaymentStatus.PartiallyPaid,
+            "Suspended" => KSeFPaymentStatus.Suspended,
+            "PaidCash" => KSeFPaymentStatus.PaidCash,
+            "PaidTransfer" => KSeFPaymentStatus.PaidTransfer,
+            _ => KSeFPaymentStatus.Unpaid
+        };
     }
 }
 

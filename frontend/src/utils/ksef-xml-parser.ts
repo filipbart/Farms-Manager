@@ -221,7 +221,12 @@ export const parseKSeFInvoiceXml = (
         : undefined,
       lineItems: parseLineItems(fa),
       payment: parsePaymentData(platnosc),
-      footer: stopka ? getElementText(stopka, "StopkaFaktury") : undefined,
+      footer: stopka
+        ? getElementText(
+            stopka.getElementsByTagName("Informacje")[0] || stopka,
+            "StopkaFaktury"
+          )
+        : undefined,
     };
   } catch (error) {
     console.error("Error parsing KSeF XML:", error);

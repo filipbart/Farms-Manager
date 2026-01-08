@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FarmsManager.Api.Controllers;
 
+[Microsoft.AspNetCore.Mvc.Route("api/tax-business-entities")]
 public class TaxBusinessEntitiesController(IMediator mediator) : BaseController
 {
     /// <summary>

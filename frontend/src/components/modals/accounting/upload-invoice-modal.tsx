@@ -26,6 +26,8 @@ import {
 import {
   KSeFInvoiceType,
   KSeFInvoiceTypeLabels,
+  KSeFPaymentStatus,
+  KSeFPaymentStatusLabels,
 } from "../../../models/accounting/ksef-invoice";
 
 interface UploadInvoiceModalProps {
@@ -45,6 +47,9 @@ const UploadInvoiceModal: React.FC<UploadInvoiceModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [invoiceType, setInvoiceType] = useState<KSeFInvoiceType>(
     KSeFInvoiceType.Purchase
+  );
+  const [paymentStatus, setPaymentStatus] = useState<KSeFPaymentStatus>(
+    KSeFPaymentStatus.Unpaid
   );
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -88,6 +93,7 @@ const UploadInvoiceModal: React.FC<UploadInvoiceModalProps> = ({
             AccountingService.uploadXmlInvoices(
               xmlFiles,
               invoiceType,
+              paymentStatus,
               controller.signal
             ),
           (data) => {
@@ -116,6 +122,7 @@ const UploadInvoiceModal: React.FC<UploadInvoiceModalProps> = ({
             AccountingService.uploadInvoices(
               otherFiles,
               invoiceType,
+              paymentStatus,
               controller.signal
             ),
           (data) => {
@@ -155,6 +162,7 @@ const UploadInvoiceModal: React.FC<UploadInvoiceModalProps> = ({
 
     setSelectedFiles([]);
     setInvoiceType(KSeFInvoiceType.Purchase);
+    setPaymentStatus(KSeFPaymentStatus.Unpaid);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -177,6 +185,23 @@ const UploadInvoiceModal: React.FC<UploadInvoiceModalProps> = ({
               }
             >
               {Object.entries(KSeFInvoiceTypeLabels).map(([key, label]) => (
+                <MenuItem key={key} value={key}>
+                  {label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <FormControl fullWidth>
+            <InputLabel>Status płatności</InputLabel>
+            <Select
+              value={paymentStatus}
+              label="Status płatności"
+              onChange={(e) =>
+                setPaymentStatus(e.target.value as KSeFPaymentStatus)
+              }
+            >
+              {Object.entries(KSeFPaymentStatusLabels).map(([key, label]) => (
                 <MenuItem key={key} value={key}>
                   {label}
                 </MenuItem>
