@@ -6,9 +6,13 @@ import {
   InvoiceSourceLabels,
 } from "../../models/accounting/ksef-invoice";
 
-export const getAccountingFiltersConfig = (): FilterConfig<
-  keyof KSeFInvoicesFilters
->[] => [
+interface AccountingFiltersConfigOptions {
+  users?: { value: string; label: string }[];
+}
+
+export const getAccountingFiltersConfig = (
+  options?: AccountingFiltersConfigOptions
+): FilterConfig<keyof KSeFInvoicesFilters>[] => [
   {
     key: "buyerName",
     label: "Nabywca",
@@ -70,5 +74,11 @@ export const getAccountingFiltersConfig = (): FilterConfig<
       value,
       label,
     })),
+  },
+  {
+    key: "assignedUserId",
+    label: "Przypisany pracownik",
+    type: "select",
+    options: options?.users ?? [],
   },
 ];

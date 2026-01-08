@@ -155,6 +155,14 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                         _logger.LogDebug("Invoice {KsefNumber} auto-assigned to user {UserId}", invoiceSummary.KsefNumber, assignedUserId.Value);
                     }
 
+                    // Automatyczne przypisanie modułu na podstawie reguł
+                    var assignedModule = await invoiceAssignmentService.FindModuleForInvoiceAsync(invoiceEntity, cancellationToken);
+                    if (assignedModule.HasValue)
+                    {
+                        invoiceEntity.Update(moduleType: assignedModule.Value);
+                        _logger.LogDebug("Invoice {KsefNumber} auto-assigned to module {ModuleType}", invoiceSummary.KsefNumber, assignedModule.Value);
+                    }
+
                     await invoiceRepository.AddAsync(invoiceEntity, cancellationToken);
                     savedCount++;
 

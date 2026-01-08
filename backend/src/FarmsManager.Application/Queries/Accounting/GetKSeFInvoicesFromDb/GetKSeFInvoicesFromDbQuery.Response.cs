@@ -29,6 +29,8 @@ public class KSeFInvoiceFromDbDto
     public decimal VatAmount { get; set; }
     public bool HasXml { get; set; }
     public bool HasPdf { get; set; }
+    public Guid? AssignedUserId { get; set; }
+    public string AssignedUserName { get; set; }
 }
 
 public class GetKSeFInvoicesFromDbQueryResponse : PaginationModel<KSeFInvoiceFromDbDto>;

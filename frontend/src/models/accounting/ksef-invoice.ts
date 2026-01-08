@@ -89,6 +89,8 @@ export interface KSeFInvoiceListModel {
   vatAmount: number;
   hasXml: boolean;
   hasPdf: boolean;
+  assignedUserId: string | null;
+  assignedUserName: string | null;
 }
 
 // Model szczegółów faktury

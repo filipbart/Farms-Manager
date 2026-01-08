@@ -209,15 +209,33 @@ const ModuleEntityForm: React.FC<ModuleEntityFormProps> = ({
     },
   });
 
-  // Load henhouses for feed module
+  // Load henhouses for feed module and auto-detect from invoice text
   useEffect(() => {
     if (moduleType === ModuleType.Feeds && selectedFarmId) {
       const farm = farms.find((f) => f.id === selectedFarmId);
       if (farm?.henhouses) {
         setHenhouses(farm.henhouses);
+
+        // Auto-detect henhouse from invoice text (line items, seller name, etc.)
+        const searchableText = [
+          invoiceData.sellerName,
+          invoiceData.buyerName,
+          ...(invoiceData.lineItems?.map((item) => item.name) || []),
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+
+        // Find henhouse by name match in invoice text
+        const matchedHenhouse = farm.henhouses.find((h) =>
+          searchableText.includes(h.name.toLowerCase())
+        );
+        if (matchedHenhouse && !feedForm.getValues("henhouseId")) {
+          feedForm.setValue("henhouseId", matchedHenhouse.id);
+        }
       }
     }
-  }, [moduleType, selectedFarmId, farms]);
+  }, [moduleType, selectedFarmId, farms, invoiceData, feedForm]);
 
   // Load feed names
   useEffect(() => {
@@ -322,11 +340,27 @@ const ModuleEntityForm: React.FC<ModuleEntityFormProps> = ({
     );
 
     switch (moduleType) {
-      case ModuleType.Feeds:
-        // For feeds: sum quantity, unit price = 1
+      case ModuleType.Feeds: {
+        // For feeds: sum quantity, calculate weighted average unit price
         feedForm.setValue("quantity", totalQuantity);
-        feedForm.setValue("unitPrice", 1);
+
+        // Calculate weighted average unit price from line items
+        const totalNetAmount = invoiceData.lineItems.reduce(
+          (sum, item) => sum + (item.netAmount || 0),
+          0
+        );
+        if (totalQuantity > 0) {
+          const avgUnitPrice = totalNetAmount / totalQuantity;
+          feedForm.setValue("unitPrice", Math.round(avgUnitPrice * 100) / 100);
+        }
+
+        // Auto-detect feed name from first line item
+        const firstItem = invoiceData.lineItems[0];
+        if (firstItem?.name && !feedForm.getValues("itemName")) {
+          feedForm.setValue("itemName", firstItem.name);
+        }
         break;
+      }
       case ModuleType.Gas:
         // For gas: sum quantity, unit price = grossAmount / quantity
         gasForm.setValue("quantity", totalQuantity);

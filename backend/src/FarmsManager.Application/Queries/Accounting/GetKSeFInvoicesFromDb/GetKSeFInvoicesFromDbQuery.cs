@@ -126,6 +126,11 @@ public record GetKSeFInvoicesFromDbQueryFilters : OrderedPaginationParams<KSeFIn
     /// Filtrowanie po module
     /// </summary>
     public ModuleType? ModuleType { get; init; }
+    
+    /// <summary>
+    /// Filtrowanie po przypisanym pracowniku
+    /// </summary>
+    public Guid? AssignedUserId { get; init; }
 }
 
 public record GetKSeFInvoicesFromDbQuery(GetKSeFInvoicesFromDbQueryFilters Filters) 

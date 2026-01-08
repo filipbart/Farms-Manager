@@ -7,7 +7,13 @@ import {
   Typography,
 } from "@mui/material";
 import { MdSend } from "react-icons/md";
-import React, { useCallback, useMemo, useReducer, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useState,
+} from "react";
 import { toast } from "react-toastify";
 import {
   DataGridPremium,
@@ -42,6 +48,8 @@ import {
   getSortOptionsFromGridModel,
   initializeFiltersFromLocalStorage,
 } from "../../utils/grid-state-helper";
+import { UsersService } from "../../services/users-service";
+import type { UserListModel } from "../../models/users/users";
 
 interface TabPanelProps {
   children: React.ReactNode;
@@ -82,8 +90,27 @@ const AccountingPage: React.FC = () => {
     ids: new Set(),
   });
   const [transferring, setTransferring] = useState(false);
-
   const [deleting, setDeleting] = useState(false);
+  const [users, setUsers] = useState<UserListModel[]>([]);
+
+  // Fetch users for filter
+  useEffect(() => {
+    const fetchUsers = async () => {
+      const response = await UsersService.getUsers({ page: 0, pageSize: 100 });
+      if (response.success && response.responseData) {
+        setUsers(response.responseData.items || []);
+      }
+    };
+    fetchUsers();
+  }, []);
+
+  const filterConfig = useMemo(
+    () =>
+      getAccountingFiltersConfig({
+        users: users.map((u) => ({ value: u.id, label: u.name })),
+      }),
+    [users]
+  );
 
   const handleUploadedInvoices = (files: DraftAccountingInvoice[]) => {
     // Jeśli lista jest pusta, to znaczy że były tylko pliki XML - odśwież listę
@@ -476,7 +503,7 @@ const AccountingPage: React.FC = () => {
 
       <TabPanel value={tabValue} index={0}>
         <FiltersForm
-          config={getAccountingFiltersConfig()}
+          config={filterConfig}
           filters={allFilters}
           dispatch={dispatchAllFilters}
         />
@@ -484,7 +511,7 @@ const AccountingPage: React.FC = () => {
       </TabPanel>
       <TabPanel value={tabValue} index={1}>
         <FiltersForm
-          config={getAccountingFiltersConfig()}
+          config={filterConfig}
           filters={salesFilters}
           dispatch={dispatchSalesFilters}
         />
@@ -492,7 +519,7 @@ const AccountingPage: React.FC = () => {
       </TabPanel>
       <TabPanel value={tabValue} index={2}>
         <FiltersForm
-          config={getAccountingFiltersConfig()}
+          config={filterConfig}
           filters={purchaseFilters}
           dispatch={dispatchPurchaseFilters}
         />

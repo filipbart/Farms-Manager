@@ -16,6 +16,7 @@ public sealed class GetKSeFInvoicesFromDbSpec : BaseSpecification<KSeFInvoiceEnt
 
         Query.Include(x => x.AssignedCycle);
         Query.Include(x => x.Farm);
+        Query.Include(x => x.AssignedUser);
 
         PopulateFilters(filters);
         ApplyOrdering(filters);
@@ -103,6 +104,12 @@ public sealed class GetKSeFInvoicesFromDbSpec : BaseSpecification<KSeFInvoiceEnt
         if (filters.ModuleType.HasValue)
         {
             Query.Where(x => x.ModuleType == filters.ModuleType.Value);
+        }
+        
+        // Filtrowanie po przypisanym pracowniku
+        if (filters.AssignedUserId.HasValue)
+        {
+            Query.Where(x => x.AssignedUserId == filters.AssignedUserId.Value);
         }
 
         // Wyszukiwanie tekstowe (ogólne)

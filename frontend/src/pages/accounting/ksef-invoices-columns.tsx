@@ -211,6 +211,12 @@ export const getKSeFInvoicesColumns = ({
       VatDeductionTypeLabels[value as VatDeductionType] || value || "—",
   },
   {
+    field: "assignedUserName",
+    headerName: "Przypisany pracownik",
+    width: 180,
+    valueGetter: (value) => value || "—",
+  },
+  {
     field: "comment",
     headerName: "Komentarz",
     width: 200,
