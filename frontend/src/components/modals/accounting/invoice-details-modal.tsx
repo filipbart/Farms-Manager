@@ -446,8 +446,9 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
   // Initialize form when details are loaded
   useEffect(() => {
     if (details) {
+      const currentModuleType = details.moduleType || ModuleType.None;
       setEditForm({
-        moduleType: details.moduleType || ModuleType.None,
+        moduleType: currentModuleType,
         vatDeductionType: details.vatDeductionType || VatDeductionType.Full,
         paymentStatus: details.paymentStatus || KSeFPaymentStatus.Unpaid,
         farmId: details.farmId || "",
@@ -456,6 +457,22 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
         comment: details.comment || "",
         relatedInvoiceNumber: details.relatedInvoiceNumber || "",
       });
+
+      // Auto-show module form if module type requires entity creation
+      const requiresEntity = [
+        ModuleType.Feeds,
+        ModuleType.Gas,
+        ModuleType.ProductionExpenses,
+        ModuleType.Sales,
+      ].includes(currentModuleType as ModuleType);
+
+      if (requiresEntity) {
+        setPendingModuleType(currentModuleType);
+        setShowModuleForm(true);
+      } else {
+        setPendingModuleType(null);
+        setShowModuleForm(false);
+      }
     }
   }, [details]);
 

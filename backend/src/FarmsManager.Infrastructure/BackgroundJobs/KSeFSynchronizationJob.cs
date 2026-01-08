@@ -265,11 +265,37 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
 
         // Jeśli podmiot nie ma ferm lub nie znaleziono podmiotu - szukaj fermy niezależnie
         // 3. Szukaj fermy po NIP
-        var matchedFarm = allFarms.FirstOrDefault(f =>
+        var farmsMatchedByNip = allFarms.Where(f =>
         {
             var farmNip = NormalizeNip(f.Nip);
             return farmNip == sellerNip || farmNip == buyerNip;
-        });
+        }).ToList();
+
+        FarmEntity matchedFarm = null;
+
+        if (farmsMatchedByNip.Count == 1)
+        {
+            // Tylko jedna ferma z tym NIP - użyj jej
+            matchedFarm = farmsMatchedByNip.First();
+        }
+        else if (farmsMatchedByNip.Count > 1)
+        {
+            // Wiele ferm z tym samym NIP - doszukaj po nazwie
+            matchedFarm = farmsMatchedByNip.FirstOrDefault(f =>
+            {
+                var farmName = f.Name?.ToLowerInvariant();
+                if (string.IsNullOrEmpty(farmName))
+                    return false;
+
+                return (!string.IsNullOrEmpty(sellerName) && sellerName.Contains(farmName)) ||
+                       (!string.IsNullOrEmpty(buyerName) && buyerName.Contains(farmName)) ||
+                       (!string.IsNullOrEmpty(sellerName) && farmName.Contains(sellerName)) ||
+                       (!string.IsNullOrEmpty(buyerName) && farmName.Contains(buyerName));
+            });
+
+            // Jeśli nie udało się dopasować po nazwie, weź pierwszą
+            matchedFarm ??= farmsMatchedByNip.First();
+        }
 
         // 4. Jeśli nie znaleziono po NIP, szukaj po nazwie
         if (matchedFarm == null)
