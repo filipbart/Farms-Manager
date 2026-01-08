@@ -164,41 +164,52 @@ public class KSeFService : IKSeFService
 
         while (true)
         {
-            var pageResult = await _ksefClient.QueryInvoiceMetadataAsync(
-                filters,
-                _sessionToken,
-                page,
-                pageSize,
-                cancellationToken: cancellationToken);
-
-            var items = pageResult?.Invoices?.ToList() ?? [];
-
-            if (items.Count == 0)
-                break;
-
-            // Konwertuj InvoiceSummary na KSeFInvoiceSyncItem
-            var syncItems = items.Select(inv => new KSeFInvoiceSyncItem
+            try
             {
-                KsefNumber = inv.KsefNumber,
-                InvoiceNumber = inv.InvoiceNumber,
-                InvoiceDate = DateOnly.FromDateTime(inv.InvoicingDate.LocalDateTime),
-                GrossAmount = inv.GrossAmount,
-                NetAmount = inv.NetAmount,
-                VatAmount = inv.VatAmount,
-                SellerNip = inv.Seller?.Nip ?? string.Empty,
-                SellerName = inv.Seller?.Name ?? string.Empty,
-                BuyerNip = inv.Buyer?.Identifier?.Value ?? string.Empty,
-                BuyerName = inv.Buyer?.Name ?? string.Empty,
-                Direction = direction,
-                InvoiceType = inv.InvoiceType
-            });
+                var pageResult = await _ksefClient.QueryInvoiceMetadataAsync(
+                    filters,
+                    _sessionToken,
+                    page,
+                    pageSize,
+                    cancellationToken: cancellationToken);
 
-            all.AddRange(syncItems);
+                var items = pageResult?.Invoices?.ToList() ?? [];
 
-            if (items.Count < pageSize)
-                break;
+                if (items.Count == 0)
+                    break;
 
-            page++;
+                // Konwertuj InvoiceSummary na KSeFInvoiceSyncItem
+                var syncItems = items.Select(inv => new KSeFInvoiceSyncItem
+                {
+                    KsefNumber = inv.KsefNumber,
+                    InvoiceNumber = inv.InvoiceNumber,
+                    InvoiceDate = DateOnly.FromDateTime(inv.InvoicingDate.LocalDateTime),
+                    GrossAmount = inv.GrossAmount,
+                    NetAmount = inv.NetAmount,
+                    VatAmount = inv.VatAmount,
+                    SellerNip = inv.Seller?.Nip ?? string.Empty,
+                    SellerName = inv.Seller?.Name ?? string.Empty,
+                    BuyerNip = inv.Buyer?.Identifier?.Value ?? string.Empty,
+                    BuyerName = inv.Buyer?.Name ?? string.Empty,
+                    Direction = direction,
+                    InvoiceType = inv.InvoiceType
+                });
+
+                all.AddRange(syncItems);
+
+                if (items.Count < pageSize)
+                    break;
+
+                page++;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Błąd podczas pobierania strony {Page} faktur z KSeF dla {SubjectType}. " +
+                    "Prawdopodobnie błąd po stronie systemu KSeF",
+                    page, subjectType);
+                throw;
+            }
         }
 
         return all;

@@ -145,9 +145,11 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                     var invoiceXml = await ksefService.GetInvoiceXmlAsync(invoiceSummary.KsefNumber, cancellationToken);
 
                     // Dopasuj podmiot gospodarczy po NIP lub nazwie
-                    var (taxBusinessEntityId, farmId) = MatchTaxBusinessEntityAndFarm(invoiceSummary, taxBusinessEntities, allFarms);
+                    var (taxBusinessEntityId, farmId) =
+                        MatchTaxBusinessEntityAndFarm(invoiceSummary, taxBusinessEntities, allFarms);
 
-                    var invoiceEntity = CreateInvoiceEntity(invoiceSummary, invoiceXml, xmlParser, taxBusinessEntityId, farmId);
+                    var invoiceEntity = CreateInvoiceEntity(invoiceSummary, invoiceXml, xmlParser, taxBusinessEntityId,
+                        farmId);
 
                     // Sprawdź czy faktura wymaga powiązania z inną fakturą
                     if (InvoiceRequiresLinking(invoiceSummary.InvoiceType))
@@ -156,19 +158,24 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                     }
 
                     // Automatyczne przypisanie pracownika na podstawie reguł
-                    var assignedUserId = await invoiceAssignmentService.FindAssignedUserForInvoiceAsync(invoiceEntity, cancellationToken);
+                    var assignedUserId =
+                        await invoiceAssignmentService.FindAssignedUserForInvoiceAsync(invoiceEntity,
+                            cancellationToken);
                     if (assignedUserId.HasValue)
                     {
                         invoiceEntity.Update(assignedUserId: assignedUserId.Value);
-                        _logger.LogDebug("Invoice {KsefNumber} auto-assigned to user {UserId}", invoiceSummary.KsefNumber, assignedUserId.Value);
+                        _logger.LogDebug("Invoice {KsefNumber} auto-assigned to user {UserId}",
+                            invoiceSummary.KsefNumber, assignedUserId.Value);
                     }
 
                     // Automatyczne przypisanie modułu na podstawie reguł
-                    var assignedModule = await invoiceAssignmentService.FindModuleForInvoiceAsync(invoiceEntity, cancellationToken);
+                    var assignedModule =
+                        await invoiceAssignmentService.FindModuleForInvoiceAsync(invoiceEntity, cancellationToken);
                     if (assignedModule.HasValue)
                     {
                         invoiceEntity.Update(moduleType: assignedModule.Value);
-                        _logger.LogDebug("Invoice {KsefNumber} auto-assigned to module {ModuleType}", invoiceSummary.KsefNumber, assignedModule.Value);
+                        _logger.LogDebug("Invoice {KsefNumber} auto-assigned to module {ModuleType}",
+                            invoiceSummary.KsefNumber, assignedModule.Value);
                     }
 
                     await invoiceRepository.AddAsync(invoiceEntity, cancellationToken);
@@ -180,6 +187,8 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                 {
                     log.ErrorsCount++;
                     _logger.LogWarning(ex, "Failed to save invoice {KsefNumber}", invoiceSummary.KsefNumber);
+                    if (isManual)
+                        throw;
                 }
             }
 
@@ -201,6 +210,8 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
             _logger.LogError(ex,
                 "KSeF synchronization failed. Error: {ErrorMessage}",
                 ex.Message);
+            if (isManual)
+                throw;
         }
         finally
         {
@@ -416,12 +427,12 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
     {
         return invoiceType switch
         {
-            KSeF.Client.Core.Models.Invoices.Common.InvoiceType.Zal => true,      // Zaliczkowa
-            KSeF.Client.Core.Models.Invoices.Common.InvoiceType.Roz => true,      // Rozliczeniowa
-            KSeF.Client.Core.Models.Invoices.Common.InvoiceType.Kor => true,      // Korygująca
-            KSeF.Client.Core.Models.Invoices.Common.InvoiceType.KorZal => true,   // Korygująca zaliczkową
-            KSeF.Client.Core.Models.Invoices.Common.InvoiceType.KorRoz => true,   // Korygująca rozliczeniową
-            KSeF.Client.Core.Models.Invoices.Common.InvoiceType.KorPef => true,   // PEF Korygująca
+            KSeF.Client.Core.Models.Invoices.Common.InvoiceType.Zal => true, // Zaliczkowa
+            KSeF.Client.Core.Models.Invoices.Common.InvoiceType.Roz => true, // Rozliczeniowa
+            KSeF.Client.Core.Models.Invoices.Common.InvoiceType.Kor => true, // Korygująca
+            KSeF.Client.Core.Models.Invoices.Common.InvoiceType.KorZal => true, // Korygująca zaliczkową
+            KSeF.Client.Core.Models.Invoices.Common.InvoiceType.KorRoz => true, // Korygująca rozliczeniową
+            KSeF.Client.Core.Models.Invoices.Common.InvoiceType.KorPef => true, // PEF Korygująca
             KSeF.Client.Core.Models.Invoices.Common.InvoiceType.KorVatRr => true, // RR Korygująca
             _ => false
         };
