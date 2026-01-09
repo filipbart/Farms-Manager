@@ -33,6 +33,9 @@ public record SaveAccountingInvoiceDto
     public decimal NetAmount { get; init; }
     public decimal VatAmount { get; init; }
     public string InvoiceType { get; init; }
+    public string DocumentType { get; init; } // Vat, Kor, Zal, Roz, etc.
+    public string Status { get; init; } // New, Accepted, etc.
+    public string VatDeductionType { get; init; } // Full, Half, None
     public ModuleType ModuleType { get; init; }
     public string Comment { get; init; }
     public string PaymentStatus { get; init; }
@@ -174,11 +177,11 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
             sellerName: data.SellerName,
             buyerNip: data.BuyerNip?.Replace("PL", "").Replace("-", "").Replace(" ", "").Trim(),
             buyerName: data.BuyerName,
-            invoiceType: InvoiceType.Vat,
-            status: KSeFInvoiceStatus.Accepted,
+            invoiceType: ParseDocumentType(data.DocumentType),
+            status: ParseInvoiceStatus(data.Status),
             paymentStatus: ParsePaymentStatus(data.PaymentStatus),
             paymentType: KSeFInvoicePaymentType.BankTransfer,
-            vatDeductionType: KSeFVatDeductionType.Full,
+            vatDeductionType: ParseVatDeductionType(data.VatDeductionType),
             moduleType: data.ModuleType,
             invoiceXml: string.Empty, // Brak XML dla manualnych faktur
             invoiceDirection: invoiceDirection,
@@ -260,6 +263,50 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
             "PaidCash" => KSeFPaymentStatus.PaidCash,
             "PaidTransfer" => KSeFPaymentStatus.PaidTransfer,
             _ => KSeFPaymentStatus.Unpaid
+        };
+    }
+
+    private static InvoiceType ParseDocumentType(string documentType)
+    {
+        return documentType switch
+        {
+            "Vat" => InvoiceType.Vat,
+            "Zal" => InvoiceType.Zal,
+            "Kor" => InvoiceType.Kor,
+            "Roz" => InvoiceType.Roz,
+            "Upr" => InvoiceType.Upr,
+            "KorZal" => InvoiceType.KorZal,
+            "KorRoz" => InvoiceType.KorRoz,
+            "VatPef" => InvoiceType.VatPef,
+            "VatPefSp" => InvoiceType.VatPefSp,
+            "KorPef" => InvoiceType.KorPef,
+            "VatRr" => InvoiceType.VatRr,
+            "KorVatRr" => InvoiceType.KorVatRr,
+            _ => InvoiceType.Vat
+        };
+    }
+
+    private static KSeFInvoiceStatus ParseInvoiceStatus(string status)
+    {
+        return status switch
+        {
+            "New" => KSeFInvoiceStatus.New,
+            "Rejected" => KSeFInvoiceStatus.Rejected,
+            "Accepted" => KSeFInvoiceStatus.Accepted,
+            "SentToOffice" => KSeFInvoiceStatus.SentToOffice,
+            "RequiresLinking" => KSeFInvoiceStatus.RequiresLinking,
+            _ => KSeFInvoiceStatus.Accepted
+        };
+    }
+
+    private static KSeFVatDeductionType ParseVatDeductionType(string vatDeductionType)
+    {
+        return vatDeductionType switch
+        {
+            "Full" => KSeFVatDeductionType.Full,
+            "Half" => KSeFVatDeductionType.Half,
+            "None" => KSeFVatDeductionType.None,
+            _ => KSeFVatDeductionType.Full
         };
     }
 }

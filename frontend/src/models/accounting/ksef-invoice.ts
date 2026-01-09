@@ -61,6 +61,37 @@ export enum VatDeductionType {
   None = "None",
 }
 
+// Typ dokumentu faktury (z KSeF)
+export enum InvoiceDocumentType {
+  Vat = "Vat",
+  Zal = "Zal",
+  Kor = "Kor",
+  Roz = "Roz",
+  Upr = "Upr",
+  KorZal = "KorZal",
+  KorRoz = "KorRoz",
+  VatPef = "VatPef",
+  VatPefSp = "VatPefSp",
+  KorPef = "KorPef",
+  VatRr = "VatRr",
+  KorVatRr = "KorVatRr",
+}
+
+export const InvoiceDocumentTypeLabels: Record<InvoiceDocumentType, string> = {
+  [InvoiceDocumentType.Vat]: "(FA) Podstawowa",
+  [InvoiceDocumentType.Zal]: "(FA) Zaliczkowa",
+  [InvoiceDocumentType.Kor]: "(FA) Korygująca",
+  [InvoiceDocumentType.Roz]: "(FA) Rozliczeniowa",
+  [InvoiceDocumentType.Upr]: "(FA) Uproszczona",
+  [InvoiceDocumentType.KorZal]: "(FA) Korygująca zaliczkową",
+  [InvoiceDocumentType.KorRoz]: "(FA) Korygująca rozliczeniową",
+  [InvoiceDocumentType.VatPef]: "(PEF) Podstawowa",
+  [InvoiceDocumentType.VatPefSp]: "(PEF) Specjalizowana",
+  [InvoiceDocumentType.KorPef]: "(PEF) Korygująca",
+  [InvoiceDocumentType.VatRr]: "(RR) Podstawowa",
+  [InvoiceDocumentType.KorVatRr]: "(RR) Korygująca",
+};
+
 // Model faktury KSeF w liście
 export interface KSeFInvoiceListModel {
   id: string;

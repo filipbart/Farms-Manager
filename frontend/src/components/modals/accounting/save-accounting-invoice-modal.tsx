@@ -39,6 +39,12 @@ import {
   ModuleTypeLabels,
   KSeFPaymentStatus,
   KSeFPaymentStatusLabels,
+  KSeFInvoiceStatus,
+  KSeFInvoiceStatusLabels,
+  VatDeductionType,
+  VatDeductionTypeLabels,
+  InvoiceDocumentType,
+  InvoiceDocumentTypeLabels,
 } from "../../../models/accounting/ksef-invoice";
 import type FarmRowModel from "../../../models/farms/farm-row-model";
 import type CycleDto from "../../../models/farms/latest-cycle";
@@ -59,6 +65,9 @@ interface SaveAccountingInvoiceFormData {
   grossAmount: number;
   netAmount: number;
   vatAmount: number;
+  documentType: InvoiceDocumentType;
+  status: KSeFInvoiceStatus;
+  vatDeductionType: VatDeductionType;
   moduleType: ModuleType;
   paymentStatus: KSeFPaymentStatus;
   comment: string;
@@ -261,6 +270,9 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
         grossAmount: currentDraft.extractedFields.grossAmount || 0,
         netAmount: currentDraft.extractedFields.netAmount || 0,
         vatAmount: currentDraft.extractedFields.vatAmount || 0,
+        documentType: InvoiceDocumentType.Vat,
+        status: KSeFInvoiceStatus.Accepted,
+        vatDeductionType: VatDeductionType.Full,
         moduleType: ModuleType.None,
         paymentStatus: KSeFPaymentStatus.Unpaid,
         comment: "",
@@ -338,6 +350,9 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
           netAmount: formData.netAmount,
           vatAmount: formData.vatAmount,
           invoiceType: draftInvoice.extractedFields.invoiceType,
+          documentType: formData.documentType,
+          status: formData.status,
+          vatDeductionType: formData.vatDeductionType,
           moduleType: formData.moduleType,
           paymentStatus: formData.paymentStatus,
           comment: formData.comment || undefined,
@@ -628,6 +643,72 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                       {...register("paymentStatus")}
                     >
                       {Object.entries(KSeFPaymentStatusLabels).map(
+                        ([key, label]) => (
+                          <MenuItem key={key} value={key}>
+                            {label}
+                          </MenuItem>
+                        )
+                      )}
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <FormControl fullWidth>
+                    <InputLabel id="document-type-label">
+                      Typ dokumentu
+                    </InputLabel>
+                    <Select
+                      labelId="document-type-label"
+                      label="Typ dokumentu"
+                      defaultValue={InvoiceDocumentType.Vat}
+                      {...register("documentType")}
+                    >
+                      {Object.entries(InvoiceDocumentTypeLabels).map(
+                        ([key, label]) => (
+                          <MenuItem key={key} value={key}>
+                            {label}
+                          </MenuItem>
+                        )
+                      )}
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <FormControl fullWidth>
+                    <InputLabel id="invoice-status-label">
+                      Status faktury
+                    </InputLabel>
+                    <Select
+                      labelId="invoice-status-label"
+                      label="Status faktury"
+                      defaultValue={KSeFInvoiceStatus.Accepted}
+                      {...register("status")}
+                    >
+                      {Object.entries(KSeFInvoiceStatusLabels).map(
+                        ([key, label]) => (
+                          <MenuItem key={key} value={key}>
+                            {label}
+                          </MenuItem>
+                        )
+                      )}
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <FormControl fullWidth>
+                    <InputLabel id="vat-deduction-label">
+                      Odliczenie VAT
+                    </InputLabel>
+                    <Select
+                      labelId="vat-deduction-label"
+                      label="Odliczenie VAT"
+                      defaultValue={VatDeductionType.Full}
+                      {...register("vatDeductionType")}
+                    >
+                      {Object.entries(VatDeductionTypeLabels).map(
                         ([key, label]) => (
                           <MenuItem key={key} value={key}>
                             {label}

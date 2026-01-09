@@ -41,6 +41,7 @@ public class KSeFInvoiceEntity : Entity
     /// <param name="userId">Identyfikator użytkownika tworzącego rekord (audit) (opcjonalnie)</param>
     /// <param name="taxBusinessEntityId">Identyfikator podmiotu gospodarczego (opcjonalnie)</param>
     /// <param name="farmId">Identyfikator fermy (opcjonalnie)</param>
+    /// <param name="cycleId">Identyfikator cyklu (opcjonalnie)</param>
     public static KSeFInvoiceEntity CreateNew(
         string kSeFNumber,
         string invoiceNumber,
@@ -67,7 +68,8 @@ public class KSeFInvoiceEntity : Entity
         string comment = null,
         Guid? userId = null,
         Guid? taxBusinessEntityId = null,
-        Guid? farmId = null)
+        Guid? farmId = null,
+        Guid? cycleId = null)
     {
         return new KSeFInvoiceEntity
         {
@@ -96,7 +98,8 @@ public class KSeFInvoiceEntity : Entity
             Comment = comment,
             CreatedBy = userId,
             TaxBusinessEntityId = taxBusinessEntityId,
-            FarmId = farmId
+            FarmId = farmId,
+            AssignedCycleId = cycleId
         };
     }
 

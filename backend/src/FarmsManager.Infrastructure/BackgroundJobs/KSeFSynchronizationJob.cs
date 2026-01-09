@@ -92,8 +92,9 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
-        // Pobierz wszystkie fermy do niezależnego wyszukiwania
+        // Pobierz wszystkie fermy do niezależnego wyszukiwania (wraz z aktywnym cyklem)
         var allFarms = await dbContext.Set<FarmEntity>()
+            .Include(f => f.ActiveCycle)
             .Where(f => f.DateDeletedUtc == null)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
@@ -144,10 +145,10 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                 {
                     var invoiceXml = await ksefService.GetInvoiceXmlAsync(invoiceSummary.KsefNumber, cancellationToken);
 
-                    // Dopasuj podmiot gospodarczy po NIP lub nazwie
-                    var (taxBusinessEntityId, farmId) = MatchTaxBusinessEntityAndFarm(invoiceSummary, taxBusinessEntities, allFarms);
+                    // Dopasuj podmiot gospodarczy, fermę i cykl po NIP lub nazwie
+                    var (taxBusinessEntityId, farmId, cycleId) = MatchTaxBusinessEntityAndFarm(invoiceSummary, taxBusinessEntities, allFarms);
 
-                    var invoiceEntity = CreateInvoiceEntity(invoiceSummary, invoiceXml, xmlParser, taxBusinessEntityId, farmId);
+                    var invoiceEntity = CreateInvoiceEntity(invoiceSummary, invoiceXml, xmlParser, taxBusinessEntityId, farmId, cycleId);
 
                     // Sprawdź czy faktura wymaga powiązania z inną fakturą
                     if (InvoiceRequiresLinking(invoiceSummary.InvoiceType))
@@ -211,13 +212,14 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
     }
 
     /// <summary>
-    /// Dopasowuje podmiot gospodarczy i fermę do faktury na podstawie NIP lub nazwy
+    /// Dopasowuje podmiot gospodarczy, fermę i cykl do faktury na podstawie NIP lub nazwy
     /// Logika przypisywania fermy:
     /// 1. Jeśli podmiot ma przypisane fermy - użyj pierwszej
     /// 2. Jeśli podmiot nie ma ferm - szukaj fermy po NIP
     /// 3. Jeśli nie znaleziono po NIP - szukaj fermy po nazwie
+    /// Dodatkowo: przypisuje aktywny cykl z dopasowanej fermy
     /// </summary>
-    private static (Guid? TaxBusinessEntityId, Guid? FarmId) MatchTaxBusinessEntityAndFarm(
+    private static (Guid? TaxBusinessEntityId, Guid? FarmId, Guid? CycleId) MatchTaxBusinessEntityAndFarm(
         KSeFInvoiceSyncItem invoiceItem,
         List<TaxBusinessEntity> taxBusinessEntities,
         List<FarmEntity> allFarms)
@@ -258,8 +260,12 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
             // Sprawdź czy podmiot ma przypisane fermy
             if (matchedEntity.Farms.Count > 0)
             {
-                farmId = matchedEntity.Farms.First().Id;
-                return (taxBusinessEntityId, farmId);
+                var entityFarm = matchedEntity.Farms.First();
+                farmId = entityFarm.Id;
+                // Znajdź fermę w allFarms aby uzyskać aktywny cykl
+                var farmWithCycle = allFarms.FirstOrDefault(f => f.Id == farmId);
+                var cycleId = farmWithCycle?.ActiveCycleId;
+                return (taxBusinessEntityId, farmId, cycleId);
             }
         }
 
@@ -316,9 +322,10 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
         if (matchedFarm != null)
         {
             farmId = matchedFarm.Id;
+            return (taxBusinessEntityId, farmId, matchedFarm.ActiveCycleId);
         }
 
-        return (taxBusinessEntityId, farmId);
+        return (taxBusinessEntityId, farmId, null);
     }
 
     /// <summary>
@@ -337,7 +344,8 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
         string invoiceXml,
         IKSeFInvoiceXmlParser xmlParser,
         Guid? taxBusinessEntityId = null,
-        Guid? farmId = null)
+        Guid? farmId = null,
+        Guid? cycleId = null)
     {
         // Parsuj XML aby wyciągnąć dodatkowe dane
         var parsedInvoice = xmlParser.ParseInvoiceXml(invoiceXml);
@@ -376,7 +384,8 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
             netAmount: invoiceItem.NetAmount,
             vatAmount: invoiceItem.VatAmount,
             taxBusinessEntityId: taxBusinessEntityId,
-            farmId: farmId
+            farmId: farmId,
+            cycleId: cycleId
         );
     }
 

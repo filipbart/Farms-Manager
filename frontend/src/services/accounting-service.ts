@@ -63,6 +63,9 @@ export interface SaveAccountingInvoiceData {
   netAmount: number;
   vatAmount: number;
   invoiceType: string;
+  documentType?: string;
+  status?: string;
+  vatDeductionType?: string;
   moduleType: string;
   comment?: string;
   // Module-specific data
