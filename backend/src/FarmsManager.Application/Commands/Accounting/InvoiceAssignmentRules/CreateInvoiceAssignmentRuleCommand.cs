@@ -14,8 +14,8 @@ public record CreateInvoiceAssignmentRuleDto
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; }
     public Guid AssignedUserId { get; set; }
-    public string[] IncludeKeywords { get; set; } = Array.Empty<string>();
-    public string[] ExcludeKeywords { get; set; } = Array.Empty<string>();
+    public string[] IncludeKeywords { get; set; } = [];
+    public string[] ExcludeKeywords { get; set; } = [];
     public Guid? TaxBusinessEntityId { get; set; }
     public Guid? FarmId { get; set; }
 }

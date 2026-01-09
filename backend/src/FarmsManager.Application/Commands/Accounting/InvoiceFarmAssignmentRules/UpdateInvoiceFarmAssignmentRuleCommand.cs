@@ -11,11 +11,11 @@ public record UpdateInvoiceFarmAssignmentRuleCommand(Guid RuleId, UpdateInvoiceF
 
 public record UpdateInvoiceFarmAssignmentRuleDto
 {
-    public string? Name { get; init; }
-    public string? Description { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public string Description { get; init; } = string.Empty;
     public Guid? TargetFarmId { get; init; }
-    public string[]? IncludeKeywords { get; init; }
-    public string[]? ExcludeKeywords { get; init; }
+    public string[] IncludeKeywords { get; init; } = [];
+    public string[] ExcludeKeywords { get; init; } = [];
     public Guid? TaxBusinessEntityId { get; init; }
     public KSeFInvoiceDirection? InvoiceDirection { get; init; }
     public bool? IsActive { get; init; }

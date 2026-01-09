@@ -22,11 +22,11 @@ public class InvoiceModuleAssignmentRuleEntity : Entity
         int priority,
         ModuleType targetModule,
         string[] includeKeywords,
-        string[]? excludeKeywords = null,
+        string[] excludeKeywords = null,
         Guid? taxBusinessEntityId = null,
         Guid? farmId = null,
         KSeFInvoiceDirection? invoiceDirection = null,
-        string? description = null,
+        string description = null,
         Guid? createdBy = null)
     {
         return new InvoiceModuleAssignmentRuleEntity
@@ -35,7 +35,7 @@ public class InvoiceModuleAssignmentRuleEntity : Entity
             Priority = priority,
             TargetModule = targetModule,
             IncludeKeywords = includeKeywords,
-            ExcludeKeywords = excludeKeywords ?? Array.Empty<string>(),
+            ExcludeKeywords = excludeKeywords ?? [],
             TaxBusinessEntityId = taxBusinessEntityId,
             FarmId = farmId,
             InvoiceDirection = invoiceDirection,
@@ -53,7 +53,7 @@ public class InvoiceModuleAssignmentRuleEntity : Entity
     /// <summary>
     /// Opis reguły (opcjonalny)
     /// </summary>
-    public string? Description { get; private set; }
+    public string Description { get; private set; }
 
     /// <summary>
     /// Priorytet reguły - niższa wartość = wyższy priorytet.
@@ -69,12 +69,12 @@ public class InvoiceModuleAssignmentRuleEntity : Entity
     /// <summary>
     /// Słowa kluczowe, które MUSZĄ się pojawić na fakturze (warunek OR - przynajmniej jedno musi wystąpić)
     /// </summary>
-    public string[] IncludeKeywords { get; private set; } = Array.Empty<string>();
+    public string[] IncludeKeywords { get; private set; } = [];
 
     /// <summary>
     /// Słowa kluczowe wykluczające - jeśli którekolwiek z nich wystąpi, reguła nie zadziała
     /// </summary>
-    public string[] ExcludeKeywords { get; private set; } = Array.Empty<string>();
+    public string[] ExcludeKeywords { get; private set; } = [];
 
     /// <summary>
     /// Opcjonalne powiązanie z podmiotem gospodarczym (działalnością)
@@ -84,7 +84,7 @@ public class InvoiceModuleAssignmentRuleEntity : Entity
     /// <summary>
     /// Podmiot gospodarczy powiązany z regułą
     /// </summary>
-    public virtual TaxBusinessEntity? TaxBusinessEntity { get; init; }
+    public virtual TaxBusinessEntity TaxBusinessEntity { get; init; }
 
     /// <summary>
     /// Opcjonalne powiązanie z fermą (lokalizacją)
@@ -94,7 +94,7 @@ public class InvoiceModuleAssignmentRuleEntity : Entity
     /// <summary>
     /// Ferma powiązana z regułą
     /// </summary>
-    public virtual FarmEntity? Farm { get; init; }
+    public virtual FarmEntity Farm { get; init; }
 
     /// <summary>
     /// Opcjonalny kierunek faktury (zakup/sprzedaż) - jeśli null, pasuje do obu
@@ -110,12 +110,12 @@ public class InvoiceModuleAssignmentRuleEntity : Entity
     /// Aktualizuje regułę
     /// </summary>
     public void Update(
-        string? name = null,
-        string? description = null,
+        string name = null,
+        string description = null,
         int? priority = null,
         ModuleType? targetModule = null,
-        string[]? includeKeywords = null,
-        string[]? excludeKeywords = null,
+        string[] includeKeywords = null,
+        string[] excludeKeywords = null,
         Guid? taxBusinessEntityId = null,
         Guid? farmId = null,
         KSeFInvoiceDirection? invoiceDirection = null,

@@ -11,11 +11,11 @@ public record UpdateInvoiceModuleAssignmentRuleCommand(Guid RuleId, UpdateInvoic
 
 public record UpdateInvoiceModuleAssignmentRuleDto
 {
-    public string? Name { get; init; }
-    public string? Description { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public string Description { get; init; } = string.Empty;
     public ModuleType? TargetModule { get; init; }
-    public string[]? IncludeKeywords { get; init; }
-    public string[]? ExcludeKeywords { get; init; }
+    public string[] IncludeKeywords { get; init; } = [];
+    public string[] ExcludeKeywords { get; init; } = [];
     public Guid? TaxBusinessEntityId { get; init; }
     public Guid? FarmId { get; init; }
     public KSeFInvoiceDirection? InvoiceDirection { get; init; }

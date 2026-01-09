@@ -18,7 +18,7 @@ public record TransferInvoicesToOfficeCommand(List<Guid> InvoiceIds) : IRequest<
 public class TransferInvoicesToOfficeResponse
 {
     public int TransferredCount { get; set; }
-    public List<string> Errors { get; set; } = new();
+    public List<string> Errors { get; set; } = [];
 }
 
 public class TransferInvoicesToOfficeCommandHandler : IRequestHandler<TransferInvoicesToOfficeCommand, TransferInvoicesToOfficeResponse>

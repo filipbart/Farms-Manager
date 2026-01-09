@@ -22,10 +22,10 @@ public class InvoiceFarmAssignmentRuleEntity : Entity
         int priority,
         Guid targetFarmId,
         string[] includeKeywords,
-        string[]? excludeKeywords = null,
+        string[] excludeKeywords = null,
         Guid? taxBusinessEntityId = null,
         KSeFInvoiceDirection? invoiceDirection = null,
-        string? description = null,
+        string description = null,
         Guid? createdBy = null)
     {
         return new InvoiceFarmAssignmentRuleEntity
@@ -34,7 +34,7 @@ public class InvoiceFarmAssignmentRuleEntity : Entity
             Priority = priority,
             TargetFarmId = targetFarmId,
             IncludeKeywords = includeKeywords,
-            ExcludeKeywords = excludeKeywords ?? Array.Empty<string>(),
+            ExcludeKeywords = excludeKeywords ?? [],
             TaxBusinessEntityId = taxBusinessEntityId,
             InvoiceDirection = invoiceDirection,
             Description = description,
@@ -51,7 +51,7 @@ public class InvoiceFarmAssignmentRuleEntity : Entity
     /// <summary>
     /// Opis reguły (opcjonalny)
     /// </summary>
-    public string? Description { get; private set; }
+    public string Description { get; private set; }
 
     /// <summary>
     /// Priorytet reguły - niższa wartość = wyższy priorytet.
@@ -67,17 +67,17 @@ public class InvoiceFarmAssignmentRuleEntity : Entity
     /// <summary>
     /// Ferma docelowa
     /// </summary>
-    public virtual FarmEntity? TargetFarm { get; init; }
+    public virtual FarmEntity TargetFarm { get; init; }
 
     /// <summary>
     /// Słowa kluczowe, które MUSZĄ się pojawić na fakturze (warunek OR - przynajmniej jedno musi wystąpić)
     /// </summary>
-    public string[] IncludeKeywords { get; private set; } = Array.Empty<string>();
+    public string[] IncludeKeywords { get; private set; } = [];
 
     /// <summary>
     /// Słowa kluczowe wykluczające - jeśli którekolwiek z nich wystąpi, reguła nie zadziała
     /// </summary>
-    public string[] ExcludeKeywords { get; private set; } = Array.Empty<string>();
+    public string[] ExcludeKeywords { get; private set; } = [];
 
     /// <summary>
     /// Opcjonalne powiązanie z podmiotem gospodarczym (działalnością)
@@ -87,7 +87,7 @@ public class InvoiceFarmAssignmentRuleEntity : Entity
     /// <summary>
     /// Podmiot gospodarczy powiązany z regułą
     /// </summary>
-    public virtual TaxBusinessEntity? TaxBusinessEntity { get; init; }
+    public virtual TaxBusinessEntity TaxBusinessEntity { get; init; }
 
     /// <summary>
     /// Opcjonalny kierunek faktury (zakup/sprzedaż) - jeśli null, pasuje do obu
@@ -103,12 +103,12 @@ public class InvoiceFarmAssignmentRuleEntity : Entity
     /// Aktualizuje regułę
     /// </summary>
     public void Update(
-        string? name = null,
-        string? description = null,
+        string name = null,
+        string description = null,
         int? priority = null,
         Guid? targetFarmId = null,
-        string[]? includeKeywords = null,
-        string[]? excludeKeywords = null,
+        string[] includeKeywords = null,
+        string[] excludeKeywords = null,
         Guid? taxBusinessEntityId = null,
         KSeFInvoiceDirection? invoiceDirection = null,
         bool? isActive = null,

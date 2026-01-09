@@ -5,5 +5,5 @@ namespace FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
 
 public interface IUserExpenseAdvanceColumnSettingsRepository : IRepository<UserExpenseAdvanceColumnSettingsEntity>
 {
-    Task<UserExpenseAdvanceColumnSettingsEntity?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task<UserExpenseAdvanceColumnSettingsEntity> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
 }

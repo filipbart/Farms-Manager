@@ -8,8 +8,8 @@ public record InvoiceAssignmentRuleDto
     public int Priority { get; init; }
     public Guid AssignedUserId { get; init; }
     public string AssignedUserName { get; init; } = string.Empty;
-    public string[] IncludeKeywords { get; init; } = Array.Empty<string>();
-    public string[] ExcludeKeywords { get; init; } = Array.Empty<string>();
+    public string[] IncludeKeywords { get; init; } = [];
+    public string[] ExcludeKeywords { get; init; } = [];
     public Guid? TaxBusinessEntityId { get; init; }
     public string TaxBusinessEntityName { get; init; }
     public Guid? FarmId { get; init; }

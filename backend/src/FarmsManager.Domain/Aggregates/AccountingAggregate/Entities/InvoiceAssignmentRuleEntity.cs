@@ -22,10 +22,10 @@ public class InvoiceAssignmentRuleEntity : Entity
         int priority,
         Guid assignedUserId,
         string[] includeKeywords,
-        string[]? excludeKeywords = null,
+        string[] excludeKeywords = null,
         Guid? taxBusinessEntityId = null,
         Guid? farmId = null,
-        string? description = null,
+        string description = null,
         Guid? createdBy = null)
     {
         return new InvoiceAssignmentRuleEntity
@@ -34,7 +34,7 @@ public class InvoiceAssignmentRuleEntity : Entity
             Priority = priority,
             AssignedUserId = assignedUserId,
             IncludeKeywords = includeKeywords,
-            ExcludeKeywords = excludeKeywords ?? Array.Empty<string>(),
+            ExcludeKeywords = excludeKeywords ?? [],
             TaxBusinessEntityId = taxBusinessEntityId,
             FarmId = farmId,
             Description = description,
@@ -51,7 +51,7 @@ public class InvoiceAssignmentRuleEntity : Entity
     /// <summary>
     /// Opis reguły (opcjonalny)
     /// </summary>
-    public string? Description { get; private set; }
+    public string Description { get; private set; }
 
     /// <summary>
     /// Priorytet reguły - niższa wartość = wyższy priorytet.
@@ -72,12 +72,12 @@ public class InvoiceAssignmentRuleEntity : Entity
     /// <summary>
     /// Słowa kluczowe, które MUSZĄ się pojawić na fakturze (warunek AND - wszystkie muszą wystąpić)
     /// </summary>
-    public string[] IncludeKeywords { get; private set; } = Array.Empty<string>();
+    public string[] IncludeKeywords { get; private set; } = [];
 
     /// <summary>
     /// Słowa kluczowe wykluczające - jeśli którekolwiek z nich wystąpi, reguła nie zadziała
     /// </summary>
-    public string[] ExcludeKeywords { get; private set; } = Array.Empty<string>();
+    public string[] ExcludeKeywords { get; private set; } = [];
 
     /// <summary>
     /// Opcjonalne powiązanie z podmiotem gospodarczym (działalnością)
@@ -87,7 +87,7 @@ public class InvoiceAssignmentRuleEntity : Entity
     /// <summary>
     /// Podmiot gospodarczy powiązany z regułą
     /// </summary>
-    public virtual TaxBusinessEntity? TaxBusinessEntity { get; init; }
+    public virtual TaxBusinessEntity TaxBusinessEntity { get; init; }
 
     /// <summary>
     /// Opcjonalne powiązanie z fermą (lokalizacją)
@@ -97,7 +97,7 @@ public class InvoiceAssignmentRuleEntity : Entity
     /// <summary>
     /// Ferma powiązana z regułą
     /// </summary>
-    public virtual FarmEntity? Farm { get; init; }
+    public virtual FarmEntity Farm { get; init; }
 
     /// <summary>
     /// Czy reguła jest aktywna
@@ -108,12 +108,12 @@ public class InvoiceAssignmentRuleEntity : Entity
     /// Aktualizuje regułę
     /// </summary>
     public void Update(
-        string? name = null,
-        string? description = null,
+        string name = null,
+        string description = null,
         int? priority = null,
         Guid? assignedUserId = null,
-        string[]? includeKeywords = null,
-        string[]? excludeKeywords = null,
+        string[] includeKeywords = null,
+        string[] excludeKeywords = null,
         Guid? taxBusinessEntityId = null,
         Guid? farmId = null,
         bool? isActive = null)

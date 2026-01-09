@@ -288,7 +288,7 @@ public class AccountingController : BaseController
     /// </summary>
     [HttpGet("invoices/{invoiceId:guid}/linkable")]
     [ProducesResponseType(typeof(BaseResponse<List<LinkableInvoiceDto>>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetLinkableInvoices(Guid invoiceId, [FromQuery] string searchPhrase = null, [FromQuery] int limit = 20)
+    public async Task<IActionResult> GetLinkableInvoices(Guid invoiceId, [FromQuery] string? searchPhrase = null, [FromQuery] int limit = 20)
     {
         var filters = new GetLinkableInvoicesFilters
         {

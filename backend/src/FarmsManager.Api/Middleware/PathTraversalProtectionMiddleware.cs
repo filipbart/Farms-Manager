@@ -7,22 +7,22 @@ public class PathTraversalProtectionMiddleware : IMiddleware
     private readonly ILogger _logger;
     
     // Lista podejrzanych ścieżek i rozszerzeń
-    private static readonly string[] SuspiciousPaths = 
-    {
+    private static readonly string[] SuspiciousPaths =
+    [
         ".env", ".git", ".aws", ".ssh", "web.config", "appsettings",
         "config.toml", "jwt.appsettings", "parameters.yml", 
         "client_secrets.json", "credentials", ".htaccess", ".htpasswd",
         "phpinfo", "info.php", "test.php", "backup", ".bak", ".sql",
         ".zip", ".tar", ".gz", "wp-config", "database.yml", "composer.json",
         "package.json", ".npmrc", ".dockerignore", "dockerfile"
-    };
+    ];
 
-    private static readonly string[] SuspiciousPatterns = 
-    {
+    private static readonly string[] SuspiciousPatterns =
+    [
         "..", "~", "%2e", "%00", "\\", "../", "..\\", 
         "/etc/", "/var/", "/proc/", "c:\\", "d:\\",
         "%2f", "%5c", "0x2f", "0x5c"
-    };
+    ];
 
     public PathTraversalProtectionMiddleware(ILogger logger)
     {

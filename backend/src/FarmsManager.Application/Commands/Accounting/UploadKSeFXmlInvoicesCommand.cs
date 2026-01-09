@@ -22,7 +22,7 @@ public record UploadKSeFXmlInvoicesCommandResponse
 {
     public int ImportedCount { get; init; }
     public int SkippedCount { get; init; }
-    public List<string> Errors { get; init; } = new();
+    public List<string> Errors { get; init; } = [];
 }
 
 public record UploadKSeFXmlInvoicesCommand(UploadKSeFXmlInvoicesCommandDto Data)

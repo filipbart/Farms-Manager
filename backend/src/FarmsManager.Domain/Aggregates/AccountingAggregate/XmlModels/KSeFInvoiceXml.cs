@@ -247,7 +247,7 @@ public class FaDane
     /// Pozycje faktury
     /// </summary>
     [XmlElement("FaWiersz")]
-    public List<FaWiersz> FaWiersze { get; set; } = new();
+    public List<FaWiersz> FaWiersze { get; set; } = [];
 
     /// <summary>
     /// Dane płatności
@@ -355,7 +355,7 @@ public class Platnosc
     /// Terminy płatności (może być wiele)
     /// </summary>
     [XmlElement("TerminPlatnosci")]
-    public List<TerminPlatnosci> TerminyPlatnosci { get; set; } = new();
+    public List<TerminPlatnosci> TerminyPlatnosci { get; set; } = [];
 
     /// <summary>
     /// Forma płatności (1 - gotówka, 2 - przelew, 3 - karta, 4 - bon, 5 - barterowa, 6 - inna)
@@ -379,13 +379,13 @@ public class Platnosc
     /// Rachunki bankowe (może być wiele)
     /// </summary>
     [XmlElement("RachunekBankowy")]
-    public List<RachunekBankowy> RachunkiBankowe { get; set; } = new();
+    public List<RachunekBankowy> RachunkiBankowe { get; set; } = [];
 
     /// <summary>
     /// Rachunki bankowe faktora
     /// </summary>
     [XmlElement("RachunekBankowyFaktora")]
-    public List<RachunekBankowy> RachunkiBankoweFaktora { get; set; } = new();
+    public List<RachunekBankowy> RachunkiBankoweFaktora { get; set; } = [];
 }
 
 public class TerminPlatnosci

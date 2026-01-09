@@ -17,7 +17,7 @@ public record AddExpenseContractorDto
     public string Name { get; init; }
     public string Nip { get; init; }
     public string Address { get; init; }
-    public List<Guid> ExpenseTypeIds { get; init; } = new();
+    public List<Guid> ExpenseTypeIds { get; init; } = [];
 }
 
 public record AddExpenseContractorCommand(AddExpenseContractorDto Data) : IRequest<EmptyBaseResponse>;

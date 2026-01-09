@@ -39,7 +39,7 @@ public abstract class Entity
         DeletedBy = deleterId;
     }
 
-    public override bool Equals(object? obj)
+    public override bool Equals(object obj)
     {
         if (obj is not Entity otherEntity)
             return false;

@@ -31,10 +31,10 @@ namespace FarmsManager.Application.Commands.Accounting;
 public class CreateModuleEntityFromInvoiceRequest
 {
     public ModuleType ModuleType { get; set; }
-    public CreateFeedInvoiceFromKSeFDto? FeedData { get; set; }
-    public CreateGasDeliveryFromKSeFDto? GasData { get; set; }
-    public CreateExpenseProductionFromKSeFDto? ExpenseData { get; set; }
-    public CreateSaleInvoiceFromKSeFDto? SaleData { get; set; }
+    public CreateFeedInvoiceFromKSeFDto FeedData { get; set; }
+    public CreateGasDeliveryFromKSeFDto GasData { get; set; }
+    public CreateExpenseProductionFromKSeFDto ExpenseData { get; set; }
+    public CreateSaleInvoiceFromKSeFDto SaleData { get; set; }
 }
 
 #endregion

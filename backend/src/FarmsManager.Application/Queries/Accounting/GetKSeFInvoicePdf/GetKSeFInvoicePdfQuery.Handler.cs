@@ -606,7 +606,7 @@ public class GetKSeFInvoicePdfQueryHandler : IRequestHandler<GetKSeFInvoicePdfQu
 
             // Pozycje faktury
             var lineItems = doc.Descendants(ns + "FaWiersz");
-            data.LineItems = new List<InvoiceLineItem>();
+            data.LineItems = [];
             foreach (var item in lineItems)
             {
                 var lineItem = new InvoiceLineItem
@@ -631,7 +631,7 @@ public class GetKSeFInvoicePdfQueryHandler : IRequestHandler<GetKSeFInvoicePdfQu
 
             // Rozbicie VAT
             var vatSummary = doc.Descendants(ns + "P_13_1");
-            data.VatBreakdown = new List<VatBreakdownItem>();
+            data.VatBreakdown = [];
             foreach (var vatItem in vatSummary)
             {
                 var vbi = new VatBreakdownItem();

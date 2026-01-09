@@ -18,7 +18,7 @@ public class UserExpenseAdvanceColumnSettingsRepository : AbstractRepository<Use
         _context = context;
     }
 
-    public async Task<UserExpenseAdvanceColumnSettingsEntity?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
+    public async Task<UserExpenseAdvanceColumnSettingsEntity> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         return await _context.Set<UserExpenseAdvanceColumnSettingsEntity>()
             .FirstOrDefaultAsync(x => x.UserId == userId && x.DateDeletedUtc == null, cancellationToken);

@@ -33,7 +33,7 @@ public record ExpenseContractorRow
 {
     public Guid Id { get; init; }
     public string Name { get; init; }
-    public List<ExpenseTypeSimpleDto> ExpenseTypes { get; init; } = new();
+    public List<ExpenseTypeSimpleDto> ExpenseTypes { get; init; } = [];
     public string Nip { get; init; }
     public string Address { get; init; }
     public DateTime DateCreatedUtc { get; init; }

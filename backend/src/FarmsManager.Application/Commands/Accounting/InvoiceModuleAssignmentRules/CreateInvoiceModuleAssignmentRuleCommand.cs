@@ -13,10 +13,10 @@ public record CreateInvoiceModuleAssignmentRuleCommand(CreateInvoiceModuleAssign
 public record CreateInvoiceModuleAssignmentRuleDto
 {
     public string Name { get; init; } = string.Empty;
-    public string? Description { get; init; }
+    public string Description { get; init; } = string.Empty;
     public ModuleType TargetModule { get; init; }
-    public string[] IncludeKeywords { get; init; } = Array.Empty<string>();
-    public string[] ExcludeKeywords { get; init; } = Array.Empty<string>();
+    public string[] IncludeKeywords { get; init; } = [];
+    public string[] ExcludeKeywords { get; init; } = [];
     public Guid? TaxBusinessEntityId { get; init; }
     public Guid? FarmId { get; init; }
     public KSeFInvoiceDirection? InvoiceDirection { get; init; }
