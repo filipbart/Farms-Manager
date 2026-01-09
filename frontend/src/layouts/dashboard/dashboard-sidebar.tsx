@@ -486,6 +486,11 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             title="Reguły faktur (moduły)"
             icon={<FaGear />}
           />
+          <SidebarMenuItem
+            to="/settings/invoice-farm-assignment-rules"
+            title="Reguły faktur (lokalizacje)"
+            icon={<FaGear />}
+          />
         </SidebarMenuItem>
       )}
     </List>

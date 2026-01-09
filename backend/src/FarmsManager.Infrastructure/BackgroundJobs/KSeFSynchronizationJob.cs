@@ -172,6 +172,22 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                         _logger.LogDebug("Invoice {KsefNumber} auto-assigned to module {ModuleType}", invoiceSummary.KsefNumber, assignedModule.Value);
                     }
 
+                    // Automatyczne przypisanie fermy na podstawie reguł (jeśli nie została przypisana przez NIP/nazwę)
+                    if (!invoiceEntity.FarmId.HasValue)
+                    {
+                        var assignedFarmId = await invoiceAssignmentService.FindFarmForInvoiceAsync(invoiceEntity, cancellationToken);
+                        if (assignedFarmId.HasValue)
+                        {
+                            // Znajdź aktywny cykl dla przypisanej fermy
+                            var assignedFarm = allFarms.FirstOrDefault(f => f.Id == assignedFarmId.Value);
+                            var assignedCycleId = assignedFarm?.ActiveCycleId;
+                            
+                            invoiceEntity.Update(farmId: assignedFarmId.Value, cycleId: assignedCycleId);
+                            _logger.LogDebug("Invoice {KsefNumber} auto-assigned to farm {FarmId} with cycle {CycleId}", 
+                                invoiceSummary.KsefNumber, assignedFarmId.Value, assignedCycleId);
+                        }
+                    }
+
                     await invoiceRepository.AddAsync(invoiceEntity, cancellationToken);
                     savedCount++;
 

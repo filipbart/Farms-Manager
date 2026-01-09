@@ -10,6 +10,11 @@ import type {
   CreateInvoiceModuleAssignmentRuleDto,
   UpdateInvoiceModuleAssignmentRuleDto,
 } from "../models/settings/invoice-module-assignment-rule";
+import type {
+  InvoiceFarmAssignmentRule,
+  CreateInvoiceFarmAssignmentRuleDto,
+  UpdateInvoiceFarmAssignmentRuleDto,
+} from "../models/settings/invoice-farm-assignment-rule";
 
 export class SettingsService {
   public static async saveIrzPlusCredentials(data: {
@@ -93,6 +98,47 @@ export class SettingsService {
   ) {
     return await AxiosWrapper.post(
       ApiUrl.ReorderInvoiceModuleAssignmentRules,
+      orderedRuleIds
+    );
+  }
+
+  // Invoice Farm Assignment Rules
+  public static async getInvoiceFarmAssignmentRules() {
+    return await AxiosWrapper.get<InvoiceFarmAssignmentRule[]>(
+      ApiUrl.InvoiceFarmAssignmentRules
+    );
+  }
+
+  public static async createInvoiceFarmAssignmentRule(
+    data: CreateInvoiceFarmAssignmentRuleDto
+  ) {
+    return await AxiosWrapper.post<string>(
+      ApiUrl.InvoiceFarmAssignmentRules,
+      data
+    );
+  }
+
+  public static async updateInvoiceFarmAssignmentRule(
+    ruleId: string,
+    data: UpdateInvoiceFarmAssignmentRuleDto
+  ) {
+    return await AxiosWrapper.put(
+      `${ApiUrl.InvoiceFarmAssignmentRules}/${ruleId}`,
+      data
+    );
+  }
+
+  public static async deleteInvoiceFarmAssignmentRule(ruleId: string) {
+    return await AxiosWrapper.delete(
+      `${ApiUrl.InvoiceFarmAssignmentRules}/${ruleId}`
+    );
+  }
+
+  public static async reorderInvoiceFarmAssignmentRules(
+    orderedRuleIds: string[]
+  ) {
+    return await AxiosWrapper.post(
+      ApiUrl.ReorderInvoiceFarmAssignmentRules,
       orderedRuleIds
     );
   }

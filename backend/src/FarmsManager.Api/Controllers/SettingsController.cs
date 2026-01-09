@@ -1,9 +1,11 @@
 ﻿using FarmsManager.Api.Controllers.Base;
 using FarmsManager.Application.Commands.Accounting.InvoiceAssignmentRules;
+using FarmsManager.Application.Commands.Accounting.InvoiceFarmAssignmentRules;
 using FarmsManager.Application.Commands.Accounting.InvoiceModuleAssignmentRules;
 using FarmsManager.Application.Commands.Settings;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Queries.Accounting.InvoiceAssignmentRules;
+using FarmsManager.Application.Queries.Accounting.InvoiceFarmAssignmentRules;
 using FarmsManager.Application.Queries.Accounting.InvoiceModuleAssignmentRules;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -139,6 +141,65 @@ public class SettingsController(IMediator mediator) : BaseController
     public async Task<IActionResult> ReorderInvoiceModuleAssignmentRules([FromBody] List<Guid> orderedRuleIds)
     {
         return Ok(await mediator.Send(new ReorderInvoiceModuleAssignmentRulesCommand(orderedRuleIds)));
+    }
+
+    #endregion
+
+    #region Invoice Farm Assignment Rules
+
+    /// <summary>
+    /// Pobiera listę reguł przypisywania faktur do lokalizacji (ferm)
+    /// </summary>
+    [HttpGet("invoice-farm-assignment-rules")]
+    [ProducesResponseType(typeof(BaseResponse<List<InvoiceFarmAssignmentRuleResponse>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetInvoiceFarmAssignmentRules()
+    {
+        return Ok(await mediator.Send(new GetInvoiceFarmAssignmentRulesQuery()));
+    }
+
+    /// <summary>
+    /// Tworzy nową regułę przypisywania faktur do lokalizacji
+    /// </summary>
+    [HttpPost("invoice-farm-assignment-rules")]
+    [ProducesResponseType(typeof(BaseResponse<Guid>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> CreateInvoiceFarmAssignmentRule([FromBody] CreateInvoiceFarmAssignmentRuleDto data)
+    {
+        return Ok(await mediator.Send(new CreateInvoiceFarmAssignmentRuleCommand(data)));
+    }
+
+    /// <summary>
+    /// Aktualizuje regułę przypisywania faktur do lokalizacji
+    /// </summary>
+    [HttpPut("invoice-farm-assignment-rules/{ruleId:guid}")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> UpdateInvoiceFarmAssignmentRule(Guid ruleId, [FromBody] UpdateInvoiceFarmAssignmentRuleDto data)
+    {
+        return Ok(await mediator.Send(new UpdateInvoiceFarmAssignmentRuleCommand(ruleId, data)));
+    }
+
+    /// <summary>
+    /// Usuwa regułę przypisywania faktur do lokalizacji
+    /// </summary>
+    [HttpDelete("invoice-farm-assignment-rules/{ruleId:guid}")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> DeleteInvoiceFarmAssignmentRule(Guid ruleId)
+    {
+        return Ok(await mediator.Send(new DeleteInvoiceFarmAssignmentRuleCommand(ruleId)));
+    }
+
+    /// <summary>
+    /// Zmienia kolejność reguł przypisywania faktur do lokalizacji
+    /// </summary>
+    [HttpPost("invoice-farm-assignment-rules/reorder")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> ReorderInvoiceFarmAssignmentRules([FromBody] List<Guid> orderedRuleIds)
+    {
+        return Ok(await mediator.Send(new ReorderInvoiceFarmAssignmentRulesCommand(orderedRuleIds)));
     }
 
     #endregion

@@ -109,6 +109,10 @@ export default class ApiUrl {
     this.Settings + "/invoice-module-assignment-rules";
   public static ReorderInvoiceModuleAssignmentRules =
     this.InvoiceModuleAssignmentRules + "/reorder";
+  public static InvoiceFarmAssignmentRules =
+    this.Settings + "/invoice-farm-assignment-rules";
+  public static ReorderInvoiceFarmAssignmentRules =
+    this.InvoiceFarmAssignmentRules + "/reorder";
 
   public static Sales = this.BaseUrl + "sales";
   public static SalesDict = this.Sales + "/dictionary";

@@ -42,6 +42,7 @@ export enum RouteName {
   SettingsCycles = "settings/cycles",
   SettingsInvoiceAssignmentRules = "settings/invoice-assignment-rules",
   SettingsInvoiceModuleAssignmentRules = "settings/invoice-module-assignment-rules",
+  SettingsInvoiceFarmAssignmentRules = "settings/invoice-farm-assignment-rules",
   Users = "users",
   UserProfile = "user-profile",
   NotFound = "not-found",

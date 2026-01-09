@@ -7,21 +7,24 @@ using FarmsManager.Domain.Aggregates.AccountingAggregate.Interfaces;
 namespace FarmsManager.Application.Services;
 
 /// <summary>
-/// Serwis do automatycznego przypisywania faktur do pracowników i modułów na podstawie reguł
+/// Serwis do automatycznego przypisywania faktur do pracowników, modułów i lokalizacji na podstawie reguł
 /// </summary>
 public class InvoiceAssignmentService : IInvoiceAssignmentService, IService
 {
     private readonly IInvoiceAssignmentRuleRepository _ruleRepository;
     private readonly IInvoiceModuleAssignmentRuleRepository _moduleRuleRepository;
+    private readonly IInvoiceFarmAssignmentRuleRepository _farmRuleRepository;
     private readonly IKSeFInvoiceXmlParser _xmlParser;
 
     public InvoiceAssignmentService(
         IInvoiceAssignmentRuleRepository ruleRepository,
         IInvoiceModuleAssignmentRuleRepository moduleRuleRepository,
+        IInvoiceFarmAssignmentRuleRepository farmRuleRepository,
         IKSeFInvoiceXmlParser xmlParser)
     {
         _ruleRepository = ruleRepository;
         _moduleRuleRepository = moduleRuleRepository;
+        _farmRuleRepository = farmRuleRepository;
         _xmlParser = xmlParser;
     }
 
@@ -65,6 +68,29 @@ public class InvoiceAssignmentService : IInvoiceAssignmentService, IService
             if (rule.MatchesInvoice(searchableText, invoice.TaxBusinessEntityId, invoice.FarmId, invoice.InvoiceDirection))
             {
                 return rule.TargetModule;
+            }
+        }
+
+        return null;
+    }
+
+    /// <inheritdoc />
+    public async Task<Guid?> FindFarmForInvoiceAsync(
+        KSeFInvoiceEntity invoice,
+        CancellationToken cancellationToken = default)
+    {
+        var rules = await _farmRuleRepository.GetAllActiveOrderedByPriorityAsync(cancellationToken);
+
+        if (rules.Count == 0)
+            return null;
+
+        var searchableText = BuildSearchableText(invoice);
+
+        foreach (var rule in rules)
+        {
+            if (rule.MatchesInvoice(searchableText, invoice.TaxBusinessEntityId, invoice.InvoiceDirection))
+            {
+                return rule.TargetFarmId;
             }
         }
 
