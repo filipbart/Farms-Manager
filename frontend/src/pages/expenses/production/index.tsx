@@ -1,6 +1,6 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
 import { type GridRowSelectionModel } from "@mui/x-data-grid";
-import { useReducer, useState, useMemo, useEffect } from "react";
+import { useReducer, useState, useMemo, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
 import FiltersForm from "../../../components/filters/filters-form";
 import {
@@ -32,13 +32,27 @@ import {
   DataGridPremium,
   GRID_AGGREGATION_ROOT_FOOTER_ROW_ID,
 } from "@mui/x-data-grid-premium";
-import { getSortOptionsFromGridModel } from "../../../utils/grid-state-helper";
+import {
+  getSortOptionsFromGridModel,
+  initializeFiltersFromLocalStorage,
+} from "../../../utils/grid-state-helper";
 import { useAuth } from "../../../auth/useAuth";
 
 const ExpenseProductionPage: React.FC = () => {
   const { userData } = useAuth();
   const isAdmin = userData?.isAdmin ?? false;
-  const [filters, dispatch] = useReducer(filterReducer, initialFilters);
+  const [filters, dispatch] = useReducer(
+    filterReducer,
+    initialFilters,
+    (init) =>
+      initializeFiltersFromLocalStorage(
+        init,
+        "expensesProductionGridState",
+        "expensesProductionPageSize",
+        ExpensesProductionsOrderType,
+        mapExpenseProductionOrderTypeToField
+      )
+  );
   const [dictionary, setDictionary] = useState<ExpensesProductionsDictionary>();
   const [openAddExpenseProductionModal, setOpenAddExpenseProductionModal] =
     useState(false);
@@ -59,11 +73,16 @@ const ExpenseProductionPage: React.FC = () => {
     refetch: fetchExpenseProductions,
   } = useExpenseProductions(filters);
 
-  const initialGridState = {
-    columns: {
-      columnVisibilityModel: { dateCreatedUtc: false },
-    },
-  };
+  const [initialGridState] = useState(() => {
+    const savedState = localStorage.getItem("expensesProductionGridState");
+    return savedState
+      ? JSON.parse(savedState)
+      : {
+          columns: {
+            columnVisibilityModel: { dateCreatedUtc: false },
+          },
+        };
+  });
 
   const [downloadingFilePath, setDownloadFilePath] = useState<string | null>(
     null
@@ -109,21 +128,24 @@ const ExpenseProductionPage: React.FC = () => {
     return Array.from(map.values());
   }, [dictionary]);
 
-  const deleteExpenseProduction = async (id: string) => {
-    try {
-      await handleApiResponse(
-        () => ExpensesService.deleteExpenseProduction(id),
-        async () => {
-          toast.success("Wpis kosztów produkcji został poprawnie usunięty");
-          dispatch({ type: "setMultiple", payload: { page: filters.page } });
-        },
-        undefined,
-        "Błąd podczas usuwania wpisu"
-      );
-    } catch {
-      toast.error("Błąd podczas usuwania wpisu");
-    }
-  };
+  const deleteExpenseProduction = useCallback(
+    async (id: string) => {
+      try {
+        await handleApiResponse(
+          () => ExpensesService.deleteExpenseProduction(id),
+          async () => {
+            toast.success("Wpis kosztów produkcji został poprawnie usunięty");
+            dispatch({ type: "setMultiple", payload: { page: filters.page } });
+          },
+          undefined,
+          "Błąd podczas usuwania wpisu"
+        );
+      } catch {
+        toast.error("Błąd podczas usuwania wpisu");
+      }
+    },
+    [filters.page]
+  );
 
   useEffect(() => {
     const fetchDictionaries = async () => {
@@ -203,7 +225,7 @@ const ExpenseProductionPage: React.FC = () => {
         downloadingFilePath,
         isAdmin,
       }),
-    [isAdmin, downloadingFilePath]
+    [isAdmin, downloadingFilePath, deleteExpenseProduction]
   );
 
   const handleCloseSaveInvoicesModal = () => {
@@ -302,6 +324,17 @@ const ExpenseProductionPage: React.FC = () => {
           rows={expenseProductions}
           columns={columns}
           initialState={initialGridState}
+          onStateChange={(newState) => {
+            const stateToSave = {
+              columns: newState.columns,
+              sorting: newState.sorting,
+              pinnedColumns: newState.pinnedColumns,
+            };
+            localStorage.setItem(
+              "expensesProductionGridState",
+              JSON.stringify(stateToSave)
+            );
+          }}
           scrollbarSize={17}
           paginationMode="server"
           pagination
@@ -310,6 +343,10 @@ const ExpenseProductionPage: React.FC = () => {
             page: filters.page ?? 0,
           }}
           onPaginationModelChange={({ page, pageSize }) => {
+            localStorage.setItem(
+              "expensesProductionPageSize",
+              pageSize.toString()
+            );
             dispatch({
               type: "setMultiple",
               payload: { page, pageSize },

@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
+import dayjs from "dayjs";
 import {
   AccountingService,
   type CreateModuleEntityRequest,
@@ -163,8 +164,10 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
         itemName: "",
         quantity: 0,
         unitPrice: 0,
-        invoiceDate: invoiceData.invoiceDate,
-        dueDate: invoiceData.dueDate || "",
+        invoiceDate: dayjs(invoiceData.invoiceDate).format("YYYY-MM-DD"),
+        dueDate: invoiceData.dueDate
+          ? dayjs(invoiceData.dueDate).format("YYYY-MM-DD")
+          : "",
         invoiceTotal: invoiceData.grossAmount,
         subTotal: invoiceData.netAmount,
         vatAmount: invoiceData.vatAmount,
@@ -178,7 +181,7 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
         farmId: selectedFarmId || "",
         contractorId: "",
         invoiceNumber: invoiceData.invoiceNumber,
-        invoiceDate: invoiceData.invoiceDate,
+        invoiceDate: dayjs(invoiceData.invoiceDate).format("YYYY-MM-DD"),
         invoiceTotal: invoiceData.grossAmount,
         unitPrice: 0,
         quantity: 0,
@@ -197,7 +200,7 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
         invoiceTotal: invoiceData.grossAmount,
         subTotal: invoiceData.netAmount,
         vatAmount: invoiceData.vatAmount,
-        invoiceDate: invoiceData.invoiceDate,
+        invoiceDate: dayjs(invoiceData.invoiceDate).format("YYYY-MM-DD"),
         comment: "",
       },
     });
@@ -209,8 +212,10 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
         cycleId: selectedCycleId || "",
         slaughterhouseId: "",
         invoiceNumber: invoiceData.invoiceNumber,
-        invoiceDate: invoiceData.invoiceDate,
-        dueDate: invoiceData.dueDate || "",
+        invoiceDate: dayjs(invoiceData.invoiceDate).format("YYYY-MM-DD"),
+        dueDate: invoiceData.dueDate
+          ? dayjs(invoiceData.dueDate).format("YYYY-MM-DD")
+          : "",
         invoiceTotal: invoiceData.grossAmount,
         subTotal: invoiceData.netAmount,
         vatAmount: invoiceData.vatAmount,
