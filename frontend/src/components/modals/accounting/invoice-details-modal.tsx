@@ -32,14 +32,23 @@ import {
   Select,
   MenuItem,
   ButtonGroup,
+  IconButton,
+  Menu,
+  ListItemIcon,
+  ListItemText,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import CheckIcon from "@mui/icons-material/Check";
 import PauseIcon from "@mui/icons-material/Pause";
 import CloseIcon from "@mui/icons-material/Close";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import DownloadIcon from "@mui/icons-material/Download";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import CodeIcon from "@mui/icons-material/Code";
 import { toast } from "react-toastify";
 import AppDialog from "../../common/app-dialog";
+import ApiUrl from "../../../common/ApiUrl";
+import { downloadFile } from "../../../utils/download-file";
 import { AccountingService } from "../../../services/accounting-service";
 import { FarmsService } from "../../../services/farms-service";
 import { UsersService } from "../../../services/users-service";
@@ -405,6 +414,9 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [details, setDetails] = useState<KSeFInvoiceDetails | null>(null);
+  const [downloadMenuAnchor, setDownloadMenuAnchor] =
+    useState<null | HTMLElement>(null);
+  const [downloading, setDownloading] = useState(false);
 
   // Edit form state
   const [editForm, setEditForm] = useState<EditFormState>({
@@ -789,10 +801,72 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
     );
   };
 
+  const handleDownloadPdf = async () => {
+    if (!details) return;
+    setDownloadMenuAnchor(null);
+    await downloadFile({
+      url: ApiUrl.AccountingInvoicePdf(details.id),
+      defaultFilename: `Faktura_${details.invoiceNumber}`,
+      setLoading: setDownloading,
+      errorMessage: "Błąd podczas pobierania PDF faktury",
+      fileExtension: "pdf",
+    });
+  };
+
+  const handleDownloadXml = async () => {
+    if (!details) return;
+    setDownloadMenuAnchor(null);
+    await downloadFile({
+      url: ApiUrl.AccountingInvoiceXml(details.id),
+      defaultFilename: `Faktura_KSeF_${
+        details.kSeFNumber || details.invoiceNumber
+      }`,
+      setLoading: setDownloading,
+      errorMessage: "Błąd podczas pobierania XML faktury",
+      fileExtension: "xml",
+    });
+  };
+
   return (
     <AppDialog open={open} onClose={onClose} maxWidth="xl" fullWidth>
       <DialogTitle>
-        Szczegóły faktury {invoice?.invoiceNumber || ""}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <span>Szczegóły faktury {invoice?.invoiceNumber || ""}</span>
+          <Box>
+            <IconButton
+              onClick={(e) => setDownloadMenuAnchor(e.currentTarget)}
+              disabled={downloading || !details}
+              size="small"
+              title="Pobierz fakturę"
+            >
+              <DownloadIcon />
+            </IconButton>
+            <Menu
+              anchorEl={downloadMenuAnchor}
+              open={Boolean(downloadMenuAnchor)}
+              onClose={() => setDownloadMenuAnchor(null)}
+            >
+              <MenuItem onClick={handleDownloadPdf}>
+                <ListItemIcon>
+                  <PictureAsPdfIcon fontSize="small" color="error" />
+                </ListItemIcon>
+                <ListItemText>Pobierz PDF</ListItemText>
+              </MenuItem>
+              <MenuItem onClick={handleDownloadXml} disabled={!details?.hasXml}>
+                <ListItemIcon>
+                  <CodeIcon fontSize="small" color="secondary" />
+                </ListItemIcon>
+                <ListItemText>Pobierz XML (KSeF)</ListItemText>
+              </MenuItem>
+            </Menu>
+          </Box>
+        </Box>
       </DialogTitle>
       <DialogContent>
         {loading ? (
