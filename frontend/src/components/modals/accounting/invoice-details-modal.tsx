@@ -1218,8 +1218,11 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                   })()}
                 </Box>
 
-                {/* Footer / Notes */}
-                {(parsedXml?.footer || details.comment) && (
+                {/* Footer / Notes / Additional Descriptions */}
+                {(parsedXml?.footer ||
+                  details.comment ||
+                  (parsedXml?.additionalDescriptions &&
+                    parsedXml.additionalDescriptions.length > 0)) && (
                   <Box
                     sx={{
                       mt: 2,
@@ -1249,6 +1252,30 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                         {details.comment}
                       </Typography>
                     )}
+                    {/* Dodatkowe opisy (DodatkowyOpis z FA(4)) */}
+                    {parsedXml?.additionalDescriptions &&
+                      parsedXml.additionalDescriptions.length > 0 && (
+                        <Box sx={{ mt: 1 }}>
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{ fontWeight: 600 }}
+                          >
+                            Dodatkowe opisy:
+                          </Typography>
+                          {parsedXml.additionalDescriptions.map((desc, idx) => (
+                            <Typography
+                              key={idx}
+                              variant="body2"
+                              color="text.secondary"
+                              sx={{ ml: 1 }}
+                            >
+                              {desc.key && <strong>{desc.key}: </strong>}
+                              {desc.value}
+                            </Typography>
+                          ))}
+                        </Box>
+                      )}
                   </Box>
                 )}
 
@@ -1658,6 +1685,8 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                         vatAmount: details.vatAmount,
                         lineItems: parsedXml?.lineItems || [],
                         footer: parsedXml?.footer,
+                        additionalDescriptions:
+                          parsedXml?.additionalDescriptions,
                       }}
                       farms={farms}
                       selectedFarmId={editForm.farmId}

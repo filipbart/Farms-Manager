@@ -260,12 +260,31 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
         var sellerName = invoiceItem.SellerName?.ToLowerInvariant();
         var buyerName = invoiceItem.BuyerName?.ToLowerInvariant();
 
-        // Wyciągnij stopkę z XML faktury - może zawierać informacje o miejscu rozładunku/kurniku
-        string footerText = null;
+        // Wyciągnij stopkę i dodatkowe opisy z XML faktury - mogą zawierać informacje o miejscu rozładunku/kurniku
+        string additionalText = null;
         if (!string.IsNullOrWhiteSpace(invoiceXml))
         {
             var parsedXml = xmlParser.ParseInvoiceXml(invoiceXml);
-            footerText = parsedXml?.Stopka?.Informacje?.StopkaFaktury?.ToLowerInvariant();
+            var parts = new List<string>();
+            
+            // Stopka faktury (np. "Miejsce rozładunku: Jaworowo Kłódź K5")
+            if (!string.IsNullOrWhiteSpace(parsedXml?.Stopka?.Informacje?.StopkaFaktury))
+                parts.Add(parsedXml.Stopka.Informacje.StopkaFaktury);
+            
+            // Dodatkowe opisy (DodatkowyOpis - klucz/wartość, zgodne z FA(4))
+            if (parsedXml?.Fa?.DodatkoweOpisy != null)
+            {
+                foreach (var opis in parsedXml.Fa.DodatkoweOpisy)
+                {
+                    if (!string.IsNullOrWhiteSpace(opis.Klucz))
+                        parts.Add(opis.Klucz);
+                    if (!string.IsNullOrWhiteSpace(opis.Wartosc))
+                        parts.Add(opis.Wartosc);
+                }
+            }
+            
+            if (parts.Count > 0)
+                additionalText = string.Join(" ", parts).ToLowerInvariant();
         }
 
         Guid? taxBusinessEntityId = null;
@@ -340,8 +359,8 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                     return true;
                 }
 
-                // Sprawdź w stopce faktury (np. "Miejsce rozładunku: Jaworowo Kłódź K5")
-                if (!string.IsNullOrEmpty(footerText) && footerText.Contains(farmName))
+                // Sprawdź w stopce i dodatkowych opisach faktury (np. "Miejsce rozładunku: Jaworowo Kłódź K5")
+                if (!string.IsNullOrEmpty(additionalText) && additionalText.Contains(farmName))
                 {
                     return true;
                 }
@@ -353,7 +372,7 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
             matchedFarm ??= farmsMatchedByNip.First();
         }
 
-        // 4. Jeśli nie znaleziono po NIP, szukaj po nazwie (w danych faktury i stopce)
+        // 4. Jeśli nie znaleziono po NIP, szukaj po nazwie (w danych faktury, stopce i dodatkowych opisach)
         if (matchedFarm == null)
         {
             matchedFarm = allFarms.FirstOrDefault(f =>
@@ -371,8 +390,8 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                     return true;
                 }
 
-                // Sprawdź w stopce faktury (np. "Miejsce rozładunku: Jaworowo Kłódź K5")
-                if (!string.IsNullOrEmpty(footerText) && footerText.Contains(farmName))
+                // Sprawdź w stopce i dodatkowych opisach faktury (np. "Miejsce rozładunku: Jaworowo Kłódź K5")
+                if (!string.IsNullOrEmpty(additionalText) && additionalText.Contains(farmName))
                 {
                     return true;
                 }

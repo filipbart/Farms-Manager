@@ -5,6 +5,7 @@ import type {
   KSeFVatBreakdown,
   KSeFPaymentData,
   KSeFBankAccount,
+  KSeFAdditionalDescription,
 } from "../models/accounting/ksef-invoice";
 
 const getElementText = (
@@ -109,6 +110,25 @@ const parseVatBreakdown = (faElement: Element | null): KSeFVatBreakdown[] => {
   }
 
   return breakdown;
+};
+
+const parseAdditionalDescriptions = (
+  faElement: Element | null
+): KSeFAdditionalDescription[] => {
+  if (!faElement) return [];
+
+  const opisy = faElement.getElementsByTagName("DodatkowyOpis");
+  const descriptions: KSeFAdditionalDescription[] = [];
+
+  for (let i = 0; i < opisy.length; i++) {
+    const opis = opisy[i];
+    descriptions.push({
+      key: getElementText(opis, "Klucz"),
+      value: getElementText(opis, "Wartosc"),
+    });
+  }
+
+  return descriptions;
 };
 
 const parseBankAccounts = (
@@ -227,6 +247,7 @@ export const parseKSeFInvoiceXml = (
             "StopkaFaktury"
           )
         : undefined,
+      additionalDescriptions: parseAdditionalDescriptions(fa),
     };
   } catch (error) {
     console.error("Error parsing KSeF XML:", error);

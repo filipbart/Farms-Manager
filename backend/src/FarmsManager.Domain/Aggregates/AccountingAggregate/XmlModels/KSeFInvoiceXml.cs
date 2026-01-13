@@ -254,6 +254,14 @@ public class FaDane
     /// </summary>
     [XmlElement("Platnosc")]
     public Platnosc Platnosc { get; set; }
+
+    /// <summary>
+    /// Dodatkowy opis - pola przeznaczone dla wykazywania dodatkowych danych na fakturze,
+    /// w tym wymaganych przepisami prawa, dla których nie przewidziano innych pól/elementów.
+    /// Może zawierać np. "Miejsce rozładunku: Jaworowo Kłódź K5"
+    /// </summary>
+    [XmlElement("DodatkowyOpis")]
+    public List<DodatkowyOpis> DodatkoweOpisy { get; set; } = [];
 }
 
 /// <summary>
@@ -434,4 +442,23 @@ public class Informacje
 {
     [XmlElement("StopkaFaktury")]
     public string StopkaFaktury { get; set; }
+}
+
+/// <summary>
+/// Dodatkowy opis faktury - struktura klucz-wartość
+/// Zgodne ze schematem KSeF FA(4) - typ TKluczWartosc
+/// </summary>
+ public class DodatkowyOpis
+{
+    /// <summary>
+    /// Klucz dodatkowego opisu (np. "Miejsce rozładunku", "Uwagi")
+    /// </summary>
+    [XmlElement("Klucz")]
+    public string Klucz { get; set; }
+
+    /// <summary>
+    /// Wartość dodatkowego opisu (np. "Jaworowo Kłódź K5")
+    /// </summary>
+    [XmlElement("Wartosc")]
+    public string Wartosc { get; set; }
 }

@@ -49,6 +49,7 @@ interface ModuleEntityFormProps {
     vatAmount: number;
     lineItems?: KSeFLineItem[];
     footer?: string;
+    additionalDescriptions?: { key?: string; value?: string }[];
   };
   farms: FarmRowModel[];
   selectedFarmId: string;
@@ -229,12 +230,17 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
         if (farm?.henhouses) {
           setHenhouses(farm.henhouses);
 
-          // Auto-detect henhouse from invoice text (line items, seller name, footer/uwagi)
+          // Auto-detect henhouse from invoice text (line items, seller name, footer/uwagi, additionalDescriptions)
           const searchableText = [
             invoiceData.sellerName,
             invoiceData.buyerName,
             ...(invoiceData.lineItems?.map((item) => item.name) || []),
             invoiceData.footer, // Stopka faktury - może zawierać "Miejsce rozładunku: Jaworowo Kłódź K5"
+            // Dodatkowe opisy (DodatkowyOpis z FA(4)) - klucz i wartość
+            ...(invoiceData.additionalDescriptions?.flatMap((d) => [
+              d.key,
+              d.value,
+            ]) || []),
           ]
             .filter(Boolean)
             .join(" ")

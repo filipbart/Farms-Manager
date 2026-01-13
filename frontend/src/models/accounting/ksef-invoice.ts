@@ -221,6 +221,12 @@ export interface KSeFParsedXmlData {
   lineItems?: KSeFLineItem[];
   payment?: KSeFPaymentData;
   footer?: string;
+  additionalDescriptions?: KSeFAdditionalDescription[];
+}
+
+export interface KSeFAdditionalDescription {
+  key?: string;
+  value?: string;
 }
 
 export interface KSeFPartyData {

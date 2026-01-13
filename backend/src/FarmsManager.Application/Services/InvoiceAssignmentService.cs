@@ -166,6 +166,18 @@ public class InvoiceAssignmentService : IInvoiceAssignmentService, IService
                 // Uwagi i stopka
                 if (!string.IsNullOrWhiteSpace(parsedXml?.Stopka?.Informacje?.StopkaFaktury))
                     parts.Add(parsedXml.Stopka.Informacje.StopkaFaktury);
+
+                // Dodatkowe opisy (DodatkowyOpis - klucz/wartość, zgodne z FA(4))
+                if (parsedXml?.Fa?.DodatkoweOpisy != null)
+                {
+                    foreach (var opis in parsedXml.Fa.DodatkoweOpisy)
+                    {
+                        if (!string.IsNullOrWhiteSpace(opis.Klucz))
+                            parts.Add(opis.Klucz);
+                        if (!string.IsNullOrWhiteSpace(opis.Wartosc))
+                            parts.Add(opis.Wartosc);
+                    }
+                }
             }
         }
 
