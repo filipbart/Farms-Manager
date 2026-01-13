@@ -318,8 +318,8 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
         {
             taxBusinessEntityId = matchedEntity.Id;
 
-            // Sprawdź czy podmiot ma przypisane fermy
-            if (matchedEntity.Farms.Count > 0)
+            // Sprawdź czy podmiot ma przypisane fermy - tylko gdy ma dokładnie 1 fermę
+            if (matchedEntity.Farms.Count == 1)
             {
                 var entityFarm = matchedEntity.Farms.First();
                 farmId = entityFarm.Id;
@@ -327,6 +327,11 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                 var farmWithCycle = allFarms.FirstOrDefault(f => f.Id == farmId);
                 var cycleId = farmWithCycle?.ActiveCycleId;
                 return (taxBusinessEntityId, farmId, cycleId);
+            }
+            // Gdy podmiot ma więcej niż 1 fermę - nie przypisuj fermy automatycznie
+            else if (matchedEntity.Farms.Count > 1)
+            {
+                return (taxBusinessEntityId, null, null);
             }
         }
 
@@ -371,9 +376,7 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
 
                 return false;
             });
-
-            // Jeśli nie udało się dopasować po nazwie, weź pierwszą
-            matchedFarm ??= farmsMatchedByNip.First();
+            // Nie przypisuj fermy jeśli nie udało się jednoznacznie dopasować po nazwie
         }
 
         // 4. Jeśli nie znaleziono po NIP, szukaj po nazwie (w danych faktury, stopce i dodatkowych opisach)

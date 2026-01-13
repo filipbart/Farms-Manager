@@ -463,10 +463,52 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
       saleForm,
     ]);
 
+    const validateForm = (): string | null => {
+      switch (moduleType) {
+        case ModuleType.Feeds: {
+          const data = feedForm.getValues();
+          if (!selectedFarmId) return "Wybierz fermę";
+          if (!selectedCycleId) return "Wybierz cykl";
+          if (!data.henhouseId) return "Wybierz kurnik";
+          if (!data.itemName) return "Wybierz nazwę paszy";
+          if (!data.quantity || data.quantity <= 0) return "Podaj ilość";
+          if (!data.unitPrice || data.unitPrice <= 0)
+            return "Podaj cenę jednostkową";
+          break;
+        }
+        case ModuleType.Gas: {
+          const data = gasForm.getValues();
+          if (!selectedFarmId) return "Wybierz fermę";
+          if (!data.quantity || data.quantity <= 0) return "Podaj ilość";
+          if (!data.unitPrice || data.unitPrice <= 0)
+            return "Podaj cenę jednostkową";
+          break;
+        }
+        case ModuleType.ProductionExpenses: {
+          const data = expenseForm.getValues();
+          if (!selectedFarmId) return "Wybierz fermę";
+          if (!selectedCycleId) return "Wybierz cykl";
+          if (!data.expenseTypeId) return "Wybierz typ kosztu";
+          break;
+        }
+        case ModuleType.Sales: {
+          if (!selectedFarmId) return "Wybierz fermę";
+          if (!selectedCycleId) return "Wybierz cykl";
+          break;
+        }
+      }
+      return null;
+    };
+
     const handleSubmit = async () => {
+      const validationError = validateForm();
+      if (validationError) {
+        toast.error(validationError);
+        return;
+      }
+
       setLoading(true);
       try {
-        // ...
         const request: CreateModuleEntityRequest | AcceptInvoiceRequest = {
           moduleType,
         };

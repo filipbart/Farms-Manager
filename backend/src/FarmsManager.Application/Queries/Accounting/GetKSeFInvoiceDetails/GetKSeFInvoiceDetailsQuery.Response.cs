@@ -18,6 +18,7 @@ public class KSeFInvoiceDetailsDto
     public Guid? FarmId { get; set; }
     public string InvoiceNumber { get; set; }
     public DateOnly InvoiceDate { get; set; }
+    public DateOnly? PaymentDueDate { get; set; }
     public string ModuleType { get; set; }
     public string VatDeductionType { get; set; }
     public string Status { get; set; }

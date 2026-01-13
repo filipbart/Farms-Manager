@@ -220,7 +220,9 @@ const DetailRow: React.FC<{ label: string; value: React.ReactNode }> = ({
       </Typography>
     </Grid>
     <Grid size={{ xs: 12, sm: 7 }}>
-      <Typography variant="body2">{value || "—"}</Typography>
+      <Typography variant="body2" component="div">
+        {value || "—"}
+      </Typography>
     </Grid>
   </Grid>
 );
