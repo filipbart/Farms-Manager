@@ -18,6 +18,7 @@ public class KSeFInvoiceEntity : Entity
     /// <param name="kSeFNumber">Numer KSeF</param>
     /// <param name="invoiceNumber">Numer faktury</param>
     /// <param name="invoiceDate">Data wystawienia</param>
+    /// <param name="paymentDueDate">Termin płatności (opcjonalnie)</param>
     /// <param name="sellerNip">NIP sprzedawcy</param>
     /// <param name="sellerName">Nazwa sprzedawcy</param>
     /// <param name="buyerNip">NIP nabywcy</param>
@@ -46,6 +47,7 @@ public class KSeFInvoiceEntity : Entity
         string kSeFNumber,
         string invoiceNumber,
         DateOnly invoiceDate,
+        DateOnly? paymentDueDate,
         string sellerNip,
         string sellerName,
         string buyerNip,
@@ -76,6 +78,7 @@ public class KSeFInvoiceEntity : Entity
             KSeFNumber = kSeFNumber,
             InvoiceNumber = invoiceNumber,
             InvoiceDate = invoiceDate,
+            PaymentDueDate = paymentDueDate,
             SellerNip = sellerNip,
             SellerName = sellerName,
             BuyerNip = buyerNip,

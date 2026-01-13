@@ -452,6 +452,7 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
             kSeFNumber: invoiceItem.KsefNumber,
             invoiceNumber: invoiceItem.InvoiceNumber,
             invoiceDate: invoiceItem.InvoiceDate,
+            paymentDueDate: ParsePaymentDueDate(parsedInvoice?.Fa?.Platnosc?.TerminPlatnosci),
             sellerNip: invoiceItem.SellerNip,
             sellerName: invoiceItem.SellerName,
             buyerNip: invoiceItem.BuyerNip,
@@ -501,6 +502,22 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
         }
 
         return KSeFPaymentStatus.Unpaid;
+    }
+
+    /// <summary>
+    /// Parsuje termin płatności z XML KSeF
+    /// </summary>
+    private static DateOnly? ParsePaymentDueDate(string terminPlatnosci)
+    {
+        if (string.IsNullOrWhiteSpace(terminPlatnosci))
+            return null;
+
+        if (DateTime.TryParse(terminPlatnosci, out var dateTime))
+        {
+            return DateOnly.FromDateTime(dateTime);
+        }
+
+        return null;
     }
 
     /// <summary>
