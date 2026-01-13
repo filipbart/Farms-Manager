@@ -1657,6 +1657,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                         netAmount: details.netAmount,
                         vatAmount: details.vatAmount,
                         lineItems: parsedXml?.lineItems || [],
+                        footer: parsedXml?.footer,
                       }}
                       farms={farms}
                       selectedFarmId={editForm.farmId}

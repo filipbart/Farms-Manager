@@ -145,9 +145,9 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                 {
                     var invoiceXml = await ksefService.GetInvoiceXmlAsync(invoiceSummary.KsefNumber, cancellationToken);
 
-                    // Dopasuj podmiot gospodarczy, fermę i cykl po NIP lub nazwie
+                    // Dopasuj podmiot gospodarczy, fermę i cykl po NIP lub nazwie (uwzględniając stopkę faktury)
                     var (taxBusinessEntityId, farmId, cycleId) =
-                        MatchTaxBusinessEntityAndFarm(invoiceSummary, taxBusinessEntities, allFarms);
+                        MatchTaxBusinessEntityAndFarm(invoiceSummary, taxBusinessEntities, allFarms, invoiceXml, xmlParser);
 
                     var invoiceEntity = CreateInvoiceEntity(invoiceSummary, invoiceXml, xmlParser, taxBusinessEntityId,
                         farmId, cycleId);
@@ -243,19 +243,30 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
     /// Logika przypisywania fermy:
     /// 1. Jeśli podmiot ma przypisane fermy - użyj pierwszej
     /// 2. Jeśli podmiot nie ma ferm - szukaj fermy po NIP
-    /// 3. Jeśli nie znaleziono po NIP - szukaj fermy po nazwie
+    /// 3. Jeśli nie znaleziono po NIP - szukaj fermy po nazwie (uwzględniając stopkę faktury)
     /// Dodatkowo: przypisuje aktywny cykl z dopasowanej fermy
+    /// Stopka faktury może zawierać informacje o miejscu rozładunku, np. "Miejsce rozładunku: Jaworowo Kłódź K5"
     /// </summary>
     private static (Guid? TaxBusinessEntityId, Guid? FarmId, Guid? CycleId) MatchTaxBusinessEntityAndFarm(
         KSeFInvoiceSyncItem invoiceItem,
         List<TaxBusinessEntity> taxBusinessEntities,
-        List<FarmEntity> allFarms)
+        List<FarmEntity> allFarms,
+        string invoiceXml,
+        IKSeFInvoiceXmlParser xmlParser)
     {
         // Normalizuj NIP-y z faktury
         var sellerNip = NormalizeNip(invoiceItem.SellerNip);
         var buyerNip = NormalizeNip(invoiceItem.BuyerNip);
         var sellerName = invoiceItem.SellerName?.ToLowerInvariant();
         var buyerName = invoiceItem.BuyerName?.ToLowerInvariant();
+
+        // Wyciągnij stopkę z XML faktury - może zawierać informacje o miejscu rozładunku/kurniku
+        string footerText = null;
+        if (!string.IsNullOrWhiteSpace(invoiceXml))
+        {
+            var parsedXml = xmlParser.ParseInvoiceXml(invoiceXml);
+            footerText = parsedXml?.Stopka?.Informacje?.StopkaFaktury?.ToLowerInvariant();
+        }
 
         Guid? taxBusinessEntityId = null;
         Guid? farmId = null;
@@ -313,24 +324,36 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
         }
         else if (farmsMatchedByNip.Count > 1)
         {
-            // Wiele ferm z tym samym NIP - doszukaj po nazwie
+            // Wiele ferm z tym samym NIP - doszukaj po nazwie (w danych faktury i stopce)
             matchedFarm = farmsMatchedByNip.FirstOrDefault(f =>
             {
                 var farmName = f.Name?.ToLowerInvariant();
                 if (string.IsNullOrEmpty(farmName))
                     return false;
 
-                return (!string.IsNullOrEmpty(sellerName) && sellerName.Contains(farmName)) ||
-                       (!string.IsNullOrEmpty(buyerName) && buyerName.Contains(farmName)) ||
-                       (!string.IsNullOrEmpty(sellerName) && farmName.Contains(sellerName)) ||
-                       (!string.IsNullOrEmpty(buyerName) && farmName.Contains(buyerName));
+                // Sprawdź w nazwie sprzedawcy/nabywcy
+                if ((!string.IsNullOrEmpty(sellerName) && sellerName.Contains(farmName)) ||
+                    (!string.IsNullOrEmpty(buyerName) && buyerName.Contains(farmName)) ||
+                    (!string.IsNullOrEmpty(sellerName) && farmName.Contains(sellerName)) ||
+                    (!string.IsNullOrEmpty(buyerName) && farmName.Contains(buyerName)))
+                {
+                    return true;
+                }
+
+                // Sprawdź w stopce faktury (np. "Miejsce rozładunku: Jaworowo Kłódź K5")
+                if (!string.IsNullOrEmpty(footerText) && footerText.Contains(farmName))
+                {
+                    return true;
+                }
+
+                return false;
             });
 
             // Jeśli nie udało się dopasować po nazwie, weź pierwszą
             matchedFarm ??= farmsMatchedByNip.First();
         }
 
-        // 4. Jeśli nie znaleziono po NIP, szukaj po nazwie
+        // 4. Jeśli nie znaleziono po NIP, szukaj po nazwie (w danych faktury i stopce)
         if (matchedFarm == null)
         {
             matchedFarm = allFarms.FirstOrDefault(f =>
@@ -339,10 +362,22 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                 if (string.IsNullOrEmpty(farmName))
                     return false;
 
-                return (!string.IsNullOrEmpty(sellerName) && sellerName.Contains(farmName)) ||
-                       (!string.IsNullOrEmpty(buyerName) && buyerName.Contains(farmName)) ||
-                       (!string.IsNullOrEmpty(sellerName) && farmName.Contains(sellerName)) ||
-                       (!string.IsNullOrEmpty(buyerName) && farmName.Contains(buyerName));
+                // Sprawdź w nazwie sprzedawcy/nabywcy
+                if ((!string.IsNullOrEmpty(sellerName) && sellerName.Contains(farmName)) ||
+                    (!string.IsNullOrEmpty(buyerName) && buyerName.Contains(farmName)) ||
+                    (!string.IsNullOrEmpty(sellerName) && farmName.Contains(sellerName)) ||
+                    (!string.IsNullOrEmpty(buyerName) && farmName.Contains(buyerName)))
+                {
+                    return true;
+                }
+
+                // Sprawdź w stopce faktury (np. "Miejsce rozładunku: Jaworowo Kłódź K5")
+                if (!string.IsNullOrEmpty(footerText) && footerText.Contains(farmName))
+                {
+                    return true;
+                }
+
+                return false;
             });
         }
 

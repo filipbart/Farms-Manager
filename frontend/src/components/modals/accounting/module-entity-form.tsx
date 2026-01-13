@@ -47,6 +47,7 @@ interface ModuleEntityFormProps {
     netAmount: number;
     vatAmount: number;
     lineItems?: KSeFLineItem[];
+    footer?: string;
   };
   farms: FarmRowModel[];
   selectedFarmId: string;
@@ -223,20 +224,23 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
         if (farm?.henhouses) {
           setHenhouses(farm.henhouses);
 
-          // Auto-detect henhouse from invoice text (line items, seller name, etc.)
+          // Auto-detect henhouse from invoice text (line items, seller name, footer/uwagi)
           const searchableText = [
             invoiceData.sellerName,
             invoiceData.buyerName,
             ...(invoiceData.lineItems?.map((item) => item.name) || []),
+            invoiceData.footer, // Stopka faktury - może zawierać "Miejsce rozładunku: Jaworowo Kłódź K5"
           ]
             .filter(Boolean)
             .join(" ")
             .toLowerCase();
 
-          // Find henhouse by name match in invoice text
-          const matchedHenhouse = farm.henhouses.find((h) =>
-            searchableText.includes(h.name.toLowerCase())
-          );
+          // Find henhouse by name or code match in invoice text
+          const matchedHenhouse = farm.henhouses.find((h) => {
+            const henhouseName = h.name.toLowerCase();
+            // Sprawdź czy nazwa kurnika występuje w tekście
+            return searchableText.includes(henhouseName);
+          });
           if (matchedHenhouse && !feedForm.getValues("henhouseId")) {
             feedForm.setValue("henhouseId", matchedHenhouse.id);
           }
