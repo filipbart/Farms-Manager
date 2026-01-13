@@ -856,13 +856,13 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                 <ListItemIcon>
                   <PictureAsPdfIcon fontSize="small" color="error" />
                 </ListItemIcon>
-                <ListItemText>Pobierz PDF</ListItemText>
+                <ListItemText>PDF</ListItemText>
               </MenuItem>
               <MenuItem onClick={handleDownloadXml} disabled={!details?.hasXml}>
                 <ListItemIcon>
                   <CodeIcon fontSize="small" color="secondary" />
                 </ListItemIcon>
-                <ListItemText>Pobierz XML (KSeF)</ListItemText>
+                <ListItemText>XML (KSeF)</ListItemText>
               </MenuItem>
             </Menu>
           </Box>
