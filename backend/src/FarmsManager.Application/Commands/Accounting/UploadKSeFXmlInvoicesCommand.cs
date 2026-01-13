@@ -85,6 +85,7 @@ public class UploadKSeFXmlInvoicesCommandHandler : IRequestHandler<UploadKSeFXml
                 var invoiceDate = parsedInvoice.Fa?.P_1 != null 
                     ? DateOnly.FromDateTime(parsedInvoice.Fa.P_1) 
                     : DateOnly.FromDateTime(DateTime.UtcNow);
+                var paymentDueDate = ParsePaymentDueDate(parsedInvoice.Fa?.Platnosc?.TerminyPlatnosci?.FirstOrDefault()?.Termin);
                 var sellerNip = parsedInvoice.Podmiot1?.DaneIdentyfikacyjne?.NIP ?? "";
                 var sellerName = parsedInvoice.Podmiot1?.DaneIdentyfikacyjne?.Nazwa ?? "";
                 var buyerNip = parsedInvoice.Podmiot2?.DaneIdentyfikacyjne?.NIP ?? "";
@@ -140,6 +141,7 @@ public class UploadKSeFXmlInvoicesCommandHandler : IRequestHandler<UploadKSeFXml
                     kSeFNumber: kSeFNumber,
                     invoiceNumber: invoiceNumber,
                     invoiceDate: invoiceDate,
+                    paymentDueDate: paymentDueDate,
                     sellerNip: sellerNip,
                     sellerName: sellerName,
                     buyerNip: buyerNip,
@@ -247,6 +249,14 @@ public class UploadKSeFXmlInvoicesCommandHandler : IRequestHandler<UploadKSeFXml
             "PaidTransfer" => KSeFPaymentStatus.PaidTransfer,
             _ => KSeFPaymentStatus.Unpaid
         };
+    }
+
+    private static DateOnly? ParsePaymentDueDate(DateTime? terminPlatnosci)
+    {
+        if (!terminPlatnosci.HasValue)
+            return null;
+
+        return DateOnly.FromDateTime(terminPlatnosci.Value);
     }
 }
 

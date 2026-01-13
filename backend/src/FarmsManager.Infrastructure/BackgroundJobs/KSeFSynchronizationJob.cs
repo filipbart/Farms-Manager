@@ -452,7 +452,7 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
             kSeFNumber: invoiceItem.KsefNumber,
             invoiceNumber: invoiceItem.InvoiceNumber,
             invoiceDate: invoiceItem.InvoiceDate,
-            paymentDueDate: ParsePaymentDueDate(parsedInvoice?.Fa?.Platnosc?.TerminPlatnosci),
+            paymentDueDate: ParsePaymentDueDate(parsedInvoice?.Fa?.Platnosc?.TerminyPlatnosci?.FirstOrDefault()?.Termin),
             sellerNip: invoiceItem.SellerNip,
             sellerName: invoiceItem.SellerName,
             buyerNip: invoiceItem.BuyerNip,
@@ -507,17 +507,12 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
     /// <summary>
     /// Parsuje termin płatności z XML KSeF
     /// </summary>
-    private static DateOnly? ParsePaymentDueDate(string terminPlatnosci)
+    private static DateOnly? ParsePaymentDueDate(DateTime? terminPlatnosci)
     {
-        if (string.IsNullOrWhiteSpace(terminPlatnosci))
+        if (!terminPlatnosci.HasValue)
             return null;
 
-        if (DateTime.TryParse(terminPlatnosci, out var dateTime))
-        {
-            return DateOnly.FromDateTime(dateTime);
-        }
-
-        return null;
+        return DateOnly.FromDateTime(terminPlatnosci.Value);
     }
 
     /// <summary>

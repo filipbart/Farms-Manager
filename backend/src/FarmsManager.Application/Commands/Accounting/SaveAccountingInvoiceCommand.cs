@@ -155,6 +155,13 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
             throw new Exception("Nieprawidłowy format daty faktury");
         }
 
+        // Parsuj termin płatności (opcjonalny)
+        DateOnly? paymentDueDate = null;
+        if (!string.IsNullOrWhiteSpace(data.DueDate) && DateOnly.TryParse(data.DueDate, out var parsedDueDate))
+        {
+            paymentDueDate = parsedDueDate;
+        }
+
         // Określ kierunek faktury
         var invoiceDirection = data.InvoiceType == "Sales"
             ? KSeFInvoiceDirection.Sales
@@ -173,6 +180,7 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
             kSeFNumber: $"MANUAL-{data.DraftId}",
             invoiceNumber: data.InvoiceNumber,
             invoiceDate: invoiceDate,
+            paymentDueDate: paymentDueDate,
             sellerNip: data.SellerNip?.Replace("PL", "").Replace("-", "").Replace(" ", "").Trim(),
             sellerName: data.SellerName,
             buyerNip: data.BuyerNip?.Replace("PL", "").Replace("-", "").Replace(" ", "").Trim(),
