@@ -50,6 +50,7 @@ interface ModuleEntityFormProps {
     lineItems?: KSeFLineItem[];
     footer?: string;
     additionalDescriptions?: { key?: string; value?: string }[];
+    bankAccountNumber?: string;
   };
   farms: FarmRowModel[];
   selectedFarmId: string;
@@ -160,7 +161,7 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
         cycleId: selectedCycleId || "",
         henhouseId: "",
         invoiceNumber: invoiceData.invoiceNumber,
-        bankAccountNumber: "",
+        bankAccountNumber: invoiceData.bankAccountNumber || "",
         vendorName: invoiceData.sellerName,
         itemName: "",
         quantity: 0,

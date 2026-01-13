@@ -1687,6 +1687,8 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                         footer: parsedXml?.footer,
                         additionalDescriptions:
                           parsedXml?.additionalDescriptions,
+                        bankAccountNumber:
+                          parsedXml?.payment?.bankAccounts?.[0]?.accountNumber,
                       }}
                       farms={farms}
                       selectedFarmId={editForm.farmId}

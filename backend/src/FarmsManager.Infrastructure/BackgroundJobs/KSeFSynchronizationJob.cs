@@ -145,17 +145,37 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                 {
                     var invoiceXml = await ksefService.GetInvoiceXmlAsync(invoiceSummary.KsefNumber, cancellationToken);
 
-                    // Dopasuj podmiot gospodarczy, fermę i cykl po NIP lub nazwie (uwzględniając stopkę faktury)
-                    var (taxBusinessEntityId, farmId, cycleId) =
+                    // Krok 1: Dopasuj podmiot gospodarczy po NIP lub nazwie
+                    var (taxBusinessEntityId, fallbackFarmId, fallbackCycleId) =
                         MatchTaxBusinessEntityAndFarm(invoiceSummary, taxBusinessEntities, allFarms, invoiceXml, xmlParser);
 
+                    // Krok 2: Utwórz encję faktury (bez fermy na razie - ferma będzie przypisana przez reguły lub fallback)
                     var invoiceEntity = CreateInvoiceEntity(invoiceSummary, invoiceXml, xmlParser, taxBusinessEntityId,
-                        farmId, cycleId);
+                        farmId: null, cycleId: null);
 
                     // Sprawdź czy faktura wymaga powiązania z inną fakturą
                     if (InvoiceRequiresLinking(invoiceSummary.InvoiceType))
                     {
                         invoiceEntity.MarkAsRequiresLinking();
+                    }
+
+                    // Krok 3: PRIORYTET 1 - Automatyczne przypisanie fermy na podstawie reguł (InvoiceFarmAssignmentRuleEntity)
+                    var ruleAssignedFarmId = await invoiceAssignmentService.FindFarmForInvoiceAsync(invoiceEntity, cancellationToken);
+                    if (ruleAssignedFarmId.HasValue)
+                    {
+                        var assignedFarm = allFarms.FirstOrDefault(f => f.Id == ruleAssignedFarmId.Value);
+                        var assignedCycleId = assignedFarm?.ActiveCycleId;
+                        
+                        invoiceEntity.Update(farmId: ruleAssignedFarmId.Value, cycleId: assignedCycleId);
+                        _logger.LogDebug("Invoice {KsefNumber} assigned to farm {FarmId} by RULE with cycle {CycleId}", 
+                            invoiceSummary.KsefNumber, ruleAssignedFarmId.Value, assignedCycleId);
+                    }
+                    // Krok 4: PRIORYTET 2 - Fallback do dopasowania po NIP/nazwie (jeśli reguły nie dopasowały)
+                    else if (fallbackFarmId.HasValue)
+                    {
+                        invoiceEntity.Update(farmId: fallbackFarmId.Value, cycleId: fallbackCycleId);
+                        _logger.LogDebug("Invoice {KsefNumber} assigned to farm {FarmId} by NIP/NAME match with cycle {CycleId}", 
+                            invoiceSummary.KsefNumber, fallbackFarmId.Value, fallbackCycleId);
                     }
 
                     // Automatyczne przypisanie pracownika na podstawie reguł
@@ -177,22 +197,6 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                         invoiceEntity.Update(moduleType: assignedModule.Value);
                         _logger.LogDebug("Invoice {KsefNumber} auto-assigned to module {ModuleType}",
                             invoiceSummary.KsefNumber, assignedModule.Value);
-                    }
-
-                    // Automatyczne przypisanie fermy na podstawie reguł (jeśli nie została przypisana przez NIP/nazwę)
-                    if (!invoiceEntity.FarmId.HasValue)
-                    {
-                        var assignedFarmId = await invoiceAssignmentService.FindFarmForInvoiceAsync(invoiceEntity, cancellationToken);
-                        if (assignedFarmId.HasValue)
-                        {
-                            // Znajdź aktywny cykl dla przypisanej fermy
-                            var assignedFarm = allFarms.FirstOrDefault(f => f.Id == assignedFarmId.Value);
-                            var assignedCycleId = assignedFarm?.ActiveCycleId;
-                            
-                            invoiceEntity.Update(farmId: assignedFarmId.Value, cycleId: assignedCycleId);
-                            _logger.LogDebug("Invoice {KsefNumber} auto-assigned to farm {FarmId} with cycle {CycleId}", 
-                                invoiceSummary.KsefNumber, assignedFarmId.Value, assignedCycleId);
-                        }
                     }
 
                     await invoiceRepository.AddAsync(invoiceEntity, cancellationToken);
