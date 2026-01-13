@@ -80,6 +80,21 @@ export const getKSeFInvoicesColumns = ({
       // Dla sprzedaży pokazujemy NIP nabywcy, dla zakupu NIP sprzedawcy
       return row.invoiceType === "Sales" ? row.buyerNip : row.sellerNip;
     },
+    valueFormatter: (value: string) => {
+      if (!value) return "—";
+
+      // Usuń wszystkie znaki niebędące cyframi
+      const cleanNip = value.replace(/\D/g, "");
+
+      // Sprawdź czy mamy 10 cyfr
+      if (cleanNip.length !== 10) return value;
+
+      // Formatuj NIP w polskim formacie ze spacjami: XXX XXX XX XX
+      return `${cleanNip.slice(0, 3)} ${cleanNip.slice(3, 6)} ${cleanNip.slice(
+        6,
+        8
+      )} ${cleanNip.slice(8, 10)}`;
+    },
   },
   {
     field: "buyerName",
