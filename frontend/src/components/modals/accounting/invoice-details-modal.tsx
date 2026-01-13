@@ -32,7 +32,6 @@ import {
   Select,
   MenuItem,
   ButtonGroup,
-  IconButton,
   Menu,
   ListItemIcon,
   ListItemText,
@@ -839,14 +838,15 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
         >
           <span>Szczegóły faktury {invoice?.invoiceNumber || ""}</span>
           <Box>
-            <IconButton
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<DownloadIcon />}
               onClick={(e) => setDownloadMenuAnchor(e.currentTarget)}
               disabled={downloading || !details}
-              size="small"
-              title="Pobierz fakturę"
             >
-              <DownloadIcon />
-            </IconButton>
+              Pobierz
+            </Button>
             <Menu
               anchorEl={downloadMenuAnchor}
               open={Boolean(downloadMenuAnchor)}
