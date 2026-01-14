@@ -214,6 +214,18 @@ const ExpenseProductionPage: React.FC = () => {
     [isAdmin, downloadingFilePath, deleteExpenseProduction]
   );
 
+  const sortModel = useMemo(() => {
+    if (filters.orderBy) {
+      return [
+        {
+          field: mapExpenseProductionOrderTypeToField(filters.orderBy),
+          sort: filters.isDescending ? ("desc" as const) : ("asc" as const),
+        },
+      ];
+    }
+    return [];
+  }, [filters.orderBy, filters.isDescending]);
+
   const handleCloseSaveInvoicesModal = () => {
     setDraftExpenseInvoices([]);
     setOpenSaveInvoicesModal(false);
@@ -368,6 +380,7 @@ const ExpenseProductionPage: React.FC = () => {
             },
           }}
           sortingMode="server"
+          sortModel={sortModel}
           onSortModelChange={(model) => {
             const sortOptions = getSortOptionsFromGridModel(
               model,
