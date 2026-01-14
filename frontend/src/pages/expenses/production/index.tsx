@@ -38,7 +38,38 @@ import { useAuth } from "../../../auth/useAuth";
 const ExpenseProductionPage: React.FC = () => {
   const { userData } = useAuth();
   const isAdmin = userData?.isAdmin ?? false;
-  const [filters, dispatch] = useReducer(filterReducer, initialFilters);
+  const [filters, dispatch] = useReducer(
+    filterReducer,
+    initialFilters,
+    (init) => {
+      const savedState = localStorage.getItem("expensesProductionGridState");
+      const savedPageSize = localStorage.getItem("expensesProductionPageSize");
+
+      let initialized = { ...init };
+
+      if (savedPageSize) {
+        initialized.pageSize = parseInt(savedPageSize, 10);
+      }
+
+      if (savedState) {
+        try {
+          const state = JSON.parse(savedState);
+          if (state.sorting?.sortModel && state.sorting.sortModel.length > 0) {
+            const sortOptions = getSortOptionsFromGridModel(
+              state.sorting.sortModel,
+              ExpensesProductionsOrderType,
+              mapExpenseProductionOrderTypeToField
+            );
+            initialized = { ...initialized, ...sortOptions };
+          }
+        } catch (e) {
+          console.error("Error parsing saved grid state:", e);
+        }
+      }
+
+      return initialized;
+    }
+  );
   const [dictionary, setDictionary] = useState<ExpensesProductionsDictionary>();
   const [openAddExpenseProductionModal, setOpenAddExpenseProductionModal] =
     useState(false);
@@ -382,6 +413,19 @@ const ExpenseProductionPage: React.FC = () => {
           sortingMode="server"
           sortModel={sortModel}
           onSortModelChange={(model) => {
+            // Zapisz sortModel do localStorage
+            const savedState = localStorage.getItem(
+              "expensesProductionGridState"
+            );
+            const currentState = savedState ? JSON.parse(savedState) : {};
+            localStorage.setItem(
+              "expensesProductionGridState",
+              JSON.stringify({
+                ...currentState,
+                sorting: { sortModel: model },
+              })
+            );
+
             const sortOptions = getSortOptionsFromGridModel(
               model,
               ExpensesProductionsOrderType,
