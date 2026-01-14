@@ -5,6 +5,7 @@ using FarmsManager.Domain.Aggregates.AccountingAggregate.Entities;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
+using KSeF.Client.Core.Models.Invoices.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -521,17 +522,17 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
     /// <summary>
     /// Sprawdza czy typ faktury wymaga powiązania z inną fakturą
     /// </summary>
-    private static bool InvoiceRequiresLinking(KSeF.Client.Core.Models.Invoices.Common.InvoiceType invoiceType)
+    private static bool InvoiceRequiresLinking(InvoiceType invoiceType)
     {
         return invoiceType switch
         {
-            KSeF.Client.Core.Models.Invoices.Common.InvoiceType.Zal => true, // Zaliczkowa
-            KSeF.Client.Core.Models.Invoices.Common.InvoiceType.Roz => true, // Rozliczeniowa
-            KSeF.Client.Core.Models.Invoices.Common.InvoiceType.Kor => true, // Korygująca
-            KSeF.Client.Core.Models.Invoices.Common.InvoiceType.KorZal => true, // Korygująca zaliczkową
-            KSeF.Client.Core.Models.Invoices.Common.InvoiceType.KorRoz => true, // Korygująca rozliczeniową
-            KSeF.Client.Core.Models.Invoices.Common.InvoiceType.KorPef => true, // PEF Korygująca
-            KSeF.Client.Core.Models.Invoices.Common.InvoiceType.KorVatRr => true, // RR Korygująca
+            InvoiceType.Zal => true, // Zaliczkowa
+            InvoiceType.Roz => true, // Rozliczeniowa
+            InvoiceType.Kor => true, // Korygująca
+            InvoiceType.KorZal => true, // Korygująca zaliczkową
+            InvoiceType.KorRoz => true, // Korygująca rozliczeniową
+            InvoiceType.KorPef => true, // PEF Korygująca
+            InvoiceType.KorVatRr => true, // RR Korygująca
             _ => false
         };
     }
