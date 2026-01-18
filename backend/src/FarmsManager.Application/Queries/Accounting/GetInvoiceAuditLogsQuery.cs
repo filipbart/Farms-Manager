@@ -1,8 +1,6 @@
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
-using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
 using FarmsManager.Domain.Exceptions;
-using FarmsManager.Shared.Extensions;
 using MediatR;
 
 namespace FarmsManager.Application.Queries.Accounting;

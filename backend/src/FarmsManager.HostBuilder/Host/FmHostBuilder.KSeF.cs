@@ -1,6 +1,7 @@
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models.KSeF;
 using FarmsManager.Infrastructure.BackgroundJobs;
+using KSeF.Client.Api.Services;
 using KSeF.Client.DI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,8 +17,8 @@ public partial class FmHostBuilder
         ConfigureServices(services =>
         {
             var kSeFOptions = ConfigurationRoot.GetSection("KSeF").Get<KSeFClientOptions>();
-            services.AddKSeFClient(options => { options.BaseUrl = kSeFOptions?.BaseUrl ?? KsefEnviromentsUris.TEST; });
-            services.AddCryptographyClient(options => { }, null);
+            services.AddKSeFClient(options => { options.BaseUrl = kSeFOptions?.BaseUrl ?? KsefEnvironmentsUris.TEST; });
+            services.AddCryptographyClient(CryptographyServiceWarmupMode.NonBlocking);
             
             // Konfiguracja synchronizacji KSeF
             services.Configure<KSeFSyncConfiguration>(ConfigurationRoot.GetSection("KSeFSyncConfiguration"));

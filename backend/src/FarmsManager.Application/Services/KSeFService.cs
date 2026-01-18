@@ -3,6 +3,7 @@ using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models.KSeF;
 using FarmsManager.Shared.Extensions;
 using KSeF.Client.Api.Builders.Auth;
+using KSeF.Client.Api.Builders.Online;
 using KSeF.Client.Core.Interfaces.Clients;
 using KSeF.Client.Core.Interfaces.Services;
 using KSeF.Client.Core.Models.Authorization;
@@ -59,7 +60,7 @@ public class KSeFService : IKSeFService
             var filters = new InvoiceQueryFilters
             {
                 //Subject1 - my jako sprzedawca, Subject2 - my jako kupujący
-                SubjectType = SubjectType.Subject1,
+                SubjectType = InvoiceSubjectType.Subject1,
                 DateRange = new DateRange
                 {
                     DateType = DateType.PermanentStorage,
@@ -124,11 +125,11 @@ public class KSeFService : IKSeFService
 
             // Pobranie faktur jako sprzedawca (Sales)
             var salesInvoices = await GetAllInvoicesForSubjectAsync(
-                SubjectType.Subject1, dateRange, pageSize, KSeFInvoiceItemDirection.Sales, cancellationToken);
+                InvoiceSubjectType.Subject1, dateRange, pageSize, KSeFInvoiceItemDirection.Sales, cancellationToken);
 
             // Pobranie faktur jako kupujący (Purchase)
             var purchaseInvoices = await GetAllInvoicesForSubjectAsync(
-                SubjectType.Subject2, dateRange, pageSize, KSeFInvoiceItemDirection.Purchase, cancellationToken);
+                InvoiceSubjectType.Subject2, dateRange, pageSize, KSeFInvoiceItemDirection.Purchase, cancellationToken);
 
             // Połączenie wyników z deduplikacją po KsefNumber
             var combined = salesInvoices
@@ -148,7 +149,7 @@ public class KSeFService : IKSeFService
     }
 
     private async Task<List<KSeFInvoiceSyncItem>> GetAllInvoicesForSubjectAsync(
-        SubjectType subjectType,
+        InvoiceSubjectType subjectType,
         DateRange dateRange,
         int pageSize,
         KSeFInvoiceItemDirection direction,
@@ -298,16 +299,16 @@ public class KSeFService : IKSeFService
 
         var openOnlineSessionRequest = OpenOnlineSessionRequestBuilder.Create()
             .WithFormCode(
-                SystemCodeHelper.GetSystemCode(SystemCodeEnum.FA3),
-                SystemCodeHelper.GetSchemaVersion(SystemCodeEnum.FA3),
-                SystemCodeHelper.GetValue(SystemCodeEnum.FA3))
+                SystemCodeHelper.GetSystemCode(SystemCode.FA3),
+                SystemCodeHelper.GetSchemaVersion(SystemCode.FA3),
+                SystemCodeHelper.GetValue(SystemCode.FA3))
             .WithEncryption(
                 encryptionData.EncryptionInfo.EncryptedSymmetricKey,
                 encryptionData.EncryptionInfo.InitializationVector)
             .Build();
 
         var openOnlineSessionResponse = await _ksefClient.OpenOnlineSessionAsync(
-            openOnlineSessionRequest, _sessionToken, cancellationToken);
+            openOnlineSessionRequest, _sessionToken, null, cancellationToken);
 
         var invoiceBytes = Encoding.UTF8.GetBytes(preparedContent);
         var encryptedInvoice = _cryptographyService.EncryptBytesWithAES256(
