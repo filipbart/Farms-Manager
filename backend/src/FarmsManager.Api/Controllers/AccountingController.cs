@@ -5,12 +5,12 @@ using FarmsManager.Application.Commands.Accounting;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Permissions;
 using FarmsManager.Application.Queries.Accounting;
-using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
 using FarmsManager.Application.Queries.Accounting.GetKSeFInvoiceDetails;
 using FarmsManager.Application.Queries.Accounting.GetKSeFInvoicesFromDb;
 using FarmsManager.Application.Queries.Accounting.GetKSeFInvoicePdf;
 using FarmsManager.Application.Queries.Accounting.GetKSeFInvoiceXml;
 using FarmsManager.Application.Queries.Accounting.GetInvoicesZip;
+using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -378,6 +378,90 @@ public class AccountingController : BaseController
         var result = await _mediator.Send(command);
         return Ok(result);
     }
+
+    /// <summary>
+    /// Synchronizuje status płatności między fakturą KSeF a powiązanym modułem
+    /// </summary>
+    [HttpPost("invoices/{invoiceId:guid}/sync-payment-status")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> SyncPaymentStatus(Guid invoiceId, [FromBody] SyncPaymentStatusRequest request)
+    {
+        var result = await _mediator.Send(new SyncPaymentStatusCommand(invoiceId, request.Direction, request.NewPaymentStatus));
+        return Ok(result);
+    }
+
+    #region Attachments
+
+    /// <summary>
+    /// Przesyła załącznik do faktury
+    /// </summary>
+    [HttpPost("invoices/{invoiceId:guid}/attachments")]
+    [ProducesResponseType(typeof(BaseResponse<InvoiceAttachmentDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> UploadAttachment(Guid invoiceId, [FromForm] IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+        {
+            return BadRequest(new { error = "Nie przesłano pliku" });
+        }
+
+        var result = await _mediator.Send(new UploadInvoiceAttachmentCommand(invoiceId, file));
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Pobiera załącznik faktury
+    /// </summary>
+    [HttpGet("invoices/{invoiceId:guid}/attachments/{attachmentId:guid}")]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DownloadAttachment(Guid invoiceId, Guid attachmentId)
+    {
+        var result = await _mediator.Send(new DownloadInvoiceAttachmentQuery(invoiceId, attachmentId));
+        return File(result.Content, result.ContentType, result.FileName);
+    }
+
+    /// <summary>
+    /// Usuwa załącznik faktury
+    /// </summary>
+    [HttpDelete("invoices/{invoiceId:guid}/attachments/{attachmentId:guid}")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteAttachment(Guid invoiceId, Guid attachmentId)
+    {
+        var result = await _mediator.Send(new DeleteInvoiceAttachmentCommand(invoiceId, attachmentId));
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Pobiera listę załączników faktury
+    /// </summary>
+    [HttpGet("invoices/{invoiceId:guid}/attachments")]
+    [ProducesResponseType(typeof(BaseResponse<List<InvoiceAttachmentDto>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAttachments(Guid invoiceId)
+    {
+        var result = await _mediator.Send(new GetInvoiceAttachmentsQuery(invoiceId));
+        return Ok(result);
+    }
+
+    #endregion
+
+    #region Audit Logs
+
+    /// <summary>
+    /// Pobiera historię audytu faktury
+    /// </summary>
+    [HttpGet("invoices/{invoiceId:guid}/audit-logs")]
+    [ProducesResponseType(typeof(BaseResponse<List<InvoiceAuditLogDto>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetInvoiceAuditLogs(Guid invoiceId)
+    {
+        var result = await _mediator.Send(new GetInvoiceAuditLogsQuery(invoiceId));
+        return Ok(result);
+    }
+
+    #endregion
 }
 
 /// <summary>
@@ -390,4 +474,47 @@ public class AcceptKSeFInvoiceRequest
     public CreateGasDeliveryFromKSeFDto? GasData { get; set; }
     public CreateExpenseProductionFromKSeFDto? ExpenseData { get; set; }
     public CreateSaleInvoiceFromKSeFDto? SaleData { get; set; }
+}
+
+/// <summary>
+/// DTO załącznika faktury
+/// </summary>
+public class InvoiceAttachmentDto
+{
+    public Guid Id { get; set; }
+    public string FileName { get; set; }
+    public long FileSize { get; set; }
+    public string ContentType { get; set; }
+    public DateTime UploadedAt { get; set; }
+    public string UploadedByName { get; set; }
+}
+
+/// <summary>
+/// DTO logu audytu faktury
+/// </summary>
+public class InvoiceAuditLogDto
+{
+    public Guid Id { get; set; }
+    public string Action { get; set; }
+    public string PreviousStatus { get; set; }
+    public string NewStatus { get; set; }
+    public string UserName { get; set; }
+    public string Comment { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
+
+/// <summary>
+/// Request do synchronizacji statusu płatności
+/// </summary>
+public class SyncPaymentStatusRequest
+{
+    /// <summary>
+    /// Kierunek synchronizacji: "ToAccounting" lub "FromAccounting"
+    /// </summary>
+    public string Direction { get; set; }
+    
+    /// <summary>
+    /// Nowy status płatności (wymagany tylko dla Direction="FromAccounting")
+    /// </summary>
+    public string NewPaymentStatus { get; set; }
 }

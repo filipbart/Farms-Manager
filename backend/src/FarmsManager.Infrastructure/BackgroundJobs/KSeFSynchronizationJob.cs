@@ -85,6 +85,7 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
         var xmlParser = scope.ServiceProvider.GetRequiredService<IKSeFInvoiceXmlParser>();
         var dbContext = scope.ServiceProvider.GetRequiredService<FarmsManagerContext>();
         var invoiceAssignmentService = scope.ServiceProvider.GetRequiredService<IInvoiceAssignmentService>();
+        var contractorAutoCreationService = scope.ServiceProvider.GetRequiredService<IContractorAutoCreationService>();
 
         // Pobierz wszystkie podmioty gospodarcze do dopasowania (wraz z fermami)
         var taxBusinessEntities = await dbContext.Set<TaxBusinessEntity>()
@@ -198,6 +199,22 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                         invoiceEntity.Update(moduleType: assignedModule.Value);
                         _logger.LogDebug("Invoice {KsefNumber} auto-assigned to module {ModuleType}",
                             invoiceSummary.KsefNumber, assignedModule.Value);
+
+                        // Automatyczne tworzenie kontrahenta jeśli nie istnieje
+                        try
+                        {
+                            await contractorAutoCreationService.EnsureContractorExistsAsync(
+                                invoiceSummary.SellerNip,
+                                invoiceSummary.SellerName,
+                                null,
+                                assignedModule.Value,
+                                cancellationToken);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "Failed to auto-create contractor for invoice {KsefNumber}", 
+                                invoiceSummary.KsefNumber);
+                        }
                     }
 
                     await invoiceRepository.AddAsync(invoiceEntity, cancellationToken);

@@ -52,7 +52,10 @@ public class KSeFInvoiceProfile : Profile
             .ForMember(d => d.AssignedUserId, opt => opt.MapFrom(s => s.AssignedUserId))
             .ForMember(d => d.AssignedUserName, opt => opt.MapFrom(s => s.AssignedUser != null ? s.AssignedUser.Name : null))
             .ForMember(d => d.CreatedAt, opt => opt.MapFrom(s => s.DateCreatedUtc))
-            .ForMember(d => d.CreatedBy, opt => opt.MapFrom(s => s.Creator != null ? s.Creator.Name : null));
+            .ForMember(d => d.CreatedBy, opt => opt.MapFrom(s => s.Creator != null ? s.Creator.Name : null))
+            .ForMember(d => d.PaymentDate, opt => opt.MapFrom(s => s.PaymentDate))
+            .ForMember(d => d.AttachmentsCount, opt => opt.MapFrom(s => s.Attachments != null ? s.Attachments.Count(a => a.DateDeletedUtc == null) : 0))
+            .ForMember(d => d.AuditLogsCount, opt => opt.MapFrom(s => s.AuditLogs != null ? s.AuditLogs.Count(a => a.DateDeletedUtc == null) : 0));
 
         // XML Model -> KSeFInvoiceDetails (dla parsowania XML z KSeF API)
         CreateMap<KSeFInvoiceXml, KSeFInvoiceDetails>()

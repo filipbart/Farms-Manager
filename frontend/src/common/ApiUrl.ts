@@ -405,4 +405,21 @@ export default class ApiUrl {
     this.AccountingInvoices + "/transfer-to-office";
   public static AccountingDownloadZip =
     this.AccountingInvoices + "/download-zip";
+
+  // Accounting - Attachments
+  public static AccountingInvoiceAttachments = (invoiceId: string) =>
+    this.AccountingInvoices + "/" + invoiceId + "/attachments";
+  public static AccountingInvoiceAttachment = (
+    invoiceId: string,
+    attachmentId: string
+  ) =>
+    this.AccountingInvoices + "/" + invoiceId + "/attachments/" + attachmentId;
+
+  // Accounting - Audit Logs
+  public static AccountingInvoiceAuditLogs = (invoiceId: string) =>
+    this.AccountingInvoices + "/" + invoiceId + "/audit-logs";
+
+  // Accounting - Payment Status Sync
+  public static AccountingSyncPaymentStatus = (invoiceId: string) =>
+    this.AccountingInvoices + "/" + invoiceId + "/sync-payment-status";
 }

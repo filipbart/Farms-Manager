@@ -93,6 +93,10 @@ const AccountingPage: React.FC = () => {
   const [deleting, setDeleting] = useState(false);
   const [users, setUsers] = useState<UserListModel[]>([]);
 
+  // Sequential processing state
+  const [sequentialMode, setSequentialMode] = useState(false);
+  const [sequentialIndex, setSequentialIndex] = useState(0);
+
   // Fetch users for filter
   useEffect(() => {
     const fetchUsers = async () => {
@@ -249,6 +253,41 @@ const AccountingPage: React.FC = () => {
   const handleViewDetails = (invoice: KSeFInvoiceListModel) => {
     setSelectedInvoice(invoice);
     setDetailsModalOpen(true);
+  };
+
+  // Sequential processing handlers
+  const handleStartSequential = () => {
+    if (invoices.length === 0) {
+      toast.warning("Brak faktur do przeglądania");
+      return;
+    }
+    setSequentialIndex(0);
+    setSelectedInvoice(invoices[0]);
+    setSequentialMode(true);
+    setDetailsModalOpen(true);
+  };
+
+  const handleSequentialNext = () => {
+    if (sequentialIndex < invoices.length - 1) {
+      const nextIndex = sequentialIndex + 1;
+      setSequentialIndex(nextIndex);
+      setSelectedInvoice(invoices[nextIndex]);
+    }
+  };
+
+  const handleSequentialPrevious = () => {
+    if (sequentialIndex > 0) {
+      const prevIndex = sequentialIndex - 1;
+      setSequentialIndex(prevIndex);
+      setSelectedInvoice(invoices[prevIndex]);
+    }
+  };
+
+  const handleExitSequential = () => {
+    setSequentialMode(false);
+    setDetailsModalOpen(false);
+    setSelectedInvoice(null);
+    fetchInvoices();
   };
 
   const handleDownloadPdf = async (invoice: KSeFInvoiceListModel) => {
@@ -461,6 +500,14 @@ const AccountingPage: React.FC = () => {
         <Box display="flex" gap={2}>
           <Button
             variant="outlined"
+            color="info"
+            onClick={handleStartSequential}
+            disabled={invoices.length === 0}
+          >
+            Przeglądaj faktury ({invoices.length})
+          </Button>
+          <Button
+            variant="outlined"
             color="error"
             startIcon={<MdDeleteForever />}
             onClick={handleDeleteAllInvoices}
@@ -541,9 +588,18 @@ const AccountingPage: React.FC = () => {
         onClose={() => {
           setDetailsModalOpen(false);
           setSelectedInvoice(null);
+          if (sequentialMode) {
+            setSequentialMode(false);
+          }
         }}
         onSave={fetchInvoices}
         invoice={selectedInvoice}
+        sequentialMode={sequentialMode}
+        currentIndex={sequentialIndex}
+        totalCount={invoices.length}
+        onNext={handleSequentialNext}
+        onPrevious={handleSequentialPrevious}
+        onExitSequential={handleExitSequential}
       />
 
       <UploadInvoiceModal

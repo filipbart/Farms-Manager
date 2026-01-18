@@ -44,11 +44,19 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DownloadIcon from "@mui/icons-material/Download";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import CodeIcon from "@mui/icons-material/Code";
+import AttachFileIcon from "@mui/icons-material/AttachFile";
+import DeleteIcon from "@mui/icons-material/Delete";
+import HistoryIcon from "@mui/icons-material/History";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { toast } from "react-toastify";
 import AppDialog from "../../common/app-dialog";
 import ApiUrl from "../../../common/ApiUrl";
 import { downloadFile } from "../../../utils/download-file";
-import { AccountingService } from "../../../services/accounting-service";
+import {
+  AccountingService,
+  type InvoiceAttachment,
+  type InvoiceAuditLog,
+} from "../../../services/accounting-service";
 import { FarmsService } from "../../../services/farms-service";
 import { UsersService } from "../../../services/users-service";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
@@ -215,6 +223,13 @@ interface InvoiceDetailsModalProps {
   onClose: () => void;
   onSave?: () => void;
   invoice: KSeFInvoiceListModel | null;
+  // Sequential processing props
+  sequentialMode?: boolean;
+  currentIndex?: number;
+  totalCount?: number;
+  onNext?: () => void;
+  onPrevious?: () => void;
+  onExitSequential?: () => void;
 }
 
 const DetailRow: React.FC<{ label: string; value: React.ReactNode }> = ({
@@ -409,6 +424,12 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
   onClose,
   onSave,
   invoice,
+  sequentialMode = false,
+  currentIndex = 0,
+  totalCount = 0,
+  onNext,
+  onPrevious,
+  onExitSequential,
 }) => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -456,6 +477,16 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
   const [showHoldModal, setShowHoldModal] = useState(false);
   const [holdUserId, setHoldUserId] = useState<string>("");
   const [holdSaving, setHoldSaving] = useState(false);
+
+  // Attachments state
+  const [attachments, setAttachments] = useState<InvoiceAttachment[]>([]);
+  const [attachmentsLoading, setAttachmentsLoading] = useState(false);
+  const [uploadingAttachment, setUploadingAttachment] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Audit logs state
+  const [auditLogs, setAuditLogs] = useState<InvoiceAuditLog[]>([]);
+  const [auditLogsLoading, setAuditLogsLoading] = useState(false);
 
   const parsedXml = useMemo(() => {
     if (!details?.invoiceXml) return null;
@@ -560,6 +591,29 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
     [farms]
   );
 
+  // Helper function to handle auto-next in sequential mode after accept
+  const handleAutoNextAfterAccept = useCallback(() => {
+    if (sequentialMode) {
+      if (currentIndex < totalCount - 1) {
+        // Go to next invoice
+        onNext?.();
+      } else {
+        // Last invoice - close modal and refresh list
+        onSave?.();
+        onExitSequential?.();
+      }
+    } else {
+      onSave?.();
+    }
+  }, [
+    sequentialMode,
+    currentIndex,
+    totalCount,
+    onNext,
+    onSave,
+    onExitSequential,
+  ]);
+
   const handleStatusChange = useCallback(
     async (newStatus: KSeFInvoiceStatus) => {
       if (!details) return;
@@ -573,7 +627,12 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
             setDetails((prev) =>
               prev ? { ...prev, status: newStatus } : null
             );
-            onSave?.();
+            // Auto-next in sequential mode after accepting
+            if (newStatus === KSeFInvoiceStatus.Accepted) {
+              handleAutoNextAfterAccept();
+            } else {
+              onSave?.();
+            }
           },
           undefined,
           "Błąd podczas zmiany statusu"
@@ -582,7 +641,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
         setSaving(false);
       }
     },
-    [details, onSave]
+    [details, onSave, handleAutoNextAfterAccept]
   );
 
   // Hold invoice handler - saves all form changes without changing status
@@ -789,6 +848,113 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
       setDetails(null);
     }
   }, [open, invoice]);
+
+  // Fetch attachments when details are loaded
+  useEffect(() => {
+    const fetchAttachments = async () => {
+      if (!details) return;
+      setAttachmentsLoading(true);
+      try {
+        const response = await AccountingService.getAttachments(details.id);
+        if (response.success && response.responseData) {
+          setAttachments(response.responseData);
+        }
+      } catch {
+        // Ignore errors
+      } finally {
+        setAttachmentsLoading(false);
+      }
+    };
+    fetchAttachments();
+  }, [details?.id]);
+
+  // Fetch audit logs when details are loaded
+  useEffect(() => {
+    const fetchAuditLogs = async () => {
+      if (!details) return;
+      setAuditLogsLoading(true);
+      try {
+        const response = await AccountingService.getAuditLogs(details.id);
+        if (response.success && response.responseData) {
+          setAuditLogs(response.responseData);
+        }
+      } catch {
+        // Ignore errors
+      } finally {
+        setAuditLogsLoading(false);
+      }
+    };
+    fetchAuditLogs();
+  }, [details?.id]);
+
+  // Handle attachment upload
+  const handleAttachmentUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file || !details) return;
+
+    setUploadingAttachment(true);
+    try {
+      await handleApiResponse(
+        () => AccountingService.uploadAttachment(details.id, file),
+        (data) => {
+          if (data.responseData) {
+            setAttachments((prev) => [data.responseData!, ...prev]);
+            toast.success("Załącznik został dodany");
+          }
+        },
+        undefined,
+        "Błąd podczas dodawania załącznika"
+      );
+    } finally {
+      setUploadingAttachment(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  // Handle attachment download
+  const handleAttachmentDownload = async (attachment: InvoiceAttachment) => {
+    if (!details) return;
+    try {
+      const blob = await AccountingService.downloadAttachment(
+        details.id,
+        attachment.id
+      );
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = attachment.fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch {
+      toast.error("Błąd podczas pobierania załącznika");
+    }
+  };
+
+  // Handle attachment delete
+  const handleAttachmentDelete = async (attachmentId: string) => {
+    if (!details) return;
+    if (!window.confirm("Czy na pewno chcesz usunąć ten załącznik?")) return;
+
+    try {
+      await handleApiResponse(
+        () => AccountingService.deleteAttachment(details.id, attachmentId),
+        () => {
+          setAttachments((prev) => prev.filter((a) => a.id !== attachmentId));
+          toast.success("Załącznik został usunięty");
+        },
+        undefined,
+        "Błąd podczas usuwania załącznika"
+      );
+    } catch {
+      // Error handled by handleApiResponse
+    }
+  };
 
   const formatCurrency = (value: number | undefined) => {
     if (value === undefined || value === null) return "—";
@@ -1420,6 +1586,14 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                             />
                           }
                         />
+                        {details.paymentDate && (
+                          <DetailRow
+                            label="Data płatności"
+                            value={dayjs(details.paymentDate).format(
+                              "YYYY-MM-DD"
+                            )}
+                          />
+                        )}
                       </Box>
                       <Box sx={{ minWidth: 200 }}>
                         <DetailRow
@@ -1477,6 +1651,166 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                     )}
                   </AccordionDetails>
                 </Accordion>
+
+                {/* Attachments Accordion */}
+                <Accordion sx={{ mt: 2 }}>
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <AttachFileIcon fontSize="small" />
+                      <Typography fontWeight={600}>
+                        Załączniki ({attachments.length})
+                      </Typography>
+                    </Box>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <Box sx={{ mb: 2 }}>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        style={{ display: "none" }}
+                        onChange={handleAttachmentUpload}
+                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
+                      />
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        startIcon={<UploadFileIcon />}
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploadingAttachment}
+                      >
+                        {uploadingAttachment
+                          ? "Dodawanie..."
+                          : "Dodaj załącznik"}
+                      </Button>
+                    </Box>
+                    {attachmentsLoading ? (
+                      <CircularProgress size={24} />
+                    ) : attachments.length === 0 ? (
+                      <Typography variant="body2" color="text.secondary">
+                        Brak załączników
+                      </Typography>
+                    ) : (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 1,
+                        }}
+                      >
+                        {attachments.map((attachment) => (
+                          <Box
+                            key={attachment.id}
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              p: 1,
+                              border: 1,
+                              borderColor: "divider",
+                              borderRadius: 1,
+                            }}
+                          >
+                            <Box>
+                              <Typography variant="body2" fontWeight={500}>
+                                {attachment.fileName}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                {(attachment.fileSize / 1024).toFixed(1)} KB •{" "}
+                                {dayjs(attachment.uploadedAt).format(
+                                  "YYYY-MM-DD HH:mm"
+                                )}
+                              </Typography>
+                            </Box>
+                            <Box>
+                              <Button
+                                size="small"
+                                onClick={() =>
+                                  handleAttachmentDownload(attachment)
+                                }
+                              >
+                                <DownloadIcon fontSize="small" />
+                              </Button>
+                              <Button
+                                size="small"
+                                color="error"
+                                onClick={() =>
+                                  handleAttachmentDelete(attachment.id)
+                                }
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </Button>
+                            </Box>
+                          </Box>
+                        ))}
+                      </Box>
+                    )}
+                  </AccordionDetails>
+                </Accordion>
+
+                {/* Audit Logs Accordion */}
+                <Accordion sx={{ mt: 2 }}>
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <HistoryIcon fontSize="small" />
+                      <Typography fontWeight={600}>
+                        Historia zmian ({auditLogs.length})
+                      </Typography>
+                    </Box>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    {auditLogsLoading ? (
+                      <CircularProgress size={24} />
+                    ) : auditLogs.length === 0 ? (
+                      <Typography variant="body2" color="text.secondary">
+                        Brak historii zmian
+                      </Typography>
+                    ) : (
+                      <TableContainer component={Paper} variant="outlined">
+                        <Table size="small">
+                          <TableHead>
+                            <TableRow>
+                              <TableCell>Data</TableCell>
+                              <TableCell>Akcja</TableCell>
+                              <TableCell>Użytkownik</TableCell>
+                              <TableCell>Komentarz</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {auditLogs.map((log) => (
+                              <TableRow key={log.id}>
+                                <TableCell>
+                                  {dayjs(log.createdAt).format(
+                                    "YYYY-MM-DD HH:mm"
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  <Chip
+                                    label={log.actionDescription || log.action}
+                                    size="small"
+                                    variant="outlined"
+                                  />
+                                  {log.previousStatus && log.newStatus && (
+                                    <Typography
+                                      variant="caption"
+                                      sx={{ ml: 1 }}
+                                    >
+                                      {log.previousStatus} → {log.newStatus}
+                                    </Typography>
+                                  )}
+                                </TableCell>
+                                <TableCell>{log.userName}</TableCell>
+                                <TableCell>{log.comment || "—"}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    )}
+                  </AccordionDetails>
+                </Accordion>
               </Paper>
             </Grid>
 
@@ -1496,6 +1830,16 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                   >
                     Zmień status faktury:
                   </Typography>
+                  {!editForm.assignedUserId &&
+                    details.status !== KSeFInvoiceStatus.Accepted && (
+                      <Typography
+                        variant="caption"
+                        color="warning.main"
+                        sx={{ display: "block", mb: 1 }}
+                      >
+                        Przypisz pracownika, aby móc zaakceptować fakturę
+                      </Typography>
+                    )}
                   <ButtonGroup variant="outlined" fullWidth>
                     <Button
                       color="success"
@@ -1507,7 +1851,9 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                       startIcon={<CheckIcon />}
                       onClick={handleAcceptClick}
                       disabled={
-                        saving || details.status === KSeFInvoiceStatus.Accepted
+                        saving ||
+                        details.status === KSeFInvoiceStatus.Accepted ||
+                        !editForm.assignedUserId
                       }
                     >
                       Zaakceptuj
@@ -1779,7 +2125,8 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                             ? { ...prev, status: KSeFInvoiceStatus.Accepted }
                             : null
                         );
-                        onSave?.();
+                        // Auto-next in sequential mode after accepting
+                        handleAutoNextAfterAccept();
                       }}
                     />
                   )}
@@ -1908,6 +2255,49 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                       handleFormChange("comment", e.target.value)
                     }
                   />
+
+                  {/* Save changes button for accepted invoices - only when payment status changed */}
+                  {details.status === KSeFInvoiceStatus.Accepted &&
+                    editForm.paymentStatus !== details.paymentStatus && (
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        fullWidth
+                        onClick={async () => {
+                          setSaving(true);
+                          try {
+                            await handleApiResponse(
+                              () =>
+                                AccountingService.updateInvoice(details.id, {
+                                  paymentStatus: editForm.paymentStatus,
+                                  vatDeductionType: editForm.vatDeductionType,
+                                  comment: editForm.comment,
+                                }),
+                              () => {
+                                toast.success("Zmiany zostały zapisane");
+                                // Update local state to reflect saved changes
+                                setDetails((prev) =>
+                                  prev
+                                    ? {
+                                        ...prev,
+                                        paymentStatus: editForm.paymentStatus,
+                                      }
+                                    : null
+                                );
+                                onSave?.();
+                              },
+                              undefined,
+                              "Błąd podczas zapisywania zmian"
+                            );
+                          } finally {
+                            setSaving(false);
+                          }
+                        }}
+                        disabled={saving}
+                      >
+                        {saving ? "Zapisywanie..." : "Zapisz zmiany"}
+                      </Button>
+                    )}
                 </Box>
               </Box>
             </Grid>
@@ -1921,10 +2311,46 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
           </Typography>
         )}
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} variant="contained">
-          Zamknij
-        </Button>
+      <DialogActions
+        sx={{ justifyContent: sequentialMode ? "space-between" : "flex-end" }}
+      >
+        {sequentialMode && (
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Button
+              onClick={onPrevious}
+              disabled={currentIndex === 0}
+              variant="outlined"
+              size="small"
+            >
+              ← Poprzednia
+            </Button>
+            <Typography variant="body2" color="text.secondary" sx={{ mx: 2 }}>
+              {currentIndex + 1} / {totalCount}
+            </Typography>
+            <Button
+              onClick={onNext}
+              disabled={currentIndex >= totalCount - 1}
+              variant="outlined"
+              size="small"
+            >
+              Następna →
+            </Button>
+          </Box>
+        )}
+        <Box sx={{ display: "flex", gap: 1 }}>
+          {sequentialMode && (
+            <Button
+              onClick={onExitSequential}
+              color="warning"
+              variant="outlined"
+            >
+              Zakończ przeglądanie
+            </Button>
+          )}
+          <Button onClick={onClose} variant="contained">
+            Zamknij
+          </Button>
+        </Box>
       </DialogActions>
 
       {/* Hold Invoice Modal */}

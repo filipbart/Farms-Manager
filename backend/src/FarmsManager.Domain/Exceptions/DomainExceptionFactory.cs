@@ -11,4 +11,5 @@ public abstract partial class DomainException
     public static DomainException Forbidden() => new ForbiddenDomainException(null);
     public static DomainException BadRequest() => new BadRequestDomainException(null, null);
     public static DomainException BadRequest(string message) => new BadRequestDomainException(message, null);
+    public static DomainException FileSizeLimitExceeded() => new FileSizeLimitExceededDomainException(null);
 }

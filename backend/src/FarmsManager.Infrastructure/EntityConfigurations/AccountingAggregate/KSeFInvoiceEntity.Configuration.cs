@@ -76,10 +76,14 @@ public class KSeFInvoiceEntityConfiguration : BaseConfiguration<KSeFInvoiceEntit
             .IsRequired()
             .HasDefaultValue(0);
 
+        builder.Property(t => t.PaymentDate)
+            .IsRequired(false);
+
         // Indexes
         builder.HasIndex(t => t.KSeFNumber).IsUnique();
         builder.HasIndex(t => t.InvoiceNumber);
         builder.HasIndex(t => t.InvoiceDate);
         builder.HasIndex(t => t.RequiresLinking);
+        builder.HasIndex(t => t.PaymentDate);
     }
 }

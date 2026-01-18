@@ -339,6 +339,94 @@ export class AccountingService {
     );
     return response.data;
   }
+
+  // ==================== Attachments ====================
+
+  /**
+   * Przesyła załącznik do faktury
+   */
+  public static async uploadAttachment(invoiceId: string, file: File) {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    return await AxiosWrapper.post<InvoiceAttachment>(
+      ApiUrl.AccountingInvoiceAttachments(invoiceId),
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+  }
+
+  /**
+   * Pobiera listę załączników faktury
+   */
+  public static async getAttachments(invoiceId: string) {
+    return await AxiosWrapper.get<InvoiceAttachment[]>(
+      ApiUrl.AccountingInvoiceAttachments(invoiceId)
+    );
+  }
+
+  /**
+   * Pobiera załącznik faktury jako blob
+   */
+  public static async downloadAttachment(
+    invoiceId: string,
+    attachmentId: string
+  ): Promise<Blob> {
+    const response = await axios.get(
+      ApiUrl.AccountingInvoiceAttachment(invoiceId, attachmentId),
+      {
+        responseType: "blob",
+      }
+    );
+    return response.data;
+  }
+
+  /**
+   * Usuwa załącznik faktury
+   */
+  public static async deleteAttachment(
+    invoiceId: string,
+    attachmentId: string
+  ) {
+    return await AxiosWrapper.delete(
+      ApiUrl.AccountingInvoiceAttachment(invoiceId, attachmentId)
+    );
+  }
+
+  // ==================== Audit Logs ====================
+
+  /**
+   * Pobiera historię audytu faktury
+   */
+  public static async getAuditLogs(invoiceId: string) {
+    return await AxiosWrapper.get<InvoiceAuditLog[]>(
+      ApiUrl.AccountingInvoiceAuditLogs(invoiceId)
+    );
+  }
+}
+
+export interface InvoiceAttachment {
+  id: string;
+  fileName: string;
+  fileSize: number;
+  contentType: string;
+  uploadedAt: string;
+  uploadedByName?: string;
+}
+
+export interface InvoiceAuditLog {
+  id: string;
+  action: string;
+  actionDescription: string;
+  previousStatus?: string;
+  newStatus?: string;
+  userName: string;
+  comment?: string;
+  createdAt: string;
 }
 
 export interface HoldInvoiceData {

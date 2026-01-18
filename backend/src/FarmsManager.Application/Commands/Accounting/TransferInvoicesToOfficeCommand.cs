@@ -25,16 +25,22 @@ public class TransferInvoicesToOfficeCommandHandler : IRequestHandler<TransferIn
 {
     private readonly IKSeFInvoiceRepository _repository;
     private readonly IUserDataResolver _userDataResolver;
+    private readonly IInvoiceAuditService _auditService;
 
-    public TransferInvoicesToOfficeCommandHandler(IKSeFInvoiceRepository repository, IUserDataResolver userDataResolver)
+    public TransferInvoicesToOfficeCommandHandler(
+        IKSeFInvoiceRepository repository, 
+        IUserDataResolver userDataResolver,
+        IInvoiceAuditService auditService)
     {
         _repository = repository;
         _userDataResolver = userDataResolver;
+        _auditService = auditService;
     }
 
     public async Task<TransferInvoicesToOfficeResponse> Handle(TransferInvoicesToOfficeCommand request, CancellationToken cancellationToken)
     {
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
+        var userName = _userDataResolver.GetLoginAsync();
         
         var response = new TransferInvoicesToOfficeResponse();
         
@@ -62,7 +68,21 @@ public class TransferInvoicesToOfficeCommandHandler : IRequestHandler<TransferIn
 
         if (response.TransferredCount > 0)
         {
-            await _repository.UpdateRangeAsync(invoices.Where(i => i.Status == KSeFInvoiceStatus.SentToOffice).ToList(), cancellationToken);
+            var transferredInvoices = invoices.Where(i => i.Status == KSeFInvoiceStatus.SentToOffice).ToList();
+            await _repository.UpdateRangeAsync(transferredInvoices, cancellationToken);
+
+            // Loguj akcję audytową dla każdej przekazanej faktury
+            foreach (var inv in transferredInvoices)
+            {
+                await _auditService.LogStatusChangeAsync(
+                    inv.Id,
+                    KSeFInvoiceAuditAction.TransferredToOffice,
+                    KSeFInvoiceStatus.Accepted,
+                    KSeFInvoiceStatus.SentToOffice,
+                    userId,
+                    userName,
+                    cancellationToken: cancellationToken);
+            }
         }
 
         return response;

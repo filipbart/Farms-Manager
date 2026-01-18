@@ -297,6 +297,21 @@ public class KSeFInvoiceEntity : Entity
     public virtual ICollection<KSeFInvoiceRelationEntity> TargetRelations { get; init; } = new List<KSeFInvoiceRelationEntity>();
 
     /// <summary>
+    /// Data płatności faktury
+    /// </summary>
+    public DateOnly? PaymentDate { get; private set; }
+
+    /// <summary>
+    /// Logi audytowe faktury
+    /// </summary>
+    public virtual ICollection<KSeFInvoiceAuditLogEntity> AuditLogs { get; init; } = new List<KSeFInvoiceAuditLogEntity>();
+
+    /// <summary>
+    /// Załączniki faktury
+    /// </summary>
+    public virtual ICollection<KSeFInvoiceAttachmentEntity> Attachments { get; init; } = new List<KSeFInvoiceAttachmentEntity>();
+
+    /// <summary>
     /// Aktualizuje edytowalne pola faktury
     /// </summary>
     public void Update(
@@ -399,5 +414,14 @@ public class KSeFInvoiceEntity : Entity
     public void ClearAssignedEntityInvoiceId()
     {
         AssignedEntityInvoiceId = null;
+    }
+
+    /// <summary>
+    /// Ustawia datę płatności faktury
+    /// </summary>
+    /// <param name="paymentDate">Data płatności lub null aby usunąć</param>
+    public void SetPaymentDate(DateOnly? paymentDate)
+    {
+        PaymentDate = paymentDate;
     }
 }

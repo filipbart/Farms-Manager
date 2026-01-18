@@ -58,6 +58,7 @@ public class AcceptKSeFInvoiceCommandHandler
     private readonly IExpenseContractorRepository _expenseContractorRepository;
     private readonly ISaleInvoiceRepository _saleInvoiceRepository;
     private readonly ISlaughterhouseRepository _slaughterhouseRepository;
+    private readonly IInvoiceAuditService _auditService;
 
     public AcceptKSeFInvoiceCommandHandler(
         IUserDataResolver userDataResolver,
@@ -73,7 +74,8 @@ public class AcceptKSeFInvoiceCommandHandler
         IExpenseProductionRepository expenseProductionRepository,
         IExpenseContractorRepository expenseContractorRepository,
         ISaleInvoiceRepository saleInvoiceRepository,
-        ISlaughterhouseRepository slaughterhouseRepository)
+        ISlaughterhouseRepository slaughterhouseRepository,
+        IInvoiceAuditService auditService)
     {
         _userDataResolver = userDataResolver;
         _ksefInvoiceRepository = ksefInvoiceRepository;
@@ -89,14 +91,18 @@ public class AcceptKSeFInvoiceCommandHandler
         _expenseContractorRepository = expenseContractorRepository;
         _saleInvoiceRepository = saleInvoiceRepository;
         _slaughterhouseRepository = slaughterhouseRepository;
+        _auditService = auditService;
     }
 
     public async Task<BaseResponse<Guid?>> Handle(AcceptKSeFInvoiceCommand request, CancellationToken ct)
     {
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
+        var userName = _userDataResolver.GetLoginAsync();
         
         var invoice = await _ksefInvoiceRepository.GetAsync(
             new KSeFInvoiceByIdSpec(request.InvoiceId), ct);
+
+        var previousStatus = invoice.Status;
 
         // Sprawdź czy faktura nie została już zaakceptowana
         if (invoice.Status == KSeFInvoiceStatus.Accepted)
@@ -151,6 +157,16 @@ public class AcceptKSeFInvoiceCommandHandler
         invoice.SetModified(userId);
         
         await _ksefInvoiceRepository.UpdateAsync(invoice, ct);
+
+        // Loguj akcję audytową
+        await _auditService.LogStatusChangeAsync(
+            invoice.Id,
+            KSeFInvoiceAuditAction.Accepted,
+            previousStatus,
+            KSeFInvoiceStatus.Accepted,
+            userId,
+            userName,
+            cancellationToken: ct);
 
         return BaseResponse.CreateResponse(newEntityId);
     }
@@ -274,7 +290,7 @@ public class AcceptKSeFInvoiceCommandHandler
         }
         else
         {
-            contractorId = await FindOrCreateExpenseContractor(data.ContractorNip, data.ContractorName, userId, ct);
+            contractorId = await FindOrCreateExpenseContractor(data.ContractorNip, data.ContractorName, data.ExpenseTypeId, userId, ct);
         }
 
         var newExpenseProduction = ExpenseProductionEntity.CreateNew(
@@ -294,29 +310,37 @@ public class AcceptKSeFInvoiceCommandHandler
         return newExpenseProduction.Id;
     }
 
-    private async Task<Guid> FindOrCreateExpenseContractor(string nip, string name, Guid userId, CancellationToken ct)
+    private async Task<Guid> FindOrCreateExpenseContractor(string nip, string name, Guid expenseTypeId, Guid userId, CancellationToken ct)
     {
+        ExpenseContractorEntity existingContractor = null;
+        
         if (!string.IsNullOrWhiteSpace(nip))
         {
             var normalizedNip = nip.Replace("PL", "").Replace("-", "").Replace(" ", "").Trim();
-            var contractor = await _expenseContractorRepository.FirstOrDefaultAsync(
-                new ExpenseContractorByNipSpec(normalizedNip), ct);
-            if (contractor != null)
-                return contractor.Id;
+            existingContractor = await _expenseContractorRepository.FirstOrDefaultAsync(
+                new ExpenseContractorByNipWithExpenseTypesSpec(normalizedNip), ct);
         }
 
-        if (!string.IsNullOrWhiteSpace(name))
+        if (existingContractor == null && !string.IsNullOrWhiteSpace(name))
         {
-            var contractor = await _expenseContractorRepository.FirstOrDefaultAsync(
-                new ExpenseContractorByNameSpec(name), ct);
-            if (contractor != null)
-                return contractor.Id;
+            existingContractor = await _expenseContractorRepository.FirstOrDefaultAsync(
+                new ExpenseContractorByNameWithExpenseTypesSpec(name), ct);
         }
 
-        var newContractor = ExpenseContractorEntity.CreateNewFromInvoice(
+        if (existingContractor != null)
+        {
+            // Kontrahent istnieje - dodaj typ wydatku jeśli go nie ma
+            existingContractor.AddExpenseType(expenseTypeId, userId);
+            await _expenseContractorRepository.UpdateAsync(existingContractor, ct);
+            return existingContractor.Id;
+        }
+
+        // Tworzymy nowego kontrahenta z przypisanym typem wydatku
+        var newContractor = ExpenseContractorEntity.CreateNew(
             name ?? "Nieznany kontrahent",
             nip ?? "",
             "",
+            new[] { expenseTypeId },
             userId);
         
         await _expenseContractorRepository.AddAsync(newContractor, ct);

@@ -19,6 +19,7 @@ public class KSeFInvoiceDetailsDto
     public string InvoiceNumber { get; set; }
     public DateOnly InvoiceDate { get; set; }
     public DateOnly? PaymentDueDate { get; set; }
+    public DateOnly? PaymentDate { get; set; }
     public string ModuleType { get; set; }
     public string VatDeductionType { get; set; }
     public string Status { get; set; }
@@ -36,4 +37,6 @@ public class KSeFInvoiceDetailsDto
     public string RelatedInvoiceNumber { get; set; }
     public DateTime CreatedAt { get; set; }
     public string CreatedBy { get; set; }
+    public int AttachmentsCount { get; set; }
+    public int AuditLogsCount { get; set; }
 }

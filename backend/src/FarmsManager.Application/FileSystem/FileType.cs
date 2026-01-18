@@ -12,5 +12,6 @@ public enum FileType
     GasDelivery,
     Employees,
     Avatar,
-    AccountingInvoice
+    AccountingInvoice,
+    AccountingInvoiceAttachment
 }

@@ -1017,7 +1017,9 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
     }
 
     return (
-      <Box sx={{ mt: 2, p: 2, bgcolor: "action.hover", borderRadius: 1 }}>
+      <Box
+        sx={{ mt: 2, p: 2, borderRadius: 1, border: 1, borderColor: "divider" }}
+      >
         {renderForm()}
       </Box>
     );

@@ -1,0 +1,15 @@
+using Ardalis.Specification;
+using FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities;
+
+namespace FarmsManager.Application.Specifications.Expenses;
+
+public sealed class ExpenseContractorByNameWithExpenseTypesSpec : BaseSpecification<ExpenseContractorEntity>,
+    ISingleResultSpecification<ExpenseContractorEntity>
+{
+    public ExpenseContractorByNameWithExpenseTypesSpec(string name)
+    {
+        Query
+            .Where(t => t.Name == name && t.DateDeletedUtc == null)
+            .Include(t => t.ExpenseTypes);
+    }
+}
