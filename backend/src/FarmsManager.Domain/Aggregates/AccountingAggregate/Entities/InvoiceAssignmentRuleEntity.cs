@@ -205,14 +205,22 @@ public class InvoiceAssignmentRuleEntity : Entity
             }
         }
 
-        // Sprawdź słowa wymagane - wszystkie muszą występować
+        // Sprawdź słowa wymagane - wystarczy jedno z podanych
+        var hasMatchingIncludeKeyword = false;
         foreach (var includeKeyword in IncludeKeywords)
         {
             if (!string.IsNullOrWhiteSpace(includeKeyword) &&
-                !textLower.Contains(includeKeyword.ToLowerInvariant()))
+                textLower.Contains(includeKeyword.ToLowerInvariant()))
             {
-                return false;
+                hasMatchingIncludeKeyword = true;
+                break;
             }
+        }
+
+        // Jeśli są zdefiniowane słowa kluczowe i żadne nie pasuje, reguła nie jest spełniona
+        if (IncludeKeywords.Any(k => !string.IsNullOrWhiteSpace(k)) && !hasMatchingIncludeKeyword)
+        {
+            return false;
         }
 
         // Jeśli nie ma słów kluczowych wymaganych, reguła nie może działać samodzielnie

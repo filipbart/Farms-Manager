@@ -19,10 +19,10 @@ public partial class FmHostBuilder
             var kSeFOptions = ConfigurationRoot.GetSection("KSeF").Get<KSeFClientOptions>();
             services.AddKSeFClient(options => { options.BaseUrl = kSeFOptions?.BaseUrl ?? KsefEnvironmentsUris.TEST; });
             services.AddCryptographyClient(CryptographyServiceWarmupMode.NonBlocking);
-            
+
             // Konfiguracja synchronizacji KSeF
             services.Configure<KSeFSyncConfiguration>(ConfigurationRoot.GetSection("KSeFSyncConfiguration"));
-            
+
             // Rejestracja BackgroundService jako singleton (IKSeFSynchronizationJob) i jako HostedService
             services.AddSingleton<KSeFSynchronizationJob>();
             services.AddSingleton<IKSeFSynchronizationJob>(sp => sp.GetRequiredService<KSeFSynchronizationJob>());

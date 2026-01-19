@@ -110,9 +110,7 @@ public class UploadKSeFXmlInvoicesCommandHandler : IRequestHandler<UploadKSeFXml
                 }
                 
                 var grossAmount = netAmount + vatAmount;
-
-                // Generuj unikalny numer KSeF dla manualnych faktur
-                var kSeFNumber = $"MANUAL-{Guid.NewGuid():N}";
+                
 
                 // Sprawdź czy faktura z tym numerem już istnieje
                 var existingInvoice = await _dbContext.Set<KSeFInvoiceEntity>()
@@ -138,7 +136,7 @@ public class UploadKSeFXmlInvoicesCommandHandler : IRequestHandler<UploadKSeFXml
 
                 // Utwórz encję faktury
                 var invoiceEntity = KSeFInvoiceEntity.CreateNew(
-                    kSeFNumber: kSeFNumber,
+                    kSeFNumber: null,
                     invoiceNumber: invoiceNumber,
                     invoiceDate: invoiceDate,
                     paymentDueDate: paymentDueDate,

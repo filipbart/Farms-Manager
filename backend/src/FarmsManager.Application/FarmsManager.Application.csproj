@@ -23,7 +23,7 @@
       <PackageReference Include="QuestPDF" Version="2025.7.4" />
       <PackageReference Include="Serilog" Version="4.3.0" />
       <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
-      <PackageReference Include="Soneta.KSeF.Client" Version="3.0.0" />
+      <PackageReference Include="Soneta.KSeF.Client" Version="4.0.0" />
       <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
     </ItemGroup>
 

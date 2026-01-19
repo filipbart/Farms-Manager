@@ -122,7 +122,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
   const [cycles, setCycles] = useState<CycleDto[]>([]);
   const [loadingCycles, setLoadingCycles] = useState(false);
   const [henhouses, setHenhouses] = useState<{ id: string; name: string }[]>(
-    []
+    [],
   );
   const [feedNames, setFeedNames] = useState<FeedsNamesRow[]>([]);
   const [gasContractors, setGasContractors] = useState<GasContractorRow[]>([]);
@@ -159,7 +159,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
     await handleApiResponse(
       () => FarmsService.getFarmsAsync(),
       (data) => setFarms(data.responseData?.items || []),
-      () => setFarms([])
+      () => setFarms([]),
     );
     setLoadingFarms(false);
   }, []);
@@ -174,7 +174,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
     await handleApiResponse(
       () => FarmsService.getFarmCycles(farmId),
       (data) => setCycles(data.responseData ?? []),
-      () => setCycles([])
+      () => setCycles([]),
     );
     setLoadingCycles(false);
   }, []);
@@ -213,35 +213,35 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
     handleApiResponse(
       () => FeedsService.getFeedsNames(),
       (data) => setFeedNames(data.responseData?.fields ?? []),
-      () => setFeedNames([])
+      () => setFeedNames([]),
     );
 
     // Gas contractors
     handleApiResponse(
       () => GasService.getGasContractors(),
       (data) => setGasContractors(data.responseData?.contractors ?? []),
-      () => setGasContractors([])
+      () => setGasContractors([]),
     );
 
     // Expense contractors
     handleApiResponse(
       () => ExpensesService.getExpensesContractors({}),
       (data) => setExpenseContractors(data.responseData?.contractors ?? []),
-      () => setExpenseContractors([])
+      () => setExpenseContractors([]),
     );
 
     // Expense types
     handleApiResponse(
       () => ExpensesService.getExpensesTypes(),
       (data) => setExpenseTypes(data.responseData?.types ?? []),
-      () => setExpenseTypes([])
+      () => setExpenseTypes([]),
     );
 
     // Slaughterhouses
     handleApiResponse(
       () => SlaughterhousesService.getAllSlaughterhouses(),
       (data) => setSlaughterhouses(data.responseData?.items ?? []),
-      () => setSlaughterhouses([])
+      () => setSlaughterhouses([]),
     );
   }, [open, fetchFarms]);
 
@@ -366,7 +366,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
         onSave(draftInvoice);
       },
       undefined,
-      "Wystąpił błąd podczas zapisywania faktury"
+      "Wystąpił błąd podczas zapisywania faktury",
     );
     setLoading(false);
   };
@@ -437,7 +437,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                         value={field.value ? dayjs(field.value) : null}
                         onChange={(date) =>
                           field.onChange(
-                            date ? dayjs(date).format("YYYY-MM-DD") : ""
+                            date ? dayjs(date).format("YYYY-MM-DD") : "",
                           )
                         }
                         slotProps={{
@@ -463,7 +463,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                         value={field.value ? dayjs(field.value) : null}
                         onChange={(date) =>
                           field.onChange(
-                            date ? dayjs(date).format("YYYY-MM-DD") : ""
+                            date ? dayjs(date).format("YYYY-MM-DD") : "",
                           )
                         }
                         slotProps={{
@@ -647,7 +647,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                           <MenuItem key={key} value={key}>
                             {label}
                           </MenuItem>
-                        )
+                        ),
                       )}
                     </Select>
                   </FormControl>
@@ -669,7 +669,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                           <MenuItem key={key} value={key}>
                             {label}
                           </MenuItem>
-                        )
+                        ),
                       )}
                     </Select>
                   </FormControl>
@@ -691,7 +691,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                           <MenuItem key={key} value={key}>
                             {label}
                           </MenuItem>
-                        )
+                        ),
                       )}
                     </Select>
                   </FormControl>
@@ -713,7 +713,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                           <MenuItem key={key} value={key}>
                             {label}
                           </MenuItem>
-                        )
+                        ),
                       )}
                     </Select>
                   </FormControl>
@@ -899,7 +899,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                         getOptionLabel={(option) => option.name || ""}
                         value={
                           gasContractors.find(
-                            (c) => c.id === watch("gasContractorId")
+                            (c) => c.id === watch("gasContractorId"),
                           ) || null
                         }
                         onChange={(_, value) =>
@@ -1001,7 +1001,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                         getOptionLabel={(option) => option.name || ""}
                         value={
                           expenseContractors.find(
-                            (c) => c.id === watchedExpenseContractorId
+                            (c) => c.id === watchedExpenseContractorId,
                           ) || null
                         }
                         onChange={(_, value) => {
@@ -1029,7 +1029,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                         >
                           {(() => {
                             const selectedContractor = expenseContractors.find(
-                              (c) => c.id === watchedExpenseContractorId
+                              (c) => c.id === watchedExpenseContractorId,
                             );
                             const availableTypes =
                               selectedContractor?.expenseTypes || [];
@@ -1115,7 +1115,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                         getOptionLabel={(option) => option.name || ""}
                         value={
                           slaughterhouses.find(
-                            (s) => s.id === watch("saleSlaughterhouseId")
+                            (s) => s.id === watch("saleSlaughterhouseId"),
                           ) || null
                         }
                         onChange={(_, value) =>
@@ -1155,7 +1155,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
           <Button
             onClick={() =>
               setCurrentIndex((prev) =>
-                Math.min(draftInvoices.length - 1, prev + 1)
+                Math.min(draftInvoices.length - 1, prev + 1),
               )
             }
             disabled={currentIndex === draftInvoices.length - 1}
@@ -1163,7 +1163,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
             Następny
           </Button>
 
-          <Button onClick={handleClose} color="secondary" variant="outlined">
+          <Button onClick={handleClose} disabled={loading}>
             Anuluj
           </Button>
           <LoadingButton

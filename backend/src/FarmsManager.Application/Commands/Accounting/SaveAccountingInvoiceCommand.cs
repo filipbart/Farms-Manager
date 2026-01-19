@@ -177,7 +177,7 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
 
         // Utwórz encję faktury
         var invoice = KSeFInvoiceEntity.CreateNew(
-            kSeFNumber: $"MANUAL-{data.DraftId}",
+            kSeFNumber: null,
             invoiceNumber: data.InvoiceNumber,
             invoiceDate: invoiceDate,
             paymentDueDate: paymentDueDate,
