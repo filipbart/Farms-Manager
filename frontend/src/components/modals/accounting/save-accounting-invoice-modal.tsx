@@ -259,23 +259,46 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
 
     const currentDraft = draftInvoices[newIndex];
     if (currentDraft) {
+      const ef = currentDraft.extractedFields;
+      const moduleType = (ef.moduleType as ModuleType) || ModuleType.None;
+
       reset({
-        invoiceNumber: currentDraft.extractedFields.invoiceNumber || "",
-        invoiceDate: currentDraft.extractedFields.invoiceDate || "",
-        dueDate: currentDraft.extractedFields.dueDate || "",
-        sellerName: currentDraft.extractedFields.sellerName || "",
-        sellerNip: currentDraft.extractedFields.sellerNip || "",
-        buyerName: currentDraft.extractedFields.buyerName || "",
-        buyerNip: currentDraft.extractedFields.buyerNip || "",
-        grossAmount: currentDraft.extractedFields.grossAmount || 0,
-        netAmount: currentDraft.extractedFields.netAmount || 0,
-        vatAmount: currentDraft.extractedFields.vatAmount || 0,
+        invoiceNumber: ef.invoiceNumber || "",
+        invoiceDate: ef.invoiceDate || "",
+        dueDate: ef.dueDate || "",
+        sellerName: ef.sellerName || "",
+        sellerNip: ef.sellerNip || "",
+        buyerName: ef.buyerName || "",
+        buyerNip: ef.buyerNip || "",
+        grossAmount: ef.grossAmount || 0,
+        netAmount: ef.netAmount || 0,
+        vatAmount: ef.vatAmount || 0,
         documentType: InvoiceDocumentType.Vat,
         status: KSeFInvoiceStatus.Accepted,
         vatDeductionType: VatDeductionType.Full,
-        moduleType: ModuleType.None,
+        moduleType: moduleType,
         paymentStatus: KSeFPaymentStatus.Unpaid,
         comment: "",
+        // Module-specific fields from AI extraction
+        feedFarmId: moduleType === ModuleType.Feeds ? ef.farmId || "" : "",
+        feedCycleId: moduleType === ModuleType.Feeds ? ef.cycleId || "" : "",
+        feedHenhouseId:
+          moduleType === ModuleType.Feeds ? ef.henhouseId || "" : "",
+        gasFarmId: moduleType === ModuleType.Gas ? ef.farmId || "" : "",
+        gasContractorId:
+          moduleType === ModuleType.Gas ? ef.gasContractorId || "" : "",
+        expenseFarmId:
+          moduleType === ModuleType.ProductionExpenses ? ef.farmId || "" : "",
+        expenseCycleId:
+          moduleType === ModuleType.ProductionExpenses ? ef.cycleId || "" : "",
+        expenseContractorId:
+          moduleType === ModuleType.ProductionExpenses
+            ? ef.expenseContractorId || ""
+            : "",
+        saleFarmId: moduleType === ModuleType.Sales ? ef.farmId || "" : "",
+        saleCycleId: moduleType === ModuleType.Sales ? ef.cycleId || "" : "",
+        saleSlaughterhouseId:
+          moduleType === ModuleType.Sales ? ef.slaughterhouseId || "" : "",
       });
     }
   }, [currentIndex, draftInvoices, reset, open, handleClose]);
@@ -394,14 +417,38 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
       </DialogTitle>
 
       <form onSubmit={handleSubmit(handleSave)}>
-        <DialogContent dividers>
-          <Grid container spacing={2}>
-            <Grid size={{ md: 12, lg: 5, xl: 6 }}>
+        <DialogContent
+          dividers
+          sx={{
+            p: 0,
+            display: "flex",
+            flexDirection: { xs: "column", lg: "row" },
+            height: { lg: "70vh" },
+          }}
+        >
+          <Grid container spacing={0} sx={{ height: "100%" }}>
+            <Grid
+              size={{ md: 12, lg: 5, xl: 6 }}
+              sx={{
+                height: { lg: "100%" },
+                overflowY: { lg: "auto" },
+                p: 2,
+                borderRight: { lg: 1 },
+                borderColor: { lg: "divider" },
+              }}
+            >
               <Typography variant="h6">Podgląd faktury</Typography>
               {renderPreview()}
             </Grid>
 
-            <Grid size={{ md: 12, lg: 7, xl: 6 }}>
+            <Grid
+              size={{ md: 12, lg: 7, xl: 6 }}
+              sx={{
+                height: { lg: "100%" },
+                overflowY: { lg: "auto" },
+                p: 2,
+              }}
+            >
               <Grid container spacing={3} alignItems={"top"}>
                 <Grid size={12}>
                   <Typography variant="h6">Dane zaczytane z faktury</Typography>
@@ -906,7 +953,15 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                           setValue("gasContractorId", value?.id || "")
                         }
                         renderInput={(params) => (
-                          <TextField {...params} label="Dostawca gazu" />
+                          <TextField
+                            {...params}
+                            label="Dostawca gazu"
+                            helperText={
+                              draftInvoice?.extractedFields.isNewGasContractor
+                                ? "Nowy dostawca - zostanie utworzony przy zapisie"
+                                : undefined
+                            }
+                          />
                         )}
                       />
                     </Grid>
@@ -1009,7 +1064,16 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                           setValue("expenseTypeId", "");
                         }}
                         renderInput={(params) => (
-                          <TextField {...params} label="Kontrahent" />
+                          <TextField
+                            {...params}
+                            label="Kontrahent"
+                            helperText={
+                              draftInvoice?.extractedFields
+                                .isNewExpenseContractor
+                                ? "Nowy kontrahent - zostanie utworzony przy zapisie"
+                                : undefined
+                            }
+                          />
                         )}
                       />
                     </Grid>
@@ -1031,16 +1095,23 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                             const selectedContractor = expenseContractors.find(
                               (c) => c.id === watchedExpenseContractorId,
                             );
+                            const isNewContractor =
+                              draftInvoice?.extractedFields
+                                .isNewExpenseContractor;
                             const availableTypes =
                               selectedContractor?.expenseTypes || [];
-                            if (availableTypes.length > 0) {
-                              return availableTypes.map((type) => (
+                            // Dla nowego kontrahenta lub gdy brak przypisanych typów - pokaż wszystkie
+                            if (
+                              isNewContractor ||
+                              availableTypes.length === 0
+                            ) {
+                              return expenseTypes.map((type) => (
                                 <MenuItem key={type.id} value={type.id}>
                                   {type.name}
                                 </MenuItem>
                               ));
                             }
-                            return expenseTypes.map((type) => (
+                            return availableTypes.map((type) => (
                               <MenuItem key={type.id} value={type.id}>
                                 {type.name}
                               </MenuItem>
@@ -1050,6 +1121,13 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                         {errors.expenseTypeId && (
                           <FormHelperText>
                             {errors.expenseTypeId.message}
+                          </FormHelperText>
+                        )}
+                        {draftInvoice?.extractedFields
+                          .isNewExpenseContractor && (
+                          <FormHelperText>
+                            Wybrany typ zostanie przypisany do nowego
+                            kontrahenta
                           </FormHelperText>
                         )}
                       </FormControl>
@@ -1122,7 +1200,16 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                           setValue("saleSlaughterhouseId", value?.id || "")
                         }
                         renderInput={(params) => (
-                          <TextField {...params} label="Ubojnia" required />
+                          <TextField
+                            {...params}
+                            label="Ubojnia"
+                            required
+                            helperText={
+                              draftInvoice?.extractedFields.isNewSlaughterhouse
+                                ? "Nowa ubojnia - zostanie utworzona przy zapisie"
+                                : undefined
+                            }
+                          />
                         )}
                       />
                     </Grid>

@@ -175,6 +175,9 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
         var taxBusinessEntityId = await MatchTaxBusinessEntityAsync(
             data.SellerNip, data.SellerName, data.BuyerNip, data.BuyerName, cancellationToken);
 
+        // Sprawdź duplikaty przed zapisem
+        await CheckForDuplicatesAsync(data.InvoiceNumber, data.SellerNip, taxBusinessEntityId, cancellationToken);
+
         // Utwórz encję faktury
         var invoice = KSeFInvoiceEntity.CreateNew(
             kSeFNumber: null,
@@ -254,6 +257,30 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
         });
 
         return matchedByName?.Id;
+    }
+
+    private async Task CheckForDuplicatesAsync(string invoiceNumber, string sellerNip, Guid? taxBusinessEntityId, CancellationToken cancellationToken)
+    {
+        var normalizedSellerNip = NormalizeNip(sellerNip);
+        
+        var query = _dbContext.Set<KSeFInvoiceEntity>()
+            .Where(i => i.InvoiceNumber == invoiceNumber && i.Status != KSeFInvoiceStatus.Rejected);
+
+        if (taxBusinessEntityId.HasValue)
+        {
+            query = query.Where(i => i.SellerNip == normalizedSellerNip || i.TaxBusinessEntityId == taxBusinessEntityId);
+        }
+        else
+        {
+            query = query.Where(i => i.SellerNip == normalizedSellerNip);
+        }
+
+        var exists = await query.AnyAsync(cancellationToken);
+
+        if (exists)
+        {
+            throw DomainException.BadRequest($"Faktura o numerze '{invoiceNumber}' od tego sprzedawcy już istnieje.");
+        }
     }
 
     private static string NormalizeNip(string nip)

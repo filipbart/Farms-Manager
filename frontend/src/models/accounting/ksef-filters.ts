@@ -3,6 +3,7 @@ import type {
   KSeFInvoiceStatus,
   KSeFPaymentStatus,
   InvoiceSource,
+  ModuleType,
 } from "./ksef-invoice";
 
 export enum KSeFInvoicesOrderType {
@@ -38,6 +39,8 @@ export interface KSeFInvoicesFilters {
   paymentStatus?: KSeFPaymentStatus;
   // Przypisany pracownik
   assignedUserId?: string;
+  // Moduł
+  moduleType?: ModuleType;
   // Ogólne wyszukiwanie (zachowane dla kompatybilności)
   searchQuery?: string;
 }
@@ -58,6 +61,7 @@ export const initialKSeFFilters: KSeFInvoicesFilters = {
   status: undefined,
   paymentStatus: undefined,
   assignedUserId: undefined,
+  moduleType: undefined,
 };
 
 export type KSeFFiltersAction =
@@ -78,13 +82,14 @@ export type KSeFFiltersAction =
   | { type: "setStatus"; payload: KSeFInvoiceStatus | undefined }
   | { type: "setPaymentStatus"; payload: KSeFPaymentStatus | undefined }
   | { type: "setAssignedUserId"; payload: string | undefined }
+  | { type: "setModuleType"; payload: ModuleType | undefined }
   | { type: "setSearchQuery"; payload: string | undefined }
   | { type: "setMultiple"; payload: Partial<KSeFInvoicesFilters> }
   | { type: "reset" };
 
 export function ksefFiltersReducer(
   state: KSeFInvoicesFilters,
-  action: KSeFFiltersAction
+  action: KSeFFiltersAction,
 ): KSeFInvoicesFilters {
   switch (action.type) {
     case "set":
@@ -121,6 +126,8 @@ export function ksefFiltersReducer(
       return { ...state, paymentStatus: action.payload, page: 0 };
     case "setAssignedUserId":
       return { ...state, assignedUserId: action.payload, page: 0 };
+    case "setModuleType":
+      return { ...state, moduleType: action.payload, page: 0 };
     case "setSearchQuery":
       return { ...state, searchQuery: action.payload, page: 0 };
     case "setMultiple":
@@ -133,7 +140,7 @@ export function ksefFiltersReducer(
 }
 
 export const mapKSeFOrderTypeToField = (
-  orderType: KSeFInvoicesOrderType
+  orderType: KSeFInvoicesOrderType,
 ): string => {
   switch (orderType) {
     case KSeFInvoicesOrderType.InvoiceDate:

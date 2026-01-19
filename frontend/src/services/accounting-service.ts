@@ -25,6 +25,23 @@ export interface AccountingInvoiceExtractedData {
   vatAmount: number | null;
   bankAccountNumber: string;
   invoiceType: string;
+  farmId?: string;
+  cycleId?: string;
+  moduleType?: string;
+
+  // Module-specific fields
+  feedContractorId?: string;
+  gasContractorId?: string;
+  expenseContractorId?: string;
+  slaughterhouseId?: string;
+  henhouseId?: string;
+  henhouseName?: string;
+
+  // Flags for new entities created during upload
+  isNewFeedContractor?: boolean;
+  isNewGasContractor?: boolean;
+  isNewExpenseContractor?: boolean;
+  isNewSlaughterhouse?: boolean;
 }
 
 export interface DraftAccountingInvoice {
@@ -113,7 +130,7 @@ export class AccountingService {
   public static async getKSeFInvoices(filters: KSeFInvoicesFilters) {
     return await AxiosWrapper.get<PaginateModel<KSeFInvoiceListModel>>(
       ApiUrl.AccountingInvoices,
-      { ...filters }
+      { ...filters },
     );
   }
 
@@ -122,7 +139,7 @@ export class AccountingService {
    */
   public static async getKSeFInvoiceDetails(invoiceId: string) {
     return await AxiosWrapper.get<KSeFInvoiceDetails>(
-      ApiUrl.AccountingInvoiceDetails(invoiceId)
+      ApiUrl.AccountingInvoiceDetails(invoiceId),
     );
   }
 
@@ -133,7 +150,8 @@ export class AccountingService {
     files: File[],
     invoiceType: string,
     paymentStatus: string,
-    signal?: AbortSignal
+    moduleType?: string,
+    signal?: AbortSignal,
   ) {
     const formData = new FormData();
     files.forEach((file) => {
@@ -141,6 +159,9 @@ export class AccountingService {
     });
     formData.append("invoiceType", invoiceType);
     formData.append("paymentStatus", paymentStatus);
+    if (moduleType) {
+      formData.append("moduleType", moduleType);
+    }
 
     return await AxiosWrapper.post<UploadAccountingInvoicesResponse>(
       ApiUrl.AccountingUploadInvoice,
@@ -150,7 +171,7 @@ export class AccountingService {
           "Content-Type": "multipart/form-data",
         },
         signal,
-      }
+      },
     );
   }
 
@@ -161,7 +182,7 @@ export class AccountingService {
     files: File[],
     invoiceType: string,
     paymentStatus: string,
-    signal?: AbortSignal
+    signal?: AbortSignal,
   ) {
     const formData = new FormData();
     files.forEach((file) => {
@@ -178,7 +199,7 @@ export class AccountingService {
           "Content-Type": "multipart/form-data",
         },
         signal,
-      }
+      },
     );
   }
 
@@ -187,7 +208,7 @@ export class AccountingService {
    */
   public static async deleteAllInvoices() {
     return await AxiosWrapper.delete<DeleteAllInvoicesResponse>(
-      ApiUrl.AccountingDeleteAllInvoices
+      ApiUrl.AccountingDeleteAllInvoices,
     );
   }
 
@@ -213,11 +234,11 @@ export class AccountingService {
       cycleId?: string | null;
       assignedUserId?: string | null;
       relatedInvoiceNumber?: string;
-    }
+    },
   ) {
     return await AxiosWrapper.patch(
       ApiUrl.AccountingUpdateInvoice(invoiceId),
-      data
+      data,
     );
   }
 
@@ -241,11 +262,11 @@ export class AccountingService {
   public static async getLinkableInvoices(
     invoiceId: string,
     searchPhrase?: string,
-    limit: number = 20
+    limit: number = 20,
   ) {
     return await AxiosWrapper.get<LinkableInvoice[]>(
       ApiUrl.AccountingLinkableInvoices(invoiceId),
-      { searchPhrase, limit }
+      { searchPhrase, limit },
     );
   }
 
@@ -262,7 +283,7 @@ export class AccountingService {
   public static async acceptNoLinking(invoiceId: string) {
     return await AxiosWrapper.post(
       ApiUrl.AccountingAcceptNoLinking(invoiceId),
-      {}
+      {},
     );
   }
 
@@ -271,11 +292,11 @@ export class AccountingService {
    */
   public static async postponeLinkingReminder(
     invoiceId: string,
-    days: number = 3
+    days: number = 3,
   ) {
     return await AxiosWrapper.post(
       `${ApiUrl.AccountingPostponeLinking(invoiceId)}?days=${days}`,
-      {}
+      {},
     );
   }
 
@@ -284,11 +305,11 @@ export class AccountingService {
    */
   public static async createModuleEntity(
     invoiceId: string,
-    data: CreateModuleEntityRequest
+    data: CreateModuleEntityRequest,
   ) {
     return await AxiosWrapper.post<string | null>(
       ApiUrl.AccountingCreateModuleEntity(invoiceId),
-      data
+      data,
     );
   }
 
@@ -298,11 +319,11 @@ export class AccountingService {
    */
   public static async acceptInvoice(
     invoiceId: string,
-    data: AcceptInvoiceRequest
+    data: AcceptInvoiceRequest,
   ) {
     return await AxiosWrapper.post<string | null>(
       ApiUrl.AccountingAcceptInvoice(invoiceId),
-      data
+      data,
     );
   }
 
@@ -312,7 +333,7 @@ export class AccountingService {
   public static async holdInvoice(invoiceId: string, data: HoldInvoiceData) {
     return await AxiosWrapper.post(
       ApiUrl.AccountingHoldInvoice(invoiceId),
-      data
+      data,
     );
   }
 
@@ -322,7 +343,7 @@ export class AccountingService {
   public static async transferToOffice(invoiceIds: string[]) {
     return await AxiosWrapper.post<TransferToOfficeResponse>(
       ApiUrl.AccountingTransferToOffice,
-      invoiceIds
+      invoiceIds,
     );
   }
 
@@ -335,7 +356,7 @@ export class AccountingService {
       invoiceIds,
       {
         responseType: "blob",
-      }
+      },
     );
     return response.data;
   }
@@ -356,7 +377,7 @@ export class AccountingService {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-      }
+      },
     );
   }
 
@@ -365,7 +386,7 @@ export class AccountingService {
    */
   public static async getAttachments(invoiceId: string) {
     return await AxiosWrapper.get<InvoiceAttachment[]>(
-      ApiUrl.AccountingInvoiceAttachments(invoiceId)
+      ApiUrl.AccountingInvoiceAttachments(invoiceId),
     );
   }
 
@@ -374,13 +395,13 @@ export class AccountingService {
    */
   public static async downloadAttachment(
     invoiceId: string,
-    attachmentId: string
+    attachmentId: string,
   ): Promise<Blob> {
     const response = await axios.get(
       ApiUrl.AccountingInvoiceAttachment(invoiceId, attachmentId),
       {
         responseType: "blob",
-      }
+      },
     );
     return response.data;
   }
@@ -390,10 +411,10 @@ export class AccountingService {
    */
   public static async deleteAttachment(
     invoiceId: string,
-    attachmentId: string
+    attachmentId: string,
   ) {
     return await AxiosWrapper.delete(
-      ApiUrl.AccountingInvoiceAttachment(invoiceId, attachmentId)
+      ApiUrl.AccountingInvoiceAttachment(invoiceId, attachmentId),
     );
   }
 
@@ -404,7 +425,7 @@ export class AccountingService {
    */
   public static async getAuditLogs(invoiceId: string) {
     return await AxiosWrapper.get<InvoiceAuditLog[]>(
-      ApiUrl.AccountingInvoiceAuditLogs(invoiceId)
+      ApiUrl.AccountingInvoiceAuditLogs(invoiceId),
     );
   }
 }

@@ -80,7 +80,9 @@ import {
   ModuleType,
   VatDeductionType,
   InvoiceRelationType,
+  InvoiceSource,
 } from "../../../models/accounting/ksef-invoice";
+import FilePreview from "../../common/file-preview";
 import type FarmRowModel from "../../../models/farms/farm-row-model";
 import type CycleDto from "../../../models/farms/latest-cycle";
 import type { UserListModel } from "../../../models/users/users";
@@ -203,7 +205,7 @@ const numberToWords = (num: number): string => {
 const calculatePaidAmount = (
   paymentStatus: KSeFPaymentStatus,
   isPaidFromXml: boolean | undefined,
-  grossAmount: number
+  grossAmount: number,
 ): number => {
   if (
     paymentStatus === KSeFPaymentStatus.PaidCash ||
@@ -457,19 +459,19 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
 
   // Linking state
   const [linkableInvoices, setLinkableInvoices] = useState<LinkableInvoice[]>(
-    []
+    [],
   );
   const [linkingSearch, setLinkingSearch] = useState("");
   const [selectedLinkIds, setSelectedLinkIds] = useState<string[]>([]);
   const [relationType, setRelationType] = useState<InvoiceRelationType>(
-    InvoiceRelationType.CorrectionToOriginal
+    InvoiceRelationType.CorrectionToOriginal,
   );
   const [linkingLoading, setLinkingLoading] = useState(false);
 
   // Module entity form state
   const [showModuleForm, setShowModuleForm] = useState(false);
   const [pendingModuleType, setPendingModuleType] = useState<string | null>(
-    null
+    null,
   );
   const moduleFormRef = useRef<ModuleEntityFormRef>(null);
 
@@ -588,7 +590,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
         setEditForm((prev) => ({ ...prev, cycleId: activeCycleId }));
       }
     },
-    [farms]
+    [farms],
   );
 
   // Helper function to handle auto-next in sequential mode after accept
@@ -625,7 +627,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
           () => {
             toast.success("Status faktury został zmieniony");
             setDetails((prev) =>
-              prev ? { ...prev, status: newStatus } : null
+              prev ? { ...prev, status: newStatus } : null,
             );
             // Auto-next in sequential mode after accepting
             if (newStatus === KSeFInvoiceStatus.Accepted) {
@@ -635,13 +637,13 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
             }
           },
           undefined,
-          "Błąd podczas zmiany statusu"
+          "Błąd podczas zmiany statusu",
         );
       } finally {
         setSaving(false);
       }
     },
-    [details, onSave, handleAutoNextAfterAccept]
+    [details, onSave, handleAutoNextAfterAccept],
   );
 
   // Hold invoice handler - saves all form changes without changing status
@@ -667,14 +669,14 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
           }),
         () => {
           toast.success(
-            "Zmiany zostały zapisane i faktura przypisana do pracownika"
+            "Zmiany zostały zapisane i faktura przypisana do pracownika",
           );
           setShowHoldModal(false);
           setHoldUserId("");
           onSave?.();
         },
         undefined,
-        "Błąd podczas zapisywania zmian"
+        "Błąd podczas zapisywania zmian",
       );
     } finally {
       setHoldSaving(false);
@@ -698,7 +700,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
     // Validate farm and cycle are selected
     if (!editForm.farmId) {
       toast.warning(
-        "Wybierz lokalizację (fermę) przed zaakceptowaniem faktury"
+        "Wybierz lokalizację (fermę) przed zaakceptowaniem faktury",
       );
       return;
     }
@@ -734,7 +736,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
       try {
         const res = await AccountingService.getLinkableInvoices(
           details.id,
-          search
+          search,
         );
         if (res.success && res.responseData) {
           setLinkableInvoices(res.responseData);
@@ -745,7 +747,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
         setLinkingLoading(false);
       }
     },
-    [details]
+    [details],
   );
 
   const handleLinkInvoices = useCallback(async () => {
@@ -763,12 +765,12 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
           toast.success("Faktury zostały powiązane");
           setSelectedLinkIds([]);
           setDetails((prev) =>
-            prev ? { ...prev, status: KSeFInvoiceStatus.New } : null
+            prev ? { ...prev, status: KSeFInvoiceStatus.New } : null,
           );
           onSave?.();
         },
         undefined,
-        "Błąd podczas powiązywania faktur"
+        "Błąd podczas powiązywania faktur",
       );
     } finally {
       setSaving(false);
@@ -784,12 +786,12 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
         () => {
           toast.success("Zaakceptowano brak powiązania");
           setDetails((prev) =>
-            prev ? { ...prev, status: KSeFInvoiceStatus.New } : null
+            prev ? { ...prev, status: KSeFInvoiceStatus.New } : null,
           );
           onSave?.();
         },
         undefined,
-        "Błąd podczas akceptacji braku powiązania"
+        "Błąd podczas akceptacji braku powiązania",
       );
     } finally {
       setSaving(false);
@@ -806,7 +808,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
           toast.success("Przypomnienie odłożone o 3 dni");
         },
         undefined,
-        "Błąd podczas odkładania przypomnienia"
+        "Błąd podczas odkładania przypomnienia",
       );
     } finally {
       setSaving(false);
@@ -833,7 +835,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
             }
           },
           undefined,
-          "Błąd podczas pobierania szczegółów faktury"
+          "Błąd podczas pobierania szczegółów faktury",
         );
       } catch {
         toast.error("Błąd podczas pobierania szczegółów faktury");
@@ -889,7 +891,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
 
   // Handle attachment upload
   const handleAttachmentUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0];
     if (!file || !details) return;
@@ -905,7 +907,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
           }
         },
         undefined,
-        "Błąd podczas dodawania załącznika"
+        "Błąd podczas dodawania załącznika",
       );
     } finally {
       setUploadingAttachment(false);
@@ -921,7 +923,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
     try {
       const blob = await AccountingService.downloadAttachment(
         details.id,
-        attachment.id
+        attachment.id,
       );
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -949,7 +951,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
           toast.success("Załącznik został usunięty");
         },
         undefined,
-        "Błąd podczas usuwania załącznika"
+        "Błąd podczas usuwania załącznika",
       );
     } catch {
       // Error handled by handleApiResponse
@@ -1046,772 +1048,802 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
           </Box>
         ) : details ? (
           <Grid container spacing={3} sx={{ mt: 1 }}>
-            {/* Left side - Invoice visualization (styled like classic invoice) */}
+            {/* Left side - Invoice visualization or FilePreview for manual invoices */}
             <Grid size={{ xs: 12, md: 8 }}>
-              <Paper
-                variant="outlined"
-                sx={{
-                  p: 3,
-                  mr: { md: 2 },
-                  borderColor: "divider",
-                  backgroundColor: "background.paper",
-                }}
-              >
-                {/* Invoice Header */}
-                <Box sx={{ mb: 3 }}>
-                  <Typography
-                    variant="h4"
-                    sx={{
-                      color: "primary.main",
-                      fontWeight: 700,
-                      fontStyle: "italic",
-                      mb: 1,
-                    }}
-                  >
-                    Faktura
+              {details.source === InvoiceSource.Manual ? (
+                <Box sx={{ mr: { md: 2 } }}>
+                  <Typography variant="h6" sx={{ mb: 2 }}>
+                    Podgląd faktury
                   </Typography>
+                  <FilePreview
+                    file={ApiUrl.AccountingInvoicePdf(details.id)}
+                    maxHeight={600}
+                    showPreviewButton={true}
+                  />
+                </Box>
+              ) : (
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    p: 3,
+                    mr: { md: 2 },
+                    borderColor: "divider",
+                    backgroundColor: "background.paper",
+                  }}
+                >
+                  {/* Invoice Header */}
+                  <Box sx={{ mb: 3 }}>
+                    <Typography
+                      variant="h4"
+                      sx={{
+                        color: "primary.main",
+                        fontWeight: 700,
+                        fontStyle: "italic",
+                        mb: 1,
+                      }}
+                    >
+                      Faktura
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: "inline-block",
+                        bgcolor: "grey.200",
+                        px: 1.5,
+                        py: 0.5,
+                        borderRadius: 1,
+                      }}
+                    >
+                      <Typography variant="body2" fontWeight={500}>
+                        Nr{" "}
+                        <CopyableText value={details.invoiceNumber}>
+                          {details.invoiceNumber}
+                        </CopyableText>
+                      </Typography>
+                    </Box>
+                    {details.kSeFNumber && (
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ ml: 2 }}
+                      >
+                        KSeF:{" "}
+                        <CopyableText value={details.kSeFNumber}>
+                          {details.kSeFNumber}
+                        </CopyableText>
+                      </Typography>
+                    )}
+                  </Box>
+
+                  {/* Seller and Buyer Section - side by side */}
                   <Box
                     sx={{
-                      display: "inline-block",
-                      bgcolor: "grey.200",
-                      px: 1.5,
-                      py: 0.5,
-                      borderRadius: 1,
+                      display: "flex",
+                      gap: 4,
+                      mb: 3,
+                      pb: 2,
+                      borderBottom: 1,
+                      borderColor: "primary.main",
                     }}
                   >
-                    <Typography variant="body2" fontWeight={500}>
-                      Nr{" "}
-                      <CopyableText value={details.invoiceNumber}>
-                        {details.invoiceNumber}
-                      </CopyableText>
-                    </Typography>
-                  </Box>
-                  {details.kSeFNumber && (
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ ml: 2 }}
-                    >
-                      KSeF:{" "}
-                      <CopyableText value={details.kSeFNumber}>
-                        {details.kSeFNumber}
-                      </CopyableText>
-                    </Typography>
-                  )}
-                </Box>
-
-                {/* Seller and Buyer Section - side by side */}
-                <Box
-                  sx={{
-                    display: "flex",
-                    gap: 4,
-                    mb: 3,
-                    pb: 2,
-                    borderBottom: 1,
-                    borderColor: "primary.main",
-                  }}
-                >
-                  <InvoicePartyBox
-                    label="Sprzedawca"
-                    party={parsedXml?.seller}
-                    fallbackName={details.sellerName}
-                    fallbackNip={details.sellerNip}
-                  />
-                  <InvoicePartyBox
-                    label="Nabywca"
-                    party={parsedXml?.buyer}
-                    fallbackName={details.buyerName}
-                    fallbackNip={details.buyerNip}
-                  />
-                </Box>
-
-                {/* Dates and Payment Info Section - side by side */}
-                <Box
-                  sx={{
-                    display: "flex",
-                    gap: 4,
-                    mb: 3,
-                    pb: 2,
-                    borderBottom: 1,
-                    borderColor: "primary.main",
-                  }}
-                >
-                  {/* Dates */}
-                  <Box sx={{ flex: 1 }}>
-                    <InvoiceInfoRow
-                      label="Data wystawienia"
-                      value={
-                        details.invoiceDate
-                          ? dayjs(details.invoiceDate).format("YYYY-MM-DD")
-                          : "—"
-                      }
-                      copyValue={
-                        details.invoiceDate
-                          ? dayjs(details.invoiceDate).format("YYYY-MM-DD")
-                          : undefined
-                      }
+                    <InvoicePartyBox
+                      label="Sprzedawca"
+                      party={parsedXml?.seller}
+                      fallbackName={details.sellerName}
+                      fallbackNip={details.sellerNip}
                     />
-                    {parsedXml?.invoiceData?.saleDate && (
-                      <InvoiceInfoRow
-                        label="Data sprzedaży"
-                        value={dayjs(parsedXml.invoiceData.saleDate).format(
-                          "YYYY-MM-DD"
-                        )}
-                        copyValue={dayjs(parsedXml.invoiceData.saleDate).format(
-                          "YYYY-MM-DD"
-                        )}
-                      />
-                    )}
-                    {parsedXml?.payment?.dueDate && (
-                      <InvoiceInfoRow
-                        label="Termin płatności"
-                        value={dayjs(parsedXml.payment.dueDate).format(
-                          "YYYY-MM-DD"
-                        )}
-                        copyValue={dayjs(parsedXml.payment.dueDate).format(
-                          "YYYY-MM-DD"
-                        )}
-                      />
-                    )}
-                  </Box>
-                  {/* Payment Info */}
-                  <Box sx={{ flex: 1 }}>
-                    <InvoiceInfoRow
-                      label="Sposób płatności"
-                      value={
-                        parsedXml?.payment?.paymentMethod ||
-                        KSeFInvoicePaymentTypeLabels[details.paymentType] ||
-                        details.paymentType
-                      }
+                    <InvoicePartyBox
+                      label="Nabywca"
+                      party={parsedXml?.buyer}
+                      fallbackName={details.buyerName}
+                      fallbackNip={details.buyerNip}
                     />
-                    {parsedXml?.payment?.bankAccounts?.[0] && (
-                      <>
-                        {parsedXml.payment.bankAccounts[0].bankName && (
+                  </Box>
+
+                  {/* Dates and Payment Info Section - side by side */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      gap: 4,
+                      mb: 3,
+                      pb: 2,
+                      borderBottom: 1,
+                      borderColor: "primary.main",
+                    }}
+                  >
+                    {/* Dates */}
+                    <Box sx={{ flex: 1 }}>
+                      <InvoiceInfoRow
+                        label="Data wystawienia"
+                        value={
+                          details.invoiceDate
+                            ? dayjs(details.invoiceDate).format("YYYY-MM-DD")
+                            : "—"
+                        }
+                        copyValue={
+                          details.invoiceDate
+                            ? dayjs(details.invoiceDate).format("YYYY-MM-DD")
+                            : undefined
+                        }
+                      />
+                      {parsedXml?.invoiceData?.saleDate && (
+                        <InvoiceInfoRow
+                          label="Data sprzedaży"
+                          value={dayjs(parsedXml.invoiceData.saleDate).format(
+                            "YYYY-MM-DD",
+                          )}
+                          copyValue={dayjs(
+                            parsedXml.invoiceData.saleDate,
+                          ).format("YYYY-MM-DD")}
+                        />
+                      )}
+                      {parsedXml?.payment?.dueDate && (
+                        <InvoiceInfoRow
+                          label="Termin płatności"
+                          value={dayjs(parsedXml.payment.dueDate).format(
+                            "YYYY-MM-DD",
+                          )}
+                          copyValue={dayjs(parsedXml.payment.dueDate).format(
+                            "YYYY-MM-DD",
+                          )}
+                        />
+                      )}
+                    </Box>
+                    {/* Payment Info */}
+                    <Box sx={{ flex: 1 }}>
+                      <InvoiceInfoRow
+                        label="Sposób płatności"
+                        value={
+                          parsedXml?.payment?.paymentMethod ||
+                          KSeFInvoicePaymentTypeLabels[details.paymentType] ||
+                          details.paymentType
+                        }
+                      />
+                      {parsedXml?.payment?.bankAccounts?.[0] && (
+                        <>
+                          {parsedXml.payment.bankAccounts[0].bankName && (
+                            <InvoiceInfoRow
+                              label="Bank"
+                              value={parsedXml.payment.bankAccounts[0].bankName}
+                              copyValue={
+                                parsedXml.payment.bankAccounts[0].bankName
+                              }
+                            />
+                          )}
                           <InvoiceInfoRow
-                            label="Bank"
-                            value={parsedXml.payment.bankAccounts[0].bankName}
+                            label="Numer konta"
+                            value={
+                              parsedXml.payment.bankAccounts[0].accountNumber
+                            }
                             copyValue={
-                              parsedXml.payment.bankAccounts[0].bankName
+                              parsedXml.payment.bankAccounts[0].accountNumber
                             }
                           />
-                        )}
-                        <InvoiceInfoRow
-                          label="Numer konta"
-                          value={
-                            parsedXml.payment.bankAccounts[0].accountNumber
-                          }
-                          copyValue={
-                            parsedXml.payment.bankAccounts[0].accountNumber
-                          }
-                        />
-                      </>
-                    )}
-                  </Box>
-                </Box>
-
-                {/* Line Items Table */}
-                <TableContainer sx={{ mb: 2 }}>
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow
-                        sx={{
-                          bgcolor: "primary.main",
-                          "& th": { color: "white", fontWeight: 600, py: 1 },
-                        }}
-                      >
-                        <TableCell>Lp.</TableCell>
-                        <TableCell>Nazwa</TableCell>
-                        <TableCell align="center">Ilość</TableCell>
-                        <TableCell align="center">Jm</TableCell>
-                        <TableCell align="right">Cena netto</TableCell>
-                        <TableCell align="right">Wartość netto</TableCell>
-                        <TableCell align="center">Stawka VAT</TableCell>
-                        <TableCell align="right">Kwota VAT</TableCell>
-                        <TableCell align="right">Wartość brutto</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {parsedXml?.lineItems &&
-                      parsedXml.lineItems.length > 0 ? (
-                        parsedXml.lineItems.map((item) => (
-                          <TableRow key={item.lineNumber}>
-                            <TableCell>{item.lineNumber}</TableCell>
-                            <TableCell>
-                              <Typography
-                                variant="body2"
-                                sx={{ maxWidth: 180 }}
-                              >
-                                {item.name || "—"}
-                              </Typography>
-                            </TableCell>
-                            <TableCell align="center">
-                              {item.quantity?.toLocaleString("pl-PL") || "—"}
-                            </TableCell>
-                            <TableCell align="center">
-                              {item.unit || "—"}
-                            </TableCell>
-                            <TableCell align="right">
-                              {formatCurrency(item.unitPriceNet)}
-                            </TableCell>
-                            <TableCell align="right">
-                              {formatCurrency(item.netAmount)}
-                            </TableCell>
-                            <TableCell align="center">
-                              {item.vatRate !== undefined
-                                ? `${item.vatRate}%`
-                                : "zw."}
-                            </TableCell>
-                            <TableCell align="right">
-                              {(() => {
-                                // Oblicz VAT: jeśli jest grossAmount, użyj różnicy, w przeciwnym razie oblicz z vatRate
-                                if (
-                                  item.grossAmount !== undefined &&
-                                  item.netAmount !== undefined
-                                ) {
-                                  return formatCurrency(
-                                    item.grossAmount - item.netAmount
-                                  );
-                                }
-                                if (
-                                  item.netAmount !== undefined &&
-                                  item.vatRate !== undefined
-                                ) {
-                                  return formatCurrency(
-                                    item.netAmount * (item.vatRate / 100)
-                                  );
-                                }
-                                return formatCurrency(0);
-                              })()}
-                            </TableCell>
-                            <TableCell align="right">
-                              {(() => {
-                                // Oblicz brutto: jeśli jest grossAmount użyj go, w przeciwnym razie oblicz z netto + VAT
-                                if (item.grossAmount !== undefined) {
-                                  return formatCurrency(item.grossAmount);
-                                }
-                                if (item.netAmount !== undefined) {
-                                  const vatAmount =
-                                    item.vatRate !== undefined
-                                      ? item.netAmount * (item.vatRate / 100)
-                                      : 0;
-                                  return formatCurrency(
-                                    item.netAmount + vatAmount
-                                  );
-                                }
-                                return "—";
-                              })()}
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={9} align="center">
-                            <Typography variant="body2" color="text.secondary">
-                              Brak pozycji do wyświetlenia
-                            </Typography>
-                          </TableCell>
-                        </TableRow>
+                        </>
                       )}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-
-                {/* Summary Section */}
-                <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
-                  {/* Total to pay box */}
-                  <Box
-                    sx={{
-                      bgcolor: "primary.main",
-                      color: "white",
-                      px: 3,
-                      py: 1.5,
-                      borderRadius: 1,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 2,
-                    }}
-                  >
-                    <Typography variant="body2" fontWeight={500}>
-                      RAZEM DO ZAPŁATY:
-                    </Typography>
-                    <Typography variant="h6" fontWeight={700}>
-                      <CopyableText
-                        value={details.grossAmount?.toFixed(2)}
-                        hoverColor="primary.light"
-                      >
-                        {formatCurrency(details.grossAmount)}
-                      </CopyableText>
-                    </Typography>
+                    </Box>
                   </Box>
 
-                  {/* VAT Summary Table */}
-                  <Box sx={{ flex: 1 }}>
+                  {/* Line Items Table */}
+                  <TableContainer sx={{ mb: 2 }}>
                     <Table size="small">
                       <TableHead>
                         <TableRow
-                          sx={{ "& th": { py: 0.5, fontSize: "0.75rem" } }}
+                          sx={{
+                            bgcolor: "primary.main",
+                            "& th": { color: "white", fontWeight: 600, py: 1 },
+                          }}
                         >
-                          <TableCell></TableCell>
+                          <TableCell>Lp.</TableCell>
+                          <TableCell>Nazwa</TableCell>
+                          <TableCell align="center">Ilość</TableCell>
+                          <TableCell align="center">Jm</TableCell>
+                          <TableCell align="right">Cena netto</TableCell>
                           <TableCell align="right">Wartość netto</TableCell>
-                          <TableCell align="center">Stawka</TableCell>
+                          <TableCell align="center">Stawka VAT</TableCell>
                           <TableCell align="right">Kwota VAT</TableCell>
                           <TableCell align="right">Wartość brutto</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        <TableRow
-                          sx={{ "& td": { py: 0.5, fontSize: "0.8rem" } }}
-                        >
-                          <TableCell
-                            sx={{ color: "primary.main", fontWeight: 600 }}
-                          >
-                            Razem:
-                          </TableCell>
-                          <TableCell
-                            align="right"
-                            sx={{ color: "primary.main" }}
-                          >
-                            <CopyableText value={details.netAmount?.toFixed(2)}>
-                              {formatCurrency(details.netAmount)}
-                            </CopyableText>
-                          </TableCell>
-                          <TableCell
-                            align="center"
-                            sx={{ color: "primary.main" }}
-                          >
-                            X
-                          </TableCell>
-                          <TableCell
-                            align="right"
-                            sx={{ color: "primary.main" }}
-                          >
-                            <CopyableText value={details.vatAmount?.toFixed(2)}>
-                              {formatCurrency(details.vatAmount)}
-                            </CopyableText>
-                          </TableCell>
-                          <TableCell
-                            align="right"
-                            sx={{ color: "primary.main" }}
-                          >
-                            <CopyableText
-                              value={details.grossAmount?.toFixed(2)}
-                            >
-                              {formatCurrency(details.grossAmount)}
-                            </CopyableText>
-                          </TableCell>
-                        </TableRow>
-                        {parsedXml?.invoiceData?.vatBreakdown?.map(
-                          (vat, idx) => (
-                            <TableRow
-                              key={idx}
-                              sx={{ "& td": { py: 0.5, fontSize: "0.75rem" } }}
-                            >
-                              <TableCell>W tym:</TableCell>
-                              <TableCell align="right">
-                                {formatCurrency(vat.netAmount)}
+                        {parsedXml?.lineItems &&
+                        parsedXml.lineItems.length > 0 ? (
+                          parsedXml.lineItems.map((item) => (
+                            <TableRow key={item.lineNumber}>
+                              <TableCell>{item.lineNumber}</TableCell>
+                              <TableCell>
+                                <Typography
+                                  variant="body2"
+                                  sx={{ maxWidth: 180 }}
+                                >
+                                  {item.name || "—"}
+                                </Typography>
                               </TableCell>
                               <TableCell align="center">
-                                {vat.rate || "zw."}
+                                {item.quantity?.toLocaleString("pl-PL") || "—"}
+                              </TableCell>
+                              <TableCell align="center">
+                                {item.unit || "—"}
                               </TableCell>
                               <TableCell align="right">
-                                {vat.vatAmount !== undefined
-                                  ? formatCurrency(vat.vatAmount)
-                                  : formatCurrency(0)}
+                                {formatCurrency(item.unitPriceNet)}
                               </TableCell>
                               <TableCell align="right">
-                                {formatCurrency(
-                                  (vat.netAmount || 0) + (vat.vatAmount || 0)
-                                )}
+                                {formatCurrency(item.netAmount)}
+                              </TableCell>
+                              <TableCell align="center">
+                                {item.vatRate !== undefined
+                                  ? `${item.vatRate}%`
+                                  : "zw."}
+                              </TableCell>
+                              <TableCell align="right">
+                                {(() => {
+                                  // Oblicz VAT: jeśli jest grossAmount, użyj różnicy, w przeciwnym razie oblicz z vatRate
+                                  if (
+                                    item.grossAmount !== undefined &&
+                                    item.netAmount !== undefined
+                                  ) {
+                                    return formatCurrency(
+                                      item.grossAmount - item.netAmount,
+                                    );
+                                  }
+                                  if (
+                                    item.netAmount !== undefined &&
+                                    item.vatRate !== undefined
+                                  ) {
+                                    return formatCurrency(
+                                      item.netAmount * (item.vatRate / 100),
+                                    );
+                                  }
+                                  return formatCurrency(0);
+                                })()}
+                              </TableCell>
+                              <TableCell align="right">
+                                {(() => {
+                                  // Oblicz brutto: jeśli jest grossAmount użyj go, w przeciwnym razie oblicz z netto + VAT
+                                  if (item.grossAmount !== undefined) {
+                                    return formatCurrency(item.grossAmount);
+                                  }
+                                  if (item.netAmount !== undefined) {
+                                    const vatAmount =
+                                      item.vatRate !== undefined
+                                        ? item.netAmount * (item.vatRate / 100)
+                                        : 0;
+                                    return formatCurrency(
+                                      item.netAmount + vatAmount,
+                                    );
+                                  }
+                                  return "—";
+                                })()}
                               </TableCell>
                             </TableRow>
-                          )
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={9} align="center">
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                              >
+                                Brak pozycji do wyświetlenia
+                              </Typography>
+                            </TableCell>
+                          </TableRow>
                         )}
                       </TableBody>
                     </Table>
-                  </Box>
-                </Box>
+                  </TableContainer>
 
-                {/* Payment Summary */}
-                <Box sx={{ mb: 2 }}>
-                  {(() => {
-                    const paidAmount = calculatePaidAmount(
-                      details.paymentStatus,
-                      parsedXml?.payment?.isPaid,
-                      details.grossAmount || 0
-                    );
-                    const remainingAmount =
-                      (details.grossAmount || 0) - paidAmount;
-                    return (
-                      <>
-                        <Typography variant="body2">
-                          <strong>Zapłacono:</strong>{" "}
-                          {formatCurrency(paidAmount)}{" "}
-                          <strong style={{ marginLeft: 16 }}>
-                            Pozostało do zapłaty:
-                          </strong>{" "}
-                          {formatCurrency(remainingAmount)}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          <strong>Słownie:</strong>{" "}
-                          {numberToWords(details.grossAmount || 0)}
-                        </Typography>
-                      </>
-                    );
-                  })()}
-                </Box>
+                  {/* Summary Section */}
+                  <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+                    {/* Total to pay box */}
+                    <Box
+                      sx={{
+                        bgcolor: "primary.main",
+                        color: "white",
+                        px: 3,
+                        py: 1.5,
+                        borderRadius: 1,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 2,
+                      }}
+                    >
+                      <Typography variant="body2" fontWeight={500}>
+                        RAZEM DO ZAPŁATY:
+                      </Typography>
+                      <Typography variant="h6" fontWeight={700}>
+                        <CopyableText
+                          value={details.grossAmount?.toFixed(2)}
+                          hoverColor="primary.light"
+                        >
+                          {formatCurrency(details.grossAmount)}
+                        </CopyableText>
+                      </Typography>
+                    </Box>
 
-                {/* Footer / Notes / Additional Descriptions */}
-                {(parsedXml?.footer ||
-                  details.comment ||
-                  (parsedXml?.additionalDescriptions &&
-                    parsedXml.additionalDescriptions.length > 0)) && (
-                  <Box
-                    sx={{
-                      mt: 2,
-                      pt: 2,
-                      borderTop: 1,
-                      borderColor: "divider",
-                    }}
-                  >
-                    <Typography variant="body2" color="text.secondary">
-                      <strong>Uwagi:</strong>
-                    </Typography>
-                    {parsedXml?.footer && (
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{ whiteSpace: "pre-wrap" }}
-                      >
-                        {parsedXml.footer}
-                      </Typography>
-                    )}
-                    {details.comment && (
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{ whiteSpace: "pre-wrap", mt: 1 }}
-                      >
-                        {details.comment}
-                      </Typography>
-                    )}
-                    {/* Dodatkowe opisy (DodatkowyOpis z FA(4)) */}
-                    {parsedXml?.additionalDescriptions &&
-                      parsedXml.additionalDescriptions.length > 0 && (
-                        <Box sx={{ mt: 1 }}>
-                          <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            sx={{ fontWeight: 600 }}
+                    {/* VAT Summary Table */}
+                    <Box sx={{ flex: 1 }}>
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow
+                            sx={{ "& th": { py: 0.5, fontSize: "0.75rem" } }}
                           >
-                            Dodatkowe opisy:
+                            <TableCell></TableCell>
+                            <TableCell align="right">Wartość netto</TableCell>
+                            <TableCell align="center">Stawka</TableCell>
+                            <TableCell align="right">Kwota VAT</TableCell>
+                            <TableCell align="right">Wartość brutto</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          <TableRow
+                            sx={{ "& td": { py: 0.5, fontSize: "0.8rem" } }}
+                          >
+                            <TableCell
+                              sx={{ color: "primary.main", fontWeight: 600 }}
+                            >
+                              Razem:
+                            </TableCell>
+                            <TableCell
+                              align="right"
+                              sx={{ color: "primary.main" }}
+                            >
+                              <CopyableText
+                                value={details.netAmount?.toFixed(2)}
+                              >
+                                {formatCurrency(details.netAmount)}
+                              </CopyableText>
+                            </TableCell>
+                            <TableCell
+                              align="center"
+                              sx={{ color: "primary.main" }}
+                            >
+                              X
+                            </TableCell>
+                            <TableCell
+                              align="right"
+                              sx={{ color: "primary.main" }}
+                            >
+                              <CopyableText
+                                value={details.vatAmount?.toFixed(2)}
+                              >
+                                {formatCurrency(details.vatAmount)}
+                              </CopyableText>
+                            </TableCell>
+                            <TableCell
+                              align="right"
+                              sx={{ color: "primary.main" }}
+                            >
+                              <CopyableText
+                                value={details.grossAmount?.toFixed(2)}
+                              >
+                                {formatCurrency(details.grossAmount)}
+                              </CopyableText>
+                            </TableCell>
+                          </TableRow>
+                          {parsedXml?.invoiceData?.vatBreakdown?.map(
+                            (vat, idx) => (
+                              <TableRow
+                                key={idx}
+                                sx={{
+                                  "& td": { py: 0.5, fontSize: "0.75rem" },
+                                }}
+                              >
+                                <TableCell>W tym:</TableCell>
+                                <TableCell align="right">
+                                  {formatCurrency(vat.netAmount)}
+                                </TableCell>
+                                <TableCell align="center">
+                                  {vat.rate || "zw."}
+                                </TableCell>
+                                <TableCell align="right">
+                                  {vat.vatAmount !== undefined
+                                    ? formatCurrency(vat.vatAmount)
+                                    : formatCurrency(0)}
+                                </TableCell>
+                                <TableCell align="right">
+                                  {formatCurrency(
+                                    (vat.netAmount || 0) + (vat.vatAmount || 0),
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            ),
+                          )}
+                        </TableBody>
+                      </Table>
+                    </Box>
+                  </Box>
+
+                  {/* Payment Summary */}
+                  <Box sx={{ mb: 2 }}>
+                    {(() => {
+                      const paidAmount = calculatePaidAmount(
+                        details.paymentStatus,
+                        parsedXml?.payment?.isPaid,
+                        details.grossAmount || 0,
+                      );
+                      const remainingAmount =
+                        (details.grossAmount || 0) - paidAmount;
+                      return (
+                        <>
+                          <Typography variant="body2">
+                            <strong>Zapłacono:</strong>{" "}
+                            {formatCurrency(paidAmount)}{" "}
+                            <strong style={{ marginLeft: 16 }}>
+                              Pozostało do zapłaty:
+                            </strong>{" "}
+                            {formatCurrency(remainingAmount)}
                           </Typography>
-                          {parsedXml.additionalDescriptions.map((desc, idx) => (
+                          <Typography variant="body2" color="text.secondary">
+                            <strong>Słownie:</strong>{" "}
+                            {numberToWords(details.grossAmount || 0)}
+                          </Typography>
+                        </>
+                      );
+                    })()}
+                  </Box>
+
+                  {/* Footer / Notes / Additional Descriptions */}
+                  {(parsedXml?.footer ||
+                    details.comment ||
+                    (parsedXml?.additionalDescriptions &&
+                      parsedXml.additionalDescriptions.length > 0)) && (
+                    <Box
+                      sx={{
+                        mt: 2,
+                        pt: 2,
+                        borderTop: 1,
+                        borderColor: "divider",
+                      }}
+                    >
+                      <Typography variant="body2" color="text.secondary">
+                        <strong>Uwagi:</strong>
+                      </Typography>
+                      {parsedXml?.footer && (
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{ whiteSpace: "pre-wrap" }}
+                        >
+                          {parsedXml.footer}
+                        </Typography>
+                      )}
+                      {details.comment && (
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{ whiteSpace: "pre-wrap", mt: 1 }}
+                        >
+                          {details.comment}
+                        </Typography>
+                      )}
+                      {/* Dodatkowe opisy (DodatkowyOpis z FA(4)) */}
+                      {parsedXml?.additionalDescriptions &&
+                        parsedXml.additionalDescriptions.length > 0 && (
+                          <Box sx={{ mt: 1 }}>
                             <Typography
-                              key={idx}
                               variant="body2"
                               color="text.secondary"
-                              sx={{ ml: 1 }}
+                              sx={{ fontWeight: 600 }}
                             >
-                              {desc.key && <strong>{desc.key}: </strong>}
-                              {desc.value}
+                              Dodatkowe opisy:
                             </Typography>
+                            {parsedXml.additionalDescriptions.map(
+                              (desc, idx) => (
+                                <Typography
+                                  key={idx}
+                                  variant="body2"
+                                  color="text.secondary"
+                                  sx={{ ml: 1 }}
+                                >
+                                  {desc.key && <strong>{desc.key}: </strong>}
+                                  {desc.value}
+                                </Typography>
+                              ),
+                            )}
+                          </Box>
+                        )}
+                    </Box>
+                  )}
+
+                  {/* Additional Info Accordion */}
+                  <Accordion sx={{ mt: 2 }}>
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                      <Typography fontWeight={600}>
+                        Dodatkowe informacje
+                      </Typography>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
+                        <Box sx={{ minWidth: 200 }}>
+                          <DetailRow
+                            label="Typ faktury"
+                            value={
+                              KSeFInvoiceTypeLabels[details.invoiceType] ||
+                              details.invoiceType
+                            }
+                          />
+                          <DetailRow
+                            label="Źródło"
+                            value={
+                              <Chip
+                                label={
+                                  InvoiceSourceLabels[details.source] ||
+                                  details.source
+                                }
+                                size="small"
+                                color={
+                                  details.source === "KSeF"
+                                    ? "primary"
+                                    : "default"
+                                }
+                                variant="outlined"
+                              />
+                            }
+                          />
+                          <DetailRow
+                            label="Status faktury"
+                            value={
+                              <Chip
+                                label={
+                                  KSeFInvoiceStatusLabels[details.status] ||
+                                  details.status
+                                }
+                                size="small"
+                                color={getStatusColor(details.status)}
+                              />
+                            }
+                          />
+                          <DetailRow
+                            label="Status płatności"
+                            value={
+                              <Chip
+                                label={
+                                  KSeFPaymentStatusLabels[
+                                    details.paymentStatus
+                                  ] || details.paymentStatus
+                                }
+                                size="small"
+                                color={getPaymentStatusColor(
+                                  details.paymentStatus,
+                                )}
+                                variant="outlined"
+                              />
+                            }
+                          />
+                          {details.paymentDate && (
+                            <DetailRow
+                              label="Data płatności"
+                              value={dayjs(details.paymentDate).format(
+                                "YYYY-MM-DD",
+                              )}
+                            />
+                          )}
+                        </Box>
+                        <Box sx={{ minWidth: 200 }}>
+                          <DetailRow
+                            label="Moduł"
+                            value={
+                              details.moduleType
+                                ? ModuleTypeLabels[details.moduleType] ||
+                                  details.moduleType
+                                : "—"
+                            }
+                          />
+                          <DetailRow
+                            label="Lokalizacja"
+                            value={details.location}
+                          />
+                          <DetailRow
+                            label="Przypisany użytkownik"
+                            value={details.assignedUserName}
+                          />
+                          <DetailRow
+                            label="Identyfikator cyklu"
+                            value={
+                              details.cycleIdentifier && details.cycleYear
+                                ? `${details.cycleIdentifier}/${details.cycleYear}`
+                                : "—"
+                            }
+                          />
+                        </Box>
+                      </Box>
+                      {parsedXml?.thirdParty && (
+                        <Box sx={{ mt: 2 }}>
+                          <Typography
+                            variant="body2"
+                            fontWeight={600}
+                            gutterBottom
+                          >
+                            Podmiot trzeci{" "}
+                            {parsedXml.thirdParty.role
+                              ? `(${parsedXml.thirdParty.role})`
+                              : ""}
+                          </Typography>
+                          <DetailRow
+                            label="Nazwa"
+                            value={parsedXml.thirdParty.name}
+                          />
+                          <DetailRow
+                            label="NIP"
+                            value={parsedXml.thirdParty.nip}
+                          />
+                          <DetailRow
+                            label="Adres"
+                            value={formatAddress(parsedXml.thirdParty)}
+                          />
+                        </Box>
+                      )}
+                    </AccordionDetails>
+                  </Accordion>
+
+                  {/* Attachments Accordion */}
+                  <Accordion sx={{ mt: 2 }}>
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        <AttachFileIcon fontSize="small" />
+                        <Typography fontWeight={600}>
+                          Załączniki ({attachments.length})
+                        </Typography>
+                      </Box>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      <Box sx={{ mb: 2 }}>
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          style={{ display: "none" }}
+                          onChange={handleAttachmentUpload}
+                          accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
+                        />
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          startIcon={<UploadFileIcon />}
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={uploadingAttachment}
+                        >
+                          {uploadingAttachment
+                            ? "Dodawanie..."
+                            : "Dodaj załącznik"}
+                        </Button>
+                      </Box>
+                      {attachmentsLoading ? (
+                        <CircularProgress size={24} />
+                      ) : attachments.length === 0 ? (
+                        <Typography variant="body2" color="text.secondary">
+                          Brak załączników
+                        </Typography>
+                      ) : (
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 1,
+                          }}
+                        >
+                          {attachments.map((attachment) => (
+                            <Box
+                              key={attachment.id}
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                p: 1,
+                                border: 1,
+                                borderColor: "divider",
+                                borderRadius: 1,
+                              }}
+                            >
+                              <Box>
+                                <Typography variant="body2" fontWeight={500}>
+                                  {attachment.fileName}
+                                </Typography>
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                >
+                                  {(attachment.fileSize / 1024).toFixed(1)} KB •{" "}
+                                  {dayjs(attachment.uploadedAt).format(
+                                    "YYYY-MM-DD HH:mm",
+                                  )}
+                                </Typography>
+                              </Box>
+                              <Box>
+                                <Button
+                                  size="small"
+                                  onClick={() =>
+                                    handleAttachmentDownload(attachment)
+                                  }
+                                >
+                                  <DownloadIcon fontSize="small" />
+                                </Button>
+                                <Button
+                                  size="small"
+                                  color="error"
+                                  onClick={() =>
+                                    handleAttachmentDelete(attachment.id)
+                                  }
+                                >
+                                  <DeleteIcon fontSize="small" />
+                                </Button>
+                              </Box>
+                            </Box>
                           ))}
                         </Box>
                       )}
-                  </Box>
-                )}
+                    </AccordionDetails>
+                  </Accordion>
 
-                {/* Additional Info Accordion */}
-                <Accordion sx={{ mt: 2 }}>
-                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                    <Typography fontWeight={600}>
-                      Dodatkowe informacje
-                    </Typography>
-                  </AccordionSummary>
-                  <AccordionDetails>
-                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
-                      <Box sx={{ minWidth: 200 }}>
-                        <DetailRow
-                          label="Typ faktury"
-                          value={
-                            KSeFInvoiceTypeLabels[details.invoiceType] ||
-                            details.invoiceType
-                          }
-                        />
-                        <DetailRow
-                          label="Źródło"
-                          value={
-                            <Chip
-                              label={
-                                InvoiceSourceLabels[details.source] ||
-                                details.source
-                              }
-                              size="small"
-                              color={
-                                details.source === "KSeF"
-                                  ? "primary"
-                                  : "default"
-                              }
-                              variant="outlined"
-                            />
-                          }
-                        />
-                        <DetailRow
-                          label="Status faktury"
-                          value={
-                            <Chip
-                              label={
-                                KSeFInvoiceStatusLabels[details.status] ||
-                                details.status
-                              }
-                              size="small"
-                              color={getStatusColor(details.status)}
-                            />
-                          }
-                        />
-                        <DetailRow
-                          label="Status płatności"
-                          value={
-                            <Chip
-                              label={
-                                KSeFPaymentStatusLabels[
-                                  details.paymentStatus
-                                ] || details.paymentStatus
-                              }
-                              size="small"
-                              color={getPaymentStatusColor(
-                                details.paymentStatus
-                              )}
-                              variant="outlined"
-                            />
-                          }
-                        />
-                        {details.paymentDate && (
-                          <DetailRow
-                            label="Data płatności"
-                            value={dayjs(details.paymentDate).format(
-                              "YYYY-MM-DD"
-                            )}
-                          />
-                        )}
-                      </Box>
-                      <Box sx={{ minWidth: 200 }}>
-                        <DetailRow
-                          label="Moduł"
-                          value={
-                            details.moduleType
-                              ? ModuleTypeLabels[details.moduleType] ||
-                                details.moduleType
-                              : "—"
-                          }
-                        />
-                        <DetailRow
-                          label="Lokalizacja"
-                          value={details.location}
-                        />
-                        <DetailRow
-                          label="Przypisany użytkownik"
-                          value={details.assignedUserName}
-                        />
-                        <DetailRow
-                          label="Identyfikator cyklu"
-                          value={
-                            details.cycleIdentifier && details.cycleYear
-                              ? `${details.cycleIdentifier}/${details.cycleYear}`
-                              : "—"
-                          }
-                        />
-                      </Box>
-                    </Box>
-                    {parsedXml?.thirdParty && (
-                      <Box sx={{ mt: 2 }}>
-                        <Typography
-                          variant="body2"
-                          fontWeight={600}
-                          gutterBottom
-                        >
-                          Podmiot trzeci{" "}
-                          {parsedXml.thirdParty.role
-                            ? `(${parsedXml.thirdParty.role})`
-                            : ""}
-                        </Typography>
-                        <DetailRow
-                          label="Nazwa"
-                          value={parsedXml.thirdParty.name}
-                        />
-                        <DetailRow
-                          label="NIP"
-                          value={parsedXml.thirdParty.nip}
-                        />
-                        <DetailRow
-                          label="Adres"
-                          value={formatAddress(parsedXml.thirdParty)}
-                        />
-                      </Box>
-                    )}
-                  </AccordionDetails>
-                </Accordion>
-
-                {/* Attachments Accordion */}
-                <Accordion sx={{ mt: 2 }}>
-                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <AttachFileIcon fontSize="small" />
-                      <Typography fontWeight={600}>
-                        Załączniki ({attachments.length})
-                      </Typography>
-                    </Box>
-                  </AccordionSummary>
-                  <AccordionDetails>
-                    <Box sx={{ mb: 2 }}>
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        style={{ display: "none" }}
-                        onChange={handleAttachmentUpload}
-                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
-                      />
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        startIcon={<UploadFileIcon />}
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={uploadingAttachment}
-                      >
-                        {uploadingAttachment
-                          ? "Dodawanie..."
-                          : "Dodaj załącznik"}
-                      </Button>
-                    </Box>
-                    {attachmentsLoading ? (
-                      <CircularProgress size={24} />
-                    ) : attachments.length === 0 ? (
-                      <Typography variant="body2" color="text.secondary">
-                        Brak załączników
-                      </Typography>
-                    ) : (
+                  {/* Audit Logs Accordion */}
+                  <Accordion sx={{ mt: 2 }}>
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                       <Box
-                        sx={{
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: 1,
-                        }}
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
                       >
-                        {attachments.map((attachment) => (
-                          <Box
-                            key={attachment.id}
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                              p: 1,
-                              border: 1,
-                              borderColor: "divider",
-                              borderRadius: 1,
-                            }}
-                          >
-                            <Box>
-                              <Typography variant="body2" fontWeight={500}>
-                                {attachment.fileName}
-                              </Typography>
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
-                              >
-                                {(attachment.fileSize / 1024).toFixed(1)} KB •{" "}
-                                {dayjs(attachment.uploadedAt).format(
-                                  "YYYY-MM-DD HH:mm"
-                                )}
-                              </Typography>
-                            </Box>
-                            <Box>
-                              <Button
-                                size="small"
-                                onClick={() =>
-                                  handleAttachmentDownload(attachment)
-                                }
-                              >
-                                <DownloadIcon fontSize="small" />
-                              </Button>
-                              <Button
-                                size="small"
-                                color="error"
-                                onClick={() =>
-                                  handleAttachmentDelete(attachment.id)
-                                }
-                              >
-                                <DeleteIcon fontSize="small" />
-                              </Button>
-                            </Box>
-                          </Box>
-                        ))}
+                        <HistoryIcon fontSize="small" />
+                        <Typography fontWeight={600}>
+                          Historia zmian ({auditLogs.length})
+                        </Typography>
                       </Box>
-                    )}
-                  </AccordionDetails>
-                </Accordion>
-
-                {/* Audit Logs Accordion */}
-                <Accordion sx={{ mt: 2 }}>
-                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <HistoryIcon fontSize="small" />
-                      <Typography fontWeight={600}>
-                        Historia zmian ({auditLogs.length})
-                      </Typography>
-                    </Box>
-                  </AccordionSummary>
-                  <AccordionDetails>
-                    {auditLogsLoading ? (
-                      <CircularProgress size={24} />
-                    ) : auditLogs.length === 0 ? (
-                      <Typography variant="body2" color="text.secondary">
-                        Brak historii zmian
-                      </Typography>
-                    ) : (
-                      <TableContainer component={Paper} variant="outlined">
-                        <Table size="small">
-                          <TableHead>
-                            <TableRow>
-                              <TableCell>Data</TableCell>
-                              <TableCell>Akcja</TableCell>
-                              <TableCell>Użytkownik</TableCell>
-                              <TableCell>Komentarz</TableCell>
-                            </TableRow>
-                          </TableHead>
-                          <TableBody>
-                            {auditLogs.map((log) => (
-                              <TableRow key={log.id}>
-                                <TableCell>
-                                  {dayjs(log.createdAt).format(
-                                    "YYYY-MM-DD HH:mm"
-                                  )}
-                                </TableCell>
-                                <TableCell>
-                                  <Chip
-                                    label={log.actionDescription || log.action}
-                                    size="small"
-                                    variant="outlined"
-                                  />
-                                  {log.previousStatus && log.newStatus && (
-                                    <Typography
-                                      variant="caption"
-                                      sx={{ ml: 1 }}
-                                    >
-                                      {log.previousStatus} → {log.newStatus}
-                                    </Typography>
-                                  )}
-                                </TableCell>
-                                <TableCell>{log.userName}</TableCell>
-                                <TableCell>{log.comment || "—"}</TableCell>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      {auditLogsLoading ? (
+                        <CircularProgress size={24} />
+                      ) : auditLogs.length === 0 ? (
+                        <Typography variant="body2" color="text.secondary">
+                          Brak historii zmian
+                        </Typography>
+                      ) : (
+                        <TableContainer component={Paper} variant="outlined">
+                          <Table size="small">
+                            <TableHead>
+                              <TableRow>
+                                <TableCell>Data</TableCell>
+                                <TableCell>Akcja</TableCell>
+                                <TableCell>Użytkownik</TableCell>
+                                <TableCell>Komentarz</TableCell>
                               </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </TableContainer>
-                    )}
-                  </AccordionDetails>
-                </Accordion>
-              </Paper>
+                            </TableHead>
+                            <TableBody>
+                              {auditLogs.map((log) => (
+                                <TableRow key={log.id}>
+                                  <TableCell>
+                                    {dayjs(log.createdAt).format(
+                                      "YYYY-MM-DD HH:mm",
+                                    )}
+                                  </TableCell>
+                                  <TableCell>
+                                    <Chip
+                                      label={
+                                        log.actionDescription || log.action
+                                      }
+                                      size="small"
+                                      variant="outlined"
+                                    />
+                                    {log.previousStatus && log.newStatus && (
+                                      <Typography
+                                        variant="caption"
+                                        sx={{ ml: 1 }}
+                                      >
+                                        {log.previousStatus} → {log.newStatus}
+                                      </Typography>
+                                    )}
+                                  </TableCell>
+                                  <TableCell>{log.userName}</TableCell>
+                                  <TableCell>{log.comment || "—"}</TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </TableContainer>
+                      )}
+                    </AccordionDetails>
+                  </Accordion>
+                </Paper>
+              )}
             </Grid>
 
             {/* Right side - Edit panel */}
@@ -1931,7 +1963,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                           label="Typ powiązania"
                           onChange={(e) =>
                             setRelationType(
-                              e.target.value as InvoiceRelationType
+                              e.target.value as InvoiceRelationType,
                             )
                           }
                           sx={{ bgcolor: "background.paper" }}
@@ -1941,7 +1973,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                               <MenuItem key={key} value={key}>
                                 {label}
                               </MenuItem>
-                            )
+                            ),
                           )}
                         </Select>
                       </FormControl>
@@ -1973,7 +2005,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                                     setSelectedLinkIds((prev) =>
                                       prev.includes(inv.id)
                                         ? prev.filter((id) => id !== inv.id)
-                                        : [...prev, inv.id]
+                                        : [...prev, inv.id],
                                     );
                                   }}
                                   selected={selectedLinkIds.includes(inv.id)}
@@ -2123,7 +2155,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                         setDetails((prev) =>
                           prev
                             ? { ...prev, status: KSeFInvoiceStatus.Accepted }
-                            : null
+                            : null,
                         );
                         // Auto-next in sequential mode after accepting
                         handleAutoNextAfterAccept();
@@ -2189,7 +2221,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                           <MenuItem key={key} value={key}>
                             {label}
                           </MenuItem>
-                        )
+                        ),
                       )}
                     </Select>
                   </FormControl>
@@ -2208,7 +2240,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                           <MenuItem key={key} value={key}>
                             {label}
                           </MenuItem>
-                        )
+                        ),
                       )}
                     </Select>
                   </FormControl>
@@ -2282,12 +2314,12 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                                         ...prev,
                                         paymentStatus: editForm.paymentStatus,
                                       }
-                                    : null
+                                    : null,
                                 );
                                 onSave?.();
                               },
                               undefined,
-                              "Błąd podczas zapisywania zmian"
+                              "Błąd podczas zapisywania zmian",
                             );
                           } finally {
                             setSaving(false);

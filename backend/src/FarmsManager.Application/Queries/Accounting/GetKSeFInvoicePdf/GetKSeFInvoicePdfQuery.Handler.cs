@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Xml.Linq;
 using FarmsManager.Application.FileSystem;
+using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Queries.Accounting.GetKSeFInvoiceDetails;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Entities;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
@@ -19,10 +20,14 @@ public class GetKSeFInvoicePdfQueryHandler : IRequestHandler<GetKSeFInvoicePdfQu
     private const string Extension = ".pdf";
 
     private readonly IKSeFInvoiceRepository _invoiceRepository;
+    private readonly IS3Service _s3Service;
 
-    public GetKSeFInvoicePdfQueryHandler(IKSeFInvoiceRepository invoiceRepository)
+    public GetKSeFInvoicePdfQueryHandler(
+        IKSeFInvoiceRepository invoiceRepository,
+        IS3Service s3Service)
     {
         _invoiceRepository = invoiceRepository;
+        _s3Service = s3Service;
     }
 
     public async Task<FileModel> Handle(GetKSeFInvoicePdfQuery request, CancellationToken cancellationToken)
@@ -35,6 +40,13 @@ public class GetKSeFInvoicePdfQueryHandler : IRequestHandler<GetKSeFInvoicePdfQu
             throw DomainException.RecordNotFound("Faktura nie została znaleziona");
         }
 
+        // Dla faktur manualnych zwróć oryginalny plik
+        if (invoice.InvoiceSource == KSeFInvoiceSource.Manual)
+        {
+            return await GetOriginalFileAsync(invoice, cancellationToken);
+        }
+
+        // Dla faktur KSeF generuj wizualizację PDF
         var parsedData = !string.IsNullOrEmpty(invoice.InvoiceXml) 
             ? ParseInvoiceXml(invoice.InvoiceXml) 
             : null;
@@ -49,6 +61,48 @@ public class GetKSeFInvoicePdfQueryHandler : IRequestHandler<GetKSeFInvoicePdfQu
             CreationDate = DateTime.Now,
             ContentType = ContentType,
             Data = fileBytes
+        };
+    }
+
+    private async Task<FileModel> GetOriginalFileAsync(KSeFInvoiceEntity invoice, CancellationToken cancellationToken)
+    {
+        // Szukaj pliku w lokalizacji accounting/{invoiceId}.* 
+        var possibleExtensions = new[] { ".pdf", ".jpg", ".jpeg", ".png" };
+        
+        foreach (var ext in possibleExtensions)
+        {
+            var filePath = $"accounting/{invoice.Id}{ext}";
+            try
+            {
+                if (await _s3Service.FileExistsAsync(FileType.AccountingInvoice, filePath))
+                {
+                    var fileModel = await _s3Service.GetFileAsync(FileType.AccountingInvoice, filePath);
+                    if (fileModel?.Data != null && fileModel.Data.Length > 0)
+                    {
+                        fileModel.FileName = $"Faktura_{SanitizeFileName(invoice.InvoiceNumber)}_{invoice.InvoiceDate:yyyy-MM-dd}{ext}";
+                        return fileModel;
+                    }
+                }
+            }
+            catch
+            {
+                // Kontynuuj szukanie z innym rozszerzeniem
+            }
+        }
+
+        // Jeśli nie znaleziono oryginalnego pliku, wygeneruj PDF
+        var parsedData = !string.IsNullOrEmpty(invoice.InvoiceXml) 
+            ? ParseInvoiceXml(invoice.InvoiceXml) 
+            : null;
+
+        var generatedBytes = GenerateInvoicePdf(invoice, parsedData);
+        return new FileModel
+        {
+            FileName = $"Faktura_{SanitizeFileName(invoice.InvoiceNumber)}_{invoice.InvoiceDate:yyyy-MM-dd}{Extension}",
+            IsFile = true,
+            CreationDate = DateTime.Now,
+            ContentType = ContentType,
+            Data = generatedBytes
         };
     }
 

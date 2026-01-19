@@ -1,3 +1,5 @@
+using KSeF.Client.Core.Models.Invoices.Common;
+
 namespace FarmsManager.Application.Models.KSeF;
 
 /// <summary>
@@ -51,7 +53,7 @@ public class KSeFInvoiceSyncItem
     public string BuyerNip { get; set; }
     public string BuyerName { get; set; }
     public KSeFInvoiceItemDirection Direction { get; set; }
-    public global::KSeF.Client.Core.Models.Invoices.Common.InvoiceType InvoiceType { get; set; }
+    public InvoiceType InvoiceType { get; set; }
 }
 
 /// <summary>

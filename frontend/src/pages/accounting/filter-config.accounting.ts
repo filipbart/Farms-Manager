@@ -4,6 +4,7 @@ import {
   KSeFInvoiceStatusLabels,
   KSeFPaymentStatusLabels,
   InvoiceSourceLabels,
+  ModuleTypeLabels,
 } from "../../models/accounting/ksef-invoice";
 
 interface AccountingFiltersConfigOptions {
@@ -11,7 +12,7 @@ interface AccountingFiltersConfigOptions {
 }
 
 export const getAccountingFiltersConfig = (
-  options?: AccountingFiltersConfigOptions
+  options?: AccountingFiltersConfigOptions,
 ): FilterConfig<keyof KSeFInvoicesFilters>[] => [
   {
     key: "buyerName",
@@ -80,5 +81,14 @@ export const getAccountingFiltersConfig = (
     label: "Przypisany pracownik",
     type: "select",
     options: options?.users ?? [],
+  },
+  {
+    key: "moduleType",
+    label: "Moduł",
+    type: "select",
+    options: Object.entries(ModuleTypeLabels).map(([value, label]) => ({
+      value,
+      label,
+    })),
   },
 ];

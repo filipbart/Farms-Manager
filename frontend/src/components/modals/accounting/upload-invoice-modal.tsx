@@ -28,6 +28,8 @@ import {
   KSeFInvoiceTypeLabels,
   KSeFPaymentStatus,
   KSeFPaymentStatusLabels,
+  ModuleType,
+  ModuleTypeLabels,
 } from "../../../models/accounting/ksef-invoice";
 
 interface UploadInvoiceModalProps {
@@ -46,11 +48,12 @@ const UploadInvoiceModal: React.FC<UploadInvoiceModalProps> = ({
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [invoiceType, setInvoiceType] = useState<KSeFInvoiceType>(
-    KSeFInvoiceType.Purchase
+    KSeFInvoiceType.Purchase,
   );
   const [paymentStatus, setPaymentStatus] = useState<KSeFPaymentStatus>(
-    KSeFPaymentStatus.Unpaid
+    KSeFPaymentStatus.Unpaid,
   );
+  const [moduleType, setModuleType] = useState<ModuleType>(ModuleType.None);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -79,10 +82,10 @@ const UploadInvoiceModal: React.FC<UploadInvoiceModalProps> = ({
 
     // Rozdziel pliki na XML i pozostałe
     const xmlFiles = selectedFiles.filter((f) =>
-      f.name.toLowerCase().endsWith(".xml")
+      f.name.toLowerCase().endsWith(".xml"),
     );
     const otherFiles = selectedFiles.filter(
-      (f) => !f.name.toLowerCase().endsWith(".xml")
+      (f) => !f.name.toLowerCase().endsWith(".xml"),
     );
 
     try {
@@ -94,14 +97,14 @@ const UploadInvoiceModal: React.FC<UploadInvoiceModalProps> = ({
               xmlFiles,
               invoiceType,
               paymentStatus,
-              controller.signal
+              controller.signal,
             ),
           (data) => {
             if (data && data.responseData) {
               const { importedCount, skippedCount, errors } = data.responseData;
               if (importedCount > 0) {
                 toast.success(
-                  `Zaimportowano ${importedCount} faktur KSeF z XML`
+                  `Zaimportowano ${importedCount} faktur KSeF z XML`,
                 );
               }
               if (skippedCount > 0) {
@@ -111,7 +114,7 @@ const UploadInvoiceModal: React.FC<UploadInvoiceModalProps> = ({
             }
           },
           undefined,
-          "Błąd podczas importowania faktur XML"
+          "Błąd podczas importowania faktur XML",
         );
       }
 
@@ -123,7 +126,8 @@ const UploadInvoiceModal: React.FC<UploadInvoiceModalProps> = ({
               otherFiles,
               invoiceType,
               paymentStatus,
-              controller.signal
+              moduleType,
+              controller.signal,
             ),
           (data) => {
             if (data && data.responseData) {
@@ -132,7 +136,7 @@ const UploadInvoiceModal: React.FC<UploadInvoiceModalProps> = ({
             toast.success("Faktury zostały wgrane pomyślnie");
           },
           undefined,
-          "Błąd podczas wgrywania faktur"
+          "Błąd podczas wgrywania faktur",
         );
       } else if (xmlFiles.length > 0) {
         // Jeśli były tylko pliki XML, zamknij modal i odśwież listę
@@ -163,6 +167,7 @@ const UploadInvoiceModal: React.FC<UploadInvoiceModalProps> = ({
     setSelectedFiles([]);
     setInvoiceType(KSeFInvoiceType.Purchase);
     setPaymentStatus(KSeFPaymentStatus.Unpaid);
+    setModuleType(ModuleType.None);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -202,6 +207,21 @@ const UploadInvoiceModal: React.FC<UploadInvoiceModalProps> = ({
               }
             >
               {Object.entries(KSeFPaymentStatusLabels).map(([key, label]) => (
+                <MenuItem key={key} value={key}>
+                  {label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <FormControl fullWidth>
+            <InputLabel>Moduł docelowy</InputLabel>
+            <Select
+              value={moduleType}
+              label="Moduł docelowy"
+              onChange={(e) => setModuleType(e.target.value as ModuleType)}
+            >
+              {Object.entries(ModuleTypeLabels).map(([key, label]) => (
                 <MenuItem key={key} value={key}>
                   {label}
                 </MenuItem>
