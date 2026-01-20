@@ -3,9 +3,18 @@ using System.Xml.Linq;
 using FarmsManager.Application.FileSystem;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Queries.Accounting.GetKSeFInvoiceDetails;
+using FarmsManager.Application.Specifications.Accounting;
+using FarmsManager.Application.Specifications.Expenses;
+using FarmsManager.Application.Specifications.Feeds;
+using FarmsManager.Application.Specifications.Gas;
+using FarmsManager.Application.Specifications.Sales;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Entities;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.GasAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.SaleAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
 using MediatR;
 using QuestPDF.Fluent;
@@ -21,13 +30,25 @@ public class GetKSeFInvoicePdfQueryHandler : IRequestHandler<GetKSeFInvoicePdfQu
 
     private readonly IKSeFInvoiceRepository _invoiceRepository;
     private readonly IS3Service _s3Service;
+    private readonly IFeedInvoiceRepository _feedInvoiceRepository;
+    private readonly IGasDeliveryRepository _gasDeliveryRepository;
+    private readonly IExpenseProductionRepository _expenseProductionRepository;
+    private readonly ISaleInvoiceRepository _saleInvoiceRepository;
 
     public GetKSeFInvoicePdfQueryHandler(
         IKSeFInvoiceRepository invoiceRepository,
-        IS3Service s3Service)
+        IS3Service s3Service,
+        IFeedInvoiceRepository feedInvoiceRepository,
+        IGasDeliveryRepository gasDeliveryRepository,
+        IExpenseProductionRepository expenseProductionRepository,
+        ISaleInvoiceRepository saleInvoiceRepository)
     {
         _invoiceRepository = invoiceRepository;
         _s3Service = s3Service;
+        _feedInvoiceRepository = feedInvoiceRepository;
+        _gasDeliveryRepository = gasDeliveryRepository;
+        _expenseProductionRepository = expenseProductionRepository;
+        _saleInvoiceRepository = saleInvoiceRepository;
     }
 
     public async Task<FileModel> Handle(GetKSeFInvoicePdfQuery request, CancellationToken cancellationToken)
@@ -66,19 +87,54 @@ public class GetKSeFInvoicePdfQueryHandler : IRequestHandler<GetKSeFInvoicePdfQu
 
     private async Task<FileModel> GetOriginalFileAsync(KSeFInvoiceEntity invoice, CancellationToken cancellationToken)
     {
-        // Szukaj pliku w lokalizacji accounting/{invoiceId}.* 
-        var possibleExtensions = new[] { ".pdf", ".jpg", ".jpeg", ".png" };
-        
-        foreach (var ext in possibleExtensions)
+        string filePath = null;
+
+        // Próbuj pobrać ścieżkę z encji modułowej
+        if (invoice.AssignedEntityInvoiceId.HasValue)
         {
-            var filePath = $"accounting/{invoice.Id}{ext}";
+            var entityId = invoice.AssignedEntityInvoiceId.Value;
+            switch (invoice.ModuleType)
+            {
+                case ModuleType.Feeds:
+                    var feedInvoice = await _feedInvoiceRepository.FirstOrDefaultAsync(
+                        new GetFeedInvoiceByIdSpec(entityId), cancellationToken);
+                    filePath = feedInvoice?.FilePath;
+                    break;
+
+                case ModuleType.Gas:
+                    var gasDelivery = await _gasDeliveryRepository.FirstOrDefaultAsync(
+                        new GetGasDeliveryByIdSpec(entityId), cancellationToken);
+                    filePath = gasDelivery?.FilePath;
+                    break;
+
+                case ModuleType.ProductionExpenses:
+                    var expenseProduction = await _expenseProductionRepository.FirstOrDefaultAsync(
+                        new GetExpenseProductionByIdSpec(entityId), cancellationToken);
+                    filePath = expenseProduction?.FilePath;
+                    break;
+
+                case ModuleType.Sales:
+                    var saleInvoice = await _saleInvoiceRepository.FirstOrDefaultAsync(
+                        new SaleInvoiceByIdSpec(entityId), cancellationToken);
+                    filePath = saleInvoice?.FilePath;
+                    break;
+            }
+        }
+
+        // Jeśli znaleziono ścieżkę, pobierz plik
+        if (!string.IsNullOrEmpty(filePath))
+        {
             try
             {
-                if (await _s3Service.FileExistsAsync(FileType.AccountingInvoice, filePath))
+                // Determine FileType and relative path from full path
+                var (fileType, relativePath) = ParseFilePath(filePath);
+                
+                if (await _s3Service.FileExistsAsync(fileType, relativePath))
                 {
-                    var fileModel = await _s3Service.GetFileAsync(FileType.AccountingInvoice, filePath);
+                    var fileModel = await _s3Service.GetFileAsync(fileType, relativePath);
                     if (fileModel?.Data != null && fileModel.Data.Length > 0)
                     {
+                        var ext = Path.GetExtension(filePath);
                         fileModel.FileName = $"Faktura_{SanitizeFileName(invoice.InvoiceNumber)}_{invoice.InvoiceDate:yyyy-MM-dd}{ext}";
                         return fileModel;
                     }
@@ -86,7 +142,64 @@ public class GetKSeFInvoicePdfQueryHandler : IRequestHandler<GetKSeFInvoicePdfQu
             }
             catch
             {
-                // Kontynuuj szukanie z innym rozszerzeniem
+                // Ignoruj błędy pobierania, fallback do generowania PDF
+            }
+        }
+
+        // Fallback: Szukaj pliku w lokalizacji saved/{invoiceId}.* używając odpowiedniego FileType dla modułu
+        // oraz accounting/saved/{invoiceId}.* i accounting/{invoiceId}.* (dla starych rekordów)
+        var possibleExtensions = new[] { ".pdf", ".jpg", ".jpeg", ".png" };
+        var moduleFileType = GetFileTypeForModule(invoice.ModuleType);
+        
+        foreach (var ext in possibleExtensions)
+        {
+            // First check module-specific folder using module FileType
+            if (moduleFileType != FileType.AccountingInvoice)
+            {
+                var modulePath = $"saved/{invoice.Id}{ext}";
+                try
+                {
+                    if (await _s3Service.FileExistsAsync(moduleFileType, modulePath))
+                    {
+                        var fileModel = await _s3Service.GetFileAsync(moduleFileType, modulePath);
+                        if (fileModel?.Data != null && fileModel.Data.Length > 0)
+                        {
+                            fileModel.FileName = $"Faktura_{SanitizeFileName(invoice.InvoiceNumber)}_{invoice.InvoiceDate:yyyy-MM-dd}{ext}";
+                            return fileModel;
+                        }
+                    }
+                }
+                catch
+                {
+                    // Kontynuuj szukanie
+                }
+            }
+            
+            // Then check accounting folders (for backwards compatibility)
+            var accountingPaths = new[] 
+            { 
+                $"saved/{invoice.Id}{ext}",
+                $"{invoice.Id}{ext}"
+            };
+
+            foreach (var fallbackPath in accountingPaths)
+            {
+                try
+                {
+                    if (await _s3Service.FileExistsAsync(FileType.AccountingInvoice, fallbackPath))
+                    {
+                        var fileModel = await _s3Service.GetFileAsync(FileType.AccountingInvoice, fallbackPath);
+                        if (fileModel?.Data != null && fileModel.Data.Length > 0)
+                        {
+                            fileModel.FileName = $"Faktura_{SanitizeFileName(invoice.InvoiceNumber)}_{invoice.InvoiceDate:yyyy-MM-dd}{ext}";
+                            return fileModel;
+                        }
+                    }
+                }
+                catch
+                {
+                    // Kontynuuj szukanie z inną ścieżką/rozszerzeniem
+                }
             }
         }
 
@@ -741,5 +854,44 @@ public class GetKSeFInvoicePdfQueryHandler : IRequestHandler<GetKSeFInvoicePdfQu
         public string Rate { get; set; }
         public decimal NetAmount { get; set; }
         public decimal VatAmount { get; set; }
+    }
+
+    private static FileType GetFileTypeForModule(ModuleType? moduleType)
+    {
+        return moduleType switch
+        {
+            ModuleType.Feeds => FileType.FeedDeliveryInvoice,
+            ModuleType.Gas => FileType.GasDelivery,
+            ModuleType.ProductionExpenses => FileType.ExpenseProduction,
+            ModuleType.Sales => FileType.SalesInvoices,
+            _ => FileType.AccountingInvoice
+        };
+    }
+
+    /// <summary>
+    /// Parses a file path to extract FileType and relative path.
+    /// Handles paths like "ExpenseProduction/saved/xxx.pdf" or "accounting/xxx.pdf"
+    /// </summary>
+    private static (FileType fileType, string relativePath) ParseFilePath(string filePath)
+    {
+        var prefixMappings = new Dictionary<string, FileType>
+        {
+            { "FeedDeliveryInvoice/", FileType.FeedDeliveryInvoice },
+            { "GasDelivery/", FileType.GasDelivery },
+            { "ExpenseProduction/", FileType.ExpenseProduction },
+            { "SalesInvoices/", FileType.SalesInvoices },
+            { "accounting/", FileType.AccountingInvoice }
+        };
+
+        foreach (var mapping in prefixMappings)
+        {
+            if (filePath.StartsWith(mapping.Key, StringComparison.OrdinalIgnoreCase))
+            {
+                return (mapping.Value, filePath.Substring(mapping.Key.Length));
+            }
+        }
+
+        // Default: assume it's an accounting invoice path without prefix
+        return (FileType.AccountingInvoice, filePath);
     }
 }

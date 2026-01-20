@@ -31,7 +31,6 @@ public class AccountingController : BaseController
     /// Zwraca faktury z systemu KSeF (API)
     /// </summary>
     [HttpGet]
-    [AllowAnonymous]
     [ProducesResponseType(typeof(BaseResponse<GetKSeFInvoicesQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetKSeFInvoices([FromQuery] GetKSeFInvoicesQueryFilters filters)
@@ -43,7 +42,6 @@ public class AccountingController : BaseController
     /// Zwraca faktury z bazy danych
     /// </summary>
     [HttpGet("invoices")]
-    [AllowAnonymous]
     [ProducesResponseType(typeof(BaseResponse<GetKSeFInvoicesFromDbQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetKSeFInvoicesFromDb([FromQuery] GetKSeFInvoicesFromDbQueryFilters filters)
@@ -55,7 +53,6 @@ public class AccountingController : BaseController
     /// Zwraca szczegóły faktury
     /// </summary>
     [HttpGet("invoices/{invoiceId:guid}")]
-    [AllowAnonymous]
     [ProducesResponseType(typeof(BaseResponse<KSeFInvoiceDetailsDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetKSeFInvoiceDetails(Guid invoiceId)
@@ -73,7 +70,6 @@ public class AccountingController : BaseController
     /// Pobiera XML faktury KSeF
     /// </summary>
     [HttpGet("invoices/{invoiceId:guid}/xml")]
-    [AllowAnonymous]
     [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DownloadInvoiceXml(Guid invoiceId)
@@ -93,7 +89,6 @@ public class AccountingController : BaseController
     /// Pobiera PDF faktury wygenerowany z danych faktury
     /// </summary>
     [HttpGet("invoices/{invoiceId:guid}/pdf")]
-    [AllowAnonymous]
     [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DownloadInvoicePdf(Guid invoiceId)
@@ -113,12 +108,14 @@ public class AccountingController : BaseController
     /// Upload faktur z zaczytywaniem danych przez AI
     /// </summary>
     [HttpPost("invoices/upload")]
-    [AllowAnonymous]
     [ProducesResponseType(typeof(BaseResponse<UploadAccountingInvoicesCommandResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> UploadInvoices(
         [FromForm] List<IFormFile> files,
-        [FromForm] string invoiceType)
+        [FromForm] string invoiceType,
+        [FromForm] string paymentStatus,
+        [FromForm] string? moduleType,
+        [FromForm] DateOnly? paymentDate)
     {
         if (files == null || files.Count == 0)
         {
@@ -129,7 +126,10 @@ public class AccountingController : BaseController
             new UploadAccountingInvoicesCommandDto
             {
                 Files = files,
-                InvoiceType = invoiceType
+                InvoiceType = invoiceType,
+                PaymentStatus = paymentStatus,
+                ModuleType = moduleType,
+                PaymentDate = paymentDate
             }));
 
         return Ok(result);
@@ -139,13 +139,13 @@ public class AccountingController : BaseController
     /// Upload faktur KSeF z plików XML (bez AI, bezpośredni import)
     /// </summary>
     [HttpPost("invoices/upload-xml")]
-    [AllowAnonymous]
     [ProducesResponseType(typeof(BaseResponse<UploadKSeFXmlInvoicesCommandResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> UploadKSeFXmlInvoices(
         [FromForm] List<IFormFile> files,
         [FromForm] string invoiceType,
-        [FromForm] string paymentStatus)
+        [FromForm] string paymentStatus,
+        [FromForm] DateOnly? paymentDate)
     {
         if (files == null || files.Count == 0)
         {
@@ -157,7 +157,8 @@ public class AccountingController : BaseController
             {
                 Files = files,
                 InvoiceType = invoiceType,
-                PaymentStatus = paymentStatus
+                PaymentStatus = paymentStatus,
+                PaymentDate = paymentDate
             }));
 
         return Ok(result);
@@ -167,7 +168,6 @@ public class AccountingController : BaseController
     /// Usuwa wszystkie faktury KSeF (tylko do testów!)
     /// </summary>
     [HttpDelete("invoices/delete-all")]
-    [AllowAnonymous]
     [ProducesResponseType(typeof(BaseResponse<DeleteAllKSeFInvoicesCommandResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> DeleteAllInvoices()
     {
@@ -179,7 +179,6 @@ public class AccountingController : BaseController
     /// Zapisuje fakturę po zaczytaniu przez AI
     /// </summary>
     [HttpPost("invoices/save")]
-    [AllowAnonymous]
     [ProducesResponseType(typeof(BaseResponse<Guid>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> SaveInvoice([FromBody] SaveAccountingInvoiceDto data)
@@ -192,7 +191,6 @@ public class AccountingController : BaseController
     /// Aktualizuje fakturę KSeF
     /// </summary>
     [HttpPatch("invoices/{invoiceId:guid}/update")]
-    [AllowAnonymous]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateInvoice(Guid invoiceId, [FromBody] UpdateKSeFInvoiceDto request)
@@ -205,7 +203,6 @@ public class AccountingController : BaseController
     /// Usuwa fakturę KSeF
     /// </summary>
     [HttpDelete("invoices/{invoiceId:guid}/delete")]
-    [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteInvoice(Guid invoiceId)
@@ -218,7 +215,6 @@ public class AccountingController : BaseController
     /// Wstrzymuje fakturę i przypisuje ją do innego pracownika (nie zmienia statusu)
     /// </summary>
     [HttpPost("invoices/{invoiceId:guid}/hold")]
-    [AllowAnonymous]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -232,7 +228,6 @@ public class AccountingController : BaseController
     /// Masowo zmienia status faktur na "Przekazana do biura"
     /// </summary>
     [HttpPost("invoices/transfer-to-office")]
-    [AllowAnonymous]
     [ProducesResponseType(typeof(TransferInvoicesToOfficeResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> TransferInvoicesToOffice([FromBody] List<Guid> invoiceIds)
@@ -245,7 +240,6 @@ public class AccountingController : BaseController
     /// Pobiera pliki faktur jako ZIP
     /// </summary>
     [HttpPost("invoices/download-zip")]
-    [AllowAnonymous]
     [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> DownloadInvoicesZip([FromBody] List<Guid> invoiceIds)
@@ -255,7 +249,6 @@ public class AccountingController : BaseController
     }
 
     [HttpPost("send-invoice")]
-    [AllowAnonymous]
     [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -288,7 +281,8 @@ public class AccountingController : BaseController
     /// </summary>
     [HttpGet("invoices/{invoiceId:guid}/linkable")]
     [ProducesResponseType(typeof(BaseResponse<List<LinkableInvoiceDto>>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetLinkableInvoices(Guid invoiceId, [FromQuery] string? searchPhrase = null, [FromQuery] int limit = 20)
+    public async Task<IActionResult> GetLinkableInvoices(Guid invoiceId, [FromQuery] string? searchPhrase = null,
+        [FromQuery] int limit = 20)
     {
         var filters = new GetLinkableInvoicesFilters
         {
@@ -336,7 +330,7 @@ public class AccountingController : BaseController
     [ProducesResponseType(typeof(BaseResponse<Guid?>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateModuleEntityFromInvoice(
-        Guid invoiceId, 
+        Guid invoiceId,
         [FromBody] CreateModuleEntityFromInvoiceRequest request)
     {
         var command = new CreateModuleEntityFromInvoiceCommand
@@ -358,11 +352,10 @@ public class AccountingController : BaseController
     /// Zmienia status faktury na "Accepted" i wymaga podania danych modułowych (jeśli moduł tego wymaga).
     /// </summary>
     [HttpPost("invoices/{invoiceId:guid}/accept")]
-    [AllowAnonymous]
     [ProducesResponseType(typeof(BaseResponse<Guid?>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> AcceptInvoice(
-        Guid invoiceId, 
+        Guid invoiceId,
         [FromBody] AcceptKSeFInvoiceRequest request)
     {
         var command = new AcceptKSeFInvoiceCommand
@@ -383,12 +376,12 @@ public class AccountingController : BaseController
     /// Synchronizuje status płatności między fakturą KSeF a powiązanym modułem
     /// </summary>
     [HttpPost("invoices/{invoiceId:guid}/sync-payment-status")]
-    [AllowAnonymous]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> SyncPaymentStatus(Guid invoiceId, [FromBody] SyncPaymentStatusRequest request)
     {
-        var result = await _mediator.Send(new SyncPaymentStatusCommand(invoiceId, request.Direction, request.NewPaymentStatus));
+        var result =
+            await _mediator.Send(new SyncPaymentStatusCommand(invoiceId, request.Direction, request.NewPaymentStatus));
         return Ok(result);
     }
 
@@ -512,7 +505,7 @@ public class SyncPaymentStatusRequest
     /// Kierunek synchronizacji: "ToAccounting" lub "FromAccounting"
     /// </summary>
     public string Direction { get; set; }
-    
+
     /// <summary>
     /// Nowy status płatności (wymagany tylko dla Direction="FromAccounting")
     /// </summary>

@@ -4,9 +4,15 @@ using FarmsManager.Application.FileSystem;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models.Invoices;
 using FarmsManager.Application.Specifications.Cycle;
+using FarmsManager.Application.Specifications.Expenses;
 using FarmsManager.Application.Specifications.Farms;
+using FarmsManager.Application.Specifications.Feeds;
+using FarmsManager.Application.Specifications.Gas;
 using FarmsManager.Application.Specifications.Sales;
+using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.GasAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.SlaughterhouseAggregate.Interfaces;
@@ -31,11 +37,17 @@ public class SaveSalesInvoiceCommandHandler : IRequestHandler<SaveSalesInvoiceCo
     private readonly IUserDataResolver _userDataResolver;
     private readonly ISlaughterhouseRepository _slaughterhouseRepository;
     private readonly ISaleInvoiceRepository _saleInvoiceRepository;
+    private readonly IGasDeliveryRepository _gasDeliveryRepository;
+    private readonly IFeedInvoiceRepository _feedInvoiceRepository;
+    private readonly IExpenseProductionRepository _expenseProductionRepository;
 
     public SaveSalesInvoiceCommandHandler(IS3Service s3Service, IFarmRepository farmRepository,
         ICycleRepository cycleRepository, IUserDataResolver userDataResolver,
         ISlaughterhouseRepository slaughterhouseRepository,
-        ISaleInvoiceRepository saleInvoiceRepository)
+        ISaleInvoiceRepository saleInvoiceRepository,
+        IGasDeliveryRepository gasDeliveryRepository,
+        IFeedInvoiceRepository feedInvoiceRepository,
+        IExpenseProductionRepository expenseProductionRepository)
     {
         _s3Service = s3Service;
         _farmRepository = farmRepository;
@@ -43,6 +55,9 @@ public class SaveSalesInvoiceCommandHandler : IRequestHandler<SaveSalesInvoiceCo
         _userDataResolver = userDataResolver;
         _slaughterhouseRepository = slaughterhouseRepository;
         _saleInvoiceRepository = saleInvoiceRepository;
+        _gasDeliveryRepository = gasDeliveryRepository;
+        _feedInvoiceRepository = feedInvoiceRepository;
+        _expenseProductionRepository = expenseProductionRepository;
     }
 
     public async Task<EmptyBaseResponse> Handle(SaveSalesInvoiceCommand request, CancellationToken ct)
@@ -62,12 +77,8 @@ public class SaveSalesInvoiceCommandHandler : IRequestHandler<SaveSalesInvoiceCo
             return response;
         }
 
-        var existedInvoice = await _saleInvoiceRepository.FirstOrDefaultAsync(
-            new GetSaleInvoiceByInvoiceNumberAndFarmSpec(request.Data.InvoiceNumber, farm.Id), ct);
-        if (existedInvoice is not null)
-        {
-            throw new Exception($"Istnieje już faktura sprzedaży z numerem '{existedInvoice.InvoiceNumber}' dla fermy '{farm.Name}'.");
-        }
+        // Sprawdź duplikaty we wszystkich modułach
+        await CheckForDuplicatesAsync(request.Data.InvoiceNumber, ct);
 
         var newSalesInvoice = SaleInvoiceEntity.CreateNew(
             farm.Id,
@@ -90,6 +101,49 @@ public class SaveSalesInvoiceCommandHandler : IRequestHandler<SaveSalesInvoiceCo
         await _s3Service.MoveFileAsync(FileType.SalesInvoices, request.FilePath, newPath);
 
         return response;
+    }
+
+    private async Task CheckForDuplicatesAsync(string invoiceNumber, CancellationToken ct)
+    {
+        // Sprawdź duplikaty w fakturach sprzedażowych
+        var existsInSales = await _saleInvoiceRepository.AnyAsync(
+            new GetSaleInvoiceByInvoiceNumberSpec(invoiceNumber),
+            ct);
+        
+        if (existsInSales)
+        {
+            throw DomainException.BadRequest($"Faktura o numerze '{invoiceNumber}' już istnieje w fakturach sprzedażowych.");
+        }
+        
+        // Sprawdź duplikaty w dostawach gazu
+        var existsInGas = await _gasDeliveryRepository.AnyAsync(
+            new GetGasDeliveryByInvoiceNumberSpec(invoiceNumber),
+            ct);
+        
+        if (existsInGas)
+        {
+            throw DomainException.BadRequest($"Faktura o numerze '{invoiceNumber}' już istnieje w dostawach gazu.");
+        }
+        
+        // Sprawdź duplikaty w dostawach pasz
+        var existsInFeeds = await _feedInvoiceRepository.AnyAsync(
+            new GetFeedInvoiceByInvoiceNumberSpec(invoiceNumber),
+            ct);
+        
+        if (existsInFeeds)
+        {
+            throw DomainException.BadRequest($"Faktura o numerze '{invoiceNumber}' już istnieje w dostawach pasz.");
+        }
+        
+        // Sprawdź duplikaty w kosztach produkcyjnych
+        var existsInExpenses = await _expenseProductionRepository.AnyAsync(
+            new GetExpenseProductionInvoiceByInvoiceNumberSpec(invoiceNumber),
+            ct);
+        
+        if (existsInExpenses)
+        {
+            throw DomainException.BadRequest($"Faktura o numerze '{invoiceNumber}' już istnieje w kosztach produkcyjnych.");
+        }
     }
 }
 

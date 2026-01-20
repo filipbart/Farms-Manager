@@ -10,4 +10,28 @@ export class FilesService {
       fileType,
     });
   }
+
+  public static async getFile(
+    filePath: string,
+    fileType?: FileType,
+  ): Promise<Blob | null> {
+    const token = AxiosWrapper.getAuthTokenFromHeader();
+    try {
+      const response = await fetch(
+        `${ApiUrl.GetFile}?filePath=${encodeURIComponent(
+          filePath,
+        )}&fileType=${encodeURIComponent(fileType ?? "")}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (!response.ok) return null;
+      return await response.blob();
+    } catch {
+      return null;
+    }
+  }
 }

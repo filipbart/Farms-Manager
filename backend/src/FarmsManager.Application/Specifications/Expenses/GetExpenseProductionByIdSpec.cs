@@ -10,5 +10,6 @@ public sealed class GetExpenseProductionByIdSpec : BaseSpecification<ExpenseProd
     {
         EnsureExists();
         Query.Where(t => t.Id == id);
+        Query.Include(t => t.Farm);
     }
 }

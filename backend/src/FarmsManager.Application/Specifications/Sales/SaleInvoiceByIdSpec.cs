@@ -12,5 +12,6 @@ public class SaleInvoiceByIdSpec : BaseSpecification<SaleInvoiceEntity>, ISingle
         Query.Include(t => t.Creator);
         Query.Include(t => t.Modifier);
         Query.Include(t => t.Deleter);
+        Query.Include(t => t.Farm);
     }
 }

@@ -297,7 +297,7 @@ public class S3Service : IS3Service
 
 
     public async Task<string> UploadFileAsync(byte[] fileBytes, FileType fileType, string path,
-        CancellationToken cancellationToken, bool publicRead = false)
+        CancellationToken cancellationToken, bool publicRead = false, string? contentType = null)
     {
         await EnsureBucketExistsAsync();
 
@@ -311,6 +311,11 @@ public class S3Service : IS3Service
             CannedACL = publicRead ? S3CannedACL.PublicRead : S3CannedACL.Private,
             InputStream = ms
         };
+
+        if (!string.IsNullOrEmpty(contentType))
+        {
+            request.ContentType = contentType;
+        }
 
         try
         {
@@ -462,12 +467,14 @@ public class S3Service : IS3Service
 
     private static string GetPath(FileType fileType, string path)
     {
-        if (path.Contains(fileType + "/"))
+        // Special case for AccountingInvoice - path starts with "accounting/" not "AccountingInvoice/"
+        var prefix = fileType == FileType.AccountingInvoice ? "accounting/" : fileType.ToString() + "/";
+        
+        if (path.StartsWith(prefix))
             return path;
 
         var pathBuilder = new StringBuilder();
-        pathBuilder.Append(fileType.ToString());
-        pathBuilder.Append('/');
+        pathBuilder.Append(prefix);
         pathBuilder.Append(path);
         return pathBuilder.ToString();
     }

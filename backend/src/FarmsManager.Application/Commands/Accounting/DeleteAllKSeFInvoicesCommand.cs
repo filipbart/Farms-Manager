@@ -1,9 +1,9 @@
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
-using FarmsManager.Domain.Aggregates.AccountingAggregate.Entities;
+using FarmsManager.Application.Specifications.Accounting;
+using FarmsManager.Domain.Aggregates.AccountingAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 namespace FarmsManager.Application.Commands.Accounting;
 
@@ -17,14 +17,14 @@ public record DeleteAllKSeFInvoicesCommand : IRequest<BaseResponse<DeleteAllKSeF
 public class DeleteAllKSeFInvoicesCommandHandler : IRequestHandler<DeleteAllKSeFInvoicesCommand,
     BaseResponse<DeleteAllKSeFInvoicesCommandResponse>>
 {
-    private readonly DbContext _dbContext;
+    private readonly IKSeFInvoiceRepository _invoiceRepository;
     private readonly IUserDataResolver _userDataResolver;
 
     public DeleteAllKSeFInvoicesCommandHandler(
-        DbContext dbContext,
+        IKSeFInvoiceRepository invoiceRepository,
         IUserDataResolver userDataResolver)
     {
-        _dbContext = dbContext;
+        _invoiceRepository = invoiceRepository;
         _userDataResolver = userDataResolver;
     }
 
@@ -35,14 +35,18 @@ public class DeleteAllKSeFInvoicesCommandHandler : IRequestHandler<DeleteAllKSeF
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
 
         // Hard delete all invoices (for testing purposes only)
-        var invoices = await _dbContext.Set<KSeFInvoiceEntity>()
-            .Where(i => i.DateDeletedUtc == null)
-            .ToListAsync(cancellationToken);
+        var invoices = await _invoiceRepository.ListAsync(
+            new AllActiveKSeFInvoicesSpec(),
+            cancellationToken);
 
         var count = invoices.Count;
 
-        _dbContext.Set<KSeFInvoiceEntity>().RemoveRange(invoices);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        foreach (var invoice in invoices)
+        {
+            await _invoiceRepository.DeleteAsync(invoice, cancellationToken);
+        }
+
+        await _invoiceRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
 
         return BaseResponse.CreateResponse(new DeleteAllKSeFInvoicesCommandResponse
         {

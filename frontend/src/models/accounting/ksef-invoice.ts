@@ -109,6 +109,7 @@ export interface KSeFInvoiceListModel {
   invoiceNumber: string;
   invoiceDate: string;
   paymentDueDate: string | null;
+  paymentDate: string | null;
   moduleType: ModuleType | null;
   vatDeductionType: VatDeductionType | null;
   status: KSeFInvoiceStatus;
@@ -137,6 +138,7 @@ export interface KSeFInvoiceDetails extends KSeFInvoiceListModel {
   paymentDate: string | null;
   createdAt: string;
   createdBy: string | null;
+  filePath: string | null;
 }
 
 // Mapowanie statusów na polskie nazwy

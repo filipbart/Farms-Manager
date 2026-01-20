@@ -136,15 +136,15 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
       onSuccess,
       mode = "create",
     },
-    ref
+    ref,
   ) => {
     const [loading, setLoading] = useState(false);
     const [henhouses, setHenhouses] = useState<{ id: string; name: string }[]>(
-      []
+      [],
     );
     const [feedNames, setFeedNames] = useState<FeedsNamesRow[]>([]);
     const [gasContractors, setGasContractors] = useState<GasContractorRow[]>(
-      []
+      [],
     );
     const [expenseContractors, setExpenseContractors] = useState<
       ExpenseContractorRow[]
@@ -266,7 +266,7 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
         handleApiResponse(
           () => FeedsService.getFeedsNames(),
           (data) => setFeedNames(data.responseData?.fields ?? []),
-          () => setFeedNames([])
+          () => setFeedNames([]),
         );
       }
     }, [moduleType]);
@@ -283,10 +283,10 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
             // Auto-select contractor by NIP first
             const normalizedInvoiceNip = invoiceData.sellerNip?.replace(
               /\D/g,
-              ""
+              "",
             );
             let contractor = contractors.find(
-              (c) => c.nip?.replace(/\D/g, "") === normalizedInvoiceNip
+              (c) => c.nip?.replace(/\D/g, "") === normalizedInvoiceNip,
             );
 
             // Fallback: match by name (case-insensitive, partial match)
@@ -295,7 +295,7 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
               contractor = contractors.find(
                 (c) =>
                   c.name?.toLowerCase().includes(sellerNameLower) ||
-                  sellerNameLower.includes(c.name?.toLowerCase() || "")
+                  sellerNameLower.includes(c.name?.toLowerCase() || ""),
               );
             }
 
@@ -303,7 +303,7 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
               gasForm.setValue("contractorId", contractor.id);
             }
           },
-          () => setGasContractors([])
+          () => setGasContractors([]),
         );
       }
     }, [moduleType, invoiceData.sellerNip, invoiceData.sellerName, gasForm]);
@@ -320,10 +320,10 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
             // Auto-select contractor by NIP first
             const normalizedInvoiceNip = invoiceData.sellerNip?.replace(
               /\D/g,
-              ""
+              "",
             );
             let contractor = contractors.find(
-              (c) => c.nip?.replace(/\D/g, "") === normalizedInvoiceNip
+              (c) => c.nip?.replace(/\D/g, "") === normalizedInvoiceNip,
             );
 
             // Fallback: match by name (case-insensitive, partial match)
@@ -332,7 +332,7 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
               contractor = contractors.find(
                 (c) =>
                   c.name?.toLowerCase().includes(sellerNameLower) ||
-                  sellerNameLower.includes(c.name?.toLowerCase() || "")
+                  sellerNameLower.includes(c.name?.toLowerCase() || ""),
               );
             }
 
@@ -340,7 +340,7 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
               expenseForm.setValue("expenseContractorId", contractor.id);
             }
           },
-          () => setExpenseContractors([])
+          () => setExpenseContractors([]),
         );
       }
     }, [
@@ -362,10 +362,10 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
             // Auto-select slaughterhouse by NIP first (buyer for sales)
             const normalizedInvoiceNip = invoiceData.buyerNip?.replace(
               /\D/g,
-              ""
+              "",
             );
             let slaughterhouse = items.find(
-              (s) => s.nip?.replace(/\D/g, "") === normalizedInvoiceNip
+              (s) => s.nip?.replace(/\D/g, "") === normalizedInvoiceNip,
             );
 
             // Fallback: match by name (case-insensitive, partial match)
@@ -374,7 +374,7 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
               slaughterhouse = items.find(
                 (s) =>
                   s.name?.toLowerCase().includes(buyerNameLower) ||
-                  buyerNameLower.includes(s.name?.toLowerCase() || "")
+                  buyerNameLower.includes(s.name?.toLowerCase() || ""),
               );
             }
 
@@ -382,7 +382,7 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
               saleForm.setValue("slaughterhouseId", slaughterhouse.id);
             }
           },
-          () => setSlaughterhouses([])
+          () => setSlaughterhouses([]),
         );
       }
     }, [moduleType, invoiceData.buyerNip, invoiceData.buyerName, saleForm]);
@@ -395,10 +395,50 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
           (data) => {
             setExpenseTypes(data.responseData?.types ?? []);
           },
-          () => setExpenseTypes([])
+          () => setExpenseTypes([]),
         );
       }
     }, [moduleType]);
+
+    // Auto-select expense type if only one available
+    const watchedExpenseContractorId = expenseForm.watch("expenseContractorId");
+    useEffect(() => {
+      if (moduleType === ModuleType.ProductionExpenses) {
+        const currentTypeId = expenseForm.getValues("expenseTypeId");
+        let availableTypes: { id: string }[] = [];
+
+        if (watchedExpenseContractorId) {
+          const selectedContractor = expenseContractors.find(
+            (c) => c.id === watchedExpenseContractorId,
+          );
+          if (
+            selectedContractor?.expenseTypes &&
+            selectedContractor.expenseTypes.length > 0
+          ) {
+            availableTypes = selectedContractor.expenseTypes;
+          } else {
+            availableTypes = expenseTypes;
+          }
+        } else {
+          availableTypes = expenseTypes;
+        }
+
+        if (availableTypes.length === 1) {
+          if (currentTypeId !== availableTypes[0].id) {
+            expenseForm.setValue("expenseTypeId", availableTypes[0].id, {
+              shouldValidate: true,
+              shouldDirty: true,
+            });
+          }
+        }
+      }
+    }, [
+      moduleType,
+      watchedExpenseContractorId,
+      expenseContractors,
+      expenseTypes,
+      expenseForm,
+    ]);
 
     // Calculate quantity and unit price from invoice line items
     useEffect(() => {
@@ -406,44 +446,74 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
 
       const totalQuantity = invoiceData.lineItems.reduce(
         (sum, item) => sum + (item.quantity || 0),
-        0
+        0,
       );
 
       switch (moduleType) {
         case ModuleType.Feeds: {
-          // For feeds: sum quantity, calculate weighted average unit price
+          // For feeds: sum quantity, get unit price from line items or calculate
           feedForm.setValue("quantity", totalQuantity);
 
-          // Calculate weighted average unit price from line items
-          const totalNetAmount = invoiceData.lineItems.reduce(
-            (sum, item) => sum + (item.netAmount || 0),
-            0
-          );
-          if (totalQuantity > 0) {
-            const avgUnitPrice = totalNetAmount / totalQuantity;
+          // Try to get unit price from first line item
+          const firstItem = invoiceData.lineItems[0];
+          if (firstItem?.unitPriceNet && firstItem.unitPriceNet > 0) {
+            // Use unit price from line item (weighted average if multiple items)
+            const totalNetAmount = invoiceData.lineItems.reduce(
+              (sum, item) => sum + (item.netAmount || 0),
+              0,
+            );
+            if (totalQuantity > 0) {
+              const avgUnitPrice = totalNetAmount / totalQuantity;
+              feedForm.setValue(
+                "unitPrice",
+                Math.round(avgUnitPrice * 100) / 100,
+              );
+            }
+          } else if (totalQuantity > 0) {
+            // Fallback: calculate from total net amount
+            const avgUnitPrice = invoiceData.netAmount / totalQuantity;
             feedForm.setValue(
               "unitPrice",
-              Math.round(avgUnitPrice * 100) / 100
+              Math.round(avgUnitPrice * 100) / 100,
             );
           }
 
           // Auto-detect feed name from first line item
-          const firstItem = invoiceData.lineItems[0];
           if (firstItem?.name && !feedForm.getValues("itemName")) {
             feedForm.setValue("itemName", firstItem.name);
           }
           break;
         }
-        case ModuleType.Gas:
-          // For gas: sum quantity, unit price = grossAmount / quantity
+        case ModuleType.Gas: {
+          // For gas: sum quantity, get unit price from line items or calculate
           gasForm.setValue("quantity", totalQuantity);
-          if (totalQuantity > 0) {
+
+          // Try to get unit price from first line item
+          const firstGasItem = invoiceData.lineItems[0];
+          if (firstGasItem?.unitPriceGross && firstGasItem.unitPriceGross > 0) {
+            // Use unit price from line item
             gasForm.setValue(
               "unitPrice",
-              invoiceData.grossAmount / totalQuantity
+              Math.round(firstGasItem.unitPriceGross * 100) / 100,
+            );
+          } else if (
+            firstGasItem?.unitPriceNet &&
+            firstGasItem.unitPriceNet > 0
+          ) {
+            // Use net price if gross not available
+            gasForm.setValue(
+              "unitPrice",
+              Math.round(firstGasItem.unitPriceNet * 100) / 100,
+            );
+          } else if (totalQuantity > 0) {
+            // Fallback: calculate from gross amount
+            gasForm.setValue(
+              "unitPrice",
+              Math.round((invoiceData.grossAmount / totalQuantity) * 100) / 100,
             );
           }
           break;
+        }
         case ModuleType.ProductionExpenses:
           // For expenses: no quantity/unitPrice fields, only set invoiceTotal
           expenseForm.setValue("invoiceTotal", invoiceData.grossAmount);
@@ -457,6 +527,7 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
       moduleType,
       invoiceData.lineItems,
       invoiceData.grossAmount,
+      invoiceData.netAmount,
       feedForm,
       gasForm,
       expenseForm,
@@ -594,16 +665,16 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
             () =>
               AccountingService.acceptInvoice(
                 invoiceId,
-                request as AcceptInvoiceRequest
+                request as AcceptInvoiceRequest,
               ),
             () => {
               toast.success(
-                "Faktura została zaakceptowana i utworzono wpis w module"
+                "Faktura została zaakceptowana i utworzono wpis w module",
               );
               onSuccess();
             },
             undefined,
-            "Wystąpił błąd podczas akceptacji faktury"
+            "Wystąpił błąd podczas akceptacji faktury",
           );
         } else {
           // Create mode: only creates module entity without changing status
@@ -614,7 +685,7 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
               onSuccess();
             },
             undefined,
-            "Wystąpił błąd podczas tworzenia wpisu w module"
+            "Wystąpił błąd podczas tworzenia wpisu w module",
           );
         }
       } finally {
@@ -761,7 +832,7 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
           getOptionLabel={(option) => option.name || ""}
           value={
             gasContractors.find(
-              (c) => c.id === gasForm.watch("contractorId")
+              (c) => c.id === gasForm.watch("contractorId"),
             ) || null
           }
           onChange={(_, value) =>
@@ -831,7 +902,7 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
           getOptionLabel={(option) => option.name || ""}
           value={
             expenseContractors.find(
-              (c) => c.id === expenseForm.watch("expenseContractorId")
+              (c) => c.id === expenseForm.watch("expenseContractorId"),
             ) || null
           }
           onChange={(_, value) => {
@@ -854,7 +925,7 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
           >
             {(() => {
               const selectedContractor = expenseContractors.find(
-                (c) => c.id === expenseForm.watch("expenseContractorId")
+                (c) => c.id === expenseForm.watch("expenseContractorId"),
               );
               const availableTypes = selectedContractor?.expenseTypes || [];
               if (availableTypes.length > 0) {
@@ -915,7 +986,7 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
             onChange={(e) =>
               expenseForm.setValue(
                 "invoiceTotal",
-                parseFloat(e.target.value) || 0
+                parseFloat(e.target.value) || 0,
               )
             }
             sx={{ flex: 1 }}
@@ -935,7 +1006,7 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
           getOptionLabel={(option) => option.name || ""}
           value={
             slaughterhouses.find(
-              (s) => s.id === saleForm.watch("slaughterhouseId")
+              (s) => s.id === saleForm.watch("slaughterhouseId"),
             ) || null
           }
           onChange={(_, value) =>
@@ -1023,7 +1094,7 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
         {renderForm()}
       </Box>
     );
-  }
+  },
 );
 
 export default ModuleEntityForm;

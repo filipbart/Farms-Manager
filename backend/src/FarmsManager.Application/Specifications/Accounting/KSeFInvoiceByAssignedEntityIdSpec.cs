@@ -9,7 +9,7 @@ public sealed class KSeFInvoiceByAssignedEntityIdSpec : BaseSpecification<KSeFIn
 {
     public KSeFInvoiceByAssignedEntityIdSpec(Guid entityId)
     {
-        Query
-            .Where(t => t.AssignedEntityInvoiceId == entityId && t.DateDeletedUtc == null);
+        EnsureExists();
+        Query.Where(t => t.AssignedEntityInvoiceId == entityId);
     }
 }

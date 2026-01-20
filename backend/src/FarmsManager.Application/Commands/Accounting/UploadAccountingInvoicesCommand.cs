@@ -9,9 +9,10 @@ using FarmsManager.Application.Specifications.Feeds;
 using FarmsManager.Application.Specifications.Gas;
 using FarmsManager.Application.Specifications.Henhouses;
 using FarmsManager.Application.Specifications.Sales;
+using FarmsManager.Application.Specifications.TaxBusinessEntities;
 using FarmsManager.Application.Commands.Sales.Invoices;
-using FarmsManager.Domain.Aggregates.AccountingAggregate.Entities;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
+using FarmsManager.Domain.Aggregates.AccountingAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
@@ -28,7 +29,6 @@ using FarmsManager.Shared.Extensions;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
 
 namespace FarmsManager.Application.Commands.Accounting;
 
@@ -36,7 +36,9 @@ public record UploadAccountingInvoicesCommandDto
 {
     public List<IFormFile> Files { get; init; }
     public string InvoiceType { get; init; } // Purchase or Sales
+    public string PaymentStatus { get; init; } // Unpaid, PaidCash, PaidTransfer, etc.
     public string ModuleType { get; init; } // Optional: Target module for AI extraction steering
+    public DateOnly? PaymentDate { get; init; } // Optional: Payment date when status is paid
 }
 
 /// <summary>
@@ -58,6 +60,8 @@ public record AccountingInvoiceExtractedData
     public decimal? VatAmount { get; init; }
     public string BankAccountNumber { get; init; }
     public string InvoiceType { get; init; }
+    public string PaymentStatus { get; init; }
+    public string PaymentDate { get; init; }
     public Guid? FarmId { get; init; }
     public Guid? CycleId { get; init; }
     public string ModuleType { get; init; }
@@ -110,7 +114,7 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
     private readonly IExpenseProductionRepository _expenseProductionRepository;
     private readonly ISlaughterhouseRepository _slaughterhouseRepository;
     private readonly ISaleInvoiceRepository _saleInvoiceRepository;
-    private readonly DbContext _dbContext;
+    private readonly ITaxBusinessEntityRepository _taxBusinessEntityRepository;
 
     public UploadAccountingInvoicesCommandHandler(
         IMapper mapper,
@@ -127,7 +131,7 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
         IExpenseProductionRepository expenseProductionRepository,
         ISlaughterhouseRepository slaughterhouseRepository,
         ISaleInvoiceRepository saleInvoiceRepository,
-        DbContext dbContext)
+        ITaxBusinessEntityRepository taxBusinessEntityRepository)
     {
         _mapper = mapper;
         _s3Service = s3Service;
@@ -143,7 +147,7 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
         _expenseProductionRepository = expenseProductionRepository;
         _slaughterhouseRepository = slaughterhouseRepository;
         _saleInvoiceRepository = saleInvoiceRepository;
-        _dbContext = dbContext;
+        _taxBusinessEntityRepository = taxBusinessEntityRepository;
     }
 
     public async Task<BaseResponse<UploadAccountingInvoicesCommandResponse>> Handle(
@@ -158,15 +162,18 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
             var fileId = Guid.NewGuid();
             var extension = Path.GetExtension(file.FileName);
             var newFileName = fileId + extension;
-            var filePath = "accounting/draft/" + fileId + extension;
+            
+            // Determine FileType based on module type
+            var fileType = GetFileTypeForModule(request.Data.ModuleType);
+            var filePath = $"draft/{fileId}{extension}";
 
             using var memoryStream = new MemoryStream();
             await file.CopyToAsync(memoryStream, cancellationToken);
             var fileBytes = memoryStream.ToArray();
-            var key = await _s3Service.UploadFileAsync(fileBytes, FileType.AccountingInvoice, filePath,
-                cancellationToken);
+            var key = await _s3Service.UploadFileAsync(fileBytes, fileType, filePath,
+                cancellationToken, contentType: file.ContentType);
 
-            var preSignedUrl = _s3Service.GeneratePreSignedUrl(FileType.AccountingInvoice, filePath, newFileName);
+            var preSignedUrl = _s3Service.GeneratePreSignedUrl(fileType, filePath, newFileName);
 
             // Zaczytaj dane z faktury przez AI - użyj odpowiedniego modelu w zależności od ModuleType
             var extractedFields = await AnalyzeInvoiceByModuleTypeAsync(
@@ -187,6 +194,8 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
             extractedFields = extractedFields with 
             { 
                 InvoiceType = request.Data.InvoiceType,
+                PaymentStatus = request.Data.PaymentStatus,
+                PaymentDate = request.Data.PaymentDate?.ToString("yyyy-MM-dd"),
                 FarmId = matchedFarm?.Id,
                 CycleId = matchedFarm?.ActiveCycleId,
                 ModuleType = request.Data.ModuleType,
@@ -445,11 +454,9 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
         string sellerNip, string sellerName, string buyerNip, string buyerName,
         CancellationToken cancellationToken)
     {
-        var taxBusinessEntities = await _dbContext.Set<TaxBusinessEntity>()
-            .Include(t => t.Farms)
-            .Where(t => t.DateDeletedUtc == null)
-            .AsNoTracking()
-            .ToListAsync(cancellationToken);
+        var taxBusinessEntities = await _taxBusinessEntityRepository.ListAsync(
+            new AllActiveTaxBusinessEntitiesSpec(),
+            cancellationToken);
 
         if (taxBusinessEntities.Count == 0)
             return null;
@@ -594,6 +601,18 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
             GrossAmount = model.InvoiceTotal,
             NetAmount = model.SubTotal,
             VatAmount = model.VatAmount
+        };
+    }
+
+    private static FileType GetFileTypeForModule(string moduleType)
+    {
+        return moduleType switch
+        {
+            nameof(ModuleType.Feeds) => FileType.FeedDeliveryInvoice,
+            nameof(ModuleType.Gas) => FileType.GasDelivery,
+            nameof(ModuleType.ProductionExpenses) => FileType.ExpenseProduction,
+            nameof(ModuleType.Sales) => FileType.SalesInvoices,
+            _ => FileType.AccountingInvoice
         };
     }
 }

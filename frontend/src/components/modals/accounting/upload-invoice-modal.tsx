@@ -13,7 +13,9 @@ import {
   Select,
   MenuItem,
   IconButton,
+  TextField,
 } from "@mui/material";
+import dayjs from "dayjs";
 import { toast } from "react-toastify";
 import { MdFileUpload, MdDelete } from "react-icons/md";
 import LoadingButton from "../../common/loading-button";
@@ -53,6 +55,7 @@ const UploadInvoiceModal: React.FC<UploadInvoiceModalProps> = ({
   const [paymentStatus, setPaymentStatus] = useState<KSeFPaymentStatus>(
     KSeFPaymentStatus.Unpaid,
   );
+  const [paymentDate, setPaymentDate] = useState<string>("");
   const [moduleType, setModuleType] = useState<ModuleType>(ModuleType.None);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -68,6 +71,20 @@ const UploadInvoiceModal: React.FC<UploadInvoiceModalProps> = ({
 
   const handleRemoveFile = (index: number) => {
     setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handlePaymentStatusChange = (value: KSeFPaymentStatus) => {
+    setPaymentStatus(value);
+
+    // Auto-set payment date when status changes to paid
+    const isPaidStatus =
+      value === KSeFPaymentStatus.PaidCash ||
+      value === KSeFPaymentStatus.PaidTransfer;
+    if (isPaidStatus && !paymentDate) {
+      setPaymentDate(dayjs().format("YYYY-MM-DD"));
+    } else if (!isPaidStatus) {
+      setPaymentDate("");
+    }
   };
 
   const handleUpload = async () => {
@@ -97,6 +114,7 @@ const UploadInvoiceModal: React.FC<UploadInvoiceModalProps> = ({
               xmlFiles,
               invoiceType,
               paymentStatus,
+              paymentDate || null,
               controller.signal,
             ),
           (data) => {
@@ -127,6 +145,7 @@ const UploadInvoiceModal: React.FC<UploadInvoiceModalProps> = ({
               invoiceType,
               paymentStatus,
               moduleType,
+              paymentDate || null,
               controller.signal,
             ),
           (data) => {
@@ -167,6 +186,7 @@ const UploadInvoiceModal: React.FC<UploadInvoiceModalProps> = ({
     setSelectedFiles([]);
     setInvoiceType(KSeFInvoiceType.Purchase);
     setPaymentStatus(KSeFPaymentStatus.Unpaid);
+    setPaymentDate("");
     setModuleType(ModuleType.None);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -203,7 +223,7 @@ const UploadInvoiceModal: React.FC<UploadInvoiceModalProps> = ({
               value={paymentStatus}
               label="Status płatności"
               onChange={(e) =>
-                setPaymentStatus(e.target.value as KSeFPaymentStatus)
+                handlePaymentStatusChange(e.target.value as KSeFPaymentStatus)
               }
             >
               {Object.entries(KSeFPaymentStatusLabels).map(([key, label]) => (
@@ -213,6 +233,24 @@ const UploadInvoiceModal: React.FC<UploadInvoiceModalProps> = ({
               ))}
             </Select>
           </FormControl>
+
+          {/* Payment Date Input - show only when status is paid */}
+          {(paymentStatus === KSeFPaymentStatus.PaidCash ||
+            paymentStatus === KSeFPaymentStatus.PaidTransfer) && (
+            <TextField
+              fullWidth
+              type="date"
+              label="Data płatności"
+              value={paymentDate}
+              onChange={(e) => setPaymentDate(e.target.value)}
+              inputProps={{
+                max: dayjs().format("YYYY-MM-DD"),
+              }}
+              InputLabelProps={{
+                shrink: true,
+              }}
+            />
+          )}
 
           <FormControl fullWidth>
             <InputLabel>Moduł docelowy</InputLabel>

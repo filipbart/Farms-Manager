@@ -34,6 +34,8 @@ import dayjs from "dayjs";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import { toast } from "react-toastify";
 import AppDialog from "../../common/app-dialog";
+import { FilesService } from "../../../services/files-service";
+import { FileType } from "../../../models/files/file-type";
 import {
   ModuleType,
   ModuleTypeLabels,
@@ -70,6 +72,7 @@ interface SaveAccountingInvoiceFormData {
   vatDeductionType: VatDeductionType;
   moduleType: ModuleType;
   paymentStatus: KSeFPaymentStatus;
+  paymentDate: string;
   comment: string;
   // Feed module fields
   feedFarmId: string;
@@ -115,6 +118,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
 
   const [loading, setLoading] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [previewBlobUrl, setPreviewBlobUrl] = useState<string | null>(null);
 
   // Module data states
   const [farms, setFarms] = useState<FarmRowModel[]>([]);
@@ -150,8 +154,45 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
   const watchedExpenseFarmId = watch("expenseFarmId");
   const watchedSaleFarmId = watch("saleFarmId");
   const watchedExpenseContractorId = watch("expenseContractorId");
+  const watchedPaymentStatus = watch("paymentStatus");
 
   const draftInvoice = draftInvoices[currentIndex];
+
+  // Fetch file blob for preview
+  useEffect(() => {
+    let active = true;
+    let objectUrl: string | null = null;
+
+    const fetchPreview = async () => {
+      setPreviewBlobUrl(null);
+      if (!draftInvoice?.filePath) {
+        return;
+      }
+
+      try {
+        const blob = await FilesService.getFile(
+          draftInvoice.filePath,
+          FileType.AccountingInvoice,
+        );
+
+        if (active && blob) {
+          objectUrl = URL.createObjectURL(blob);
+          setPreviewBlobUrl(objectUrl);
+        }
+      } catch (err) {
+        console.error("Failed to fetch preview blob", err);
+      }
+    };
+
+    fetchPreview();
+
+    return () => {
+      active = false;
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [draftInvoice?.filePath]);
 
   // Fetch farms on open
   const fetchFarms = useCallback(async () => {
@@ -179,29 +220,196 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
     setLoadingCycles(false);
   }, []);
 
-  // Update henhouses when feed farm changes
+  // Update henhouses and cycles when feed farm changes
   useEffect(() => {
-    if (watchedFeedFarmId) {
+    if (watchedFeedFarmId && farms.length > 0) {
       const farm = farms.find((f) => f.id === watchedFeedFarmId);
       setHenhouses(farm?.henhouses || []);
       fetchCycles(watchedFeedFarmId);
+      // Auto-select active cycle
+      if (farm?.activeCycle) {
+        setValue("feedCycleId", farm.activeCycle.id);
+      }
     }
-  }, [watchedFeedFarmId, farms, fetchCycles]);
+  }, [watchedFeedFarmId, farms, fetchCycles, setValue]);
 
-  // Update cycles when other module farm changes
+  // Update cycles when gas farm changes
   useEffect(() => {
-    const farmId =
-      watchedGasFarmId || watchedExpenseFarmId || watchedSaleFarmId;
-    if (farmId && !watchedFeedFarmId) {
-      fetchCycles(farmId);
+    if (watchedGasFarmId && farms.length > 0) {
+      fetchCycles(watchedGasFarmId);
+    }
+  }, [watchedGasFarmId, farms, fetchCycles]);
+
+  // Update cycles when expense farm changes and auto-select active cycle
+  useEffect(() => {
+    if (watchedExpenseFarmId && farms.length > 0) {
+      const farm = farms.find((f) => f.id === watchedExpenseFarmId);
+      fetchCycles(watchedExpenseFarmId);
+      if (farm?.activeCycle) {
+        setValue("expenseCycleId", farm.activeCycle.id);
+      }
+    }
+  }, [watchedExpenseFarmId, farms, fetchCycles, setValue]);
+
+  // Update cycles when sale farm changes and auto-select active cycle
+  useEffect(() => {
+    if (watchedSaleFarmId && farms.length > 0) {
+      const farm = farms.find((f) => f.id === watchedSaleFarmId);
+      fetchCycles(watchedSaleFarmId);
+      if (farm?.activeCycle) {
+        setValue("saleCycleId", farm.activeCycle.id);
+      }
+    }
+  }, [watchedSaleFarmId, farms, fetchCycles, setValue]);
+
+  // Auto-fill module-specific fields when moduleType changes
+  useEffect(() => {
+    if (!draftInvoice || !farms.length) return;
+    const ef = draftInvoice.extractedFields;
+
+    switch (watchedModuleType) {
+      case ModuleType.Feeds:
+        if (ef.farmId) setValue("feedFarmId", ef.farmId);
+        if (ef.cycleId) setValue("feedCycleId", ef.cycleId);
+        if (ef.henhouseId) setValue("feedHenhouseId", ef.henhouseId);
+        // Match feed name from seller
+        if (feedNames.length > 0) {
+          const matchedFeedName = feedNames.find(
+            (f) => f.name.toLowerCase() === ef.sellerName?.toLowerCase(),
+          );
+          if (matchedFeedName) setValue("feedItemName", matchedFeedName.name);
+        }
+        setValue("feedVendorName", ef.sellerName || "");
+        break;
+      case ModuleType.Gas:
+        if (ef.farmId) setValue("gasFarmId", ef.farmId);
+        break;
+      case ModuleType.ProductionExpenses:
+        if (ef.farmId) setValue("expenseFarmId", ef.farmId);
+        if (ef.cycleId) setValue("expenseCycleId", ef.cycleId);
+        break;
+      case ModuleType.Sales:
+        if (ef.farmId) setValue("saleFarmId", ef.farmId);
+        if (ef.cycleId) setValue("saleCycleId", ef.cycleId);
+        break;
+    }
+  }, [watchedModuleType, draftInvoice, farms, feedNames, setValue]);
+
+  // Auto-fill gas contractor (like in save-gas-invoices-modal.tsx)
+  useEffect(() => {
+    if (watchedModuleType !== ModuleType.Gas || !draftInvoice) return;
+    const ef = draftInvoice.extractedFields;
+
+    // First check if backend returned contractor ID (new or existing)
+    if (ef.gasContractorId) {
+      setValue("gasContractorId", ef.gasContractorId);
+      return;
+    }
+
+    // Try to match by seller name
+    if (gasContractors.length > 0 && ef.sellerName) {
+      const matchedContractor = gasContractors.find(
+        (c) => c.name.toLowerCase() === ef.sellerName?.toLowerCase(),
+      );
+      if (matchedContractor) {
+        setValue("gasContractorId", matchedContractor.id);
+      }
+    }
+  }, [watchedModuleType, draftInvoice, gasContractors, setValue]);
+
+  // Auto-fill expense contractor (like in save-expenses-invoices-modal.tsx)
+  useEffect(() => {
+    if (watchedModuleType !== ModuleType.ProductionExpenses || !draftInvoice)
+      return;
+    const ef = draftInvoice.extractedFields;
+
+    // First check if backend returned contractor ID (new or existing)
+    if (ef.expenseContractorId) {
+      setValue("expenseContractorId", ef.expenseContractorId);
+      return;
+    }
+
+    // Try to match by seller name
+    if (expenseContractors.length > 0 && ef.sellerName) {
+      const matchedContractor = expenseContractors.find(
+        (c) => c.name.toLowerCase() === ef.sellerName?.toLowerCase(),
+      );
+      if (matchedContractor) {
+        setValue("expenseContractorId", matchedContractor.id);
+      }
+    }
+  }, [watchedModuleType, draftInvoice, expenseContractors, setValue]);
+
+  // Auto-select expense type when contractor has only one expense type
+  useEffect(() => {
+    if (watchedModuleType !== ModuleType.ProductionExpenses) return;
+
+    const selectedContractor = expenseContractors.find(
+      (c) => c.id === watchedExpenseContractorId,
+    );
+
+    if (selectedContractor && selectedContractor.expenseTypes.length === 1) {
+      // Only auto-select if field is empty or if the current value is not in the contractor's types
+      const currentValue = watch("expenseTypeId");
+      if (
+        !currentValue ||
+        !selectedContractor.expenseTypes.some((t) => t.id === currentValue)
+      ) {
+        setValue("expenseTypeId", selectedContractor.expenseTypes[0].id);
+      }
+    } else if (
+      selectedContractor &&
+      selectedContractor.expenseTypes.length === 0
+    ) {
+      // Clear the field if contractor has no expense types (user will need to select from all types)
+      setValue("expenseTypeId", "");
     }
   }, [
-    watchedGasFarmId,
-    watchedExpenseFarmId,
-    watchedSaleFarmId,
-    watchedFeedFarmId,
-    fetchCycles,
+    watchedExpenseContractorId,
+    expenseContractors,
+    watchedModuleType,
+    setValue,
+    watch,
   ]);
+
+  // Auto-fill slaughterhouse (like in save-sales-invoices-modal.tsx)
+  useEffect(() => {
+    if (watchedModuleType !== ModuleType.Sales || !draftInvoice) return;
+    const ef = draftInvoice.extractedFields;
+
+    // First check if backend returned slaughterhouse ID (new or existing)
+    if (ef.slaughterhouseId) {
+      setValue("saleSlaughterhouseId", ef.slaughterhouseId);
+      return;
+    }
+
+    // Try to match by buyer name (for sales, buyer is slaughterhouse)
+    if (slaughterhouses.length > 0 && ef.buyerName) {
+      const matchedSlaughterhouse = slaughterhouses.find(
+        (s) => s.name.toLowerCase() === ef.buyerName?.toLowerCase(),
+      );
+      if (matchedSlaughterhouse) {
+        setValue("saleSlaughterhouseId", matchedSlaughterhouse.id);
+      }
+    }
+  }, [watchedModuleType, draftInvoice, slaughterhouses, setValue]);
+
+  // Auto-set payment date when payment status changes to paid
+  useEffect(() => {
+    const isPaidStatus =
+      watchedPaymentStatus === KSeFPaymentStatus.PaidCash ||
+      watchedPaymentStatus === KSeFPaymentStatus.PaidTransfer;
+
+    const currentPaymentDate = watch("paymentDate");
+
+    if (isPaidStatus && !currentPaymentDate) {
+      // Set today's date if no payment date is set
+      setValue("paymentDate", new Date().toISOString().split("T")[0]);
+    } else if (!isPaidStatus) {
+      // Clear payment date if status is not paid
+      setValue("paymentDate", "");
+    }
+  }, [watchedPaymentStatus, setValue, watch]);
 
   // Fetch module-specific data
   useEffect(() => {
@@ -246,7 +454,9 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
   }, [open, fetchFarms]);
 
   useEffect(() => {
-    if (draftInvoices.length === 0 && open) {
+    if (!open) return;
+
+    if (draftInvoices.length === 0) {
       handleClose();
       return;
     }
@@ -277,16 +487,25 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
         status: KSeFInvoiceStatus.Accepted,
         vatDeductionType: VatDeductionType.Full,
         moduleType: moduleType,
-        paymentStatus: KSeFPaymentStatus.Unpaid,
+        paymentStatus:
+          (ef.paymentStatus as KSeFPaymentStatus) || KSeFPaymentStatus.Unpaid,
+        paymentDate: ef.paymentDate || "",
         comment: "",
         // Module-specific fields from AI extraction
         feedFarmId: moduleType === ModuleType.Feeds ? ef.farmId || "" : "",
         feedCycleId: moduleType === ModuleType.Feeds ? ef.cycleId || "" : "",
         feedHenhouseId:
           moduleType === ModuleType.Feeds ? ef.henhouseId || "" : "",
+        feedBankAccountNumber: "",
+        feedVendorName: "",
+        feedItemName: "",
+        feedQuantity: 0,
+        feedUnitPrice: 0,
         gasFarmId: moduleType === ModuleType.Gas ? ef.farmId || "" : "",
         gasContractorId:
           moduleType === ModuleType.Gas ? ef.gasContractorId || "" : "",
+        gasUnitPrice: 0,
+        gasQuantity: 0,
         expenseFarmId:
           moduleType === ModuleType.ProductionExpenses ? ef.farmId || "" : "",
         expenseCycleId:
@@ -295,6 +514,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
           moduleType === ModuleType.ProductionExpenses
             ? ef.expenseContractorId || ""
             : "",
+        expenseTypeId: "",
         saleFarmId: moduleType === ModuleType.Sales ? ef.farmId || "" : "",
         saleCycleId: moduleType === ModuleType.Sales ? ef.cycleId || "" : "",
         saleSlaughterhouseId:
@@ -378,6 +598,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
           vatDeductionType: formData.vatDeductionType,
           moduleType: formData.moduleType,
           paymentStatus: formData.paymentStatus,
+          paymentDate: formData.paymentDate || undefined,
           comment: formData.comment || undefined,
           feedData,
           gasData,
@@ -395,11 +616,12 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
   };
 
   const renderPreview = () => {
-    if (!draftInvoice?.fileUrl) return <Typography>Brak podglądu</Typography>;
+    const url = previewBlobUrl || draftInvoice?.fileUrl;
+    if (!url) return <Typography>Brak podglądu</Typography>;
 
     return (
       <FilePreview
-        file={draftInvoice.fileUrl}
+        file={url}
         maxHeight={isLg ? 900 : isMd ? 700 : 500}
         showPreviewButton={true}
       />
@@ -503,6 +725,18 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                   <Controller
                     name="dueDate"
                     control={control}
+                    rules={{
+                      validate: (value) => {
+                        if (
+                          (watchedModuleType === ModuleType.Feeds ||
+                            watchedModuleType === ModuleType.Sales) &&
+                          !value
+                        ) {
+                          return "Termin płatności jest wymagany dla wybranego modułu";
+                        }
+                        return true;
+                      },
+                    }}
                     render={({ field }) => (
                       <DatePicker
                         label="Termin płatności"
@@ -516,6 +750,8 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                         slotProps={{
                           textField: {
                             fullWidth: true,
+                            error: !!errors.dueDate,
+                            helperText: errors.dueDate?.message,
                           },
                         }}
                       />
@@ -650,32 +886,44 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                 </Grid>
 
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <FormControl fullWidth error={!!errors.moduleType} required>
-                    <InputLabel id="module-type-label">Moduł</InputLabel>
-                    <Select
-                      labelId="module-type-label"
-                      label="Moduł"
-                      value={watchedModuleType || ""}
-                      {...register("moduleType", {
-                        required: "Moduł jest wymagany",
-                        validate: (value) =>
-                          value !== ModuleType.None || "Wybierz moduł",
-                      })}
-                    >
-                      {Object.entries(ModuleTypeLabels)
-                        .filter(([key]) => key !== ModuleType.None)
-                        .map(([key, label]) => (
-                          <MenuItem key={key} value={key}>
-                            {label}
-                          </MenuItem>
-                        ))}
-                    </Select>
-                    {errors.moduleType && (
-                      <FormHelperText>
-                        {errors.moduleType.message}
-                      </FormHelperText>
+                  <Controller
+                    name="moduleType"
+                    control={control}
+                    rules={{
+                      required: "Moduł jest wymagany",
+                      validate: (value) =>
+                        value !== ModuleType.None || "Wybierz moduł",
+                    }}
+                    render={({ field }) => (
+                      <FormControl
+                        fullWidth
+                        error={!!errors.moduleType}
+                        required
+                      >
+                        <InputLabel id="module-type-label">Moduł</InputLabel>
+                        <Select
+                          labelId="module-type-label"
+                          label="Moduł"
+                          value={field.value || ""}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                        >
+                          {Object.entries(ModuleTypeLabels)
+                            .filter(([key]) => key !== ModuleType.None)
+                            .map(([key, label]) => (
+                              <MenuItem key={key} value={key}>
+                                {label}
+                              </MenuItem>
+                            ))}
+                        </Select>
+                        {errors.moduleType && (
+                          <FormHelperText>
+                            {errors.moduleType.message}
+                          </FormHelperText>
+                        )}
+                      </FormControl>
                     )}
-                  </FormControl>
+                  />
                 </Grid>
 
                 <Grid size={{ xs: 12, sm: 6 }}>
@@ -698,6 +946,19 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                       )}
                     </Select>
                   </FormControl>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
+                    fullWidth
+                    label="Data płatności"
+                    type="date"
+                    {...register("paymentDate")}
+                    InputLabelProps={{ shrink: true }}
+                    inputProps={{
+                      max: new Date().toISOString().split("T")[0],
+                    }}
+                  />
                 </Grid>
 
                 <Grid size={{ xs: 12, sm: 4 }}>
@@ -864,7 +1125,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6 }}>
                       <TextField
-                        label="Ilość [kg]"
+                        label="Ilość [t]"
                         type="number"
                         fullWidth
                         required
@@ -879,7 +1140,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6 }}>
                       <TextField
-                        label="Cena jednostkowa [zł/kg]"
+                        label="Cena jednostkowa [zł/t]"
                         type="number"
                         fullWidth
                         required
@@ -967,7 +1228,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6 }}>
                       <TextField
-                        label="Ilość [m³]"
+                        label="Ilość [l]"
                         type="number"
                         fullWidth
                         required
@@ -1061,7 +1322,18 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                         }
                         onChange={(_, value) => {
                           setValue("expenseContractorId", value?.id || "");
-                          setValue("expenseTypeId", "");
+                          // Only clear expense type if the new contractor has different types
+                          if (value) {
+                            const currentExpenseTypeId = watch("expenseTypeId");
+                            const hasCurrentType = value.expenseTypes.some(
+                              (t) => t.id === currentExpenseTypeId,
+                            );
+                            if (!hasCurrentType) {
+                              setValue("expenseTypeId", "");
+                            }
+                          } else {
+                            setValue("expenseTypeId", "");
+                          }
                         }}
                         renderInput={(params) => (
                           <TextField
@@ -1078,59 +1350,68 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                       />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6 }}>
-                      <FormControl
-                        fullWidth
-                        required
-                        error={!!errors.expenseTypeId}
-                      >
-                        <InputLabel>Typ wydatku</InputLabel>
-                        <Select
-                          label="Typ wydatku"
-                          value={watch("expenseTypeId") || ""}
-                          {...register("expenseTypeId", {
-                            required: "Typ wydatku jest wymagany",
-                          })}
-                        >
-                          {(() => {
-                            const selectedContractor = expenseContractors.find(
-                              (c) => c.id === watchedExpenseContractorId,
-                            );
-                            const isNewContractor =
-                              draftInvoice?.extractedFields
-                                .isNewExpenseContractor;
-                            const availableTypes =
-                              selectedContractor?.expenseTypes || [];
-                            // Dla nowego kontrahenta lub gdy brak przypisanych typów - pokaż wszystkie
-                            if (
-                              isNewContractor ||
-                              availableTypes.length === 0
-                            ) {
-                              return expenseTypes.map((type) => (
-                                <MenuItem key={type.id} value={type.id}>
-                                  {type.name}
-                                </MenuItem>
-                              ));
-                            }
-                            return availableTypes.map((type) => (
-                              <MenuItem key={type.id} value={type.id}>
-                                {type.name}
-                              </MenuItem>
-                            ));
-                          })()}
-                        </Select>
-                        {errors.expenseTypeId && (
-                          <FormHelperText>
-                            {errors.expenseTypeId.message}
-                          </FormHelperText>
+                      <Controller
+                        name="expenseTypeId"
+                        control={control}
+                        rules={{
+                          required: "Typ wydatku jest wymagany",
+                        }}
+                        render={({ field }) => (
+                          <FormControl
+                            fullWidth
+                            required
+                            error={!!errors.expenseTypeId}
+                          >
+                            <InputLabel>Typ wydatku</InputLabel>
+                            <Select
+                              label="Typ wydatku"
+                              value={field.value || ""}
+                              onChange={field.onChange}
+                              onBlur={field.onBlur}
+                            >
+                              {(() => {
+                                const selectedContractor =
+                                  expenseContractors.find(
+                                    (c) => c.id === watchedExpenseContractorId,
+                                  );
+                                const isNewContractor =
+                                  draftInvoice?.extractedFields
+                                    .isNewExpenseContractor;
+                                const availableTypes =
+                                  selectedContractor?.expenseTypes || [];
+                                // Dla nowego kontrahenta lub gdy brak przypisanych typów - pokaż wszystkie
+                                if (
+                                  isNewContractor ||
+                                  availableTypes.length === 0
+                                ) {
+                                  return expenseTypes.map((type) => (
+                                    <MenuItem key={type.id} value={type.id}>
+                                      {type.name}
+                                    </MenuItem>
+                                  ));
+                                }
+                                return availableTypes.map((type) => (
+                                  <MenuItem key={type.id} value={type.id}>
+                                    {type.name}
+                                  </MenuItem>
+                                ));
+                              })()}
+                            </Select>
+                            {errors.expenseTypeId && (
+                              <FormHelperText>
+                                {errors.expenseTypeId.message}
+                              </FormHelperText>
+                            )}
+                            {draftInvoice?.extractedFields
+                              .isNewExpenseContractor && (
+                              <FormHelperText>
+                                Wybrany typ zostanie przypisany do nowego
+                                kontrahenta
+                              </FormHelperText>
+                            )}
+                          </FormControl>
                         )}
-                        {draftInvoice?.extractedFields
-                          .isNewExpenseContractor && (
-                          <FormHelperText>
-                            Wybrany typ zostanie przypisany do nowego
-                            kontrahenta
-                          </FormHelperText>
-                        )}
-                      </FormControl>
+                      />
                     </Grid>
                   </>
                 )}

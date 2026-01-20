@@ -43,6 +43,7 @@ public class KSeFInvoiceEntity : Entity
     /// <param name="taxBusinessEntityId">Identyfikator podmiotu gospodarczego (opcjonalnie)</param>
     /// <param name="farmId">Identyfikator fermy (opcjonalnie)</param>
     /// <param name="cycleId">Identyfikator cyklu (opcjonalnie)</param>
+    /// <param name="paymentDate">Data płatności (opcjonalnie)</param>
     public static KSeFInvoiceEntity CreateNew(
         string kSeFNumber,
         string invoiceNumber,
@@ -71,7 +72,8 @@ public class KSeFInvoiceEntity : Entity
         Guid? userId = null,
         Guid? taxBusinessEntityId = null,
         Guid? farmId = null,
-        Guid? cycleId = null)
+        Guid? cycleId = null,
+        DateOnly? paymentDate = null)
     {
         return new KSeFInvoiceEntity
         {
@@ -102,7 +104,8 @@ public class KSeFInvoiceEntity : Entity
             CreatedBy = userId,
             TaxBusinessEntityId = taxBusinessEntityId,
             FarmId = farmId,
-            AssignedCycleId = cycleId
+            AssignedCycleId = cycleId,
+            PaymentDate = paymentDate
         };
     }
 
@@ -317,6 +320,7 @@ public class KSeFInvoiceEntity : Entity
     public void Update(
         KSeFInvoiceStatus? status = null,
         KSeFPaymentStatus? paymentStatus = null,
+        DateOnly? paymentDate = null,
         ModuleType? moduleType = null,
         KSeFVatDeductionType? vatDeductionType = null,
         string comment = null,
@@ -329,7 +333,25 @@ public class KSeFInvoiceEntity : Entity
             Status = status.Value;
 
         if (paymentStatus.HasValue)
+        {
             PaymentStatus = paymentStatus.Value;
+            
+            // Automatycznie ustaw datę płatności gdy status zmienia się na opłaconą
+            if (paymentStatus.Value == KSeFPaymentStatus.PaidCash || 
+                paymentStatus.Value == KSeFPaymentStatus.PaidTransfer)
+            {
+                if (!PaymentDate.HasValue && !paymentDate.HasValue)
+                {
+                    PaymentDate = DateOnly.FromDateTime(DateTime.Today);
+                }
+            }
+        }
+
+        // Ustaw datę płatności jeśli została przekazana
+        if (paymentDate.HasValue)
+        {
+            PaymentDate = paymentDate.Value;
+        }
 
         if (moduleType.HasValue)
             ModuleType = moduleType.Value;

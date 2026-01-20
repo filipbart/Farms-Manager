@@ -1,20 +1,18 @@
 using FarmsManager.Application.Interfaces;
+using FarmsManager.Application.Specifications.Accounting;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Entities;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Interfaces;
-using Microsoft.EntityFrameworkCore;
 
 namespace FarmsManager.Application.Services;
 
 public class InvoiceAuditService : IInvoiceAuditService
 {
     private readonly IKSeFInvoiceAuditLogRepository _auditLogRepository;
-    private readonly DbContext _dbContext;
 
-    public InvoiceAuditService(IKSeFInvoiceAuditLogRepository auditLogRepository, DbContext dbContext)
+    public InvoiceAuditService(IKSeFInvoiceAuditLogRepository auditLogRepository)
     {
         _auditLogRepository = auditLogRepository;
-        _dbContext = dbContext;
     }
 
     public async Task LogStatusChangeAsync(
@@ -45,11 +43,9 @@ public class InvoiceAuditService : IInvoiceAuditService
         Guid invoiceId,
         CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Set<KSeFInvoiceAuditLogEntity>()
-            .Where(a => a.InvoiceId == invoiceId && a.DateDeletedUtc == null)
-            .OrderByDescending(a => a.DateCreatedUtc)
-            .AsNoTracking()
-            .ToListAsync(cancellationToken);
+        return await _auditLogRepository.ListAsync(
+            new KSeFInvoiceAuditLogByInvoiceIdSpec(invoiceId),
+            cancellationToken);
     }
 
     public async Task<List<KSeFInvoiceAuditLogEntity>> GetAuditLogsByUserAsync(
@@ -58,18 +54,8 @@ public class InvoiceAuditService : IInvoiceAuditService
         DateTime? toDate = null,
         CancellationToken cancellationToken = default)
     {
-        var query = _dbContext.Set<KSeFInvoiceAuditLogEntity>()
-            .Where(a => a.UserId == userId && a.DateDeletedUtc == null);
-
-        if (fromDate.HasValue)
-            query = query.Where(a => a.DateCreatedUtc >= fromDate.Value);
-
-        if (toDate.HasValue)
-            query = query.Where(a => a.DateCreatedUtc <= toDate.Value);
-
-        return await query
-            .OrderByDescending(a => a.DateCreatedUtc)
-            .AsNoTracking()
-            .ToListAsync(cancellationToken);
+        return await _auditLogRepository.ListAsync(
+            new KSeFInvoiceAuditLogByUserIdSpec(userId, fromDate, toDate),
+            cancellationToken);
     }
 }

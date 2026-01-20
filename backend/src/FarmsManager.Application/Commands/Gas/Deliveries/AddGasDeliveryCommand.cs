@@ -1,11 +1,17 @@
 ﻿using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.FileSystem;
 using FarmsManager.Application.Interfaces;
+using FarmsManager.Application.Specifications.Expenses;
 using FarmsManager.Application.Specifications.Farms;
+using FarmsManager.Application.Specifications.Feeds;
 using FarmsManager.Application.Specifications.Gas;
+using FarmsManager.Application.Specifications.Sales;
+using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.GasAggregate.Entities;
 using FarmsManager.Domain.Aggregates.GasAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.SaleAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
 using FluentValidation;
 using MediatR;
@@ -34,16 +40,23 @@ public class AddGasDeliveryCommandHandler : IRequestHandler<AddGasDeliveryComman
     private readonly IUserDataResolver _userDataResolver;
     private readonly IGasContractorRepository _gasContractorRepository;
     private readonly IGasDeliveryRepository _gasDeliveryRepository;
+    private readonly IFeedInvoiceRepository _feedInvoiceRepository;
+    private readonly IExpenseProductionRepository _expenseProductionRepository;
+    private readonly ISaleInvoiceRepository _saleInvoiceRepository;
 
     public AddGasDeliveryCommandHandler(IS3Service s3Service, IFarmRepository farmRepository,
         IUserDataResolver userDataResolver, IGasContractorRepository gasContractorRepository,
-        IGasDeliveryRepository gasDeliveryRepository)
+        IGasDeliveryRepository gasDeliveryRepository, IFeedInvoiceRepository feedInvoiceRepository,
+        IExpenseProductionRepository expenseProductionRepository, ISaleInvoiceRepository saleInvoiceRepository)
     {
         _s3Service = s3Service;
         _farmRepository = farmRepository;
         _userDataResolver = userDataResolver;
         _gasContractorRepository = gasContractorRepository;
         _gasDeliveryRepository = gasDeliveryRepository;
+        _feedInvoiceRepository = feedInvoiceRepository;
+        _expenseProductionRepository = expenseProductionRepository;
+        _saleInvoiceRepository = saleInvoiceRepository;
     }
 
     public async Task<EmptyBaseResponse> Handle(AddGasDeliveryCommand request, CancellationToken ct)
@@ -52,6 +65,9 @@ public class AddGasDeliveryCommandHandler : IRequestHandler<AddGasDeliveryComman
         var farm = await _farmRepository.GetAsync(new FarmByIdSpec(request.Data.FarmId), ct);
         var contractor =
             await _gasContractorRepository.GetAsync(new GetGasContractorByIdSpec(request.Data.ContractorId), ct);
+
+        // Sprawdź duplikaty we wszystkich modułach
+        await CheckForDuplicatesAsync(request.Data.InvoiceNumber, ct);
 
         var newGasDelivery = GasDeliveryEntity.CreateNew(
             farm.Id,
@@ -80,6 +96,49 @@ public class AddGasDeliveryCommandHandler : IRequestHandler<AddGasDeliveryComman
 
         await _gasDeliveryRepository.AddAsync(newGasDelivery, ct);
         return new EmptyBaseResponse();
+    }
+
+    private async Task CheckForDuplicatesAsync(string invoiceNumber, CancellationToken ct)
+    {
+        // Sprawdź duplikaty w dostawach gazu
+        var existsInGas = await _gasDeliveryRepository.AnyAsync(
+            new GetGasDeliveryByInvoiceNumberSpec(invoiceNumber),
+            ct);
+        
+        if (existsInGas)
+        {
+            throw DomainException.BadRequest($"Faktura o numerze '{invoiceNumber}' już istnieje w dostawach gazu.");
+        }
+        
+        // Sprawdź duplikaty w dostawach pasz
+        var existsInFeeds = await _feedInvoiceRepository.AnyAsync(
+            new GetFeedInvoiceByInvoiceNumberSpec(invoiceNumber),
+            ct);
+        
+        if (existsInFeeds)
+        {
+            throw DomainException.BadRequest($"Faktura o numerze '{invoiceNumber}' już istnieje w dostawach pasz.");
+        }
+        
+        // Sprawdź duplikaty w kosztach produkcyjnych
+        var existsInExpenses = await _expenseProductionRepository.AnyAsync(
+            new GetExpenseProductionInvoiceByInvoiceNumberSpec(invoiceNumber),
+            ct);
+        
+        if (existsInExpenses)
+        {
+            throw DomainException.BadRequest($"Faktura o numerze '{invoiceNumber}' już istnieje w kosztach produkcyjnych.");
+        }
+        
+        // Sprawdź duplikaty w fakturach sprzedażowych
+        var existsInSales = await _saleInvoiceRepository.AnyAsync(
+            new GetSaleInvoiceByInvoiceNumberSpec(invoiceNumber),
+            ct);
+        
+        if (existsInSales)
+        {
+            throw DomainException.BadRequest($"Faktura o numerze '{invoiceNumber}' już istnieje w fakturach sprzedażowych.");
+        }
     }
 }
 

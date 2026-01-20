@@ -15,6 +15,7 @@ public class KSeFInvoiceEntityConfiguration : BaseConfiguration<KSeFInvoiceEntit
         builder.HasKey(t => t.Id);
 
         builder.Property(t => t.KSeFNumber)
+            .HasColumnName("ksef_number")
             .IsRequired()
             .HasMaxLength(100);
 

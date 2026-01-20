@@ -13,6 +13,7 @@ public class UpdateKSeFInvoiceDto
 {
     public KSeFInvoiceStatus? Status { get; set; }
     public KSeFPaymentStatus? PaymentStatus { get; set; }
+    public DateOnly? PaymentDate { get; set; }
     public ModuleType? ModuleType { get; set; }
     public KSeFVatDeductionType? VatDeductionType { get; set; }
     public string Comment { get; set; }
@@ -50,6 +51,7 @@ public class UpdateKSeFInvoiceCommandHandler : IRequestHandler<UpdateKSeFInvoice
         invoice.Update(
             request.Data.Status,
             request.Data.PaymentStatus,
+            request.Data.PaymentDate,
             request.Data.ModuleType,
             request.Data.VatDeductionType,
             request.Data.Comment,

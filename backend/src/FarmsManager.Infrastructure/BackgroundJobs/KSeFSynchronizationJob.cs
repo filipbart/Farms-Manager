@@ -464,10 +464,14 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
         // Parsuj typ płatności z XML
         var paymentType = ParsePaymentType(parsedInvoice?.Fa?.Platnosc?.FormaPlatnosci);
 
-        // Sprawdź czy faktura jest opłacona (Zaplacono = "1")
+        // Sprawdź czy faktura jest opłacona (Zaplacono = "1") lub częściowo opłacona
         var paymentStatus = ParsePaymentStatus(
             parsedInvoice?.Fa?.Platnosc?.Zaplacono,
+            parsedInvoice?.Fa?.Platnosc?.ZnacznikZaplatyCzesciowej,
             paymentType);
+
+        // Parsuj datę płatności z XML (DataZaplaty)
+        var paymentDate = ParsePaymentDate(parsedInvoice?.Fa?.Platnosc?.DataZaplaty);
 
         return KSeFInvoiceEntity.CreateNew(
             kSeFNumber: invoiceItem.KsefNumber,
@@ -492,7 +496,8 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
             vatAmount: invoiceItem.VatAmount,
             taxBusinessEntityId: taxBusinessEntityId,
             farmId: farmId,
-            cycleId: cycleId
+            cycleId: cycleId,
+            paymentDate: paymentDate
         );
     }
 
@@ -510,11 +515,33 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
     }
 
     /// <summary>
-    /// Parsuje status płatności na podstawie pola Zaplacono z XML KSeF
+    /// Parsuje status płatności na podstawie pól Zaplacono i ZnacznikZaplatyCzesciowej z XML KSeF
     /// Zaplacono = "1" oznacza że faktura została opłacona
+    /// ZnacznikZaplatyCzesciowej:
+    ///   "1" = należność zapłacona częściowo
+    ///   "2" = należność zapłacona w całości (ale w co najmniej 2 częściach)
     /// </summary>
-    private static KSeFPaymentStatus ParsePaymentStatus(string zaplacono, KSeFInvoicePaymentType paymentType)
+    private static KSeFPaymentStatus ParsePaymentStatus(
+        string zaplacono,
+        string znacznikZaplatyCzesciowej,
+        KSeFInvoicePaymentType paymentType)
     {
+        // Sprawdź najpierw znacznik zapłaty częściowej
+        if (znacznikZaplatyCzesciowej == "1")
+        {
+            // Faktura opłacona częściowo
+            return KSeFPaymentStatus.PartiallyPaid;
+        }
+
+        if (znacznikZaplatyCzesciowej == "2")
+        {
+            // Faktura opłacona w całości (w częściach) - traktuj jako w pełni opłaconą
+            return paymentType == KSeFInvoicePaymentType.Cash
+                ? KSeFPaymentStatus.PaidCash
+                : KSeFPaymentStatus.PaidTransfer;
+        }
+
+        // Standardowa logika - pole Zaplacono
         if (zaplacono == "1")
         {
             return paymentType == KSeFInvoicePaymentType.Cash
@@ -534,6 +561,17 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
             return null;
 
         return DateOnly.FromDateTime(terminPlatnosci.Value);
+    }
+
+    /// <summary>
+    /// Parsuje datę płatności z XML KSeF (pole DataZaplaty)
+    /// </summary>
+    private static DateOnly? ParsePaymentDate(DateTime? dataZaplaty)
+    {
+        if (!dataZaplaty.HasValue)
+            return null;
+
+        return DateOnly.FromDateTime(dataZaplaty.Value);
     }
 
     /// <summary>

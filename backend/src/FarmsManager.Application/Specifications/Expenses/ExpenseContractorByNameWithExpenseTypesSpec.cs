@@ -8,8 +8,8 @@ public sealed class ExpenseContractorByNameWithExpenseTypesSpec : BaseSpecificat
 {
     public ExpenseContractorByNameWithExpenseTypesSpec(string name)
     {
-        Query
-            .Where(t => t.Name == name && t.DateDeletedUtc == null)
-            .Include(t => t.ExpenseTypes);
+        EnsureExists();
+        Query.Where(t => t.Name == name)
+             .Include(t => t.ExpenseTypes);
     }
 }

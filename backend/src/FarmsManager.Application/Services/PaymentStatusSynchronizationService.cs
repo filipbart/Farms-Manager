@@ -1,25 +1,27 @@
 using FarmsManager.Application.Interfaces;
-using FarmsManager.Domain.Aggregates.AccountingAggregate.Entities;
+using FarmsManager.Application.Specifications.Accounting;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Interfaces;
-using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
-using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
+using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.SaleAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
-using Microsoft.EntityFrameworkCore;
 
 namespace FarmsManager.Application.Services;
 
 public class PaymentStatusSynchronizationService : IPaymentStatusSynchronizationService
 {
     private readonly IKSeFInvoiceRepository _invoiceRepository;
-    private readonly DbContext _dbContext;
+    private readonly IFeedInvoiceRepository _feedInvoiceRepository;
+    private readonly ISaleInvoiceRepository _saleInvoiceRepository;
 
     public PaymentStatusSynchronizationService(
         IKSeFInvoiceRepository invoiceRepository,
-        DbContext dbContext)
+        IFeedInvoiceRepository feedInvoiceRepository,
+        ISaleInvoiceRepository saleInvoiceRepository)
     {
         _invoiceRepository = invoiceRepository;
-        _dbContext = dbContext;
+        _feedInvoiceRepository = feedInvoiceRepository;
+        _saleInvoiceRepository = saleInvoiceRepository;
     }
 
     public async Task SyncPaymentStatusToAccountingAsync(
@@ -70,16 +72,16 @@ public class PaymentStatusSynchronizationService : IPaymentStatusSynchronization
                 break;
         }
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _invoiceRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<KSeFPaymentStatus?> GetModulePaymentStatusAsync(
         Guid invoiceId,
         CancellationToken cancellationToken = default)
     {
-        var invoice = await _dbContext.Set<KSeFInvoiceEntity>()
-            .AsNoTracking()
-            .FirstOrDefaultAsync(i => i.Id == invoiceId, cancellationToken);
+        var invoice = await _invoiceRepository.FirstOrDefaultAsync(
+            new KSeFInvoiceByIdSpec(invoiceId), 
+            cancellationToken);
 
         if (invoice == null || !invoice.AssignedEntityInvoiceId.HasValue)
         {
@@ -91,9 +93,9 @@ public class PaymentStatusSynchronizationService : IPaymentStatusSynchronization
         switch (invoice.ModuleType)
         {
             case ModuleType.Feeds:
-                var feedInvoice = await _dbContext.Set<FeedInvoiceEntity>()
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(f => f.Id == entityId, cancellationToken);
+                var feedInvoice = await _feedInvoiceRepository.FirstOrDefaultAsync(
+                    new Specifications.Feeds.GetFeedInvoiceByIdSpec(entityId),
+                    cancellationToken);
                 if (feedInvoice != null)
                 {
                     return feedInvoice.PaymentId.HasValue 
@@ -103,9 +105,9 @@ public class PaymentStatusSynchronizationService : IPaymentStatusSynchronization
                 break;
 
             case ModuleType.Sales:
-                var saleInvoice = await _dbContext.Set<SaleInvoiceEntity>()
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(s => s.Id == entityId, cancellationToken);
+                var saleInvoice = await _saleInvoiceRepository.FirstOrDefaultAsync(
+                    new Specifications.Sales.SaleInvoiceByIdSpec(entityId),
+                    cancellationToken);
                 if (saleInvoice != null)
                 {
                     return saleInvoice.PaymentDate.HasValue 
@@ -120,8 +122,7 @@ public class PaymentStatusSynchronizationService : IPaymentStatusSynchronization
 
     private async Task SyncToFeedInvoiceAsync(Guid entityId, bool isPaid, CancellationToken cancellationToken)
     {
-        var feedInvoice = await _dbContext.Set<FeedInvoiceEntity>()
-            .FirstOrDefaultAsync(f => f.Id == entityId, cancellationToken);
+        var feedInvoice = await _feedInvoiceRepository.GetByIdAsync(entityId, cancellationToken);
 
         if (feedInvoice == null) return;
 
@@ -137,8 +138,7 @@ public class PaymentStatusSynchronizationService : IPaymentStatusSynchronization
 
     private async Task SyncToSaleInvoiceAsync(Guid entityId, bool isPaid, CancellationToken cancellationToken)
     {
-        var saleInvoice = await _dbContext.Set<SaleInvoiceEntity>()
-            .FirstOrDefaultAsync(s => s.Id == entityId, cancellationToken);
+        var saleInvoice = await _saleInvoiceRepository.GetByIdAsync(entityId, cancellationToken);
 
         if (saleInvoice == null) return;
 

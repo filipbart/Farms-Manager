@@ -30,22 +30,22 @@ export interface UploadGasInvoicesResponse {
 export class GasService {
   public static async getDictionaries() {
     return await AxiosWrapper.get<GasDeliveriesDictionary>(
-      ApiUrl.GasDeliveriesDictionary
+      ApiUrl.GasDeliveriesDictionary,
     );
   }
 
   public static async getGasDeliveries(
-    filters: GasDeliveriesFilterPaginationModel
+    filters: GasDeliveriesFilterPaginationModel,
   ) {
     return await AxiosWrapper.get<PaginateModel<GasDeliveryListModel>>(
       ApiUrl.GasDeliveries,
-      { ...filters }
+      { ...filters },
     );
   }
 
   public static async getGasContractors() {
     return await AxiosWrapper.get<GasContractorsQueryResponse>(
-      ApiUrl.GasContractors
+      ApiUrl.GasContractors,
     );
   }
 
@@ -69,7 +69,7 @@ export class GasService {
 
   public static async updateGasDelivery(
     id: string,
-    data: UpdateGasDeliveryData
+    data: UpdateGasDeliveryData,
   ) {
     return await AxiosWrapper.patch(ApiUrl.UpdateGasDelivery(id), data);
   }
@@ -92,7 +92,7 @@ export class GasService {
           "Content-Type": "multipart/form-data",
         },
         signal: signal,
-      }
+      },
     );
   }
 
@@ -102,16 +102,16 @@ export class GasService {
 
   public static async getConsumptionsDictionaries() {
     return await AxiosWrapper.get<GasConsumptionsDictionary>(
-      ApiUrl.GetGasConsumptionsDictionary
+      ApiUrl.GetGasConsumptionsDictionary,
     );
   }
 
   public static async getGasConsumptions(
-    filters: GasConsumptionsFilterPaginationModel
+    filters: GasConsumptionsFilterPaginationModel,
   ) {
     return await AxiosWrapper.get<PaginateModel<GasConsumptionListModel>>(
       ApiUrl.GasConsumptions,
-      { ...filters }
+      { ...filters },
     );
   }
 
@@ -121,7 +121,7 @@ export class GasService {
   public static async calculateCost(params: GasConsumptionCalculateCostParams) {
     return await AxiosWrapper.get<GasConsumptionCalculateCostResponse>(
       ApiUrl.CalculateGasCost,
-      params
+      params,
     );
   }
 
@@ -137,7 +137,7 @@ export class GasService {
    */
   public static async updateGasConsumption(
     id: string,
-    payload: UpdateGasConsumptionData
+    payload: UpdateGasConsumptionData,
   ) {
     return await AxiosWrapper.patch(ApiUrl.UpdateGasConsumption(id), payload);
   }

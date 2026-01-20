@@ -1,5 +1,7 @@
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
+using FarmsManager.Application.Specifications.Accounting;
+using FarmsManager.Application.Specifications.TaxBusinessEntities;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Entities;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Interfaces;
@@ -7,7 +9,6 @@ using FarmsManager.Domain.Exceptions;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
 
 namespace FarmsManager.Application.Commands.Accounting;
 
@@ -16,6 +17,7 @@ public record UploadKSeFXmlInvoicesCommandDto
     public List<IFormFile> Files { get; init; }
     public string InvoiceType { get; init; } // Purchase or Sales
     public string PaymentStatus { get; init; } // Unpaid, PaidCash, PaidTransfer, etc.
+    public DateOnly? PaymentDate { get; init; } // Optional: Payment date when status is paid
 }
 
 public record UploadKSeFXmlInvoicesCommandResponse
@@ -34,18 +36,18 @@ public class UploadKSeFXmlInvoicesCommandHandler : IRequestHandler<UploadKSeFXml
     private readonly IKSeFInvoiceRepository _invoiceRepository;
     private readonly IKSeFInvoiceXmlParser _xmlParser;
     private readonly IUserDataResolver _userDataResolver;
-    private readonly DbContext _dbContext;
+    private readonly ITaxBusinessEntityRepository _taxBusinessEntityRepository;
 
     public UploadKSeFXmlInvoicesCommandHandler(
         IKSeFInvoiceRepository invoiceRepository,
         IKSeFInvoiceXmlParser xmlParser,
         IUserDataResolver userDataResolver,
-        DbContext dbContext)
+        ITaxBusinessEntityRepository taxBusinessEntityRepository)
     {
         _invoiceRepository = invoiceRepository;
         _xmlParser = xmlParser;
         _userDataResolver = userDataResolver;
-        _dbContext = dbContext;
+        _taxBusinessEntityRepository = taxBusinessEntityRepository;
     }
 
     public async Task<BaseResponse<UploadKSeFXmlInvoicesCommandResponse>> Handle(
@@ -59,10 +61,9 @@ public class UploadKSeFXmlInvoicesCommandHandler : IRequestHandler<UploadKSeFXml
         var errors = new List<string>();
 
         // Pobierz podmioty gospodarcze do dopasowania
-        var taxBusinessEntities = await _dbContext.Set<TaxBusinessEntity>()
-            .Where(t => t.DateDeletedUtc == null)
-            .AsNoTracking()
-            .ToListAsync(cancellationToken);
+        var taxBusinessEntities = await _taxBusinessEntityRepository.ListAsync(
+            new AllActiveTaxBusinessEntitiesSpec(),
+            cancellationToken);
 
         foreach (var file in request.Data.Files)
         {
@@ -113,8 +114,9 @@ public class UploadKSeFXmlInvoicesCommandHandler : IRequestHandler<UploadKSeFXml
                 
 
                 // Sprawdź czy faktura z tym numerem już istnieje
-                var existingInvoice = await _dbContext.Set<KSeFInvoiceEntity>()
-                    .AnyAsync(i => i.InvoiceNumber == invoiceNumber && i.DateDeletedUtc == null, cancellationToken);
+                var existingInvoice = await _invoiceRepository.AnyAsync(
+                    new KSeFInvoiceByInvoiceNumberSpec(invoiceNumber),
+                    cancellationToken);
                 if (existingInvoice)
                 {
                     skippedCount++;
@@ -156,7 +158,8 @@ public class UploadKSeFXmlInvoicesCommandHandler : IRequestHandler<UploadKSeFXml
                     grossAmount: grossAmount,
                     netAmount: netAmount,
                     vatAmount: vatAmount,
-                    taxBusinessEntityId: taxBusinessEntityId
+                    taxBusinessEntityId: taxBusinessEntityId,
+                    paymentDate: request.Data.PaymentDate
                 );
 
                 await _invoiceRepository.AddAsync(invoiceEntity, cancellationToken);

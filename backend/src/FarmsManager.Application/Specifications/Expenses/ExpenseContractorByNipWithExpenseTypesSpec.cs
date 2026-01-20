@@ -10,8 +10,8 @@ public sealed class ExpenseContractorByNipWithExpenseTypesSpec : BaseSpecificati
     {
         nip = nip?.Replace("PL", "").Replace("-", "").Replace(" ", "").Trim();
 
-        Query
-            .Where(t => t.Nip == nip && t.DateDeletedUtc == null)
-            .Include(t => t.ExpenseTypes);
+        EnsureExists();
+        Query.Where(t => t.Nip == nip)
+             .Include(t => t.ExpenseTypes);
     }
 }

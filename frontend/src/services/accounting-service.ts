@@ -25,6 +25,8 @@ export interface AccountingInvoiceExtractedData {
   vatAmount: number | null;
   bankAccountNumber: string;
   invoiceType: string;
+  paymentStatus?: string;
+  paymentDate?: string;
   farmId?: string;
   cycleId?: string;
   moduleType?: string;
@@ -76,6 +78,7 @@ export interface SaveAccountingInvoiceData {
   buyerName: string;
   buyerNip: string;
   paymentStatus?: string;
+  paymentDate?: string;
   grossAmount: number;
   netAmount: number;
   vatAmount: number;
@@ -151,6 +154,7 @@ export class AccountingService {
     invoiceType: string,
     paymentStatus: string,
     moduleType?: string,
+    paymentDate?: string | null,
     signal?: AbortSignal,
   ) {
     const formData = new FormData();
@@ -161,6 +165,9 @@ export class AccountingService {
     formData.append("paymentStatus", paymentStatus);
     if (moduleType) {
       formData.append("moduleType", moduleType);
+    }
+    if (paymentDate) {
+      formData.append("paymentDate", paymentDate);
     }
 
     return await AxiosWrapper.post<UploadAccountingInvoicesResponse>(
@@ -182,6 +189,7 @@ export class AccountingService {
     files: File[],
     invoiceType: string,
     paymentStatus: string,
+    paymentDate?: string | null,
     signal?: AbortSignal,
   ) {
     const formData = new FormData();
@@ -190,6 +198,9 @@ export class AccountingService {
     });
     formData.append("invoiceType", invoiceType);
     formData.append("paymentStatus", paymentStatus);
+    if (paymentDate) {
+      formData.append("paymentDate", paymentDate);
+    }
 
     return await AxiosWrapper.post<UploadXmlInvoicesResponse>(
       ApiUrl.AccountingUploadXmlInvoice,
@@ -227,6 +238,7 @@ export class AccountingService {
     data: {
       status?: string;
       paymentStatus?: string;
+      paymentDate?: string | null;
       moduleType?: string;
       vatDeductionType?: string;
       comment?: string;

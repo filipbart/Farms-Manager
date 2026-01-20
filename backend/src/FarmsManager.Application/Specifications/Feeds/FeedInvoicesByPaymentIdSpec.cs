@@ -3,11 +3,11 @@ using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
 
 namespace FarmsManager.Application.Specifications.Feeds;
 
-public sealed class FeedInvoicesByPaymentIdSpec : Specification<FeedInvoiceEntity>
+public sealed class FeedInvoicesByPaymentIdSpec : BaseSpecification<FeedInvoiceEntity>
 {
     public FeedInvoicesByPaymentIdSpec(Guid paymentId)
     {
-        Query
-            .Where(t => t.PaymentId == paymentId && t.DateDeletedUtc == null);
+        EnsureExists();
+        Query.Where(t => t.PaymentId == paymentId);
     }
 }

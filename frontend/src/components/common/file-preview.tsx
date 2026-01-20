@@ -44,32 +44,40 @@ const FilePreview: React.FC<FilePreviewProps> = ({
       const mime = file.type.toLowerCase();
       if (mime === "application/pdf") return "pdf";
       if (mime.startsWith("image/")) return "image";
+
+      // Fallback to filename extension if MIME is unknown/empty
+      const fileName = file.name.toLowerCase();
+      if (fileName.endsWith(".pdf")) return "pdf";
+      if (fileName.match(/\.(jpe?g|png|webp|gif|bmp)$/)) return "image";
+
       return "unknown";
     }
 
     try {
-      const url = new URL(file);
+      // Try to parse as absolute URL first
+      const url = new URL(file, window.location.origin);
       const pathname = url.pathname.toLowerCase();
 
       if (pathname.endsWith(".pdf")) return "pdf";
       if (pathname.match(/\.(jpe?g|png|webp|gif|bmp)$/)) return "image";
 
-      if (url.pathname) {
-        if (
-          url.pathname.includes("/pdf/") ||
-          url.searchParams.get("type") === "pdf"
-        )
-          return "pdf";
-        if (
-          url.pathname.includes("/image/") ||
-          url.searchParams.get("type") === "image"
-        )
-          return "image";
-      }
+      // Check query params for type hint
+      const typeParam = url.searchParams.get("type");
+      if (typeParam === "pdf") return "pdf";
+      if (typeParam === "image") return "image";
+
+      // Check path segments
+      if (pathname.includes("/pdf")) return "pdf";
+      if (pathname.includes("/image")) return "image";
     } catch {
+      // Fallback for non-URL strings
       const lowerPath = file.toLowerCase();
       if (lowerPath.endsWith(".pdf")) return "pdf";
       if (lowerPath.match(/\.(jpe?g|png|webp|gif|bmp)$/)) return "image";
+
+      // Check for query param in string
+      if (lowerPath.includes("type=pdf")) return "pdf";
+      if (lowerPath.includes("type=image")) return "image";
     }
 
     return "unknown";
@@ -120,11 +128,11 @@ const FilePreview: React.FC<FilePreviewProps> = ({
 
         const maxX = Math.max(
           0,
-          (imgRect.width * scale - containerRect.width) / 2
+          (imgRect.width * scale - containerRect.width) / 2,
         );
         const maxY = Math.max(
           0,
-          (imgRect.height * scale - containerRect.height) / 2
+          (imgRect.height * scale - containerRect.height) / 2,
         );
 
         setPosition({
@@ -326,8 +334,8 @@ const FilePreview: React.FC<FilePreviewProps> = ({
                   cursor: isDragging
                     ? "grabbing"
                     : scale > 1
-                    ? "move"
-                    : "default",
+                      ? "move"
+                      : "default",
                 }}
                 onWheel={handleWheel}
                 onMouseDown={handleMouseDown}

@@ -1,20 +1,27 @@
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.FileSystem;
 using FarmsManager.Application.Interfaces;
+using FarmsManager.Application.Specifications.Accounting;
+using FarmsManager.Application.Specifications.Expenses;
+using FarmsManager.Application.Specifications.Feeds;
+using FarmsManager.Application.Specifications.Gas;
+using FarmsManager.Application.Specifications.Sales;
+using FarmsManager.Application.Specifications.TaxBusinessEntities;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Entities;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
-using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.GasAggregate.Entities;
 using FarmsManager.Domain.Aggregates.GasAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Interfaces;
-using FarmsManager.Domain.Aggregates.SlaughterhouseAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
 using FluentValidation;
 using KSeF.Client.Core.Models.Invoices.Common;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 namespace FarmsManager.Application.Commands.Accounting;
 
@@ -23,8 +30,8 @@ public record SaveAccountingInvoiceDto
     public Guid DraftId { get; init; }
     public string FilePath { get; init; }
     public string InvoiceNumber { get; init; }
-    public string InvoiceDate { get; init; }
-    public string DueDate { get; init; }
+    public DateOnly InvoiceDate { get; init; }
+    public DateOnly? DueDate { get; init; }
     public string SellerName { get; init; }
     public string SellerNip { get; init; }
     public string BuyerName { get; init; }
@@ -39,6 +46,7 @@ public record SaveAccountingInvoiceDto
     public ModuleType ModuleType { get; init; }
     public string Comment { get; init; }
     public string PaymentStatus { get; init; }
+    public DateOnly? PaymentDate { get; init; }
     
     // Module-specific data
     public SaveFeedInvoiceDto FeedData { get; init; }
@@ -94,54 +102,30 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
     private readonly IKSeFInvoiceRepository _invoiceRepository;
     private readonly IUserDataResolver _userDataResolver;
     private readonly IS3Service _s3Service;
-    private readonly DbContext _dbContext;
-    private readonly IFarmRepository _farmRepository;
-    private readonly ICycleRepository _cycleRepository;
-    private readonly IHenhouseRepository _henhouseRepository;
-    private readonly IFeedNameRepository _feedNameRepository;
-    private readonly IFeedInvoiceRepository _feedInvoiceRepository;
-    private readonly IFeedPriceRepository _feedPriceRepository;
+    private readonly ITaxBusinessEntityRepository _taxBusinessEntityRepository;
     private readonly IGasDeliveryRepository _gasDeliveryRepository;
-    private readonly IGasContractorRepository _gasContractorRepository;
+    private readonly IFeedInvoiceRepository _feedInvoiceRepository;
     private readonly IExpenseProductionRepository _expenseProductionRepository;
-    private readonly IExpenseContractorRepository _expenseContractorRepository;
     private readonly ISaleInvoiceRepository _saleInvoiceRepository;
-    private readonly ISlaughterhouseRepository _slaughterhouseRepository;
 
     public SaveAccountingInvoiceCommandHandler(
         IKSeFInvoiceRepository invoiceRepository,
         IUserDataResolver userDataResolver,
         IS3Service s3Service,
-        DbContext dbContext,
-        IFarmRepository farmRepository,
-        ICycleRepository cycleRepository,
-        IHenhouseRepository henhouseRepository,
-        IFeedNameRepository feedNameRepository,
-        IFeedInvoiceRepository feedInvoiceRepository,
-        IFeedPriceRepository feedPriceRepository,
+        ITaxBusinessEntityRepository taxBusinessEntityRepository,
         IGasDeliveryRepository gasDeliveryRepository,
-        IGasContractorRepository gasContractorRepository,
+        IFeedInvoiceRepository feedInvoiceRepository,
         IExpenseProductionRepository expenseProductionRepository,
-        IExpenseContractorRepository expenseContractorRepository,
-        ISaleInvoiceRepository saleInvoiceRepository,
-        ISlaughterhouseRepository slaughterhouseRepository)
+        ISaleInvoiceRepository saleInvoiceRepository)
     {
         _invoiceRepository = invoiceRepository;
         _userDataResolver = userDataResolver;
         _s3Service = s3Service;
-        _dbContext = dbContext;
-        _farmRepository = farmRepository;
-        _cycleRepository = cycleRepository;
-        _henhouseRepository = henhouseRepository;
-        _feedNameRepository = feedNameRepository;
-        _feedInvoiceRepository = feedInvoiceRepository;
-        _feedPriceRepository = feedPriceRepository;
+        _taxBusinessEntityRepository = taxBusinessEntityRepository;
         _gasDeliveryRepository = gasDeliveryRepository;
-        _gasContractorRepository = gasContractorRepository;
+        _feedInvoiceRepository = feedInvoiceRepository;
         _expenseProductionRepository = expenseProductionRepository;
-        _expenseContractorRepository = expenseContractorRepository;
         _saleInvoiceRepository = saleInvoiceRepository;
-        _slaughterhouseRepository = slaughterhouseRepository;
     }
 
     public async Task<BaseResponse<Guid>> Handle(SaveAccountingInvoiceCommand request, CancellationToken cancellationToken)
@@ -149,27 +133,13 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var data = request.Data;
 
-        // Parsuj datę faktury
-        if (!DateOnly.TryParse(data.InvoiceDate, out var invoiceDate))
-        {
-            throw new Exception("Nieprawidłowy format daty faktury");
-        }
-
-        // Parsuj termin płatności (opcjonalny)
-        DateOnly? paymentDueDate = null;
-        if (!string.IsNullOrWhiteSpace(data.DueDate) && DateOnly.TryParse(data.DueDate, out var parsedDueDate))
-        {
-            paymentDueDate = parsedDueDate;
-        }
+        var invoiceDate = data.InvoiceDate;
+        var paymentDueDate = data.DueDate;
 
         // Określ kierunek faktury
         var invoiceDirection = data.InvoiceType == "Sales"
             ? KSeFInvoiceDirection.Sales
             : KSeFInvoiceDirection.Purchase;
-
-        // Przenieś plik z draft do stałej lokalizacji
-        var permanentPath = $"accounting/{data.DraftId}{Path.GetExtension(data.FilePath)}";
-        await _s3Service.MoveFileAsync(FileType.AccountingInvoice, data.FilePath, permanentPath);
 
         // Dopasuj podmiot gospodarczy po NIP sprzedawcy lub nabywcy
         var taxBusinessEntityId = await MatchTaxBusinessEntityAsync(
@@ -178,9 +148,41 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
         // Sprawdź duplikaty przed zapisem
         await CheckForDuplicatesAsync(data.InvoiceNumber, data.SellerNip, taxBusinessEntityId, cancellationToken);
 
+        // Dla manualnych faktur generujemy placeholder KSeFNumber
+        var manualKSeFNumber = $"MANUAL-{data.DraftId:N}";
+
+        // Określ status faktury
+        var invoiceStatus = ParseInvoiceStatus(data.Status);
+        
+        // Encję modułową tworzymy zawsze dla faktur manualnych (a ten command obsługuje tylko manualne)
+        var shouldCreateModuleEntity = true;
+
+        // Pobierz dane lokalizacji i cyklu z danych modułu
+        Guid? farmId = null;
+        Guid? cycleId = null;
+
+        switch (data.ModuleType)
+        {
+            case ModuleType.Feeds:
+                farmId = data.FeedData?.FarmId;
+                cycleId = data.FeedData?.CycleId;
+                break;
+            case ModuleType.Gas:
+                farmId = data.GasData?.FarmId;
+                break;
+            case ModuleType.ProductionExpenses:
+                farmId = data.ExpenseData?.FarmId;
+                cycleId = data.ExpenseData?.CycleId;
+                break;
+            case ModuleType.Sales:
+                farmId = data.SaleData?.FarmId;
+                cycleId = data.SaleData?.CycleId;
+                break;
+        }
+
         // Utwórz encję faktury
         var invoice = KSeFInvoiceEntity.CreateNew(
-            kSeFNumber: null,
+            kSeFNumber: manualKSeFNumber,
             invoiceNumber: data.InvoiceNumber,
             invoiceDate: invoiceDate,
             paymentDueDate: paymentDueDate,
@@ -189,7 +191,7 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
             buyerNip: data.BuyerNip?.Replace("PL", "").Replace("-", "").Replace(" ", "").Trim(),
             buyerName: data.BuyerName,
             invoiceType: ParseDocumentType(data.DocumentType),
-            status: ParseInvoiceStatus(data.Status),
+            status: invoiceStatus,
             paymentStatus: ParsePaymentStatus(data.PaymentStatus),
             paymentType: KSeFInvoicePaymentType.BankTransfer,
             vatDeductionType: ParseVatDeductionType(data.VatDeductionType),
@@ -202,13 +204,36 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
             vatAmount: data.VatAmount,
             comment: data.Comment,
             userId: userId,
-            taxBusinessEntityId: taxBusinessEntityId
+            taxBusinessEntityId: taxBusinessEntityId,
+            farmId: farmId,
+            cycleId: cycleId,
+            paymentDate: data.PaymentDate
         );
-
-        // Encja modułowa zostanie utworzona dopiero przy akceptacji faktury (AcceptKSeFInvoiceCommand)
-        // Faktura jest zapisywana ze statusem "New" bez tworzenia encji modułowej
-
+        
         await _invoiceRepository.AddAsync(invoice, cancellationToken);
+
+        // Construct permanent path in saved folder using module-specific FileType
+        var extension = Path.GetExtension(data.FilePath);
+        var fileType = GetFileTypeForModule(data.ModuleType);
+        var relativePath = $"saved/{invoice.Id}{extension}";
+        
+        // Move file from draft to saved
+        await _s3Service.MoveFileAsync(fileType, data.FilePath, relativePath);
+        
+        // Store full path with module prefix for frontend retrieval
+        var modulePrefix = GetModulePrefixForFileType(fileType);
+        var fullPath = $"{modulePrefix}/{relativePath}";
+
+        // Utwórz encję modułową jeśli wymagane
+        if (shouldCreateModuleEntity)
+        {
+            var moduleEntityId = await CreateModuleEntityAsync(invoice, data, userId, fullPath, cancellationToken);
+            if (moduleEntityId.HasValue)
+            {
+                invoice.SetAssignedEntityInvoiceId(moduleEntityId.Value);
+            }
+        }
+
         await _invoiceRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
 
         return BaseResponse.CreateResponse(invoice.Id);
@@ -221,10 +246,8 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
         string sellerNip, string sellerName, string buyerNip, string buyerName,
         CancellationToken cancellationToken)
     {
-        var taxBusinessEntities = await _dbContext.Set<TaxBusinessEntity>()
-            .Where(t => t.DateDeletedUtc == null)
-            .AsNoTracking()
-            .ToListAsync(cancellationToken);
+        var taxBusinessEntities = await _taxBusinessEntityRepository
+            .ListAsync(new AllActiveTaxBusinessEntitiesSpec(), cancellationToken);
 
         if (taxBusinessEntities.Count == 0)
             return null;
@@ -263,24 +286,170 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
     {
         var normalizedSellerNip = NormalizeNip(sellerNip);
         
-        var query = _dbContext.Set<KSeFInvoiceEntity>()
-            .Where(i => i.InvoiceNumber == invoiceNumber && i.Status != KSeFInvoiceStatus.Rejected);
+        // Sprawdź duplikaty w fakturach KSeF
+        var existsInKSeF = await _invoiceRepository.AnyAsync(
+            new KSeFInvoiceByNumberAndSellerSpec(invoiceNumber, normalizedSellerNip, taxBusinessEntityId),
+            cancellationToken);
 
-        if (taxBusinessEntityId.HasValue)
+        if (existsInKSeF)
         {
-            query = query.Where(i => i.SellerNip == normalizedSellerNip || i.TaxBusinessEntityId == taxBusinessEntityId);
+            throw DomainException.BadRequest($"Faktura o numerze '{invoiceNumber}' od tego sprzedawcy już istnieje w księgowości.");
         }
-        else
+        
+        // Sprawdź duplikaty w dostawach gazu
+        var existsInGas = await _gasDeliveryRepository.AnyAsync(
+            new GetGasDeliveryByInvoiceNumberSpec(invoiceNumber),
+            cancellationToken);
+        
+        if (existsInGas)
         {
-            query = query.Where(i => i.SellerNip == normalizedSellerNip);
+            throw DomainException.BadRequest($"Faktura o numerze '{invoiceNumber}' już istnieje w dostawach gazu.");
+        }
+        
+        // Sprawdź duplikaty w dostawach pasz
+        var existsInFeeds = await _feedInvoiceRepository.AnyAsync(
+            new GetFeedInvoiceByInvoiceNumberSpec(invoiceNumber),
+            cancellationToken);
+        
+        if (existsInFeeds)
+        {
+            throw DomainException.BadRequest($"Faktura o numerze '{invoiceNumber}' już istnieje w dostawach pasz.");
+        }
+        
+        // Sprawdź duplikaty w kosztach produkcyjnych
+        var existsInExpenses = await _expenseProductionRepository.AnyAsync(
+            new GetExpenseProductionInvoiceByInvoiceNumberSpec(invoiceNumber),
+            cancellationToken);
+        
+        if (existsInExpenses)
+        {
+            throw DomainException.BadRequest($"Faktura o numerze '{invoiceNumber}' już istnieje w kosztach produkcyjnych.");
+        }
+        
+        // Sprawdź duplikaty w fakturach sprzedażowych
+        var existsInSales = await _saleInvoiceRepository.AnyAsync(
+            new GetSaleInvoiceByInvoiceNumberSpec(invoiceNumber),
+            cancellationToken);
+        
+        if (existsInSales)
+        {
+            throw DomainException.BadRequest($"Faktura o numerze '{invoiceNumber}' już istnieje w fakturach sprzedażowych.");
+        }
+    }
+
+    /// <summary>
+    /// Tworzy encję modułową na podstawie danych faktury
+    /// </summary>
+    private async Task<Guid?> CreateModuleEntityAsync(KSeFInvoiceEntity invoice, SaveAccountingInvoiceDto data, Guid userId, string filePath, CancellationToken cancellationToken)
+    {
+        switch (data.ModuleType)
+        {
+            case ModuleType.Feeds:
+                if (data.FeedData != null)
+                {
+                    var feedInvoice = FeedInvoiceEntity.CreateNew(
+                        data.FeedData.FarmId,
+                        data.FeedData.CycleId,
+                        data.FeedData.HenhouseId,
+                        data.InvoiceNumber,
+                        data.FeedData.BankAccountNumber ?? "",
+                        data.FeedData.VendorName,
+                        data.FeedData.ItemName,
+                        data.FeedData.Quantity,
+                        data.FeedData.UnitPrice,
+                        data.InvoiceDate,
+                        data.DueDate ?? data.InvoiceDate,
+                        data.GrossAmount,
+                        data.NetAmount,
+                        data.VatAmount,
+                        data.Comment,
+                        userId);
+                    
+                    feedInvoice.SetFilePath(filePath);
+
+                    await _feedInvoiceRepository.AddAsync(feedInvoice, cancellationToken);
+                    await _feedInvoiceRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
+                    return feedInvoice.Id;
+                }
+                break;
+
+            case ModuleType.Gas:
+                if (data.GasData != null)
+                {
+                    var gasDelivery = GasDeliveryEntity.CreateNew(
+                        data.GasData.FarmId,
+                        data.GasData.ContractorId ?? Guid.Empty,
+                        data.InvoiceNumber,
+                        data.InvoiceDate,
+                        data.GrossAmount,
+                        data.GasData.UnitPrice,
+                        data.GasData.Quantity,
+                        data.Comment,
+                        userId);
+                    
+                    gasDelivery.SetFilePath(filePath);
+
+                    await _gasDeliveryRepository.AddAsync(gasDelivery, cancellationToken);
+                    await _gasDeliveryRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
+                    return gasDelivery.Id;
+                }
+                break;
+
+            case ModuleType.ProductionExpenses:
+                if (data.ExpenseData != null)
+                {
+                    var expenseProduction = ExpenseProductionEntity.CreateNew(
+                        data.ExpenseData.FarmId,
+                        data.ExpenseData.CycleId,
+                        data.ExpenseData.ExpenseContractorId ?? Guid.Empty,
+                        data.ExpenseData.ExpenseTypeId,
+                        data.InvoiceNumber,
+                        data.GrossAmount,
+                        data.NetAmount,
+                        data.VatAmount,
+                        data.InvoiceDate,
+                        data.Comment,
+                        userId);
+                    
+                    expenseProduction.SetFilePath(filePath);
+
+                    await _expenseProductionRepository.AddAsync(expenseProduction, cancellationToken);
+                    await _expenseProductionRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
+                    return expenseProduction.Id;
+                }
+                break;
+
+            case ModuleType.Sales:
+                if (data.SaleData != null)
+                {
+                    var saleInvoice = SaleInvoiceEntity.CreateNew(
+                        data.SaleData.FarmId,
+                        data.SaleData.CycleId,
+                        data.SaleData.SlaughterhouseId ?? Guid.Empty,
+                        data.InvoiceNumber,
+                        data.InvoiceDate,
+                        data.DueDate ?? data.InvoiceDate,
+                        data.GrossAmount,
+                        data.NetAmount,
+                        data.VatAmount,
+                        userId);
+                    
+                    saleInvoice.SetFilePath(filePath);
+
+                    await _saleInvoiceRepository.AddAsync(saleInvoice, cancellationToken);
+                    await _saleInvoiceRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
+                    return saleInvoice.Id;
+                }
+                break;
+
+            case ModuleType.Farmstead:
+            case ModuleType.Other:
+            case ModuleType.None:
+                // Dla tych modułów nie tworzymy encji modułowej
+                break;
         }
 
-        var exists = await query.AnyAsync(cancellationToken);
-
-        if (exists)
-        {
-            throw DomainException.BadRequest($"Faktura o numerze '{invoiceNumber}' od tego sprzedawcy już istnieje.");
-        }
+        return null;
     }
 
     private static string NormalizeNip(string nip)
@@ -342,6 +511,31 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
             "Half" => KSeFVatDeductionType.Half,
             "None" => KSeFVatDeductionType.None,
             _ => KSeFVatDeductionType.Full
+        };
+    }
+
+    private static FileType GetFileTypeForModule(ModuleType moduleType)
+    {
+        return moduleType switch
+        {
+            ModuleType.Feeds => FileType.FeedDeliveryInvoice,
+            ModuleType.Gas => FileType.GasDelivery,
+            ModuleType.ProductionExpenses => FileType.ExpenseProduction,
+            ModuleType.Sales => FileType.SalesInvoices,
+            _ => FileType.AccountingInvoice
+        };
+    }
+
+    private static string GetModulePrefixForFileType(FileType fileType)
+    {
+        return fileType switch
+        {
+            FileType.FeedDeliveryInvoice => "FeedDeliveryInvoice",
+            FileType.GasDelivery => "GasDelivery",
+            FileType.ExpenseProduction => "ExpenseProduction",
+            FileType.SalesInvoices => "SalesInvoices",
+            FileType.AccountingInvoice => "accounting",
+            _ => fileType.ToString()
         };
     }
 }

@@ -1,9 +1,9 @@
 using FarmsManager.Application.FileSystem;
 using FarmsManager.Application.Interfaces;
+using FarmsManager.Application.Specifications.Accounting;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Entities;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
-using Microsoft.EntityFrameworkCore;
 
 namespace FarmsManager.Application.Services;
 
@@ -11,17 +11,14 @@ public class InvoiceAttachmentService : IInvoiceAttachmentService
 {
     private readonly IKSeFInvoiceAttachmentRepository _attachmentRepository;
     private readonly IS3Service _s3Service;
-    private readonly DbContext _dbContext;
     private const long MaxFileSizeBytes = 10 * 1024 * 1024; // 10 MB
 
     public InvoiceAttachmentService(
         IKSeFInvoiceAttachmentRepository attachmentRepository,
-        IS3Service s3Service,
-        DbContext dbContext)
+        IS3Service s3Service)
     {
         _attachmentRepository = attachmentRepository;
         _s3Service = s3Service;
-        _dbContext = dbContext;
     }
 
     public async Task<KSeFInvoiceAttachmentEntity> UploadAttachmentAsync(
@@ -64,8 +61,9 @@ public class InvoiceAttachmentService : IInvoiceAttachmentService
         Guid attachmentId,
         CancellationToken cancellationToken = default)
     {
-        var attachment = await _dbContext.Set<KSeFInvoiceAttachmentEntity>()
-            .FirstOrDefaultAsync(a => a.Id == attachmentId && a.DateDeletedUtc == null, cancellationToken);
+        var attachment = await _attachmentRepository.FirstOrDefaultAsync(
+            new KSeFInvoiceAttachmentByIdSpec(attachmentId),
+            cancellationToken);
 
         if (attachment == null)
             throw DomainException.FileNotFound();
@@ -82,8 +80,9 @@ public class InvoiceAttachmentService : IInvoiceAttachmentService
         Guid attachmentId,
         CancellationToken cancellationToken = default)
     {
-        var attachment = await _dbContext.Set<KSeFInvoiceAttachmentEntity>()
-            .FirstOrDefaultAsync(a => a.Id == attachmentId && a.DateDeletedUtc == null, cancellationToken);
+        var attachment = await _attachmentRepository.FirstOrDefaultAsync(
+            new KSeFInvoiceAttachmentByIdSpec(attachmentId),
+            cancellationToken);
 
         if (attachment == null)
             throw DomainException.FileNotFound();
@@ -101,11 +100,9 @@ public class InvoiceAttachmentService : IInvoiceAttachmentService
         Guid invoiceId,
         CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Set<KSeFInvoiceAttachmentEntity>()
-            .Where(a => a.InvoiceId == invoiceId && a.DateDeletedUtc == null)
-            .OrderByDescending(a => a.DateCreatedUtc)
-            .AsNoTracking()
-            .ToListAsync(cancellationToken);
+        return await _attachmentRepository.ListAsync(
+            new KSeFInvoiceAttachmentByInvoiceIdSpec(invoiceId),
+            cancellationToken);
     }
 
     private static string SanitizeFileName(string fileName)

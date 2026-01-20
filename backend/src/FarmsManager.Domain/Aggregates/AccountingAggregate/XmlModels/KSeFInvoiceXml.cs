@@ -360,6 +360,20 @@ public class Platnosc
     public DateTime? DataZaplaty { get; set; }
 
     /// <summary>
+    /// Znacznik zapłaty częściowej:
+    /// 1 = należność zapłacona częściowo
+    /// 2 = należność zapłacona w całości (ale w co najmniej 2 częściach), ostatnia płatność końcowa
+    /// </summary>
+    [XmlElement("ZnacznikZaplatyCzesciowej")]
+    public string ZnacznikZaplatyCzesciowej { get; set; }
+
+    /// <summary>
+    /// Lista płatności częściowych (max 100)
+    /// </summary>
+    [XmlElement("ZaplataCzesciowa")]
+    public List<ZaplataCzesciowa> ZaplatyCzesciowe { get; set; } = [];
+
+    /// <summary>
     /// Terminy płatności (może być wiele)
     /// </summary>
     [XmlElement("TerminPlatnosci")]
@@ -427,6 +441,30 @@ public class RachunekBankowy
 
     [XmlElement("OpisRachunku")]
     public string OpisRachunku { get; set; }
+}
+
+/// <summary>
+/// Płatność częściowa - dane pojedynczej wpłaty
+/// </summary>
+public class ZaplataCzesciowa
+{
+    /// <summary>
+    /// Data zapłaty częściowej
+    /// </summary>
+    [XmlElement("DataZaplatyCzesciowej")]
+    public DateTime? DataZaplatyCzesciowej { get; set; }
+
+    /// <summary>
+    /// Kwota zapłaty częściowej
+    /// </summary>
+    [XmlElement("KwotaZaplatyCzesciowej")]
+    public decimal? KwotaZaplatyCzesciowej { get; set; }
+
+    /// <summary>
+    /// Forma płatności częściowej (1-7: gotówka, karta, bon, czek, kredyt, przelew, mobilna)
+    /// </summary>
+    [XmlElement("FormaPlatnosciCzesciowej")]
+    public string FormaPlatnosciCzesciowej { get; set; }
 }
 
 /// <summary>

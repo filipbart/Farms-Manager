@@ -35,6 +35,8 @@ import {
   Menu,
   ListItemIcon,
   ListItemText,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import CheckIcon from "@mui/icons-material/Check";
@@ -58,6 +60,7 @@ import {
   type InvoiceAuditLog,
 } from "../../../services/accounting-service";
 import { FarmsService } from "../../../services/farms-service";
+import { FilesService } from "../../../services/files-service";
 import { UsersService } from "../../../services/users-service";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import type {
@@ -66,6 +69,7 @@ import type {
   KSeFPartyData,
   LinkableInvoice,
 } from "../../../models/accounting/ksef-invoice";
+import { FileType } from "../../../models/files/file-type";
 import {
   KSeFInvoiceStatusLabels,
   KSeFPaymentStatusLabels,
@@ -414,6 +418,7 @@ interface EditFormState {
   moduleType: ModuleType;
   vatDeductionType: VatDeductionType;
   paymentStatus: KSeFPaymentStatus;
+  paymentDate: string;
   farmId: string;
   cycleId: string;
   assignedUserId: string;
@@ -433,6 +438,10 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
   onPrevious,
   onExitSequential,
 }) => {
+  const theme = useTheme();
+  const isMd = useMediaQuery(theme.breakpoints.up("md"));
+  const isLg = useMediaQuery(theme.breakpoints.up("lg"));
+
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [details, setDetails] = useState<KSeFInvoiceDetails | null>(null);
@@ -445,6 +454,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
     moduleType: ModuleType.None,
     vatDeductionType: VatDeductionType.Full,
     paymentStatus: KSeFPaymentStatus.Unpaid,
+    paymentDate: "",
     farmId: "",
     cycleId: "",
     assignedUserId: "",
@@ -490,6 +500,52 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
   const [auditLogs, setAuditLogs] = useState<InvoiceAuditLog[]>([]);
   const [auditLogsLoading, setAuditLogsLoading] = useState(false);
 
+  // Manual invoice preview state
+  const [manualPreviewFile, setManualPreviewFile] = useState<File | null>(null);
+
+  useEffect(() => {
+    let active = true;
+
+    const fetchManualPreview = async () => {
+      setManualPreviewFile(null);
+      if (!details?.filePath || !details?.hasPdf) {
+        return;
+      }
+
+      try {
+        // Determine FileType from filePath
+        let fileType: FileType;
+        if (details.filePath.startsWith("FeedDeliveryInvoice/")) {
+          fileType = FileType.FeedDeliveryInvoice;
+        } else if (details.filePath.startsWith("GasDelivery/")) {
+          fileType = FileType.GasDelivery;
+        } else if (details.filePath.startsWith("ExpenseProduction/")) {
+          fileType = FileType.ExpenseProduction;
+        } else if (details.filePath.startsWith("SalesInvoices/")) {
+          fileType = FileType.SalesInvoices;
+        } else {
+          fileType = FileType.AccountingInvoice;
+        }
+
+        const blob = await FilesService.getFile(details.filePath, fileType);
+
+        if (active && blob) {
+          const fileName = details.filePath.split("/").pop() || "invoice";
+          const file = new File([blob], fileName, { type: blob.type });
+          setManualPreviewFile(file);
+        }
+      } catch (err) {
+        console.error("Failed to fetch manual preview blob", err);
+      }
+    };
+
+    fetchManualPreview();
+
+    return () => {
+      active = false;
+    };
+  }, [details?.filePath, details?.hasPdf]);
+
   const parsedXml = useMemo(() => {
     if (!details?.invoiceXml) return null;
     return parseKSeFInvoiceXml(details.invoiceXml);
@@ -513,6 +569,9 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
         moduleType: currentModuleType,
         vatDeductionType: details.vatDeductionType || VatDeductionType.Full,
         paymentStatus: details.paymentStatus || KSeFPaymentStatus.Unpaid,
+        paymentDate: details.paymentDate
+          ? dayjs(details.paymentDate).format("YYYY-MM-DD")
+          : "",
         farmId: details.farmId || "",
         cycleId: cycleIdToUse,
         assignedUserId: details.assignedUserId || "",
@@ -582,13 +641,29 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
 
   const handleFormChange = useCallback(
     (field: keyof EditFormState, value: string) => {
-      setEditForm((prev) => ({ ...prev, [field]: value }));
-      // Auto-select active cycle when farm changes
-      if (field === "farmId") {
-        const selectedFarm = farms.find((f) => f.id === value);
-        const activeCycleId = selectedFarm?.activeCycle?.id || "";
-        setEditForm((prev) => ({ ...prev, cycleId: activeCycleId }));
-      }
+      setEditForm((prev) => {
+        const newState = { ...prev, [field]: value };
+
+        // Auto-select active cycle when farm changes
+        if (field === "farmId") {
+          const selectedFarm = farms.find((f) => f.id === value);
+          newState.cycleId = selectedFarm?.activeCycle?.id || "";
+        }
+
+        // Auto-set payment date when payment status changes to paid
+        if (field === "paymentStatus") {
+          const isPaidStatus =
+            value === KSeFPaymentStatus.PaidCash ||
+            value === KSeFPaymentStatus.PaidTransfer;
+          if (isPaidStatus && !prev.paymentDate) {
+            newState.paymentDate = dayjs().format("YYYY-MM-DD");
+          } else if (!isPaidStatus) {
+            newState.paymentDate = "";
+          }
+        }
+
+        return newState;
+      });
     },
     [farms],
   );
@@ -664,6 +739,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
             assignedUserId: holdUserId,
             vatDeductionType: editForm.vatDeductionType,
             paymentStatus: editForm.paymentStatus,
+            paymentDate: editForm.paymentDate || null,
             comment: editForm.comment,
             relatedInvoiceNumber: editForm.relatedInvoiceNumber,
           }),
@@ -868,7 +944,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
       }
     };
     fetchAttachments();
-  }, [details?.id]);
+  }, [details?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch audit logs when details are loaded
   useEffect(() => {
@@ -1055,11 +1131,17 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                   <Typography variant="h6" sx={{ mb: 2 }}>
                     Podgląd faktury
                   </Typography>
-                  <FilePreview
-                    file={ApiUrl.AccountingInvoicePdf(details.id)}
-                    maxHeight={600}
-                    showPreviewButton={true}
-                  />
+                  {manualPreviewFile ? (
+                    <FilePreview
+                      file={manualPreviewFile}
+                      maxHeight={isLg ? 900 : isMd ? 700 : 500}
+                      showPreviewButton={true}
+                    />
+                  ) : (
+                    <Typography color="text.secondary">
+                      Brak pliku faktury
+                    </Typography>
+                  )}
                 </Box>
               ) : (
                 <Paper
@@ -2245,6 +2327,28 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                     </Select>
                   </FormControl>
 
+                  {/* Payment Date Input - show only when status is paid */}
+                  {(editForm.paymentStatus === KSeFPaymentStatus.PaidCash ||
+                    editForm.paymentStatus ===
+                      KSeFPaymentStatus.PaidTransfer) && (
+                    <TextField
+                      fullWidth
+                      size="small"
+                      type="date"
+                      label="Data płatności"
+                      value={editForm.paymentDate}
+                      onChange={(e) =>
+                        handleFormChange("paymentDate", e.target.value)
+                      }
+                      inputProps={{
+                        max: dayjs().format("YYYY-MM-DD"),
+                      }}
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
+                    />
+                  )}
+
                   <FormControl fullWidth size="small">
                     <InputLabel>Przypisany pracownik</InputLabel>
                     <Select
@@ -2288,9 +2392,13 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                     }
                   />
 
-                  {/* Save changes button for accepted invoices - only when payment status changed */}
+                  {/* Save changes button for accepted invoices - only when payment status or payment date changed */}
                   {details.status === KSeFInvoiceStatus.Accepted &&
-                    editForm.paymentStatus !== details.paymentStatus && (
+                    (editForm.paymentStatus !== details.paymentStatus ||
+                      editForm.paymentDate !==
+                        (details.paymentDate
+                          ? dayjs(details.paymentDate).format("YYYY-MM-DD")
+                          : "")) && (
                       <Button
                         variant="contained"
                         color="primary"
@@ -2302,6 +2410,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                               () =>
                                 AccountingService.updateInvoice(details.id, {
                                   paymentStatus: editForm.paymentStatus,
+                                  paymentDate: editForm.paymentDate || null,
                                   vatDeductionType: editForm.vatDeductionType,
                                   comment: editForm.comment,
                                 }),
@@ -2313,6 +2422,8 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                                     ? {
                                         ...prev,
                                         paymentStatus: editForm.paymentStatus,
+                                        paymentDate:
+                                          editForm.paymentDate || null,
                                       }
                                     : null,
                                 );

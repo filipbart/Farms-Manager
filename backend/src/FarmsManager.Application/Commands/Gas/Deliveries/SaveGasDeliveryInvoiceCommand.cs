@@ -2,11 +2,17 @@
 using FarmsManager.Application.FileSystem;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models.Invoices;
+using FarmsManager.Application.Specifications.Expenses;
 using FarmsManager.Application.Specifications.Farms;
+using FarmsManager.Application.Specifications.Feeds;
 using FarmsManager.Application.Specifications.Gas;
+using FarmsManager.Application.Specifications.Sales;
+using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.GasAggregate.Entities;
 using FarmsManager.Domain.Aggregates.GasAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.SaleAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
 using FluentValidation;
 using MediatR;
@@ -20,25 +26,33 @@ public record SaveGasDeliveryInvoiceCommand : IRequest<EmptyBaseResponse>
     public AddGasDeliveryInvoiceDto Data { get; init; }
 }
 
-public class
-    SaveGasDeliveryInvoiceCommandHandler : IRequestHandler<SaveGasDeliveryInvoiceCommand, EmptyBaseResponse>
+public class SaveGasDeliveryInvoiceCommandHandler : IRequestHandler<SaveGasDeliveryInvoiceCommand, EmptyBaseResponse>
 {
     private readonly IS3Service _s3Service;
     private readonly IFarmRepository _farmRepository;
     private readonly IUserDataResolver _userDataResolver;
     private readonly IGasContractorRepository _gasContractorRepository;
     private readonly IGasDeliveryRepository _gasDeliveryRepository;
+    private readonly IFeedInvoiceRepository _feedInvoiceRepository;
+    private readonly IExpenseProductionRepository _expenseProductionRepository;
+    private readonly ISaleInvoiceRepository _saleInvoiceRepository;
 
     public SaveGasDeliveryInvoiceCommandHandler(IS3Service s3Service, IFarmRepository farmRepository,
         IUserDataResolver userDataResolver,
         IGasContractorRepository gasContractorRepository,
-        IGasDeliveryRepository gasDeliveryRepository)
+        IGasDeliveryRepository gasDeliveryRepository,
+        IFeedInvoiceRepository feedInvoiceRepository,
+        IExpenseProductionRepository expenseProductionRepository,
+        ISaleInvoiceRepository saleInvoiceRepository)
     {
         _s3Service = s3Service;
         _farmRepository = farmRepository;
         _userDataResolver = userDataResolver;
         _gasContractorRepository = gasContractorRepository;
         _gasDeliveryRepository = gasDeliveryRepository;
+        _feedInvoiceRepository = feedInvoiceRepository;
+        _expenseProductionRepository = expenseProductionRepository;
+        _saleInvoiceRepository = saleInvoiceRepository;
     }
 
     public async Task<EmptyBaseResponse> Handle(SaveGasDeliveryInvoiceCommand request, CancellationToken ct)
@@ -57,12 +71,7 @@ public class
             return response;
         }
 
-        var existedInvoice = await _gasDeliveryRepository.SingleOrDefaultAsync(
-            new GetGasDeliveryByInvoiceNumberSpec(request.Data.InvoiceNumber), ct);
-        if (existedInvoice is not null)
-        {
-            throw new Exception($"Istnieje już dostawa z tym numerem faktury: {existedInvoice.InvoiceNumber}");
-        }
+        await CheckForDuplicatesAsync(request.Data.InvoiceNumber, ct);
 
         var newGasDelivery = GasDeliveryEntity.CreateNew(
             farm.Id,
@@ -84,6 +93,45 @@ public class
         await _s3Service.MoveFileAsync(FileType.GasDelivery, request.FilePath, newPath);
 
         return response;
+    }
+
+    private async Task CheckForDuplicatesAsync(string invoiceNumber, CancellationToken ct)
+    {
+        var existsInGas = await _gasDeliveryRepository.AnyAsync(
+            new GetGasDeliveryByInvoiceNumberSpec(invoiceNumber),
+            ct);
+        
+        if (existsInGas)
+        {
+            throw DomainException.BadRequest($"Faktura o numerze '{invoiceNumber}' już istnieje w dostawach gazu.");
+        }
+        
+        var existsInFeeds = await _feedInvoiceRepository.AnyAsync(
+            new GetFeedInvoiceByInvoiceNumberSpec(invoiceNumber),
+            ct);
+        
+        if (existsInFeeds)
+        {
+            throw DomainException.BadRequest($"Faktura o numerze '{invoiceNumber}' już istnieje w dostawach pasz.");
+        }
+        
+        var existsInExpenses = await _expenseProductionRepository.AnyAsync(
+            new GetExpenseProductionInvoiceByInvoiceNumberSpec(invoiceNumber),
+            ct);
+        
+        if (existsInExpenses)
+        {
+            throw DomainException.BadRequest($"Faktura o numerze '{invoiceNumber}' już istnieje w kosztach produkcyjnych.");
+        }
+        
+        var existsInSales = await _saleInvoiceRepository.AnyAsync(
+            new GetSaleInvoiceByInvoiceNumberSpec(invoiceNumber),
+            ct);
+        
+        if (existsInSales)
+        {
+            throw DomainException.BadRequest($"Faktura o numerze '{invoiceNumber}' już istnieje w fakturach sprzedażowych.");
+        }
     }
 }
 

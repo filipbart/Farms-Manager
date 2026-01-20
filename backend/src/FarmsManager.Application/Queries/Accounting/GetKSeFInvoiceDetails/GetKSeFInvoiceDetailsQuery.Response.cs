@@ -15,6 +15,7 @@ public class KSeFInvoiceDetailsDto
     public Guid? CycleId { get; set; }
     public string Source { get; set; }
     public string Location { get; set; }
+    public string FilePath { get; set; }
     public Guid? FarmId { get; set; }
     public string InvoiceNumber { get; set; }
     public DateOnly InvoiceDate { get; set; }

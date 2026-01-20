@@ -92,7 +92,7 @@ export const getKSeFInvoicesColumns = ({
       // Formatuj NIP w polskim formacie ze spacjami: XXX XXX XX XX
       return `${cleanNip.slice(0, 3)} ${cleanNip.slice(3, 6)} ${cleanNip.slice(
         6,
-        8
+        8,
       )} ${cleanNip.slice(8, 10)}`;
     },
   },
@@ -163,6 +163,13 @@ export const getKSeFInvoicesColumns = ({
   {
     field: "paymentDueDate",
     headerName: "Termin płatności",
+    width: 140,
+    valueGetter: (value: string | null) =>
+      value ? dayjs(value).format("YYYY-MM-DD") : "—",
+  },
+  {
+    field: "paymentDate",
+    headerName: "Data płatności",
     width: 140,
     valueGetter: (value: string | null) =>
       value ? dayjs(value).format("YYYY-MM-DD") : "—",
