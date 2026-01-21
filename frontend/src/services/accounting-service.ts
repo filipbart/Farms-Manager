@@ -351,16 +351,6 @@ export class AccountingService {
   }
 
   /**
-   * Masowo zmienia status faktur na "Przekazana do biura"
-   */
-  public static async transferToOffice(invoiceIds: string[]) {
-    return await AxiosWrapper.post<TransferToOfficeResponse>(
-      ApiUrl.AccountingTransferToOffice,
-      invoiceIds,
-    );
-  }
-
-  /**
    * Pobiera pliki faktur jako ZIP
    */
   public static async downloadInvoicesZip(invoiceIds: string[]): Promise<Blob> {
@@ -466,11 +456,6 @@ export interface InvoiceAuditLog {
 export interface HoldInvoiceData {
   newAssignedUserId: string;
   expectedCurrentAssignedUserId: string | null;
-}
-
-export interface TransferToOfficeResponse {
-  transferredCount: number;
-  errors: string[];
 }
 
 // Types for module entity creation

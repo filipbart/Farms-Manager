@@ -514,7 +514,6 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
             "New" => KSeFInvoiceStatus.New,
             "Rejected" => KSeFInvoiceStatus.Rejected,
             "Accepted" => KSeFInvoiceStatus.Accepted,
-            "SentToOffice" => KSeFInvoiceStatus.SentToOffice,
             "RequiresLinking" => KSeFInvoiceStatus.RequiresLinking,
             _ => KSeFInvoiceStatus.Accepted
         };

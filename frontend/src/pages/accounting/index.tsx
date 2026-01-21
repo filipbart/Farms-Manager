@@ -6,7 +6,7 @@ import {
   tablePaginationClasses,
   Typography,
 } from "@mui/material";
-import { MdSend } from "react-icons/md";
+import { MdAdd, MdSync, MdDeleteForever } from "react-icons/md";
 import React, {
   useCallback,
   useEffect,
@@ -21,7 +21,6 @@ import {
   type GridRowSelectionModel,
 } from "@mui/x-data-grid-premium";
 import NoRowsOverlay from "../../components/datagrid/custom-norows";
-import { MdAdd, MdSync, MdDeleteForever } from "react-icons/md";
 import { AccountingService } from "../../services/accounting-service";
 import { handleApiResponse } from "../../utils/axios/handle-api-response";
 import { downloadFile } from "../../utils/download-file";
@@ -91,7 +90,6 @@ const AccountingPage: React.FC = () => {
     type: "include",
     ids: new Set(),
   });
-  const [transferring, setTransferring] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [users, setUsers] = useState<UserListModel[]>([]);
   const [farms, setFarms] = useState<FarmRowModel[]>([]);
@@ -327,55 +325,6 @@ const AccountingPage: React.FC = () => {
     });
   };
 
-  const handleTransferToOffice = async () => {
-    if (!selectedRowIds.ids || selectedRowIds.ids.size === 0) {
-      toast.warning("Zaznacz faktury do przekazania");
-      return;
-    }
-    setTransferring(true);
-    const invoiceIds = Array.from(selectedRowIds.ids).map((id) => String(id));
-    try {
-      await handleApiResponse(
-        () => AccountingService.transferToOffice(invoiceIds),
-        async (data) => {
-          if (data.responseData) {
-            if (data.responseData.transferredCount > 0) {
-              toast.success(
-                `Przekazano ${data.responseData.transferredCount} faktur do biura`,
-              );
-              // Pobierz ZIP z plikami faktur
-              try {
-                const blob =
-                  await AccountingService.downloadInvoicesZip(invoiceIds);
-                const url = window.URL.createObjectURL(blob);
-                const link = document.createElement("a");
-                link.href = url;
-                link.download = `Faktury_${new Date()
-                  .toISOString()
-                  .slice(0, 10)}.zip`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                window.URL.revokeObjectURL(url);
-              } catch {
-                toast.warning("Nie udało się pobrać plików faktur");
-              }
-            }
-            if (data.responseData.errors.length > 0) {
-              data.responseData.errors.forEach((err) => toast.warning(err));
-            }
-            setSelectedRowIds({ type: "include", ids: new Set() });
-            fetchInvoices();
-          }
-        },
-        undefined,
-        "Błąd podczas przekazywania faktur do biura",
-      );
-    } finally {
-      setTransferring(false);
-    }
-  };
-
   const handleSyncKSeF = async () => {
     setSyncing(true);
     try {
@@ -528,15 +477,6 @@ const AccountingPage: React.FC = () => {
             disabled={deleting}
           >
             Usuń wszystkie
-          </Button>
-          <Button
-            variant="outlined"
-            color="secondary"
-            startIcon={<MdSend />}
-            onClick={handleTransferToOffice}
-            disabled={transferring || selectedRowIds.ids.size === 0}
-          >
-            Przekaż do biura ({selectedRowIds.ids.size})
           </Button>
           <Button
             variant="outlined"

@@ -81,7 +81,6 @@ public class UpdateKSeFInvoiceCommandHandler : IRequestHandler<UpdateKSeFInvoice
             {
                 KSeFInvoiceStatus.Rejected => KSeFInvoiceAuditAction.Rejected,
                 KSeFInvoiceStatus.Accepted => KSeFInvoiceAuditAction.Accepted,
-                KSeFInvoiceStatus.SentToOffice => KSeFInvoiceAuditAction.TransferredToOffice,
                 _ => (KSeFInvoiceAuditAction?)null
             };
 

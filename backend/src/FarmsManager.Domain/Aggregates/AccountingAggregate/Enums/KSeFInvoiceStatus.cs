@@ -10,7 +10,6 @@ public enum KSeFInvoiceStatus
 
     [Description("Zaakceptowana")] Accepted,
 
-    [Description("Przekazana do biura")] SentToOffice,
 
     [Description("Wymaga powiązania")] RequiresLinking,
 }

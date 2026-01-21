@@ -9,7 +9,6 @@ export enum KSeFInvoiceStatus {
   New = "New",
   Rejected = "Rejected",
   Accepted = "Accepted",
-  SentToOffice = "SentToOffice",
   RequiresLinking = "RequiresLinking",
 }
 
@@ -146,7 +145,6 @@ export const KSeFInvoiceStatusLabels: Record<KSeFInvoiceStatus, string> = {
   [KSeFInvoiceStatus.New]: "Nowa",
   [KSeFInvoiceStatus.Rejected]: "Odrzucona",
   [KSeFInvoiceStatus.Accepted]: "Zaakceptowana",
-  [KSeFInvoiceStatus.SentToOffice]: "Przekazana do biura",
   [KSeFInvoiceStatus.RequiresLinking]: "Wymaga powiązania",
 };
 

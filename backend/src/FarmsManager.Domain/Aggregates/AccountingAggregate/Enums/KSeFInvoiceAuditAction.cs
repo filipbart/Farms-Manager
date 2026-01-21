@@ -10,7 +10,6 @@ public enum KSeFInvoiceAuditAction
 
     [Description("Odrzucono")] Rejected,
 
-    [Description("Przekazano do biura")] TransferredToOffice,
 
     [Description("Zmieniono status płatności")] PaymentStatusChanged,
 

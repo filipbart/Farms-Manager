@@ -225,18 +225,6 @@ public class AccountingController : BaseController
     }
 
     /// <summary>
-    /// Masowo zmienia status faktur na "Przekazana do biura"
-    /// </summary>
-    [HttpPost("invoices/transfer-to-office")]
-    [ProducesResponseType(typeof(TransferInvoicesToOfficeResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> TransferInvoicesToOffice([FromBody] List<Guid> invoiceIds)
-    {
-        var result = await _mediator.Send(new TransferInvoicesToOfficeCommand(invoiceIds));
-        return Ok(result);
-    }
-
-    /// <summary>
     /// Pobiera pliki faktur jako ZIP
     /// </summary>
     [HttpPost("invoices/download-zip")]

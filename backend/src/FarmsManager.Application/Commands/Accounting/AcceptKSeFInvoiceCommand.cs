@@ -110,12 +110,6 @@ public class AcceptKSeFInvoiceCommandHandler
             throw DomainException.BadRequest("Faktura została już zaakceptowana.");
         }
 
-        // Sprawdź czy faktura nie została przekazana do biura
-        if (invoice.Status == KSeFInvoiceStatus.SentToOffice)
-        {
-            throw DomainException.BadRequest("Faktura została już przekazana do biura.");
-        }
-
         var previousModuleType = invoice.ModuleType;
         var previousEntityId = invoice.AssignedEntityInvoiceId;
 
