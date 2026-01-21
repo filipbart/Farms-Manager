@@ -18,6 +18,7 @@ using FarmsManager.Domain.Aggregates.GasAggregate.Entities;
 using FarmsManager.Domain.Aggregates.GasAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.SlaughterhouseAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
 using FluentValidation;
 using KSeF.Client.Core.Models.Invoices.Common;
@@ -104,10 +105,12 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
     private readonly IS3Service _s3Service;
     private readonly ITaxBusinessEntityRepository _taxBusinessEntityRepository;
     private readonly IGasDeliveryRepository _gasDeliveryRepository;
+    private readonly IGasContractorRepository _gasContractorRepository;
     private readonly IFeedInvoiceRepository _feedInvoiceRepository;
     private readonly IExpenseProductionRepository _expenseProductionRepository;
     private readonly IExpenseContractorRepository _expenseContractorRepository;
     private readonly ISaleInvoiceRepository _saleInvoiceRepository;
+    private readonly ISlaughterhouseRepository _slaughterhouseRepository;
 
     public SaveAccountingInvoiceCommandHandler(
         IKSeFInvoiceRepository invoiceRepository,
@@ -115,20 +118,24 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
         IS3Service s3Service,
         ITaxBusinessEntityRepository taxBusinessEntityRepository,
         IGasDeliveryRepository gasDeliveryRepository,
+        IGasContractorRepository gasContractorRepository,
         IFeedInvoiceRepository feedInvoiceRepository,
         IExpenseProductionRepository expenseProductionRepository,
         IExpenseContractorRepository expenseContractorRepository,
-        ISaleInvoiceRepository saleInvoiceRepository)
+        ISaleInvoiceRepository saleInvoiceRepository,
+        ISlaughterhouseRepository slaughterhouseRepository)
     {
         _invoiceRepository = invoiceRepository;
         _userDataResolver = userDataResolver;
         _s3Service = s3Service;
         _taxBusinessEntityRepository = taxBusinessEntityRepository;
         _gasDeliveryRepository = gasDeliveryRepository;
+        _gasContractorRepository = gasContractorRepository;
         _feedInvoiceRepository = feedInvoiceRepository;
         _expenseProductionRepository = expenseProductionRepository;
         _expenseContractorRepository = expenseContractorRepository;
         _saleInvoiceRepository = saleInvoiceRepository;
+        _slaughterhouseRepository = slaughterhouseRepository;
     }
 
     public async Task<BaseResponse<Guid>> Handle(SaveAccountingInvoiceCommand request, CancellationToken cancellationToken)
@@ -139,6 +146,40 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
         var invoiceDate = data.InvoiceDate;
         var paymentDueDate = data.DueDate;
 
+        // Override Seller/Buyer details from module entities if available
+        var sellerName = data.SellerName;
+        var sellerNip = data.SellerNip;
+        var buyerName = data.BuyerName;
+        var buyerNip = data.BuyerNip;
+
+        if (data.ModuleType == ModuleType.ProductionExpenses && data.ExpenseData?.ExpenseContractorId.HasValue == true)
+        {
+            var contractor = await _expenseContractorRepository.GetByIdAsync(data.ExpenseData.ExpenseContractorId.Value, cancellationToken);
+            if (contractor != null)
+            {
+                sellerName = contractor.Name;
+                sellerNip = contractor.Nip;
+            }
+        }
+        else if (data.ModuleType == ModuleType.Gas && data.GasData?.ContractorId.HasValue == true)
+        {
+            var contractor = await _gasContractorRepository.GetByIdAsync(data.GasData.ContractorId.Value, cancellationToken);
+            if (contractor != null)
+            {
+                sellerName = contractor.Name;
+                sellerNip = contractor.Nip;
+            }
+        }
+        else if (data.ModuleType == ModuleType.Sales && data.SaleData?.SlaughterhouseId.HasValue == true)
+        {
+            var slaughterhouse = await _slaughterhouseRepository.GetByIdAsync(data.SaleData.SlaughterhouseId.Value, cancellationToken);
+            if (slaughterhouse != null)
+            {
+                buyerName = slaughterhouse.Name;
+                buyerNip = slaughterhouse.Nip;
+            }
+        }
+
         // Określ kierunek faktury
         var invoiceDirection = data.InvoiceType == "Sales"
             ? KSeFInvoiceDirection.Sales
@@ -146,10 +187,10 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
 
         // Dopasuj podmiot gospodarczy po NIP sprzedawcy lub nabywcy
         var taxBusinessEntityId = await MatchTaxBusinessEntityAsync(
-            data.SellerNip, data.SellerName, data.BuyerNip, data.BuyerName, cancellationToken);
+            sellerNip, sellerName, buyerNip, buyerName, cancellationToken);
 
         // Sprawdź duplikaty przed zapisem
-        await CheckForDuplicatesAsync(data.InvoiceNumber, data.SellerNip, taxBusinessEntityId, cancellationToken);
+        await CheckForDuplicatesAsync(data.InvoiceNumber, sellerNip, taxBusinessEntityId, cancellationToken);
 
         // Dla manualnych faktur generujemy placeholder KSeFNumber
         var manualKSeFNumber = $"MANUAL-{data.DraftId:N}";
@@ -189,10 +230,10 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
             invoiceNumber: data.InvoiceNumber,
             invoiceDate: invoiceDate,
             paymentDueDate: paymentDueDate,
-            sellerNip: data.SellerNip?.Replace("PL", "").Replace("-", "").Replace(" ", "").Trim(),
-            sellerName: data.SellerName,
-            buyerNip: data.BuyerNip?.Replace("PL", "").Replace("-", "").Replace(" ", "").Trim(),
-            buyerName: data.BuyerName,
+            sellerNip: sellerNip?.Replace("PL", "").Replace("-", "").Replace(" ", "").Trim(),
+            sellerName: sellerName,
+            buyerNip: buyerNip?.Replace("PL", "").Replace("-", "").Replace(" ", "").Trim(),
+            buyerName: buyerName,
             invoiceType: ParseDocumentType(data.DocumentType),
             status: invoiceStatus,
             paymentStatus: ParsePaymentStatus(data.PaymentStatus),
