@@ -146,7 +146,10 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
     reset,
     watch,
     setValue,
-  } = useForm<SaveAccountingInvoiceFormData>();
+  } = useForm<SaveAccountingInvoiceFormData>({
+    shouldUnregister: true,
+    mode: "onSubmit",
+  });
 
   const watchedModuleType = watch("moduleType");
   const watchedFeedFarmId = watch("feedFarmId");
@@ -761,63 +764,351 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
 
                 <Grid size={12}>
                   <Divider>
-                    <Typography variant="caption">Sprzedawca</Typography>
+                    <Typography variant="caption">
+                      {watchedModuleType === ModuleType.ProductionExpenses
+                        ? "Sprzedawca / Kontrahent"
+                        : watchedModuleType === ModuleType.Gas
+                          ? "Sprzedawca / Dostawca gazu"
+                          : watchedModuleType === ModuleType.Feeds
+                            ? "Sprzedawca / Dostawca paszy"
+                            : "Sprzedawca"}
+                    </Typography>
                   </Divider>
                 </Grid>
 
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField
-                    label="Nazwa sprzedawcy"
-                    error={!!errors.sellerName}
-                    helperText={errors.sellerName?.message}
-                    {...register("sellerName", {
-                      required: "Nazwa sprzedawcy jest wymagana",
-                    })}
-                    fullWidth
-                    slotProps={{ inputLabel: { shrink: true } }}
-                  />
-                </Grid>
-
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField
-                    label="NIP sprzedawcy"
-                    error={!!errors.sellerNip}
-                    helperText={errors.sellerNip?.message}
-                    {...register("sellerNip")}
-                    fullWidth
-                    slotProps={{ inputLabel: { shrink: true } }}
-                  />
-                </Grid>
+                {/* ProductionExpenses: show contractor and expense type in seller section */}
+                {watchedModuleType === ModuleType.ProductionExpenses ? (
+                  <>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <Controller
+                        name="expenseContractorId"
+                        control={control}
+                        rules={{
+                          validate: (value) => {
+                            if (
+                              watchedModuleType !==
+                              ModuleType.ProductionExpenses
+                            )
+                              return true;
+                            return (
+                              !!value ||
+                              draftInvoice?.extractedFields
+                                .isNewExpenseContractor ||
+                              "Kontrahent jest wymagany"
+                            );
+                          },
+                        }}
+                        render={({ field: { onChange, value } }) => (
+                          <Autocomplete
+                            options={expenseContractors}
+                            getOptionLabel={(option) => option.name || ""}
+                            value={
+                              expenseContractors.find((c) => c.id === value) ||
+                              null
+                            }
+                            onChange={(_, newValue) => {
+                              onChange(newValue?.id || "");
+                              // Sync seller name with contractor
+                              if (newValue) {
+                                setValue("sellerName", newValue.name);
+                                setValue("sellerNip", newValue.nip || "");
+                              }
+                              // Only clear expense type if the new contractor has different types
+                              if (newValue) {
+                                const currentExpenseTypeId =
+                                  watch("expenseTypeId");
+                                const hasCurrentType =
+                                  newValue.expenseTypes.some(
+                                    (t) => t.id === currentExpenseTypeId,
+                                  );
+                                if (!hasCurrentType) {
+                                  setValue("expenseTypeId", "");
+                                }
+                              } else {
+                                setValue("expenseTypeId", "");
+                              }
+                            }}
+                            renderInput={(params) => (
+                              <TextField
+                                {...params}
+                                label="Kontrahent (Sprzedawca)"
+                                required
+                                error={!!errors.expenseContractorId}
+                                helperText={
+                                  errors.expenseContractorId?.message ||
+                                  (draftInvoice?.extractedFields
+                                    .isNewExpenseContractor
+                                    ? "Nowy kontrahent - zostanie utworzony przy zapisie"
+                                    : undefined)
+                                }
+                              />
+                            )}
+                          />
+                        )}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <Controller
+                        name="expenseTypeId"
+                        control={control}
+                        rules={{
+                          required: "Typ wydatku jest wymagany",
+                        }}
+                        render={({ field }) => (
+                          <FormControl
+                            fullWidth
+                            required
+                            error={!!errors.expenseTypeId}
+                          >
+                            <InputLabel>Typ wydatku</InputLabel>
+                            <Select
+                              label="Typ wydatku"
+                              value={field.value || ""}
+                              onChange={field.onChange}
+                              onBlur={field.onBlur}
+                            >
+                              {(() => {
+                                const selectedContractor =
+                                  expenseContractors.find(
+                                    (c) => c.id === watchedExpenseContractorId,
+                                  );
+                                const isNewContractor =
+                                  draftInvoice?.extractedFields
+                                    .isNewExpenseContractor;
+                                const availableTypes =
+                                  selectedContractor?.expenseTypes || [];
+                                if (
+                                  isNewContractor ||
+                                  availableTypes.length === 0
+                                ) {
+                                  return expenseTypes.map((type) => (
+                                    <MenuItem key={type.id} value={type.id}>
+                                      {type.name}
+                                    </MenuItem>
+                                  ));
+                                }
+                                return availableTypes.map((type) => (
+                                  <MenuItem key={type.id} value={type.id}>
+                                    {type.name}
+                                  </MenuItem>
+                                ));
+                              })()}
+                            </Select>
+                            {errors.expenseTypeId && (
+                              <FormHelperText>
+                                {errors.expenseTypeId.message}
+                              </FormHelperText>
+                            )}
+                            {draftInvoice?.extractedFields
+                              .isNewExpenseContractor && (
+                              <FormHelperText>
+                                Wybrany typ zostanie przypisany do nowego
+                                kontrahenta
+                              </FormHelperText>
+                            )}
+                          </FormControl>
+                        )}
+                      />
+                    </Grid>
+                    {/* Hidden fields for backend compatibility */}
+                    <input type="hidden" {...register("sellerName")} />
+                    <input type="hidden" {...register("sellerNip")} />
+                  </>
+                ) : watchedModuleType === ModuleType.Gas ? (
+                  <>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <Controller
+                        name="gasContractorId"
+                        control={control}
+                        rules={{
+                          validate: (value) => {
+                            if (watchedModuleType !== ModuleType.Gas)
+                              return true;
+                            return (
+                              !!value ||
+                              draftInvoice?.extractedFields
+                                .isNewGasContractor ||
+                              "Dostawca gazu jest wymagany"
+                            );
+                          },
+                        }}
+                        render={({ field: { onChange, value } }) => (
+                          <Autocomplete
+                            options={gasContractors}
+                            getOptionLabel={(option) => option.name || ""}
+                            value={
+                              gasContractors.find((c) => c.id === value) || null
+                            }
+                            onChange={(_, newValue) => {
+                              onChange(newValue?.id || "");
+                              // Sync seller name with contractor
+                              if (newValue) {
+                                setValue("sellerName", newValue.name);
+                                setValue("sellerNip", newValue.nip || "");
+                              }
+                            }}
+                            renderInput={(params) => (
+                              <TextField
+                                {...params}
+                                label="Dostawca gazu (Sprzedawca)"
+                                required
+                                error={!!errors.gasContractorId}
+                                helperText={
+                                  errors.gasContractorId?.message ||
+                                  (draftInvoice?.extractedFields
+                                    .isNewGasContractor
+                                    ? "Nowy dostawca - zostanie utworzony przy zapisie"
+                                    : undefined)
+                                }
+                              />
+                            )}
+                          />
+                        )}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <TextField
+                        label="NIP sprzedawcy"
+                        value={watch("sellerNip") || ""}
+                        fullWidth
+                        slotProps={{ inputLabel: { shrink: true } }}
+                        disabled
+                      />
+                    </Grid>
+                    {/* Hidden fields for backend compatibility */}
+                    <input type="hidden" {...register("sellerName")} />
+                    <input type="hidden" {...register("sellerNip")} />
+                  </>
+                ) : (
+                  <>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <TextField
+                        label="Nazwa sprzedawcy"
+                        error={!!errors.sellerName}
+                        helperText={errors.sellerName?.message}
+                        {...register("sellerName", {
+                          required: "Nazwa sprzedawcy jest wymagana",
+                        })}
+                        fullWidth
+                        slotProps={{ inputLabel: { shrink: true } }}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <TextField
+                        label="NIP sprzedawcy"
+                        error={!!errors.sellerNip}
+                        helperText={errors.sellerNip?.message}
+                        {...register("sellerNip")}
+                        fullWidth
+                        slotProps={{ inputLabel: { shrink: true } }}
+                      />
+                    </Grid>
+                  </>
+                )}
 
                 <Grid size={12}>
                   <Divider>
-                    <Typography variant="caption">Nabywca</Typography>
+                    <Typography variant="caption">
+                      {watchedModuleType === ModuleType.Sales
+                        ? "Nabywca / Ubojnia"
+                        : "Nabywca"}
+                    </Typography>
                   </Divider>
                 </Grid>
 
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField
-                    label="Nazwa nabywcy"
-                    error={!!errors.buyerName}
-                    helperText={errors.buyerName?.message}
-                    {...register("buyerName", {
-                      required: "Nazwa nabywcy jest wymagana",
-                    })}
-                    fullWidth
-                    slotProps={{ inputLabel: { shrink: true } }}
-                  />
-                </Grid>
-
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField
-                    label="NIP nabywcy"
-                    error={!!errors.buyerNip}
-                    helperText={errors.buyerNip?.message}
-                    {...register("buyerNip")}
-                    fullWidth
-                    slotProps={{ inputLabel: { shrink: true } }}
-                  />
-                </Grid>
+                {/* Sales: show slaughterhouse in buyer section */}
+                {watchedModuleType === ModuleType.Sales ? (
+                  <>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <Controller
+                        name="saleSlaughterhouseId"
+                        control={control}
+                        rules={{
+                          validate: (value) => {
+                            if (watchedModuleType !== ModuleType.Sales)
+                              return true;
+                            return (
+                              !!value ||
+                              draftInvoice?.extractedFields
+                                .isNewSlaughterhouse ||
+                              "Ubojnia jest wymagana"
+                            );
+                          },
+                        }}
+                        render={({ field: { onChange, value } }) => (
+                          <Autocomplete
+                            options={slaughterhouses}
+                            getOptionLabel={(option) => option.name || ""}
+                            value={
+                              slaughterhouses.find((s) => s.id === value) ||
+                              null
+                            }
+                            onChange={(_, newValue) => {
+                              onChange(newValue?.id || "");
+                              // Sync buyer name with slaughterhouse
+                              if (newValue) {
+                                setValue("buyerName", newValue.name);
+                                setValue("buyerNip", newValue.nip || "");
+                              }
+                            }}
+                            renderInput={(params) => (
+                              <TextField
+                                {...params}
+                                label="Ubojnia (Nabywca)"
+                                required
+                                error={!!errors.saleSlaughterhouseId}
+                                helperText={
+                                  errors.saleSlaughterhouseId?.message ||
+                                  (draftInvoice?.extractedFields
+                                    .isNewSlaughterhouse
+                                    ? "Nowa ubojnia - zostanie utworzona przy zapisie"
+                                    : undefined)
+                                }
+                              />
+                            )}
+                          />
+                        )}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <TextField
+                        label="NIP nabywcy"
+                        value={watch("buyerNip") || ""}
+                        fullWidth
+                        slotProps={{ inputLabel: { shrink: true } }}
+                        disabled
+                      />
+                    </Grid>
+                    {/* Hidden fields for backend compatibility */}
+                    <input type="hidden" {...register("buyerName")} />
+                    <input type="hidden" {...register("buyerNip")} />
+                  </>
+                ) : (
+                  <>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <TextField
+                        label="Nazwa nabywcy"
+                        error={!!errors.buyerName}
+                        helperText={errors.buyerName?.message}
+                        {...register("buyerName", {
+                          required: "Nazwa nabywcy jest wymagana",
+                        })}
+                        fullWidth
+                        slotProps={{ inputLabel: { shrink: true } }}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <TextField
+                        label="NIP nabywcy"
+                        error={!!errors.buyerNip}
+                        helperText={errors.buyerNip?.message}
+                        {...register("buyerNip")}
+                        fullWidth
+                        slotProps={{ inputLabel: { shrink: true } }}
+                      />
+                    </Grid>
+                  </>
+                )}
 
                 <Grid size={12}>
                   <Divider>
@@ -1102,23 +1393,37 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                       </TextField>
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6 }}>
-                      <Autocomplete
-                        freeSolo
-                        options={feedNames.map((f) => f.name)}
-                        value={watch("feedItemName") || ""}
-                        onChange={(_, value) =>
-                          setValue("feedItemName", value || "")
-                        }
-                        onInputChange={(_, value) =>
-                          setValue("feedItemName", value)
-                        }
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            label="Nazwa paszy"
-                            required
-                            error={!!errors.feedItemName}
-                            helperText={errors.feedItemName?.message}
+                      <Controller
+                        name="feedItemName"
+                        control={control}
+                        rules={{
+                          validate: (value) => {
+                            if (watchedModuleType !== ModuleType.Feeds)
+                              return true;
+                            return !!value || "Nazwa paszy jest wymagana";
+                          },
+                        }}
+                        render={({ field: { onChange, value, ref } }) => (
+                          <Autocomplete
+                            freeSolo
+                            options={feedNames.map((f) => f.name)}
+                            value={value || ""}
+                            onChange={(_, newValue) => onChange(newValue || "")}
+                            onInputChange={(_, newInputValue) => {
+                              // For freeSolo, we might want to update value on input change if it doesn't match option
+                              // But here we want the value to be the string
+                              onChange(newInputValue);
+                            }}
+                            renderInput={(params) => (
+                              <TextField
+                                {...params}
+                                label="Nazwa paszy"
+                                inputRef={ref}
+                                required
+                                error={!!errors.feedItemName}
+                                helperText={errors.feedItemName?.message}
+                              />
+                            )}
                           />
                         )}
                       />
@@ -1200,31 +1505,6 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                           </MenuItem>
                         ))}
                       </LoadingTextField>
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <Autocomplete
-                        options={gasContractors}
-                        getOptionLabel={(option) => option.name || ""}
-                        value={
-                          gasContractors.find(
-                            (c) => c.id === watch("gasContractorId"),
-                          ) || null
-                        }
-                        onChange={(_, value) =>
-                          setValue("gasContractorId", value?.id || "")
-                        }
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            label="Dostawca gazu"
-                            helperText={
-                              draftInvoice?.extractedFields.isNewGasContractor
-                                ? "Nowy dostawca - zostanie utworzony przy zapisie"
-                                : undefined
-                            }
-                          />
-                        )}
-                      />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6 }}>
                       <TextField
@@ -1311,108 +1591,6 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                         ))}
                       </LoadingTextField>
                     </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <Autocomplete
-                        options={expenseContractors}
-                        getOptionLabel={(option) => option.name || ""}
-                        value={
-                          expenseContractors.find(
-                            (c) => c.id === watchedExpenseContractorId,
-                          ) || null
-                        }
-                        onChange={(_, value) => {
-                          setValue("expenseContractorId", value?.id || "");
-                          // Only clear expense type if the new contractor has different types
-                          if (value) {
-                            const currentExpenseTypeId = watch("expenseTypeId");
-                            const hasCurrentType = value.expenseTypes.some(
-                              (t) => t.id === currentExpenseTypeId,
-                            );
-                            if (!hasCurrentType) {
-                              setValue("expenseTypeId", "");
-                            }
-                          } else {
-                            setValue("expenseTypeId", "");
-                          }
-                        }}
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            label="Kontrahent"
-                            helperText={
-                              draftInvoice?.extractedFields
-                                .isNewExpenseContractor
-                                ? "Nowy kontrahent - zostanie utworzony przy zapisie"
-                                : undefined
-                            }
-                          />
-                        )}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <Controller
-                        name="expenseTypeId"
-                        control={control}
-                        rules={{
-                          required: "Typ wydatku jest wymagany",
-                        }}
-                        render={({ field }) => (
-                          <FormControl
-                            fullWidth
-                            required
-                            error={!!errors.expenseTypeId}
-                          >
-                            <InputLabel>Typ wydatku</InputLabel>
-                            <Select
-                              label="Typ wydatku"
-                              value={field.value || ""}
-                              onChange={field.onChange}
-                              onBlur={field.onBlur}
-                            >
-                              {(() => {
-                                const selectedContractor =
-                                  expenseContractors.find(
-                                    (c) => c.id === watchedExpenseContractorId,
-                                  );
-                                const isNewContractor =
-                                  draftInvoice?.extractedFields
-                                    .isNewExpenseContractor;
-                                const availableTypes =
-                                  selectedContractor?.expenseTypes || [];
-                                // Dla nowego kontrahenta lub gdy brak przypisanych typów - pokaż wszystkie
-                                if (
-                                  isNewContractor ||
-                                  availableTypes.length === 0
-                                ) {
-                                  return expenseTypes.map((type) => (
-                                    <MenuItem key={type.id} value={type.id}>
-                                      {type.name}
-                                    </MenuItem>
-                                  ));
-                                }
-                                return availableTypes.map((type) => (
-                                  <MenuItem key={type.id} value={type.id}>
-                                    {type.name}
-                                  </MenuItem>
-                                ));
-                              })()}
-                            </Select>
-                            {errors.expenseTypeId && (
-                              <FormHelperText>
-                                {errors.expenseTypeId.message}
-                              </FormHelperText>
-                            )}
-                            {draftInvoice?.extractedFields
-                              .isNewExpenseContractor && (
-                              <FormHelperText>
-                                Wybrany typ zostanie przypisany do nowego
-                                kontrahenta
-                              </FormHelperText>
-                            )}
-                          </FormControl>
-                        )}
-                      />
-                    </Grid>
                   </>
                 )}
 
@@ -1467,32 +1645,6 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                           </MenuItem>
                         ))}
                       </LoadingTextField>
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <Autocomplete
-                        options={slaughterhouses}
-                        getOptionLabel={(option) => option.name || ""}
-                        value={
-                          slaughterhouses.find(
-                            (s) => s.id === watch("saleSlaughterhouseId"),
-                          ) || null
-                        }
-                        onChange={(_, value) =>
-                          setValue("saleSlaughterhouseId", value?.id || "")
-                        }
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            label="Ubojnia"
-                            required
-                            helperText={
-                              draftInvoice?.extractedFields.isNewSlaughterhouse
-                                ? "Nowa ubojnia - zostanie utworzona przy zapisie"
-                                : undefined
-                            }
-                          />
-                        )}
-                      />
                     </Grid>
                   </>
                 )}

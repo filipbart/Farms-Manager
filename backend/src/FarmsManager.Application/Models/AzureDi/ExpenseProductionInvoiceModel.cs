@@ -19,6 +19,9 @@ public class ExpenseProductionInvoiceModel
     [AzureDiField("InvoiceDate")]
     public DateOnly? InvoiceDate { get; init; }
     
+    [AzureDiField("DueDate")]
+    public DateOnly? DueDate { get; init; }
+    
     [AzureDiField("InvoiceTotal")]
     public decimal? InvoiceTotal { get; init; }
     

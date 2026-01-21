@@ -36,11 +36,13 @@ export interface KSeFInvoicesFilters {
   paymentDueDateTo?: string;
   // Statusy
   status?: KSeFInvoiceStatus;
-  paymentStatus?: KSeFPaymentStatus;
+  paymentStatus?: KSeFPaymentStatus[];
   // Przypisany pracownik
   assignedUserId?: string;
   // Moduł
   moduleType?: ModuleType;
+  // Lokalizacja (ferma)
+  farmId?: string;
   // Ogólne wyszukiwanie (zachowane dla kompatybilności)
   searchQuery?: string;
 }
@@ -59,9 +61,10 @@ export const initialKSeFFilters: KSeFInvoicesFilters = {
   paymentDueDateFrom: undefined,
   paymentDueDateTo: undefined,
   status: undefined,
-  paymentStatus: undefined,
+  paymentStatus: [],
   assignedUserId: undefined,
   moduleType: undefined,
+  farmId: undefined,
 };
 
 export type KSeFFiltersAction =
@@ -80,9 +83,10 @@ export type KSeFFiltersAction =
   | { type: "setPaymentDueDateFrom"; payload: string | undefined }
   | { type: "setPaymentDueDateTo"; payload: string | undefined }
   | { type: "setStatus"; payload: KSeFInvoiceStatus | undefined }
-  | { type: "setPaymentStatus"; payload: KSeFPaymentStatus | undefined }
+  | { type: "setPaymentStatus"; payload: KSeFPaymentStatus[] }
   | { type: "setAssignedUserId"; payload: string | undefined }
   | { type: "setModuleType"; payload: ModuleType | undefined }
+  | { type: "setFarmId"; payload: string | undefined }
   | { type: "setSearchQuery"; payload: string | undefined }
   | { type: "setMultiple"; payload: Partial<KSeFInvoicesFilters> }
   | { type: "reset" };
@@ -128,6 +132,8 @@ export function ksefFiltersReducer(
       return { ...state, assignedUserId: action.payload, page: 0 };
     case "setModuleType":
       return { ...state, moduleType: action.payload, page: 0 };
+    case "setFarmId":
+      return { ...state, farmId: action.payload, page: 0 };
     case "setSearchQuery":
       return { ...state, searchQuery: action.payload, page: 0 };
     case "setMultiple":

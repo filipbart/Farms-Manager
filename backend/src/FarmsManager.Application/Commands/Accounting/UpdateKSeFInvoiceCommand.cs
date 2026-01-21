@@ -2,6 +2,8 @@ using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.SaleAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
 using MediatR;
 
@@ -14,6 +16,7 @@ public class UpdateKSeFInvoiceDto
     public KSeFInvoiceStatus? Status { get; set; }
     public KSeFPaymentStatus? PaymentStatus { get; set; }
     public DateOnly? PaymentDate { get; set; }
+    public DateOnly? DueDate { get; set; }
     public ModuleType? ModuleType { get; set; }
     public KSeFVatDeductionType? VatDeductionType { get; set; }
     public string Comment { get; set; }
@@ -28,15 +31,21 @@ public class UpdateKSeFInvoiceCommandHandler : IRequestHandler<UpdateKSeFInvoice
     private readonly IKSeFInvoiceRepository _repository;
     private readonly IUserDataResolver _userDataResolver;
     private readonly IInvoiceAuditService _auditService;
+    private readonly IFeedInvoiceRepository _feedInvoiceRepository;
+    private readonly ISaleInvoiceRepository _saleInvoiceRepository;
 
     public UpdateKSeFInvoiceCommandHandler(
         IKSeFInvoiceRepository repository, 
         IUserDataResolver userDataResolver,
-        IInvoiceAuditService auditService)
+        IInvoiceAuditService auditService,
+        IFeedInvoiceRepository feedInvoiceRepository,
+        ISaleInvoiceRepository saleInvoiceRepository)
     {
         _repository = repository;
         _userDataResolver = userDataResolver;
         _auditService = auditService;
+        _feedInvoiceRepository = feedInvoiceRepository;
+        _saleInvoiceRepository = saleInvoiceRepository;
     }
 
     public async Task<EmptyBaseResponse> Handle(UpdateKSeFInvoiceCommand request, CancellationToken cancellationToken)
@@ -52,6 +61,7 @@ public class UpdateKSeFInvoiceCommandHandler : IRequestHandler<UpdateKSeFInvoice
             request.Data.Status,
             request.Data.PaymentStatus,
             request.Data.PaymentDate,
+            request.Data.DueDate,
             request.Data.ModuleType,
             request.Data.VatDeductionType,
             request.Data.Comment,
@@ -102,6 +112,55 @@ public class UpdateKSeFInvoiceCommandHandler : IRequestHandler<UpdateKSeFInvoice
                 cancellationToken);
         }
 
+        // Aktualizuj termin płatności w powiązanej encji modułowej (jeśli istnieje)
+        if (request.Data.DueDate.HasValue && invoice.AssignedEntityInvoiceId.HasValue)
+        {
+            await UpdateModuleEntityDueDateAsync(invoice.ModuleType, invoice.AssignedEntityInvoiceId.Value, request.Data.DueDate.Value, cancellationToken);
+        }
+
         return BaseResponse.EmptyResponse;
+    }
+
+    private async Task UpdateModuleEntityDueDateAsync(ModuleType moduleType, Guid entityId, DateOnly dueDate, CancellationToken cancellationToken)
+    {
+        switch (moduleType)
+        {
+            case ModuleType.Feeds:
+                var feedInvoice = await _feedInvoiceRepository.GetByIdAsync(entityId, cancellationToken);
+                if (feedInvoice != null)
+                {
+                    feedInvoice.Update(
+                        feedInvoice.InvoiceNumber,
+                        feedInvoice.BankAccountNumber,
+                        feedInvoice.ItemName,
+                        feedInvoice.VendorName,
+                        feedInvoice.Quantity,
+                        feedInvoice.UnitPrice,
+                        feedInvoice.InvoiceDate,
+                        dueDate,
+                        feedInvoice.InvoiceTotal,
+                        feedInvoice.SubTotal,
+                        feedInvoice.VatAmount,
+                        feedInvoice.Comment);
+                    await _feedInvoiceRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
+                }
+                break;
+
+            case ModuleType.Sales:
+                var saleInvoice = await _saleInvoiceRepository.GetByIdAsync(entityId, cancellationToken);
+                if (saleInvoice != null)
+                {
+                    saleInvoice.Update(
+                        saleInvoice.InvoiceNumber,
+                        saleInvoice.InvoiceDate,
+                        dueDate,
+                        saleInvoice.PaymentDate,
+                        saleInvoice.InvoiceTotal,
+                        saleInvoice.SubTotal,
+                        saleInvoice.VatAmount);
+                    await _saleInvoiceRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
+                }
+                break;
+        }
     }
 }

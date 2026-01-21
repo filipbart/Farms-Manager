@@ -120,7 +120,7 @@ public record GetKSeFInvoicesFromDbQueryFilters : OrderedPaginationParams<KSeFIn
     /// <summary>
     /// Filtrowanie po statusie płatności
     /// </summary>
-    public KSeFPaymentStatus? PaymentStatus { get; init; }
+    public List<KSeFPaymentStatus>? PaymentStatuses { get; init; }
     
     /// <summary>
     /// Filtrowanie po module

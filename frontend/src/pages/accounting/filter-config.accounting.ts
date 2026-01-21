@@ -9,6 +9,7 @@ import {
 
 interface AccountingFiltersConfigOptions {
   users?: { value: string; label: string }[];
+  farms?: { value: string; label: string }[];
 }
 
 export const getAccountingFiltersConfig = (
@@ -70,7 +71,7 @@ export const getAccountingFiltersConfig = (
   {
     key: "paymentStatus",
     label: "Status płatności",
-    type: "select",
+    type: "multiSelect",
     options: Object.entries(KSeFPaymentStatusLabels).map(([value, label]) => ({
       value,
       label,
@@ -90,5 +91,11 @@ export const getAccountingFiltersConfig = (
       value,
       label,
     })),
+  },
+  {
+    key: "farmId",
+    label: "Lokalizacja",
+    type: "select",
+    options: options?.farms ?? [],
   },
 ];

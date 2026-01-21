@@ -556,6 +556,7 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
         {
             InvoiceNumber = model.InvoiceNumber,
             InvoiceDate = model.InvoiceDate?.ToString("yyyy-MM-dd"),
+            DueDate = model.DueDate?.ToString("yyyy-MM-dd"),
             SellerName = model.VendorName,
             SellerNip = model.VendorNip,
             SellerAddress = model.VendorAddress,
@@ -573,6 +574,7 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
         {
             InvoiceNumber = model.InvoiceNumber,
             InvoiceDate = model.InvoiceDate?.ToString("yyyy-MM-dd"),
+            DueDate = model.DueDate?.ToString("yyyy-MM-dd"),
             SellerName = model.VendorName,
             SellerNip = model.VendorNip,
             SellerAddress = model.VendorAddress,

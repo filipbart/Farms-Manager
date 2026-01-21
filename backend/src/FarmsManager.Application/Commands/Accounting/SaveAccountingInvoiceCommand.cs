@@ -106,6 +106,7 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
     private readonly IGasDeliveryRepository _gasDeliveryRepository;
     private readonly IFeedInvoiceRepository _feedInvoiceRepository;
     private readonly IExpenseProductionRepository _expenseProductionRepository;
+    private readonly IExpenseContractorRepository _expenseContractorRepository;
     private readonly ISaleInvoiceRepository _saleInvoiceRepository;
 
     public SaveAccountingInvoiceCommandHandler(
@@ -116,6 +117,7 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
         IGasDeliveryRepository gasDeliveryRepository,
         IFeedInvoiceRepository feedInvoiceRepository,
         IExpenseProductionRepository expenseProductionRepository,
+        IExpenseContractorRepository expenseContractorRepository,
         ISaleInvoiceRepository saleInvoiceRepository)
     {
         _invoiceRepository = invoiceRepository;
@@ -125,6 +127,7 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
         _gasDeliveryRepository = gasDeliveryRepository;
         _feedInvoiceRepository = feedInvoiceRepository;
         _expenseProductionRepository = expenseProductionRepository;
+        _expenseContractorRepository = expenseContractorRepository;
         _saleInvoiceRepository = saleInvoiceRepository;
     }
 
@@ -204,6 +207,7 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
             vatAmount: data.VatAmount,
             comment: data.Comment,
             userId: userId,
+            assignedUserId: userId,
             taxBusinessEntityId: taxBusinessEntityId,
             farmId: farmId,
             cycleId: cycleId,
@@ -414,6 +418,19 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
                     expenseProduction.SetFilePath(filePath);
 
                     await _expenseProductionRepository.AddAsync(expenseProduction, cancellationToken);
+                    
+                    // Dodaj typ wydatku do kontrahenta, jeśli jeszcze go nie ma
+                    if (data.ExpenseData.ExpenseContractorId.HasValue && data.ExpenseData.ExpenseTypeId != Guid.Empty)
+                    {
+                        var contractor = await _expenseContractorRepository.GetByIdAsync(
+                            data.ExpenseData.ExpenseContractorId.Value, cancellationToken);
+                        
+                        if (contractor != null)
+                        {
+                            contractor.AddExpenseType(data.ExpenseData.ExpenseTypeId, userId);
+                        }
+                    }
+                    
                     await _expenseProductionRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
                     return expenseProduction.Id;
                 }

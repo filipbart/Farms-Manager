@@ -96,9 +96,9 @@ public sealed class GetKSeFInvoicesFromDbSpec : BaseSpecification<KSeFInvoiceEnt
             Query.Where(x => x.Status == filters.Status.Value);
         }
         
-        if (filters.PaymentStatus.HasValue)
+        if (filters.PaymentStatuses != null && filters.PaymentStatuses.Any())
         {
-            Query.Where(x => x.PaymentStatus == filters.PaymentStatus.Value);
+            Query.Where(x => filters.PaymentStatuses.Contains(x.PaymentStatus));
         }
         
         if (filters.ModuleType.HasValue)

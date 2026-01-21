@@ -127,7 +127,7 @@ public class KSeFInvoiceEntity : Entity
     /// <summary>
     /// Termin płatności faktury
     /// </summary>
-    public DateOnly? PaymentDueDate { get; init; }
+    public DateOnly? PaymentDueDate { get; private set; }
 
     /// <summary>
     /// NIP sprzedawcy
@@ -321,6 +321,7 @@ public class KSeFInvoiceEntity : Entity
         KSeFInvoiceStatus? status = null,
         KSeFPaymentStatus? paymentStatus = null,
         DateOnly? paymentDate = null,
+        DateOnly? dueDate = null,
         ModuleType? moduleType = null,
         KSeFVatDeductionType? vatDeductionType = null,
         string comment = null,
@@ -351,6 +352,12 @@ public class KSeFInvoiceEntity : Entity
         if (paymentDate.HasValue)
         {
             PaymentDate = paymentDate.Value;
+        }
+
+        // Ustaw termin płatności jeśli został przekazany
+        if (dueDate.HasValue)
+        {
+            PaymentDueDate = dueDate.Value;
         }
 
         if (moduleType.HasValue)

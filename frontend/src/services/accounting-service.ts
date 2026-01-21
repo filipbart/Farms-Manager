@@ -239,6 +239,7 @@ export class AccountingService {
       status?: string;
       paymentStatus?: string;
       paymentDate?: string | null;
+      dueDate?: string | null;
       moduleType?: string;
       vatDeductionType?: string;
       comment?: string;

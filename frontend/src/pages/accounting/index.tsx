@@ -50,6 +50,8 @@ import {
 } from "../../utils/grid-state-helper";
 import { UsersService } from "../../services/users-service";
 import type { UserListModel } from "../../models/users/users";
+import { FarmsService } from "../../services/farms-service";
+import type FarmRowModel from "../../models/farms/farm-row-model";
 
 interface TabPanelProps {
   children: React.ReactNode;
@@ -83,7 +85,7 @@ const AccountingPage: React.FC = () => {
   const [selectedInvoice, setSelectedInvoice] =
     useState<KSeFInvoiceListModel | null>(null);
   const [draftInvoices, setDraftInvoices] = useState<DraftAccountingInvoice[]>(
-    []
+    [],
   );
   const [selectedRowIds, setSelectedRowIds] = useState<GridRowSelectionModel>({
     type: "include",
@@ -92,6 +94,7 @@ const AccountingPage: React.FC = () => {
   const [transferring, setTransferring] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [users, setUsers] = useState<UserListModel[]>([]);
+  const [farms, setFarms] = useState<FarmRowModel[]>([]);
 
   // Sequential processing state
   const [sequentialMode, setSequentialMode] = useState(false);
@@ -108,12 +111,24 @@ const AccountingPage: React.FC = () => {
     fetchUsers();
   }, []);
 
+  // Fetch farms for filter
+  useEffect(() => {
+    const fetchFarms = async () => {
+      const response = await FarmsService.getFarmsAsync();
+      if (response.success && response.responseData) {
+        setFarms(response.responseData.items || []);
+      }
+    };
+    fetchFarms();
+  }, []);
+
   const filterConfig = useMemo(
     () =>
       getAccountingFiltersConfig({
         users: users.map((u) => ({ value: u.id, label: u.name })),
+        farms: farms.map((f) => ({ value: f.id, label: f.name })),
       }),
-    [users]
+    [users, farms],
   );
 
   const handleUploadedInvoices = (files: DraftAccountingInvoice[]) => {
@@ -129,7 +144,7 @@ const AccountingPage: React.FC = () => {
   const handleDeleteAllInvoices = async () => {
     if (
       !window.confirm(
-        "Czy na pewno chcesz usunąć WSZYSTKIE faktury? Ta operacja jest nieodwracalna!"
+        "Czy na pewno chcesz usunąć WSZYSTKIE faktury? Ta operacja jest nieodwracalna!",
       )
     ) {
       return;
@@ -140,12 +155,12 @@ const AccountingPage: React.FC = () => {
         () => AccountingService.deleteAllInvoices(),
         (data) => {
           toast.success(
-            `Usunięto ${data.responseData?.deletedCount || 0} faktur`
+            `Usunięto ${data.responseData?.deletedCount || 0} faktur`,
           );
           fetchInvoices();
         },
         undefined,
-        "Błąd podczas usuwania faktur"
+        "Błąd podczas usuwania faktur",
       );
     } finally {
       setDeleting(false);
@@ -162,8 +177,8 @@ const AccountingPage: React.FC = () => {
         "accountingAllGridState",
         "accountingAllPageSize",
         KSeFInvoicesOrderType,
-        mapKSeFOrderTypeToField
-      )
+        mapKSeFOrderTypeToField,
+      ),
   );
 
   const [salesFilters, dispatchSalesFilters] = useReducer(
@@ -175,8 +190,8 @@ const AccountingPage: React.FC = () => {
         "accountingSalesGridState",
         "accountingSalesPageSize",
         KSeFInvoicesOrderType,
-        mapKSeFOrderTypeToField
-      )
+        mapKSeFOrderTypeToField,
+      ),
   );
 
   const [purchaseFilters, dispatchPurchaseFilters] = useReducer(
@@ -188,8 +203,8 @@ const AccountingPage: React.FC = () => {
         "accountingPurchaseGridState",
         "accountingPurchasePageSize",
         KSeFInvoicesOrderType,
-        mapKSeFOrderTypeToField
-      )
+        mapKSeFOrderTypeToField,
+      ),
   );
 
   const getCurrentFilters = useCallback((): {
@@ -232,7 +247,7 @@ const AccountingPage: React.FC = () => {
           }
         },
         undefined,
-        "Błąd podczas pobierania faktur"
+        "Błąd podczas pobierania faktur",
       );
     } catch {
       toast.error("Błąd podczas pobierania faktur");
@@ -326,13 +341,12 @@ const AccountingPage: React.FC = () => {
           if (data.responseData) {
             if (data.responseData.transferredCount > 0) {
               toast.success(
-                `Przekazano ${data.responseData.transferredCount} faktur do biura`
+                `Przekazano ${data.responseData.transferredCount} faktur do biura`,
               );
               // Pobierz ZIP z plikami faktur
               try {
-                const blob = await AccountingService.downloadInvoicesZip(
-                  invoiceIds
-                );
+                const blob =
+                  await AccountingService.downloadInvoicesZip(invoiceIds);
                 const url = window.URL.createObjectURL(blob);
                 const link = document.createElement("a");
                 link.href = url;
@@ -355,7 +369,7 @@ const AccountingPage: React.FC = () => {
           }
         },
         undefined,
-        "Błąd podczas przekazywania faktur do biura"
+        "Błąd podczas przekazywania faktur do biura",
       );
     } finally {
       setTransferring(false);
@@ -384,7 +398,7 @@ const AccountingPage: React.FC = () => {
       const errorMessage =
         error instanceof Error ? error.message : "Nieznany błąd";
       toast.error(
-        `Wystąpił błąd podczas synchronizacji z KSeF: ${errorMessage}`
+        `Wystąpił błąd podczas synchronizacji z KSeF: ${errorMessage}`,
       );
     } finally {
       setSyncing(false);
@@ -398,7 +412,7 @@ const AccountingPage: React.FC = () => {
         onDownloadXml: handleDownloadXml,
         downloadingId,
       }),
-    [downloadingId]
+    [downloadingId],
   );
 
   const [initialGridState] = useState(() => {
@@ -430,7 +444,7 @@ const AccountingPage: React.FC = () => {
           };
           localStorage.setItem(
             "accountingGridState",
-            JSON.stringify(stateToSave)
+            JSON.stringify(stateToSave),
           );
         }}
         paginationMode="server"
@@ -472,7 +486,7 @@ const AccountingPage: React.FC = () => {
           const sortOptions = getSortOptionsFromGridModel(
             model,
             KSeFInvoicesOrderType,
-            mapKSeFOrderTypeToField
+            mapKSeFOrderTypeToField,
           );
           const payload =
             model.length > 0 ? { ...sortOptions, page: 0 } : { ...sortOptions };
@@ -618,11 +632,12 @@ const AccountingPage: React.FC = () => {
           draftInvoices={draftInvoices}
           onSave={(savedInvoice) => {
             setDraftInvoices((prev) =>
-              prev.filter((d) => d.draftId !== savedInvoice.draftId)
+              prev.filter((d) => d.draftId !== savedInvoice.draftId),
             );
+            // Always refresh the table after each save
+            fetchInvoices();
             if (draftInvoices.length <= 1) {
               setSaveModalOpen(false);
-              fetchInvoices();
             }
           }}
         />

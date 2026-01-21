@@ -1591,13 +1591,22 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                         </Typography>
                       )}
                       {details.comment && (
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          sx={{ whiteSpace: "pre-wrap", mt: 1 }}
-                        >
-                          {details.comment}
-                        </Typography>
+                        <Box sx={{ mt: 1 }}>
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{ fontWeight: 600 }}
+                          >
+                            Komentarz:
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{ whiteSpace: "pre-wrap", mt: 0.5 }}
+                          >
+                            {details.comment}
+                          </Typography>
+                        </Box>
                       )}
                       {/* Dodatkowe opisy (DodatkowyOpis z FA(4)) */}
                       {parsedXml?.additionalDescriptions &&
@@ -2392,13 +2401,73 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                     }
                   />
 
+                  {/* Save changes button for non-accepted invoices */}
+                  {details.status !== KSeFInvoiceStatus.Accepted && (
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      fullWidth
+                      onClick={async () => {
+                        setSaving(true);
+                        try {
+                          await handleApiResponse(
+                            () =>
+                              AccountingService.updateInvoice(details.id, {
+                                moduleType: editForm.moduleType,
+                                farmId: editForm.farmId || null,
+                                cycleId: editForm.cycleId || null,
+                                assignedUserId: editForm.assignedUserId || null,
+                                vatDeductionType: editForm.vatDeductionType,
+                                paymentStatus: editForm.paymentStatus,
+                                paymentDate: editForm.paymentDate || null,
+                                comment: editForm.comment,
+                                relatedInvoiceNumber:
+                                  editForm.relatedInvoiceNumber,
+                              }),
+                            () => {
+                              toast.success("Zmiany zostały zapisane");
+                              // Update local state to reflect saved changes
+                              setDetails((prev) =>
+                                prev
+                                  ? {
+                                      ...prev,
+                                      moduleType: editForm.moduleType,
+                                      farmId: editForm.farmId,
+                                      cycleId: editForm.cycleId,
+                                      assignedUserId: editForm.assignedUserId,
+                                      vatDeductionType:
+                                        editForm.vatDeductionType,
+                                      paymentStatus: editForm.paymentStatus,
+                                      paymentDate: editForm.paymentDate,
+                                      comment: editForm.comment,
+                                      relatedInvoiceNumber:
+                                        editForm.relatedInvoiceNumber,
+                                    }
+                                  : null,
+                              );
+                              onSave?.();
+                            },
+                            undefined,
+                            "Błąd podczas zapisywania zmian",
+                          );
+                        } finally {
+                          setSaving(false);
+                        }
+                      }}
+                      disabled={saving}
+                    >
+                      {saving ? "Zapisywanie..." : "Zapisz zmiany"}
+                    </Button>
+                  )}
+
                   {/* Save changes button for accepted invoices - only when payment status or payment date changed */}
                   {details.status === KSeFInvoiceStatus.Accepted &&
                     (editForm.paymentStatus !== details.paymentStatus ||
                       editForm.paymentDate !==
                         (details.paymentDate
                           ? dayjs(details.paymentDate).format("YYYY-MM-DD")
-                          : "")) && (
+                          : "") ||
+                      editForm.comment !== details.comment) && (
                       <Button
                         variant="contained"
                         color="primary"
@@ -2424,6 +2493,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                                         paymentStatus: editForm.paymentStatus,
                                         paymentDate:
                                           editForm.paymentDate || null,
+                                        comment: editForm.comment,
                                       }
                                     : null,
                                 );
