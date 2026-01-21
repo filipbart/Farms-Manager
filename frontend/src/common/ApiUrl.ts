@@ -401,8 +401,6 @@ export default class ApiUrl {
     this.AccountingInvoices + "/" + id + "/accept";
   public static AccountingHoldInvoice = (id: string) =>
     this.AccountingInvoices + "/" + id + "/hold";
-  public static AccountingTransferToOffice =
-    this.AccountingInvoices + "/transfer-to-office";
   public static AccountingDownloadZip =
     this.AccountingInvoices + "/download-zip";
 
@@ -411,7 +409,7 @@ export default class ApiUrl {
     this.AccountingInvoices + "/" + invoiceId + "/attachments";
   public static AccountingInvoiceAttachment = (
     invoiceId: string,
-    attachmentId: string
+    attachmentId: string,
   ) =>
     this.AccountingInvoices + "/" + invoiceId + "/attachments/" + attachmentId;
 

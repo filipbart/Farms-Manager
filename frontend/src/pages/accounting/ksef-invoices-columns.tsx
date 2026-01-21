@@ -28,8 +28,6 @@ const getStatusColor = (status: KSeFInvoiceStatus) => {
       return "success";
     case KSeFInvoiceStatus.Rejected:
       return "error";
-    case KSeFInvoiceStatus.SentToOffice:
-      return "info";
     case KSeFInvoiceStatus.New:
     default:
       return "warning";

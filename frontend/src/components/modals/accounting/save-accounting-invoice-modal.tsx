@@ -910,6 +910,15 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                         )}
                       />
                     </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <TextField
+                        label="NIP sprzedawcy"
+                        value={watch("sellerNip") || ""}
+                        fullWidth
+                        slotProps={{ inputLabel: { shrink: true } }}
+                        disabled
+                      />
+                    </Grid>
                     {/* Hidden fields for backend compatibility */}
                     <input type="hidden" {...register("sellerName")} />
                     <input type="hidden" {...register("sellerNip")} />

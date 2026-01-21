@@ -216,6 +216,14 @@ public class CreateModuleEntityFromInvoiceCommandHandler
 
     private async Task<Guid> CreateFeedInvoice(CreateFeedInvoiceFromKSeFDto data, Guid userId, CancellationToken ct)
     {
+        var exists = await _feedInvoiceRepository.AnyAsync(
+            new GetFeedInvoiceByInvoiceNumberSpec(data.InvoiceNumber), ct);
+
+        if (exists)
+        {
+            throw DomainException.BadRequest($"Faktura paszowa o numerze '{data.InvoiceNumber}' już istnieje.");
+        }
+
         var farm = await _farmRepository.GetAsync(new FarmByIdSpec(data.FarmId), ct);
         var cycle = await _cycleRepository.GetAsync(new CycleByIdSpec(data.CycleId), ct);
         var henhouse = await _henhouseRepository.GetAsync(new HenhouseByIdSpec(data.HenhouseId), ct);
@@ -256,6 +264,14 @@ public class CreateModuleEntityFromInvoiceCommandHandler
 
     private async Task<Guid> CreateGasDelivery(CreateGasDeliveryFromKSeFDto data, Guid userId, CancellationToken ct)
     {
+        var exists = await _gasDeliveryRepository.AnyAsync(
+            new GetGasDeliveryByInvoiceNumberSpec(data.InvoiceNumber), ct);
+
+        if (exists)
+        {
+            throw DomainException.BadRequest($"Dostawa gazu o numerze faktury '{data.InvoiceNumber}' już istnieje.");
+        }
+
         var farm = await _farmRepository.GetAsync(new FarmByIdSpec(data.FarmId), ct);
         
         Guid contractorId;
@@ -315,6 +331,14 @@ public class CreateModuleEntityFromInvoiceCommandHandler
 
     private async Task<Guid> CreateExpenseProduction(CreateExpenseProductionFromKSeFDto data, Guid userId, CancellationToken ct)
     {
+        var exists = await _expenseProductionRepository.AnyAsync(
+            new GetExpenseProductionInvoiceByInvoiceNumberSpec(data.InvoiceNumber), ct);
+
+        if (exists)
+        {
+            throw DomainException.BadRequest($"Koszt produkcyjny o numerze faktury '{data.InvoiceNumber}' już istnieje.");
+        }
+
         var farm = await _farmRepository.GetAsync(new FarmByIdSpec(data.FarmId), ct);
         var cycle = await _cycleRepository.GetAsync(new CycleByIdSpec(data.CycleId), ct);
 
@@ -377,6 +401,14 @@ public class CreateModuleEntityFromInvoiceCommandHandler
 
     private async Task<Guid> CreateSaleInvoice(CreateSaleInvoiceFromKSeFDto data, Guid userId, CancellationToken ct)
     {
+        var exists = await _saleInvoiceRepository.AnyAsync(
+            new GetSaleInvoiceByInvoiceNumberSpec(data.InvoiceNumber), ct);
+
+        if (exists)
+        {
+            throw DomainException.BadRequest($"Faktura sprzedaży o numerze '{data.InvoiceNumber}' już istnieje.");
+        }
+
         var farm = await _farmRepository.GetAsync(new FarmByIdSpec(data.FarmId), ct);
         var cycle = await _cycleRepository.GetAsync(new CycleByIdSpec(data.CycleId), ct);
 
