@@ -1,10 +1,18 @@
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models.KSeF;
 using FarmsManager.Application.Specifications.KSeF;
+using FarmsManager.Application.Specifications.Expenses;
+using FarmsManager.Application.Specifications.Feeds;
+using FarmsManager.Application.Specifications.Gas;
+using FarmsManager.Application.Specifications.Sales;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Entities;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
+using FarmsManager.Domain.Aggregates.GasAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.SlaughterhouseAggregate.Interfaces;
 using KSeF.Client.Core.Models.Invoices.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -86,6 +94,12 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
         var dbContext = scope.ServiceProvider.GetRequiredService<FarmsManagerContext>();
         var invoiceAssignmentService = scope.ServiceProvider.GetRequiredService<IInvoiceAssignmentService>();
         var contractorAutoCreationService = scope.ServiceProvider.GetRequiredService<IContractorAutoCreationService>();
+        
+        // Add repositories for fetching authoritative entity names
+        var gasContractorRepository = scope.ServiceProvider.GetRequiredService<IGasContractorRepository>();
+        var expenseContractorRepository = scope.ServiceProvider.GetRequiredService<IExpenseContractorRepository>();
+        var slaughterhouseRepository = scope.ServiceProvider.GetRequiredService<ISlaughterhouseRepository>();
+        var feedContractorRepository = scope.ServiceProvider.GetRequiredService<IFeedContractorRepository>();
 
         // Pobierz wszystkie podmioty gospodarcze do dopasowania (wraz z fermami)
         var taxBusinessEntities = await dbContext.Set<TaxBusinessEntity>()
@@ -208,6 +222,18 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                                 invoiceSummary.SellerName,
                                 null,
                                 assignedModule.Value,
+                                cancellationToken);
+                            
+                            // After contractor creation, fetch authoritative names and update invoice
+                            await UpdateInvoiceWithAuthoritativeNamesAsync(
+                                invoiceEntity,
+                                assignedModule.Value,
+                                invoiceSummary.SellerNip,
+                                invoiceSummary.BuyerNip,
+                                gasContractorRepository,
+                                expenseContractorRepository,
+                                slaughterhouseRepository,
+                                feedContractorRepository,
                                 cancellationToken);
                         }
                         catch (Exception ex)
@@ -572,6 +598,95 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
             return null;
 
         return DateOnly.FromDateTime(dataZaplaty.Value);
+    }
+
+    /// <summary>
+    /// Updates KSeFInvoiceEntity with authoritative names from module entities
+    /// </summary>
+    private static async Task UpdateInvoiceWithAuthoritativeNamesAsync(
+        KSeFInvoiceEntity invoiceEntity,
+        ModuleType moduleType,
+        string sellerNip,
+        string buyerNip,
+        IGasContractorRepository gasContractorRepository,
+        IExpenseContractorRepository expenseContractorRepository,
+        ISlaughterhouseRepository slaughterhouseRepository,
+        IFeedContractorRepository feedContractorRepository,
+        CancellationToken cancellationToken)
+    {
+        var normalizedSellerNip = NormalizeNip(sellerNip);
+        var normalizedBuyerNip = NormalizeNip(buyerNip);
+
+        string authoritativeSellerName = null;
+        string authoritativeSellerNip = null;
+        string authoritativeBuyerName = null;
+        string authoritativeBuyerNip = null;
+
+        switch (moduleType)
+        {
+            case ModuleType.Gas:
+                if (!string.IsNullOrWhiteSpace(normalizedSellerNip))
+                {
+                    var gasContractor = await gasContractorRepository.FirstOrDefaultAsync(
+                        new GasContractorByNipSpec(normalizedSellerNip), cancellationToken);
+                    if (gasContractor != null)
+                    {
+                        authoritativeSellerName = gasContractor.Name;
+                        authoritativeSellerNip = gasContractor.Nip;
+                    }
+                }
+                break;
+
+            case ModuleType.ProductionExpenses:
+                if (!string.IsNullOrWhiteSpace(normalizedSellerNip))
+                {
+                    var expenseContractor = await expenseContractorRepository.FirstOrDefaultAsync(
+                        new ExpenseContractorByNipSpec(normalizedSellerNip), cancellationToken);
+                    if (expenseContractor != null)
+                    {
+                        authoritativeSellerName = expenseContractor.Name;
+                        authoritativeSellerNip = expenseContractor.Nip;
+                    }
+                }
+                break;
+
+            case ModuleType.Sales:
+                if (!string.IsNullOrWhiteSpace(normalizedBuyerNip))
+                {
+                    var slaughterhouse = await slaughterhouseRepository.FirstOrDefaultAsync(
+                        new SlaughterhouseByNipSpec(normalizedBuyerNip), cancellationToken);
+                    if (slaughterhouse != null)
+                    {
+                        authoritativeBuyerName = slaughterhouse.Name;
+                        authoritativeBuyerNip = slaughterhouse.Nip;
+                    }
+                }
+                break;
+
+            case ModuleType.Feeds:
+                if (!string.IsNullOrWhiteSpace(normalizedSellerNip))
+                {
+                    var feedContractor = await feedContractorRepository.FirstOrDefaultAsync(
+                        new FeedContractorByNipSpec(normalizedSellerNip), cancellationToken);
+                    if (feedContractor != null)
+                    {
+                        authoritativeSellerName = feedContractor.Name;
+                        authoritativeSellerNip = feedContractor.Nip;
+                    }
+                }
+                break;
+        }
+
+        // Update invoice with authoritative names if any were found
+        if (authoritativeSellerName != null || authoritativeSellerNip != null || 
+            authoritativeBuyerName != null || authoritativeBuyerNip != null)
+        {
+            invoiceEntity.UpdateSellerBuyerInfo(
+                authoritativeSellerName,
+                authoritativeSellerNip,
+                authoritativeBuyerName,
+                authoritativeBuyerNip);
+        }
     }
 
     /// <summary>

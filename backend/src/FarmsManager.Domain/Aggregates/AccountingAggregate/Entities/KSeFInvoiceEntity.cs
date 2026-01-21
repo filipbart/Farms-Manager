@@ -132,22 +132,22 @@ public class KSeFInvoiceEntity : Entity
     /// <summary>
     /// NIP sprzedawcy
     /// </summary>
-    public string SellerNip { get; init; }
+    public string SellerNip { get; private set; }
 
     /// <summary>
     /// Nazwa sprzedawcy
     /// </summary>
-    public string SellerName { get; init; }
+    public string SellerName { get; private set; }
 
     /// <summary>
     /// NIP nabywcy
     /// </summary>
-    public string BuyerNip { get; init; }
+    public string BuyerNip { get; private set; }
 
     /// <summary>
     /// Nazwa nabywcy
     /// </summary>
-    public string BuyerName { get; init; }
+    public string BuyerName { get; private set; }
 
     /// <summary>
     /// Typ faktury (np. podstawowa, zaliczkowa, korygująca)
@@ -380,6 +380,28 @@ public class KSeFInvoiceEntity : Entity
 
         if (relatedInvoiceNumber != null)
             RelatedInvoiceNumber = relatedInvoiceNumber;
+    }
+
+    /// <summary>
+    /// Aktualizuje dane sprzedawcy i nabywcy
+    /// </summary>
+    public void UpdateSellerBuyerInfo(
+        string sellerName = null,
+        string sellerNip = null,
+        string buyerName = null,
+        string buyerNip = null)
+    {
+        if (sellerName != null)
+            SellerName = sellerName;
+
+        if (sellerNip != null)
+            SellerNip = sellerNip;
+
+        if (buyerName != null)
+            BuyerName = buyerName;
+
+        if (buyerNip != null)
+            BuyerNip = buyerNip;
     }
 
     /// <summary>
