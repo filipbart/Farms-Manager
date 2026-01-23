@@ -12,7 +12,6 @@ using FarmsManager.Application.Queries.Accounting.GetKSeFInvoiceXml;
 using FarmsManager.Application.Queries.Accounting.GetInvoicesZip;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
 using MediatR;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FarmsManager.Api.Controllers;

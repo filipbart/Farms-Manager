@@ -2,7 +2,6 @@ using AutoMapper;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.FileSystem;
 using FarmsManager.Application.Interfaces;
-using FarmsManager.Application.Specifications.Accounting;
 using FarmsManager.Application.Specifications.Expenses;
 using FarmsManager.Application.Specifications.Feeds;
 using FarmsManager.Application.Specifications.Gas;

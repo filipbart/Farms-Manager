@@ -1,10 +1,10 @@
+using FarmsManager.Application.Commands.Sales.Invoices;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models.KSeF;
 using FarmsManager.Application.Specifications.KSeF;
 using FarmsManager.Application.Specifications.Expenses;
 using FarmsManager.Application.Specifications.Feeds;
 using FarmsManager.Application.Specifications.Gas;
-using FarmsManager.Application.Specifications.Sales;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Entities;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Interfaces;
