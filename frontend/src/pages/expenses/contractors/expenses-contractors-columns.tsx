@@ -12,7 +12,17 @@ export const getExpensesContractorsColumns = ({
 }): GridColDef[] => {
   return [
     { field: "name", headerName: "Nazwa", flex: 1 },
-    { field: "expenseType", headerName: "Typ wydatku", flex: 1 },
+    {
+      field: "expenseTypes",
+      headerName: "Typ wydatku",
+      flex: 1,
+      valueGetter: (_value: any, row: any) => {
+        if (!row.expenseTypes || row.expenseTypes.length === 0) {
+          return "";
+        }
+        return row.expenseTypes.map((et: any) => et.name).join(", ");
+      },
+    },
     { field: "nip", headerName: "NIP", flex: 1 },
     { field: "address", headerName: "Adres", flex: 1 },
     {

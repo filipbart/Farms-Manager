@@ -202,12 +202,13 @@ public class AccountingController : BaseController
     /// Usuwa fakturę KSeF
     /// </summary>
     [HttpDelete("invoices/{invoiceId:guid}/delete")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> DeleteInvoice(Guid invoiceId)
     {
-        // TODO: Implementacja soft delete faktury
-        return Ok(new { message = "Faktura została usunięta" });
+        var result = await _mediator.Send(new DeleteKSeFInvoiceCommand(invoiceId));
+        return Ok(result);
     }
 
     /// <summary>

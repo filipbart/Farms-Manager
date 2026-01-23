@@ -39,6 +39,15 @@ export interface AccountingInvoiceExtractedData {
   henhouseId?: string;
   henhouseName?: string;
 
+  // Feed module specific fields
+  feedItemName?: string;
+  feedQuantity?: number;
+  feedUnitPrice?: number;
+
+  // Gas module specific fields
+  gasQuantity?: number;
+  gasUnitPrice?: number;
+
   // Flags for new entities created during upload
   isNewFeedContractor?: boolean;
   isNewGasContractor?: boolean;
@@ -118,6 +127,8 @@ export interface SaveExpenseProductionData {
   cycleId: string;
   expenseContractorId?: string;
   expenseTypeId: string;
+  contractorName?: string;
+  contractorNip?: string;
 }
 
 export interface SaveSaleInvoiceData {

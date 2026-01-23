@@ -26,6 +26,12 @@ public class GasDeliveryInvoiceModel
     [AzureDiField("InvoiceTotal")]
     public decimal? InvoiceTotal { get; init; }
     
+    [AzureDiField("SubTotal")]
+    public decimal? SubTotal { get; init; }
+    
+    [AzureDiField("TotalTax")]
+    public decimal? VatAmount { get; init; }
+    
     [AzureDiField("UnitPrice")]
     public decimal? UnitPrice { get; init; }
     

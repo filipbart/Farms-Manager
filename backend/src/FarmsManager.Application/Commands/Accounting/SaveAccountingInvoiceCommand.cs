@@ -84,6 +84,8 @@ public record SaveExpenseProductionDto
     public Guid CycleId { get; init; }
     public Guid? ExpenseContractorId { get; init; }
     public Guid ExpenseTypeId { get; init; }
+    public string ContractorName { get; init; }
+    public string ContractorNip { get; init; }
 }
 
 public record SaveSaleInvoiceDto
@@ -443,10 +445,36 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
             case ModuleType.ProductionExpenses:
                 if (data.ExpenseData != null)
                 {
+                    Guid contractorId;
+                    
+                    if (data.ExpenseData.ExpenseContractorId.HasValue)
+                    {
+                        contractorId = data.ExpenseData.ExpenseContractorId.Value;
+                        
+                        // Dodaj typ wydatku do istniejącego kontrahenta, jeśli go nie ma
+                        var existingContractor = await _expenseContractorRepository.GetByIdAsync(
+                            contractorId, cancellationToken);
+                        if (existingContractor != null)
+                        {
+                            existingContractor.AddExpenseType(data.ExpenseData.ExpenseTypeId, userId);
+                            await _expenseContractorRepository.UpdateAsync(existingContractor, cancellationToken);
+                        }
+                    }
+                    else
+                    {
+                        // Tworzymy kontrahenta na podstawie danych z faktury
+                        contractorId = await FindOrCreateExpenseContractor(
+                            data.SellerNip, 
+                            data.SellerName, 
+                            data.ExpenseData.ExpenseTypeId, 
+                            userId, 
+                            cancellationToken);
+                    }
+
                     var expenseProduction = ExpenseProductionEntity.CreateNew(
                         data.ExpenseData.FarmId,
                         data.ExpenseData.CycleId,
-                        data.ExpenseData.ExpenseContractorId ?? Guid.Empty,
+                        contractorId,
                         data.ExpenseData.ExpenseTypeId,
                         data.InvoiceNumber,
                         data.GrossAmount,
@@ -459,19 +487,6 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
                     expenseProduction.SetFilePath(filePath);
 
                     await _expenseProductionRepository.AddAsync(expenseProduction, cancellationToken);
-                    
-                    // Dodaj typ wydatku do kontrahenta, jeśli jeszcze go nie ma
-                    if (data.ExpenseData.ExpenseContractorId.HasValue && data.ExpenseData.ExpenseTypeId != Guid.Empty)
-                    {
-                        var contractor = await _expenseContractorRepository.GetByIdAsync(
-                            data.ExpenseData.ExpenseContractorId.Value, cancellationToken);
-                        
-                        if (contractor != null)
-                        {
-                            contractor.AddExpenseType(data.ExpenseData.ExpenseTypeId, userId);
-                        }
-                    }
-                    
                     await _expenseProductionRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
                     return expenseProduction.Id;
                 }
@@ -594,6 +609,43 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
             FileType.AccountingInvoice => "accounting",
             _ => fileType.ToString()
         };
+    }
+
+    private async Task<Guid> FindOrCreateExpenseContractor(string nip, string name, Guid expenseTypeId, Guid userId, CancellationToken cancellationToken)
+    {
+        ExpenseContractorEntity existingContractor = null;
+        
+        if (!string.IsNullOrWhiteSpace(nip))
+        {
+            var normalizedNip = nip.Replace("PL", "").Replace("-", "").Replace(" ", "").Trim();
+            existingContractor = await _expenseContractorRepository.FirstOrDefaultAsync(
+                new ExpenseContractorByNipWithExpenseTypesSpec(normalizedNip), cancellationToken);
+        }
+
+        if (existingContractor == null && !string.IsNullOrWhiteSpace(name))
+        {
+            existingContractor = await _expenseContractorRepository.FirstOrDefaultAsync(
+                new ExpenseContractorByNameWithExpenseTypesSpec(name), cancellationToken);
+        }
+
+        if (existingContractor != null)
+        {
+            // Kontrahent istnieje - dodaj typ wydatku jeśli go nie ma
+            existingContractor.AddExpenseType(expenseTypeId, userId);
+            await _expenseContractorRepository.UpdateAsync(existingContractor, cancellationToken);
+            return existingContractor.Id;
+        }
+
+        // Tworzymy nowego kontrahenta z przypisanym typem wydatku
+        var newContractor = ExpenseContractorEntity.CreateNew(
+            name ?? "Nieznany kontrahent",
+            nip ?? "",
+            "",
+            new[] { expenseTypeId },
+            userId);
+        
+        await _expenseContractorRepository.AddAsync(newContractor, cancellationToken);
+        return newContractor.Id;
     }
 }
 

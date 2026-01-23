@@ -317,9 +317,7 @@ const UploadInvoiceModal: React.FC<UploadInvoiceModalProps> = ({
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose} disabled={loading}>
-          Anuluj
-        </Button>
+        <Button onClick={handleClose}>Anuluj</Button>
         <LoadingButton
           onClick={handleUpload}
           disabled={selectedFiles.length === 0}

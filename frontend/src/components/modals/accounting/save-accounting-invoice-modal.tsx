@@ -119,6 +119,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [previewBlobUrl, setPreviewBlobUrl] = useState<string | null>(null);
+  const [savedCount, setSavedCount] = useState(0);
 
   // Module data states
   const [farms, setFarms] = useState<FarmRowModel[]>([]);
@@ -332,11 +333,38 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
       return;
     }
 
-    // Try to match by seller name
-    if (expenseContractors.length > 0 && ef.sellerName) {
-      const matchedContractor = expenseContractors.find(
-        (c) => c.name.toLowerCase() === ef.sellerName?.toLowerCase(),
+    // Try to match by NIP first (most reliable)
+    if (expenseContractors.length > 0 && ef.sellerNip) {
+      const normalizedInvoiceNip = ef.sellerNip.replace(/\D/g, "");
+      const matchedByNip = expenseContractors.find(
+        (c) => c.nip?.replace(/\D/g, "") === normalizedInvoiceNip,
       );
+      if (matchedByNip) {
+        setValue("expenseContractorId", matchedByNip.id);
+        return;
+      }
+    }
+
+    // Fallback: try to match by seller name (more flexible matching)
+    if (expenseContractors.length > 0 && ef.sellerName) {
+      const sellerNameLower = ef.sellerName.toLowerCase().trim();
+
+      // First try exact match
+      let matchedContractor = expenseContractors.find(
+        (c) => c.name?.toLowerCase().trim() === sellerNameLower,
+      );
+
+      // If no exact match, try partial match
+      if (!matchedContractor) {
+        matchedContractor = expenseContractors.find((c) => {
+          const contractorNameLower = c.name?.toLowerCase().trim() || "";
+          return (
+            contractorNameLower.includes(sellerNameLower) ||
+            sellerNameLower.includes(contractorNameLower)
+          );
+        });
+      }
+
       if (matchedContractor) {
         setValue("expenseContractorId", matchedContractor.id);
       }
@@ -351,14 +379,28 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
       (c) => c.id === watchedExpenseContractorId,
     );
 
+    const currentValue = watch("expenseTypeId");
+
     if (selectedContractor && selectedContractor.expenseTypes.length === 1) {
-      // Only auto-select if field is empty or if the current value is not in the contractor's types
-      const currentValue = watch("expenseTypeId");
+      // Auto-select if contractor has exactly one expense type
       if (
         !currentValue ||
         !selectedContractor.expenseTypes.some((t) => t.id === currentValue)
       ) {
         setValue("expenseTypeId", selectedContractor.expenseTypes[0].id);
+      }
+    } else if (
+      selectedContractor &&
+      selectedContractor.expenseTypes.length > 1
+    ) {
+      // If contractor has multiple expense types, but current value is empty or not valid for this contractor
+      if (
+        !currentValue ||
+        !selectedContractor.expenseTypes.some((t) => t.id === currentValue)
+      ) {
+        // Don't auto-select, but leave field empty so user can choose
+        // (This handles the case where we want to show filtered list but not auto-select)
+        setValue("expenseTypeId", "");
       }
     } else if (
       selectedContractor &&
@@ -454,7 +496,14 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
       (data) => setSlaughterhouses(data.responseData?.items ?? []),
       () => setSlaughterhouses([]),
     );
-  }, [open, fetchFarms]);
+  }, [open, fetchFarms, savedCount]);
+
+  // Reset saved count when modal closes
+  useEffect(() => {
+    if (!open) {
+      setSavedCount(0);
+    }
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -499,16 +548,21 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
         feedCycleId: moduleType === ModuleType.Feeds ? ef.cycleId || "" : "",
         feedHenhouseId:
           moduleType === ModuleType.Feeds ? ef.henhouseId || "" : "",
-        feedBankAccountNumber: "",
-        feedVendorName: "",
-        feedItemName: "",
-        feedQuantity: 0,
-        feedUnitPrice: 0,
+        feedBankAccountNumber:
+          moduleType === ModuleType.Feeds ? ef.bankAccountNumber || "" : "",
+        feedVendorName:
+          moduleType === ModuleType.Feeds ? ef.sellerName || "" : "",
+        feedItemName:
+          moduleType === ModuleType.Feeds ? ef.feedItemName || "" : "",
+        feedQuantity:
+          moduleType === ModuleType.Feeds ? ef.feedQuantity || 0 : 0,
+        feedUnitPrice:
+          moduleType === ModuleType.Feeds ? ef.feedUnitPrice || 0 : 0,
         gasFarmId: moduleType === ModuleType.Gas ? ef.farmId || "" : "",
         gasContractorId:
           moduleType === ModuleType.Gas ? ef.gasContractorId || "" : "",
-        gasUnitPrice: 0,
-        gasQuantity: 0,
+        gasUnitPrice: moduleType === ModuleType.Gas ? ef.gasUnitPrice || 0 : 0,
+        gasQuantity: moduleType === ModuleType.Gas ? ef.gasQuantity || 0 : 0,
         expenseFarmId:
           moduleType === ModuleType.ProductionExpenses ? ef.farmId || "" : "",
         expenseCycleId:
@@ -568,6 +622,8 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
           cycleId: formData.expenseCycleId,
           expenseContractorId: formData.expenseContractorId || undefined,
           expenseTypeId: formData.expenseTypeId,
+          contractorName: formData.sellerName,
+          contractorNip: formData.sellerNip,
         };
         break;
       case ModuleType.Sales:
@@ -610,6 +666,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
         }),
       () => {
         toast.success(`Pomyślnie zapisano fakturę: ${formData.invoiceNumber}`);
+        setSavedCount((prev) => prev + 1); // Wymuś odświeżenie kontrahentów
         onSave(draftInvoice);
       },
       undefined,
@@ -683,81 +740,42 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                 </Grid>
 
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField
-                    label="Numer faktury"
-                    error={!!errors.invoiceNumber}
-                    helperText={errors.invoiceNumber?.message}
-                    {...register("invoiceNumber", {
-                      required: "Numer faktury jest wymagany",
-                    })}
-                    fullWidth
-                    slotProps={{ inputLabel: { shrink: true } }}
-                  />
-                </Grid>
-
-                <Grid size={{ xs: 12, sm: 6 }}>
                   <Controller
-                    name="invoiceDate"
+                    name="moduleType"
                     control={control}
                     rules={{
-                      required: "Data wystawienia faktury jest wymagana",
+                      required: "Moduł jest wymagany",
+                      validate: (value) =>
+                        value !== ModuleType.None || "Wybierz moduł",
                     }}
                     render={({ field }) => (
-                      <DatePicker
-                        label="Data wystawienia"
-                        format="DD.MM.YYYY"
-                        value={field.value ? dayjs(field.value) : null}
-                        onChange={(date) =>
-                          field.onChange(
-                            date ? dayjs(date).format("YYYY-MM-DD") : "",
-                          )
-                        }
-                        slotProps={{
-                          textField: {
-                            fullWidth: true,
-                            error: !!errors.invoiceDate,
-                            helperText: errors.invoiceDate?.message,
-                          },
-                        }}
-                      />
-                    )}
-                  />
-                </Grid>
-
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <Controller
-                    name="dueDate"
-                    control={control}
-                    rules={{
-                      validate: (value) => {
-                        if (
-                          (watchedModuleType === ModuleType.Feeds ||
-                            watchedModuleType === ModuleType.Sales) &&
-                          !value
-                        ) {
-                          return "Termin płatności jest wymagany dla wybranego modułu";
-                        }
-                        return true;
-                      },
-                    }}
-                    render={({ field }) => (
-                      <DatePicker
-                        label="Termin płatności"
-                        format="DD.MM.YYYY"
-                        value={field.value ? dayjs(field.value) : null}
-                        onChange={(date) =>
-                          field.onChange(
-                            date ? dayjs(date).format("YYYY-MM-DD") : "",
-                          )
-                        }
-                        slotProps={{
-                          textField: {
-                            fullWidth: true,
-                            error: !!errors.dueDate,
-                            helperText: errors.dueDate?.message,
-                          },
-                        }}
-                      />
+                      <FormControl
+                        fullWidth
+                        error={!!errors.moduleType}
+                        required
+                      >
+                        <InputLabel id="module-type-label">Moduł</InputLabel>
+                        <Select
+                          labelId="module-type-label"
+                          label="Moduł"
+                          value={field.value || ""}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                        >
+                          {Object.entries(ModuleTypeLabels)
+                            .filter(([key]) => key !== ModuleType.None)
+                            .map(([key, label]) => (
+                              <MenuItem key={key} value={key}>
+                                {label}
+                              </MenuItem>
+                            ))}
+                        </Select>
+                        {errors.moduleType && (
+                          <FormHelperText>
+                            {errors.moduleType.message}
+                          </FormHelperText>
+                        )}
+                      </FormControl>
                     )}
                   />
                 </Grid>
@@ -776,7 +794,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                   </Divider>
                 </Grid>
 
-                {/* ProductionExpenses: show contractor and expense type in seller section */}
+                {/* ProductionExpenses: show contractor and expense type in seller section, farm and cycle in buyer section */}
                 {watchedModuleType === ModuleType.ProductionExpenses ? (
                   <>
                     <Grid size={{ xs: 12, sm: 6 }}>
@@ -872,22 +890,23 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                                   expenseContractors.find(
                                     (c) => c.id === watchedExpenseContractorId,
                                   );
-                                const isNewContractor =
-                                  draftInvoice?.extractedFields
-                                    .isNewExpenseContractor;
-                                const availableTypes =
-                                  selectedContractor?.expenseTypes || [];
+
+                                // Jeśli kontrahent jest wybrany i ma przypisane typy wydatków, pokaż tylko te typy
                                 if (
-                                  isNewContractor ||
-                                  availableTypes.length === 0
+                                  selectedContractor &&
+                                  selectedContractor.expenseTypes.length > 0
                                 ) {
-                                  return expenseTypes.map((type) => (
-                                    <MenuItem key={type.id} value={type.id}>
-                                      {type.name}
-                                    </MenuItem>
-                                  ));
+                                  return selectedContractor.expenseTypes.map(
+                                    (type) => (
+                                      <MenuItem key={type.id} value={type.id}>
+                                        {type.name}
+                                      </MenuItem>
+                                    ),
+                                  );
                                 }
-                                return availableTypes.map((type) => (
+
+                                // Jeśli kontrahent nie jest wybrany lub nie ma przypisanych typów, pokaż wszystkie
+                                return expenseTypes.map((type) => (
                                   <MenuItem key={type.id} value={type.id}>
                                     {type.name}
                                   </MenuItem>
@@ -1020,7 +1039,9 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                     <Typography variant="caption">
                       {watchedModuleType === ModuleType.Sales
                         ? "Nabywca / Ubojnia"
-                        : "Nabywca"}
+                        : watchedModuleType === ModuleType.ProductionExpenses
+                          ? "Nabywca / Ferma i Cykl"
+                          : "Nabywca"}
                     </Typography>
                   </Divider>
                 </Grid>
@@ -1092,6 +1113,75 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                     <input type="hidden" {...register("buyerName")} />
                     <input type="hidden" {...register("buyerNip")} />
                   </>
+                ) : watchedModuleType === ModuleType.ProductionExpenses ? (
+                  <>
+                    {/* For ProductionExpenses: show farm and cycle in buyer section */}
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <LoadingTextField
+                        loading={loadingFarms}
+                        select
+                        label="Ferma"
+                        fullWidth
+                        required
+                        value={watchedExpenseFarmId || ""}
+                        error={!!errors.expenseFarmId}
+                        helperText={errors.expenseFarmId?.message}
+                        {...register("expenseFarmId", {
+                          required: "Ferma jest wymagana",
+                        })}
+                      >
+                        {farms.map((farm) => (
+                          <MenuItem key={farm.id} value={farm.id}>
+                            {farm.name}
+                          </MenuItem>
+                        ))}
+                      </LoadingTextField>
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <LoadingTextField
+                        loading={loadingCycles}
+                        select
+                        label="Cykl"
+                        fullWidth
+                        required
+                        disabled={!watchedExpenseFarmId}
+                        value={watch("expenseCycleId") || ""}
+                        error={!!errors.expenseCycleId}
+                        helperText={errors.expenseCycleId?.message}
+                        {...register("expenseCycleId", {
+                          required: "Cykl jest wymagany",
+                        })}
+                      >
+                        {cycles.map((cycle) => (
+                          <MenuItem key={cycle.id} value={cycle.id}>
+                            {cycle.identifier}/{cycle.year}
+                          </MenuItem>
+                        ))}
+                      </LoadingTextField>
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <TextField
+                        label="Nazwa nabywcy"
+                        error={!!errors.buyerName}
+                        helperText={errors.buyerName?.message}
+                        {...register("buyerName", {
+                          required: "Nazwa nabywcy jest wymagana",
+                        })}
+                        fullWidth
+                        slotProps={{ inputLabel: { shrink: true } }}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <TextField
+                        label="NIP nabywcy"
+                        error={!!errors.buyerNip}
+                        helperText={errors.buyerNip?.message}
+                        {...register("buyerNip")}
+                        fullWidth
+                        slotProps={{ inputLabel: { shrink: true } }}
+                      />
+                    </Grid>
+                  </>
                 ) : (
                   <>
                     <Grid size={{ xs: 12, sm: 6 }}>
@@ -1121,8 +1211,90 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
 
                 <Grid size={12}>
                   <Divider>
-                    <Typography variant="caption">Kwoty</Typography>
+                    <Typography variant="caption">Dane faktury</Typography>
                   </Divider>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <TextField
+                    label="Numer faktury"
+                    error={!!errors.invoiceNumber}
+                    helperText={errors.invoiceNumber?.message}
+                    {...register("invoiceNumber", {
+                      required: "Numer faktury jest wymagany",
+                    })}
+                    fullWidth
+                    slotProps={{ inputLabel: { shrink: true } }}
+                  />
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <Controller
+                    name="invoiceDate"
+                    control={control}
+                    rules={{
+                      required: "Data wystawienia faktury jest wymagana",
+                    }}
+                    render={({ field }) => (
+                      <DatePicker
+                        label="Data wystawienia"
+                        format="DD.MM.YYYY"
+                        value={field.value ? dayjs(field.value) : null}
+                        onChange={(date) =>
+                          field.onChange(
+                            date ? dayjs(date).format("YYYY-MM-DD") : "",
+                          )
+                        }
+                        slotProps={{
+                          textField: {
+                            fullWidth: true,
+                            error: !!errors.invoiceDate,
+                            helperText: errors.invoiceDate?.message,
+                          },
+                        }}
+                      />
+                    )}
+                  />
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <Controller
+                    name="dueDate"
+                    control={control}
+                    rules={{
+                      validate: (value) => {
+                        if (
+                          (watchedModuleType === ModuleType.Feeds ||
+                            watchedModuleType === ModuleType.Sales ||
+                            watchedModuleType ===
+                              ModuleType.ProductionExpenses) &&
+                          !value
+                        ) {
+                          return "Termin płatności jest wymagany dla wybranego modułu";
+                        }
+                        return true;
+                      },
+                    }}
+                    render={({ field }) => (
+                      <DatePicker
+                        label="Termin płatności"
+                        format="DD.MM.YYYY"
+                        value={field.value ? dayjs(field.value) : null}
+                        onChange={(date) =>
+                          field.onChange(
+                            date ? dayjs(date).format("YYYY-MM-DD") : "",
+                          )
+                        }
+                        slotProps={{
+                          textField: {
+                            fullWidth: true,
+                            error: !!errors.dueDate,
+                            helperText: errors.dueDate?.message,
+                          },
+                        }}
+                      />
+                    )}
+                  />
                 </Grid>
 
                 <Grid size={{ xs: 12, sm: 4 }}>
@@ -1181,87 +1353,13 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
 
                 <Grid size={12}>
                   <Divider>
-                    <Typography variant="caption">Przypisanie</Typography>
+                    <Typography variant="caption">
+                      Klasyfikacja faktury
+                    </Typography>
                   </Divider>
                 </Grid>
 
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <Controller
-                    name="moduleType"
-                    control={control}
-                    rules={{
-                      required: "Moduł jest wymagany",
-                      validate: (value) =>
-                        value !== ModuleType.None || "Wybierz moduł",
-                    }}
-                    render={({ field }) => (
-                      <FormControl
-                        fullWidth
-                        error={!!errors.moduleType}
-                        required
-                      >
-                        <InputLabel id="module-type-label">Moduł</InputLabel>
-                        <Select
-                          labelId="module-type-label"
-                          label="Moduł"
-                          value={field.value || ""}
-                          onChange={field.onChange}
-                          onBlur={field.onBlur}
-                        >
-                          {Object.entries(ModuleTypeLabels)
-                            .filter(([key]) => key !== ModuleType.None)
-                            .map(([key, label]) => (
-                              <MenuItem key={key} value={key}>
-                                {label}
-                              </MenuItem>
-                            ))}
-                        </Select>
-                        {errors.moduleType && (
-                          <FormHelperText>
-                            {errors.moduleType.message}
-                          </FormHelperText>
-                        )}
-                      </FormControl>
-                    )}
-                  />
-                </Grid>
-
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <FormControl fullWidth>
-                    <InputLabel id="payment-status-label">
-                      Status płatności
-                    </InputLabel>
-                    <Select
-                      labelId="payment-status-label"
-                      label="Status płatności"
-                      defaultValue={KSeFPaymentStatus.Unpaid}
-                      {...register("paymentStatus")}
-                    >
-                      {Object.entries(KSeFPaymentStatusLabels).map(
-                        ([key, label]) => (
-                          <MenuItem key={key} value={key}>
-                            {label}
-                          </MenuItem>
-                        ),
-                      )}
-                    </Select>
-                  </FormControl>
-                </Grid>
-
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <TextField
-                    fullWidth
-                    label="Data płatności"
-                    type="date"
-                    {...register("paymentDate")}
-                    InputLabelProps={{ shrink: true }}
-                    inputProps={{
-                      max: new Date().toISOString().split("T")[0],
-                    }}
-                  />
-                </Grid>
-
-                <Grid size={{ xs: 12, sm: 4 }}>
                   <FormControl fullWidth>
                     <InputLabel id="document-type-label">
                       Typ dokumentu
@@ -1281,6 +1379,34 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                       )}
                     </Select>
                   </FormControl>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <FormControl fullWidth>
+                    <InputLabel id="vat-deduction-label">
+                      Odliczenie VAT
+                    </InputLabel>
+                    <Select
+                      labelId="vat-deduction-label"
+                      label="Odliczenie VAT"
+                      defaultValue={VatDeductionType.Full}
+                      {...register("vatDeductionType")}
+                    >
+                      {Object.entries(VatDeductionTypeLabels).map(
+                        ([key, label]) => (
+                          <MenuItem key={key} value={key}>
+                            {label}
+                          </MenuItem>
+                        ),
+                      )}
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                <Grid size={12}>
+                  <Divider>
+                    <Typography variant="caption">Status faktury</Typography>
+                  </Divider>
                 </Grid>
 
                 <Grid size={{ xs: 12, sm: 4 }}>
@@ -1307,16 +1433,16 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
 
                 <Grid size={{ xs: 12, sm: 4 }}>
                   <FormControl fullWidth>
-                    <InputLabel id="vat-deduction-label">
-                      Odliczenie VAT
+                    <InputLabel id="payment-status-label">
+                      Status płatności
                     </InputLabel>
                     <Select
-                      labelId="vat-deduction-label"
-                      label="Odliczenie VAT"
-                      defaultValue={VatDeductionType.Full}
-                      {...register("vatDeductionType")}
+                      labelId="payment-status-label"
+                      label="Status płatności"
+                      defaultValue={KSeFPaymentStatus.Unpaid}
+                      {...register("paymentStatus")}
                     >
-                      {Object.entries(VatDeductionTypeLabels).map(
+                      {Object.entries(KSeFPaymentStatusLabels).map(
                         ([key, label]) => (
                           <MenuItem key={key} value={key}>
                             {label}
@@ -1325,6 +1451,31 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                       )}
                     </Select>
                   </FormControl>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <TextField
+                    fullWidth
+                    label="Data płatności"
+                    type="date"
+                    {...register("paymentDate")}
+                    InputLabelProps={{ shrink: true }}
+                    inputProps={{
+                      max: new Date().toISOString().split("T")[0],
+                    }}
+                  />
+                </Grid>
+
+                <Grid size={12}>
+                  <TextField
+                    label="Komentarz"
+                    error={!!errors.comment}
+                    helperText={errors.comment?.message}
+                    {...register("comment")}
+                    fullWidth
+                    multiline
+                    rows={2}
+                  />
                 </Grid>
 
                 {/* Module-specific fields */}
@@ -1443,12 +1594,21 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                         type="number"
                         fullWidth
                         required
-                        slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
+                        slotProps={{
+                          htmlInput: { min: 0, step: "0.01" },
+                          inputLabel: { shrink: true },
+                        }}
                         error={!!errors.feedQuantity}
                         helperText={errors.feedQuantity?.message}
                         {...register("feedQuantity", {
                           required: "Ilość jest wymagana",
                           valueAsNumber: true,
+                          validate: (value) => {
+                            if (isNaN(value) || value <= 0) {
+                              return "Ilość musi być większa od 0";
+                            }
+                            return true;
+                          },
                         })}
                       />
                     </Grid>
@@ -1458,12 +1618,21 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                         type="number"
                         fullWidth
                         required
-                        slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
+                        slotProps={{
+                          htmlInput: { min: 0, step: "0.01" },
+                          inputLabel: { shrink: true },
+                        }}
                         error={!!errors.feedUnitPrice}
                         helperText={errors.feedUnitPrice?.message}
                         {...register("feedUnitPrice", {
                           required: "Cena jest wymagana",
                           valueAsNumber: true,
+                          validate: (value) => {
+                            if (isNaN(value) || value <= 0) {
+                              return "Cena musi być większa od 0";
+                            }
+                            return true;
+                          },
                         })}
                       />
                     </Grid>
@@ -1479,7 +1648,13 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                       <TextField
                         label="Nr konta bankowego"
                         fullWidth
-                        {...register("feedBankAccountNumber")}
+                        required
+                        slotProps={{ inputLabel: { shrink: true } }}
+                        error={!!errors.feedBankAccountNumber}
+                        helperText={errors.feedBankAccountNumber?.message}
+                        {...register("feedBankAccountNumber", {
+                          required: "Nr konta bankowego jest wymagany",
+                        })}
                       />
                     </Grid>
                   </>
@@ -1548,61 +1723,6 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                   </>
                 )}
 
-                {watchedModuleType === ModuleType.ProductionExpenses && (
-                  <>
-                    <Grid size={12}>
-                      <Divider>
-                        <Typography variant="caption">
-                          Dane kosztu produkcyjnego
-                        </Typography>
-                      </Divider>
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <LoadingTextField
-                        loading={loadingFarms}
-                        select
-                        label="Ferma"
-                        fullWidth
-                        required
-                        value={watchedExpenseFarmId || ""}
-                        error={!!errors.expenseFarmId}
-                        helperText={errors.expenseFarmId?.message}
-                        {...register("expenseFarmId", {
-                          required: "Ferma jest wymagana",
-                        })}
-                      >
-                        {farms.map((farm) => (
-                          <MenuItem key={farm.id} value={farm.id}>
-                            {farm.name}
-                          </MenuItem>
-                        ))}
-                      </LoadingTextField>
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <LoadingTextField
-                        loading={loadingCycles}
-                        select
-                        label="Cykl"
-                        fullWidth
-                        required
-                        disabled={!watchedExpenseFarmId}
-                        value={watch("expenseCycleId") || ""}
-                        error={!!errors.expenseCycleId}
-                        helperText={errors.expenseCycleId?.message}
-                        {...register("expenseCycleId", {
-                          required: "Cykl jest wymagany",
-                        })}
-                      >
-                        {cycles.map((cycle) => (
-                          <MenuItem key={cycle.id} value={cycle.id}>
-                            {cycle.identifier}/{cycle.year}
-                          </MenuItem>
-                        ))}
-                      </LoadingTextField>
-                    </Grid>
-                  </>
-                )}
-
                 {watchedModuleType === ModuleType.Sales && (
                   <>
                     <Grid size={12}>
@@ -1657,18 +1777,6 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                     </Grid>
                   </>
                 )}
-
-                <Grid size={12}>
-                  <TextField
-                    label="Komentarz"
-                    error={!!errors.comment}
-                    helperText={errors.comment?.message}
-                    {...register("comment")}
-                    fullWidth
-                    multiline
-                    rows={2}
-                  />
-                </Grid>
               </Grid>
             </Grid>
           </Grid>

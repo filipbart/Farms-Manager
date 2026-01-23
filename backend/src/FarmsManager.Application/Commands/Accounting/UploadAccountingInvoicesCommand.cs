@@ -47,8 +47,8 @@ public record UploadAccountingInvoicesCommandDto
 public record AccountingInvoiceExtractedData
 {
     public string InvoiceNumber { get; init; }
-    public string InvoiceDate { get; init; }
-    public string DueDate { get; init; }
+    public DateOnly? InvoiceDate { get; init; }
+    public DateOnly? DueDate { get; init; }
     public string SellerName { get; init; }
     public string SellerNip { get; init; }
     public string SellerAddress { get; init; }
@@ -61,11 +61,11 @@ public record AccountingInvoiceExtractedData
     public string BankAccountNumber { get; init; }
     public string InvoiceType { get; init; }
     public string PaymentStatus { get; init; }
-    public string PaymentDate { get; init; }
+    public DateOnly? PaymentDate { get; init; }
     public Guid? FarmId { get; init; }
     public Guid? CycleId { get; init; }
     public string ModuleType { get; init; }
-    
+
     // Module-specific fields
     public Guid? FeedContractorId { get; init; }
     public Guid? GasContractorId { get; init; }
@@ -73,7 +73,16 @@ public record AccountingInvoiceExtractedData
     public Guid? SlaughterhouseId { get; init; }
     public Guid? HenhouseId { get; init; }
     public string HenhouseName { get; init; }
-    
+
+    // Feed module specific fields
+    public string FeedItemName { get; init; }
+    public decimal? FeedQuantity { get; init; }
+    public decimal? FeedUnitPrice { get; init; }
+
+    // Gas module specific fields
+    public decimal? GasQuantity { get; init; }
+    public decimal? GasUnitPrice { get; init; }
+
     // Flags for new entities created during upload
     public bool IsNewFeedContractor { get; init; }
     public bool IsNewGasContractor { get; init; }
@@ -162,7 +171,7 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
             var fileId = Guid.NewGuid();
             var extension = Path.GetExtension(file.FileName);
             var newFileName = fileId + extension;
-            
+
             // Determine FileType based on module type
             var fileType = GetFileTypeForModule(request.Data.ModuleType);
             var filePath = $"draft/{fileId}{extension}";
@@ -178,24 +187,24 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
             // Zaczytaj dane z faktury przez AI - użyj odpowiedniego modelu w zależności od ModuleType
             var extractedFields = await AnalyzeInvoiceByModuleTypeAsync(
                 preSignedUrl, request.Data.ModuleType, cancellationToken);
-            
+
             // Próba automatycznego dopasowania fermy na podstawie podmiotu gospodarczego
             // Dla Sales: ferma = Seller (my sprzedajemy), dla pozostałych: ferma = Buyer (my kupujemy)
             var isSalesModule = request.Data.ModuleType == nameof(ModuleType.Sales);
             var matchedFarm = await MatchFarmEntityAsync(
-                extractedFields.SellerNip, extractedFields.SellerName, 
-                extractedFields.BuyerNip, extractedFields.BuyerName, 
+                extractedFields.SellerNip, extractedFields.SellerName,
+                extractedFields.BuyerNip, extractedFields.BuyerName,
                 isSalesModule, cancellationToken);
 
             // Przetwórz moduł-specyficzne dane (kontrahenci, duplikaty, itp.)
             var moduleData = await ProcessModuleSpecificDataAsync(
                 request.Data.ModuleType, extractedFields, matchedFarm, userId, cancellationToken);
 
-            extractedFields = extractedFields with 
-            { 
+            extractedFields = extractedFields with
+            {
                 InvoiceType = request.Data.InvoiceType,
                 PaymentStatus = request.Data.PaymentStatus,
-                PaymentDate = request.Data.PaymentDate?.ToString("yyyy-MM-dd"),
+                PaymentDate = request.Data.PaymentDate,
                 FarmId = matchedFarm?.Id,
                 CycleId = matchedFarm?.ActiveCycleId,
                 ModuleType = request.Data.ModuleType,
@@ -236,7 +245,7 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
         bool IsNewSlaughterhouse = false);
 
     private async Task<ModuleSpecificData> ProcessModuleSpecificDataAsync(
-        string moduleTypeStr, AccountingInvoiceExtractedData extractedFields, 
+        string moduleTypeStr, AccountingInvoiceExtractedData extractedFields,
         FarmEntity farm, Guid userId, CancellationToken cancellationToken)
     {
         if (!Enum.TryParse<ModuleType>(moduleTypeStr, out var moduleType))
@@ -246,17 +255,19 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
         {
             ModuleType.Feeds => await ProcessFeedsModuleAsync(extractedFields, farm, userId, cancellationToken),
             ModuleType.Gas => await ProcessGasModuleAsync(extractedFields, userId, cancellationToken),
-            ModuleType.ProductionExpenses => await ProcessExpenseModuleAsync(extractedFields, userId, cancellationToken),
+            ModuleType.ProductionExpenses =>
+                await ProcessExpenseModuleAsync(extractedFields, userId, cancellationToken),
             ModuleType.Sales => await ProcessSalesModuleAsync(extractedFields, farm, userId, cancellationToken),
             _ => new ModuleSpecificData()
         };
     }
 
     private async Task<ModuleSpecificData> ProcessFeedsModuleAsync(
-        AccountingInvoiceExtractedData extractedFields, FarmEntity farm, Guid userId, CancellationToken cancellationToken)
+        AccountingInvoiceExtractedData extractedFields, FarmEntity farm, Guid userId,
+        CancellationToken cancellationToken)
     {
         var isNew = false;
-        
+
         // Szukaj/twórz FeedContractor
         var contractor = await _feedContractorRepository.FirstOrDefaultAsync(
             new FeedContractorByNipSpec(extractedFields.SellerNip?.Replace("-", "")), cancellationToken);
@@ -356,7 +367,8 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
         if (!string.IsNullOrEmpty(extractedFields.InvoiceNumber) && contractor is not null)
         {
             var existedInvoice = await _expenseProductionRepository.FirstOrDefaultAsync(
-                new GetExpenseProductionInvoiceByInvoiceNumberAndContractorSpec(extractedFields.InvoiceNumber, contractor.Id),
+                new GetExpenseProductionInvoiceByInvoiceNumberAndContractorSpec(extractedFields.InvoiceNumber,
+                    contractor.Id),
                 cancellationToken);
 
             if (existedInvoice is not null)
@@ -370,7 +382,8 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
     }
 
     private async Task<ModuleSpecificData> ProcessSalesModuleAsync(
-        AccountingInvoiceExtractedData extractedFields, FarmEntity farm, Guid userId, CancellationToken cancellationToken)
+        AccountingInvoiceExtractedData extractedFields, FarmEntity farm, Guid userId,
+        CancellationToken cancellationToken)
     {
         var isNew = false;
 
@@ -444,7 +457,8 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
         // 3. Fallback: szukaj przez TaxBusinessEntity
         if (farm is null)
         {
-            farm = await MatchFarmViaTaxBusinessEntityAsync(primaryNip, primaryName, secondaryNip, secondaryName, cancellationToken);
+            farm = await MatchFarmViaTaxBusinessEntityAsync(primaryNip, primaryName, secondaryNip, secondaryName,
+                cancellationToken);
         }
 
         return farm;
@@ -531,12 +545,18 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
     private async Task<AccountingInvoiceExtractedData> AnalyzeFeedInvoiceAsync(
         string preSignedUrl, CancellationToken cancellationToken)
     {
-        var model = await _azureDiService.AnalyzeInvoiceAsync<FeedDeliveryInvoiceModel>(preSignedUrl, cancellationToken);
+        var model = await _azureDiService.AnalyzeInvoiceAsync<FeedDeliveryInvoiceModel>(preSignedUrl,
+            cancellationToken);
+
+        var feedItemName = model.Items?.Count > 0 ? model.Items.FirstOrDefault().Name : null;
+        var feedQuantity = model.Items?.Count > 0 ? model.Items.Sum(i => i.Quantity) : null;
+        var feedUnitPrice = model.Items?.Count > 0 ? model.Items.FirstOrDefault().UnitPrice : null;
+
         return new AccountingInvoiceExtractedData
         {
             InvoiceNumber = model.InvoiceNumber,
-            InvoiceDate = model.InvoiceDate?.ToString("yyyy-MM-dd"),
-            DueDate = model.DueDate?.ToString("yyyy-MM-dd"),
+            InvoiceDate = model.InvoiceDate,
+            DueDate = model.DueDate,
             SellerName = model.VendorName,
             SellerNip = model.VendorNip,
             BuyerName = model.CustomerName,
@@ -544,7 +564,11 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
             GrossAmount = model.InvoiceTotal,
             NetAmount = model.SubTotal,
             VatAmount = model.VatAmount,
-            BankAccountNumber = model.BankAccountNumber
+            BankAccountNumber = model.BankAccountNumber,
+            HenhouseName = model.HenhouseName,
+            FeedItemName = feedItemName,
+            FeedQuantity = feedQuantity,
+            FeedUnitPrice = feedUnitPrice
         };
     }
 
@@ -552,29 +576,53 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
         string preSignedUrl, CancellationToken cancellationToken)
     {
         var model = await _azureDiService.AnalyzeInvoiceAsync<GasDeliveryInvoiceModel>(preSignedUrl, cancellationToken);
+
+        // Try to extract quantity from the Quantity field or Items
+        decimal? gasQuantity = null;
+        if (model.Items?.Count > 0)
+        {
+            gasQuantity = model.Items.Sum(i => i.Quantity);
+        }
+        else if (model.Quantity != null && decimal.TryParse(model.Quantity, out var parsedQuantity))
+        {
+            gasQuantity = parsedQuantity;
+        }
+
+        // Try to extract unit price from UnitPrice field or Items
+        var gasUnitPrice = model.UnitPrice;
+        if (gasUnitPrice == null && model.Items?.Count > 0)
+        {
+            gasUnitPrice = model.Items.FirstOrDefault()?.UnitPrice;
+        }
+
         return new AccountingInvoiceExtractedData
         {
             InvoiceNumber = model.InvoiceNumber,
-            InvoiceDate = model.InvoiceDate?.ToString("yyyy-MM-dd"),
-            DueDate = model.DueDate?.ToString("yyyy-MM-dd"),
+            InvoiceDate = model.InvoiceDate,
+            DueDate = model.DueDate,
             SellerName = model.VendorName,
             SellerNip = model.VendorNip,
             SellerAddress = model.VendorAddress,
             BuyerName = model.CustomerName,
             BuyerNip = model.CustomerNip,
-            GrossAmount = model.InvoiceTotal
+            GrossAmount = model.InvoiceTotal,
+            NetAmount = model.SubTotal,
+            VatAmount = model.VatAmount,
+            GasQuantity = gasQuantity,
+            GasUnitPrice = gasUnitPrice
         };
     }
 
     private async Task<AccountingInvoiceExtractedData> AnalyzeExpenseInvoiceAsync(
         string preSignedUrl, CancellationToken cancellationToken)
     {
-        var model = await _azureDiService.AnalyzeInvoiceAsync<ExpenseProductionInvoiceModel>(preSignedUrl, cancellationToken);
+        var model = await _azureDiService.AnalyzeInvoiceAsync<ExpenseProductionInvoiceModel>(preSignedUrl,
+            cancellationToken);
         return new AccountingInvoiceExtractedData
         {
             InvoiceNumber = model.InvoiceNumber,
-            InvoiceDate = model.InvoiceDate?.ToString("yyyy-MM-dd"),
-            DueDate = model.DueDate?.ToString("yyyy-MM-dd"),
+            InvoiceDate = model.InvoiceDate,
+            DueDate = model.DueDate,
             SellerName = model.VendorName,
             SellerNip = model.VendorNip,
             SellerAddress = model.VendorAddress,
@@ -593,8 +641,8 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
         return new AccountingInvoiceExtractedData
         {
             InvoiceNumber = model.InvoiceNumber,
-            InvoiceDate = model.InvoiceDate?.ToString("yyyy-MM-dd"),
-            DueDate = model.DueDate?.ToString("yyyy-MM-dd"),
+            InvoiceDate = model.InvoiceDate,
+            DueDate = model.DueDate,
             SellerName = model.VendorName,
             SellerNip = model.VendorNip,
             BuyerName = model.CustomerName,
@@ -634,10 +682,8 @@ public class UploadAccountingInvoicesCommandProfile : Profile
     public UploadAccountingInvoicesCommandProfile()
     {
         CreateMap<AccountingInvoiceModel, AccountingInvoiceExtractedData>()
-            .ForMember(m => m.InvoiceDate,
-                opt => opt.MapFrom(t => t.InvoiceDate.HasValue ? t.InvoiceDate.Value.ToString("yyyy-MM-dd") : null))
-            .ForMember(m => m.DueDate,
-                opt => opt.MapFrom(t => t.DueDate.HasValue ? t.DueDate.Value.ToString("yyyy-MM-dd") : null))
+            .ForMember(m => m.InvoiceDate, opt => opt.MapFrom(t => t.InvoiceDate))
+            .ForMember(m => m.DueDate, opt => opt.MapFrom(t => t.DueDate))
             .ForMember(m => m.InvoiceType, opt => opt.Ignore())
             .ForMember(m => m.FarmId, opt => opt.Ignore())
             .ForMember(m => m.ModuleType, opt => opt.Ignore());
