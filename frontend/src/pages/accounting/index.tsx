@@ -91,6 +91,9 @@ const AccountingPage: React.FC = () => {
     ids: new Set(),
   });
   const [deleting, setDeleting] = useState(false);
+  const [deletingInvoiceId, setDeletingInvoiceId] = useState<string | null>(
+    null,
+  );
   const [users, setUsers] = useState<UserListModel[]>([]);
   const [farms, setFarms] = useState<FarmRowModel[]>([]);
 
@@ -137,32 +140,6 @@ const AccountingPage: React.FC = () => {
     }
     setDraftInvoices(files);
     setSaveModalOpen(true);
-  };
-
-  const handleDeleteAllInvoices = async () => {
-    if (
-      !window.confirm(
-        "Czy na pewno chcesz usunąć WSZYSTKIE faktury? Ta operacja jest nieodwracalna!",
-      )
-    ) {
-      return;
-    }
-    setDeleting(true);
-    try {
-      await handleApiResponse(
-        () => AccountingService.deleteAllInvoices(),
-        (data) => {
-          toast.success(
-            `Usunięto ${data.responseData?.deletedCount || 0} faktur`,
-          );
-          fetchInvoices();
-        },
-        undefined,
-        "Błąd podczas usuwania faktur",
-      );
-    } finally {
-      setDeleting(false);
-    }
   };
 
   // Filters for each tab (all, sales, purchases)
@@ -253,6 +230,59 @@ const AccountingPage: React.FC = () => {
       setLoading(false);
     }
   }, [getCurrentFilters]);
+
+  const handleDeleteAllInvoices = async () => {
+    if (
+      !window.confirm(
+        "Czy na pewno chcesz usunąć WSZYSTKIE faktury? Ta operacja jest nieodwracalna!",
+      )
+    ) {
+      return;
+    }
+    setDeleting(true);
+    try {
+      await handleApiResponse(
+        () => AccountingService.deleteAllInvoices(),
+        (data) => {
+          toast.success(
+            `Usunięto ${data.responseData?.deletedCount || 0} faktur`,
+          );
+          fetchInvoices();
+        },
+        undefined,
+        "Błąd podczas usuwania faktur",
+      );
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleDeleteInvoice = useCallback(
+    async (invoice: KSeFInvoiceListModel) => {
+      if (
+        !window.confirm(
+          `Czy na pewno chcesz usunąć fakturę "${invoice.invoiceNumber}"? Ta operacja jest nieodwracalna!`,
+        )
+      ) {
+        return;
+      }
+      setDeletingInvoiceId(invoice.id);
+      try {
+        await handleApiResponse(
+          () => AccountingService.deleteInvoice(invoice.id),
+          () => {
+            toast.success(`Usunięto fakturę: ${invoice.invoiceNumber}`);
+            fetchInvoices();
+          },
+          undefined,
+          "Błąd podczas usuwania faktury",
+        );
+      } finally {
+        setDeletingInvoiceId(null);
+      }
+    },
+    [fetchInvoices],
+  );
 
   // Fetch data when tab or filters change
   React.useEffect(() => {
@@ -359,9 +389,10 @@ const AccountingPage: React.FC = () => {
       getKSeFInvoicesColumns({
         onDownloadPdf: handleDownloadPdf,
         onDownloadXml: handleDownloadXml,
-        downloadingId,
+        onDelete: handleDeleteInvoice,
+        downloadingId: downloadingId || deletingInvoiceId,
       }),
-    [downloadingId],
+    [downloadingId, deletingInvoiceId, handleDeleteInvoice],
   );
 
   const [initialGridState] = useState(() => {

@@ -853,7 +853,7 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
 
         <Box sx={{ display: "flex", gap: 2 }}>
           <TextField
-            label="Ilość [m³]"
+            label="Ilość [l]"
             size="small"
             type="number"
             inputProps={{ step: "0.01" }}
@@ -865,7 +865,7 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
             required
           />
           <TextField
-            label="Cena jedn. [zł/m³]"
+            label="Cena jedn. [zł/l]"
             size="small"
             type="number"
             inputProps={{ step: "0.01" }}

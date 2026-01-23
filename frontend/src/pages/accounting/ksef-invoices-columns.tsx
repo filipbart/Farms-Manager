@@ -1,7 +1,7 @@
 import type { GridColDef } from "@mui/x-data-grid";
 import dayjs from "dayjs";
 import { Chip, IconButton, Tooltip } from "@mui/material";
-import { MdPictureAsPdf, MdCode } from "react-icons/md";
+import { MdPictureAsPdf, MdCode, MdDeleteForever } from "react-icons/md";
 import type { KSeFInvoiceListModel } from "../../models/accounting/ksef-invoice";
 import {
   KSeFInvoiceStatusLabels,
@@ -19,6 +19,7 @@ import {
 interface GetKSeFInvoicesColumnsProps {
   onDownloadPdf: (invoice: KSeFInvoiceListModel) => void;
   onDownloadXml: (invoice: KSeFInvoiceListModel) => void;
+  onDelete?: (invoice: KSeFInvoiceListModel) => void;
   downloadingId: string | null;
 }
 
@@ -52,6 +53,7 @@ const getPaymentStatusColor = (status: KSeFPaymentStatus) => {
 export const getKSeFInvoicesColumns = ({
   onDownloadPdf,
   onDownloadXml,
+  onDelete,
   downloadingId,
 }: GetKSeFInvoicesColumnsProps): GridColDef<KSeFInvoiceListModel>[] => [
   {
@@ -264,10 +266,10 @@ export const getKSeFInvoicesColumns = ({
     field: "actions",
     type: "actions",
     headerName: "Akcje",
-    width: 100,
+    width: 140,
     getActions: (params) => {
       const isDownloading = downloadingId === params.row.id;
-      return [
+      const actions = [
         <Tooltip title="Pobierz PDF" key="pdf">
           <span>
             <IconButton
@@ -293,6 +295,26 @@ export const getKSeFInvoicesColumns = ({
           </span>
         </Tooltip>,
       ];
+
+      // Add delete button only for non-KSeF invoices (source !== "KSeF")
+      if (params.row.source !== "KSeF" && onDelete) {
+        actions.push(
+          <Tooltip title="Usuń fakturę" key="delete">
+            <span>
+              <IconButton
+                size="small"
+                onClick={() => onDelete(params.row)}
+                disabled={isDownloading}
+                color="error"
+              >
+                <MdDeleteForever />
+              </IconButton>
+            </span>
+          </Tooltip>,
+        );
+      }
+
+      return actions;
     },
   },
 ];

@@ -1262,15 +1262,10 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                     name="dueDate"
                     control={control}
                     rules={{
+                      required: "Termin płatności jest wymagany",
                       validate: (value) => {
-                        if (
-                          (watchedModuleType === ModuleType.Feeds ||
-                            watchedModuleType === ModuleType.Sales ||
-                            watchedModuleType ===
-                              ModuleType.ProductionExpenses) &&
-                          !value
-                        ) {
-                          return "Termin płatności jest wymagany dla wybranego modułu";
+                        if (!value) {
+                          return "Termin płatności jest wymagany - uzupełnij to pole";
                         }
                         return true;
                       },
@@ -1707,7 +1702,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6 }}>
                       <TextField
-                        label="Cena jednostkowa [zł/m³]"
+                        label="Cena jednostkowa [zł/l]"
                         type="number"
                         fullWidth
                         required

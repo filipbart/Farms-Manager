@@ -362,6 +362,38 @@ export class AccountingService {
   }
 
   /**
+   * Aktualizuje fermę w powiązanej encji modułu
+   */
+  public static async updateModuleEntityFarm(
+    entityInvoiceId: string,
+    moduleType: string,
+    newFarmId: string,
+  ) {
+    return await AxiosWrapper.patch(
+      `${ApiUrl.AccountingInvoices}/${entityInvoiceId}/module-entity/farm`,
+      {
+        moduleType,
+        farmId: newFarmId,
+      },
+    );
+  }
+
+  /**
+   * Usuwa encję z modułu powiązaną z fakturą
+   */
+  public static async deleteModuleEntity(
+    entityInvoiceId: string,
+    moduleType: string,
+  ) {
+    return await AxiosWrapper.delete(
+      `${ApiUrl.AccountingInvoices}/${entityInvoiceId}/module-entity`,
+      {
+        moduleType,
+      },
+    );
+  }
+
+  /**
    * Pobiera pliki faktur jako ZIP
    */
   public static async downloadInvoicesZip(invoiceIds: string[]): Promise<Blob> {

@@ -135,6 +135,8 @@ export interface KSeFInvoiceDetails extends KSeFInvoiceListModel {
   assignedUserName: string | null;
   relatedInvoiceNumber: string | null;
   paymentDate: string | null;
+  paymentDueDate: string | null;
+  assignedEntityInvoiceId: string | null;
   createdAt: string;
   createdBy: string | null;
   filePath: string | null;

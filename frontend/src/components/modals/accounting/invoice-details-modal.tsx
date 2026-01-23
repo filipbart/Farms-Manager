@@ -417,6 +417,7 @@ interface EditFormState {
   vatDeductionType: VatDeductionType;
   paymentStatus: KSeFPaymentStatus;
   paymentDate: string;
+  dueDate: string;
   farmId: string;
   cycleId: string;
   assignedUserId: string;
@@ -453,6 +454,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
     vatDeductionType: VatDeductionType.Full,
     paymentStatus: KSeFPaymentStatus.Unpaid,
     paymentDate: "",
+    dueDate: "",
     farmId: "",
     cycleId: "",
     assignedUserId: "",
@@ -570,6 +572,9 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
         paymentDate: details.paymentDate
           ? dayjs(details.paymentDate).format("YYYY-MM-DD")
           : "",
+        dueDate: details.paymentDueDate
+          ? dayjs(details.paymentDueDate).format("YYYY-MM-DD")
+          : "",
         farmId: details.farmId || "",
         cycleId: cycleIdToUse,
         assignedUserId: details.assignedUserId || "",
@@ -650,11 +655,19 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
 
         // Auto-set payment date when payment status changes to paid
         if (field === "paymentStatus") {
-          const isPaidStatus =
-            value === KSeFPaymentStatus.PaidCash ||
-            value === KSeFPaymentStatus.PaidTransfer;
+          const isPaidCashStatus = value === KSeFPaymentStatus.PaidCash;
+          const isPaidTransferStatus = value === KSeFPaymentStatus.PaidTransfer;
+          const isPaidStatus = isPaidCashStatus || isPaidTransferStatus;
+
           if (isPaidStatus && !prev.paymentDate) {
-            newState.paymentDate = dayjs().format("YYYY-MM-DD");
+            // For cash payments, use invoice date; for transfers, use current date
+            if (isPaidCashStatus && details?.invoiceDate) {
+              newState.paymentDate = dayjs(details.invoiceDate).format(
+                "YYYY-MM-DD",
+              );
+            } else {
+              newState.paymentDate = dayjs().format("YYYY-MM-DD");
+            }
           } else if (!isPaidStatus) {
             newState.paymentDate = "";
           }
@@ -663,7 +676,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
         return newState;
       });
     },
-    [farms],
+    [farms, details?.invoiceDate],
   );
 
   // Helper function to handle auto-next in sequential mode after accept
@@ -694,24 +707,72 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
       if (!details) return;
       setSaving(true);
       try {
-        await handleApiResponse(
-          () =>
-            AccountingService.updateInvoice(details.id, { status: newStatus }),
-          () => {
-            toast.success("Status faktury został zmieniony");
-            setDetails((prev) =>
-              prev ? { ...prev, status: newStatus } : null,
-            );
-            // Auto-next in sequential mode after accepting
-            if (newStatus === KSeFInvoiceStatus.Accepted) {
-              handleAutoNextAfterAccept();
-            } else {
-              onSave?.();
-            }
-          },
-          undefined,
-          "Błąd podczas zmiany statusu",
-        );
+        // Check if we're changing from Accepted to Rejected and have a module entry
+        const isChangingToRejected = newStatus === KSeFInvoiceStatus.Rejected;
+        const wasAccepted = details.status === KSeFInvoiceStatus.Accepted;
+        const hasModuleEntry =
+          details.assignedEntityInvoiceId && details.moduleType;
+
+        if (isChangingToRejected && wasAccepted && hasModuleEntry) {
+          // First delete the module entry, then update the status
+          await handleApiResponse(
+            () =>
+              AccountingService.deleteModuleEntity(
+                details.assignedEntityInvoiceId!,
+                details.moduleType!,
+              ),
+            () => {
+              // Module entry deleted successfully, now update the status
+              return handleApiResponse(
+                () =>
+                  AccountingService.updateInvoice(details.id, {
+                    status: newStatus,
+                  }),
+                () => {
+                  toast.success(
+                    "Status faktury został zmieniony i wpis w module usunięty",
+                  );
+                  setDetails((prev) =>
+                    prev
+                      ? {
+                          ...prev,
+                          status: newStatus,
+                          assignedEntityInvoiceId: null,
+                        }
+                      : null,
+                  );
+                  onSave?.();
+                },
+                undefined,
+                "Błąd podczas zmiany statusu",
+              );
+            },
+            undefined,
+            "Błąd podczas usuwania wpisu z modułu",
+          );
+        } else {
+          // Normal status change without module entry deletion
+          await handleApiResponse(
+            () =>
+              AccountingService.updateInvoice(details.id, {
+                status: newStatus,
+              }),
+            () => {
+              toast.success("Status faktury został zmieniony");
+              setDetails((prev) =>
+                prev ? { ...prev, status: newStatus } : null,
+              );
+              // Auto-next in sequential mode after accepting
+              if (newStatus === KSeFInvoiceStatus.Accepted) {
+                handleAutoNextAfterAccept();
+              } else {
+                onSave?.();
+              }
+            },
+            undefined,
+            "Błąd podczas zmiany statusu",
+          );
+        }
       } finally {
         setSaving(false);
       }
@@ -738,6 +799,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
             vatDeductionType: editForm.vatDeductionType,
             paymentStatus: editForm.paymentStatus,
             paymentDate: editForm.paymentDate || null,
+            dueDate: editForm.dueDate || null,
             comment: editForm.comment,
             relatedInvoiceNumber: editForm.relatedInvoiceNumber,
           }),
@@ -2257,9 +2319,43 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                     <Select
                       value={editForm.farmId}
                       label="Lokalizacja (Ferma)"
-                      onChange={(e) =>
-                        handleFormChange("farmId", e.target.value)
-                      }
+                      onChange={(e) => {
+                        const newFarmId = e.target.value;
+                        handleFormChange("farmId", newFarmId);
+
+                        // If this is a non-KSeF invoice with an accepted status and has a module entry,
+                        // update the farm in the respective module
+                        if (
+                          details?.source === InvoiceSource.Manual &&
+                          details?.status === KSeFInvoiceStatus.Accepted &&
+                          details?.assignedEntityInvoiceId &&
+                          details?.moduleType &&
+                          [
+                            ModuleType.Feeds,
+                            ModuleType.Gas,
+                            ModuleType.ProductionExpenses,
+                            ModuleType.Sales,
+                          ].includes(details.moduleType as ModuleType)
+                        ) {
+                          // Update module entity farm
+                          handleApiResponse(
+                            () =>
+                              AccountingService.updateModuleEntityFarm(
+                                details.assignedEntityInvoiceId!,
+                                details.moduleType!,
+                                newFarmId,
+                              ),
+                            () => {
+                              toast.success(
+                                "Lokalizacja została zaktualizowana w module",
+                              );
+                            },
+                            undefined,
+                            "Błąd podczas aktualizacji lokalizacji w module",
+                          );
+                        }
+                      }}
+                      disabled={details?.source === InvoiceSource.KSeF} // Disable for KSeF invoices
                     >
                       <MenuItem value="">
                         <em>Brak</em>
@@ -2270,6 +2366,15 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                         </MenuItem>
                       ))}
                     </Select>
+                    {details?.source === InvoiceSource.KSeF && (
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ mt: 0.5 }}
+                      >
+                        Lokalizacja faktur KSeF nie może być zmieniana
+                      </Typography>
+                    )}
                   </FormControl>
 
                   <FormControl
@@ -2333,6 +2438,23 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                       )}
                     </Select>
                   </FormControl>
+
+                  {/* Due Date Input - show for non-KSeF invoices */}
+                  {details?.source === InvoiceSource.Manual && (
+                    <TextField
+                      fullWidth
+                      size="small"
+                      type="date"
+                      label="Termin płatności"
+                      value={editForm.dueDate}
+                      onChange={(e) =>
+                        handleFormChange("dueDate", e.target.value)
+                      }
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
+                    />
+                  )}
 
                   {/* Payment Date Input - show only when status is paid */}
                   {(editForm.paymentStatus === KSeFPaymentStatus.PaidCash ||
@@ -2418,6 +2540,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                                 vatDeductionType: editForm.vatDeductionType,
                                 paymentStatus: editForm.paymentStatus,
                                 paymentDate: editForm.paymentDate || null,
+                                dueDate: editForm.dueDate || null,
                                 comment: editForm.comment,
                                 relatedInvoiceNumber:
                                   editForm.relatedInvoiceNumber,
@@ -2437,6 +2560,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                                         editForm.vatDeductionType,
                                       paymentStatus: editForm.paymentStatus,
                                       paymentDate: editForm.paymentDate,
+                                      paymentDueDate: editForm.dueDate,
                                       comment: editForm.comment,
                                       relatedInvoiceNumber:
                                         editForm.relatedInvoiceNumber,
@@ -2478,6 +2602,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                                 AccountingService.updateInvoice(details.id, {
                                   paymentStatus: editForm.paymentStatus,
                                   paymentDate: editForm.paymentDate || null,
+                                  dueDate: editForm.dueDate || null,
                                   vatDeductionType: editForm.vatDeductionType,
                                   comment: editForm.comment,
                                 }),
@@ -2491,6 +2616,8 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                                         paymentStatus: editForm.paymentStatus,
                                         paymentDate:
                                           editForm.paymentDate || null,
+                                        paymentDueDate:
+                                          editForm.dueDate || null,
                                         comment: editForm.comment,
                                       }
                                     : null,
