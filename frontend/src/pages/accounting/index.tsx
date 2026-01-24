@@ -51,6 +51,7 @@ import { UsersService } from "../../services/users-service";
 import type { UserListModel } from "../../models/users/users";
 import { FarmsService } from "../../services/farms-service";
 import type FarmRowModel from "../../models/farms/farm-row-model";
+import ConfirmDialog from "../../components/common/confirm-dialog";
 
 interface TabPanelProps {
   children: React.ReactNode;
@@ -94,6 +95,9 @@ const AccountingPage: React.FC = () => {
   const [deletingInvoiceId, setDeletingInvoiceId] = useState<string | null>(
     null,
   );
+  const [deleteAllDialogOpen, setDeleteAllDialogOpen] = useState(false);
+  const [invoiceToDelete, setInvoiceToDelete] =
+    useState<KSeFInvoiceListModel | null>(null);
   const [users, setUsers] = useState<UserListModel[]>([]);
   const [farms, setFarms] = useState<FarmRowModel[]>([]);
 
@@ -232,13 +236,10 @@ const AccountingPage: React.FC = () => {
   }, [getCurrentFilters]);
 
   const handleDeleteAllInvoices = async () => {
-    if (
-      !window.confirm(
-        "Czy na pewno chcesz usunąć WSZYSTKIE faktury? Ta operacja jest nieodwracalna!",
-      )
-    ) {
-      return;
-    }
+    setDeleteAllDialogOpen(true);
+  };
+
+  const confirmDeleteAllInvoices = async () => {
     setDeleting(true);
     try {
       await handleApiResponse(
@@ -254,35 +255,35 @@ const AccountingPage: React.FC = () => {
       );
     } finally {
       setDeleting(false);
+      setDeleteAllDialogOpen(false);
     }
   };
 
   const handleDeleteInvoice = useCallback(
     async (invoice: KSeFInvoiceListModel) => {
-      if (
-        !window.confirm(
-          `Czy na pewno chcesz usunąć fakturę "${invoice.invoiceNumber}"? Ta operacja jest nieodwracalna!`,
-        )
-      ) {
-        return;
-      }
-      setDeletingInvoiceId(invoice.id);
-      try {
-        await handleApiResponse(
-          () => AccountingService.deleteInvoice(invoice.id),
-          () => {
-            toast.success(`Usunięto fakturę: ${invoice.invoiceNumber}`);
-            fetchInvoices();
-          },
-          undefined,
-          "Błąd podczas usuwania faktury",
-        );
-      } finally {
-        setDeletingInvoiceId(null);
-      }
+      setInvoiceToDelete(invoice);
     },
-    [fetchInvoices],
+    [],
   );
+
+  const confirmDeleteInvoice = useCallback(async () => {
+    if (!invoiceToDelete) return;
+    setDeletingInvoiceId(invoiceToDelete.id);
+    try {
+      await handleApiResponse(
+        () => AccountingService.deleteInvoice(invoiceToDelete.id),
+        () => {
+          toast.success(`Usunięto fakturę: ${invoiceToDelete.invoiceNumber}`);
+          fetchInvoices();
+        },
+        undefined,
+        "Błąd podczas usuwania faktury",
+      );
+    } finally {
+      setDeletingInvoiceId(null);
+      setInvoiceToDelete(null);
+    }
+  }, [fetchInvoices, invoiceToDelete]);
 
   // Fetch data when tab or filters change
   React.useEffect(() => {
@@ -613,6 +614,30 @@ const AccountingPage: React.FC = () => {
           }}
         />
       )}
+
+      <ConfirmDialog
+        open={deleteAllDialogOpen}
+        onClose={() => setDeleteAllDialogOpen(false)}
+        onConfirm={confirmDeleteAllInvoices}
+        title="Usuń wszystkie faktury"
+        content="Czy na pewno chcesz usunąć WSZYSTKIE faktury? Ta operacja jest nieodwracalna!"
+        confirmText="Usuń"
+        confirmColor="error"
+      />
+
+      <ConfirmDialog
+        open={Boolean(invoiceToDelete)}
+        onClose={() => setInvoiceToDelete(null)}
+        onConfirm={confirmDeleteInvoice}
+        title="Usuń fakturę"
+        content={
+          invoiceToDelete
+            ? `Czy na pewno chcesz usunąć fakturę "${invoiceToDelete.invoiceNumber}"? Ta operacja jest nieodwracalna!`
+            : "Czy na pewno chcesz usunąć fakturę? Ta operacja jest nieodwracalna!"
+        }
+        confirmText="Usuń"
+        confirmColor="error"
+      />
     </Box>
   );
 };

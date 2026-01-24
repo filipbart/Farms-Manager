@@ -19,7 +19,7 @@ public class ExpenseProductionInvoiceModel
     [AzureDiField("InvoiceDate")]
     public DateOnly? InvoiceDate { get; init; }
     
-    [AzureDiField("DueDate")]
+    [AzureDiField("DueDate", customField:true)]
     public DateOnly? DueDate { get; init; }
     
     [AzureDiField("InvoiceTotal")]

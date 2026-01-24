@@ -30,6 +30,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
 import SaveIcon from "@mui/icons-material/Save";
+import ConfirmDialog from "../../../../../components/common/confirm-dialog";
 import type { UserDetailsModel } from "../../../../../models/users/users";
 import {
   ExpenseAdvancePermissionType,
@@ -63,17 +64,20 @@ const ExpenseAdvancesTab: React.FC<ExpenseAdvancesTabProps> = ({
     ExpenseAdvanceEntity[]
   >([]);
   const [permissions, setPermissions] = useState<ExpenseAdvancePermission[]>(
-    []
+    [],
   );
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // Stan dla ustawień kolumn
   const [availableColumns, setAvailableColumns] = useState<AvailableColumn[]>(
-    []
+    [],
   );
   const [visibleColumns, setVisibleColumns] = useState<string[]>([]);
   const [savingColumns, setSavingColumns] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [permissionToDelete, setPermissionToDelete] =
+    useState<ExpenseAdvancePermission | null>(null);
 
   // Pobieranie danych
   const fetchData = async () => {
@@ -83,7 +87,7 @@ const ExpenseAdvancesTab: React.FC<ExpenseAdvancesTabProps> = ({
         await Promise.all([
           ExpenseAdvancePermissionsService.getAllExpenseAdvances(),
           ExpenseAdvancePermissionsService.getUserExpenseAdvancePermissions(
-            user.id
+            user.id,
           ),
           ExpenseAdvancePermissionsService.getUserColumnSettings(user.id),
         ]);
@@ -106,10 +110,10 @@ const ExpenseAdvancesTab: React.FC<ExpenseAdvancesTabProps> = ({
         columnSettingsResponse.responseData
       ) {
         setAvailableColumns(
-          columnSettingsResponse.responseData.availableColumns || []
+          columnSettingsResponse.responseData.availableColumns || [],
         );
         setVisibleColumns(
-          columnSettingsResponse.responseData.visibleColumns || []
+          columnSettingsResponse.responseData.visibleColumns || [],
         );
       }
     } catch (err) {
@@ -139,7 +143,7 @@ const ExpenseAdvancesTab: React.FC<ExpenseAdvancesTabProps> = ({
           toast.success("Ustawienia kolumn zostały zapisane");
         },
         undefined,
-        "Nie udało się zapisać ustawień kolumn"
+        "Nie udało się zapisać ustawień kolumn",
       );
     } catch {
       toast.error("Wystąpił błąd podczas zapisu ustawień kolumn");
@@ -153,7 +157,7 @@ const ExpenseAdvancesTab: React.FC<ExpenseAdvancesTabProps> = ({
     setVisibleColumns((prev) =>
       prev.includes(columnKey)
         ? prev.filter((c) => c !== columnKey)
-        : [...prev, columnKey]
+        : [...prev, columnKey],
     );
   };
 
@@ -187,7 +191,7 @@ const ExpenseAdvancesTab: React.FC<ExpenseAdvancesTabProps> = ({
     setSelectedPermissions((prev) =>
       prev.includes(permission)
         ? prev.filter((p) => p !== permission)
-        : [...prev, permission]
+        : [...prev, permission],
     );
   };
 
@@ -208,7 +212,7 @@ const ExpenseAdvancesTab: React.FC<ExpenseAdvancesTabProps> = ({
         await handleApiResponse(
           () =>
             ExpenseAdvancePermissionsService.updateExpenseAdvancePermission(
-              request
+              request,
             ),
           () => {
             toast.success("Pomyślnie zaktualizowano uprawnienia");
@@ -217,7 +221,7 @@ const ExpenseAdvancesTab: React.FC<ExpenseAdvancesTabProps> = ({
             handleCloseDialog();
           },
           undefined,
-          "Nie udało się zaktualizować uprawnień"
+          "Nie udało się zaktualizować uprawnień",
         );
       } else {
         // Dodawanie nowych uprawnień
@@ -229,7 +233,7 @@ const ExpenseAdvancesTab: React.FC<ExpenseAdvancesTabProps> = ({
         await handleApiResponse(
           () =>
             ExpenseAdvancePermissionsService.assignExpenseAdvancePermission(
-              request
+              request,
             ),
           () => {
             toast.success("Pomyślnie przypisano uprawnienia");
@@ -238,7 +242,7 @@ const ExpenseAdvancesTab: React.FC<ExpenseAdvancesTabProps> = ({
             handleCloseDialog();
           },
           undefined,
-          "Nie udało się przypisać uprawnień"
+          "Nie udało się przypisać uprawnień",
         );
       }
     } catch {
@@ -249,15 +253,21 @@ const ExpenseAdvancesTab: React.FC<ExpenseAdvancesTabProps> = ({
   };
 
   const handleDelete = async (permissionId: string) => {
-    if (!window.confirm("Czy na pewno chcesz usunąć to uprawnienie?")) {
-      return;
-    }
+    const targetPermission = permissions.find(
+      (permission) => permission.id === permissionId,
+    );
+    setPermissionToDelete(targetPermission ?? null);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!permissionToDelete) return;
 
     try {
       await handleApiResponse(
         () =>
           ExpenseAdvancePermissionsService.removeExpenseAdvancePermission({
-            permissionId,
+            permissionId: permissionToDelete.id,
           }),
         () => {
           toast.success("Pomyślnie usunięto uprawnienie");
@@ -265,10 +275,13 @@ const ExpenseAdvancesTab: React.FC<ExpenseAdvancesTabProps> = ({
           refetch();
         },
         undefined,
-        "Nie udało się usunąć uprawnienia"
+        "Nie udało się usunąć uprawnienia",
       );
     } catch {
       toast.error("Wystąpił błąd podczas usuwania");
+    } finally {
+      setDeleteDialogOpen(false);
+      setPermissionToDelete(null);
     }
   };
 
@@ -469,11 +482,11 @@ const ExpenseAdvancesTab: React.FC<ExpenseAdvancesTabProps> = ({
                   control={
                     <Checkbox
                       checked={selectedPermissions.includes(
-                        ExpenseAdvancePermissionType.View
+                        ExpenseAdvancePermissionType.View,
                       )}
                       onChange={() =>
                         handlePermissionToggle(
-                          ExpenseAdvancePermissionType.View
+                          ExpenseAdvancePermissionType.View,
                         )
                       }
                     />
@@ -484,11 +497,11 @@ const ExpenseAdvancesTab: React.FC<ExpenseAdvancesTabProps> = ({
                   control={
                     <Checkbox
                       checked={selectedPermissions.includes(
-                        ExpenseAdvancePermissionType.Edit
+                        ExpenseAdvancePermissionType.Edit,
                       )}
                       onChange={() =>
                         handlePermissionToggle(
-                          ExpenseAdvancePermissionType.Edit
+                          ExpenseAdvancePermissionType.Edit,
                         )
                       }
                     />
@@ -528,6 +541,20 @@ const ExpenseAdvancesTab: React.FC<ExpenseAdvancesTabProps> = ({
           </Button>
         </DialogActions>
       </Dialog>
+
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={confirmDelete}
+        title="Usuń uprawnienie"
+        content={
+          permissionToDelete
+            ? `Czy na pewno chcesz usunąć uprawnienie dla "${permissionToDelete.employeeName}"?`
+            : "Czy na pewno chcesz usunąć to uprawnienie?"
+        }
+        confirmText="Usuń"
+        confirmColor="error"
+      />
     </Box>
   );
 };

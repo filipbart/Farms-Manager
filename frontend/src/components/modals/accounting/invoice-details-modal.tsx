@@ -95,6 +95,7 @@ import { parseKSeFInvoiceXml } from "../../../utils/ksef-xml-parser";
 import ModuleEntityForm, {
   type ModuleEntityFormRef,
 } from "./module-entity-form";
+import ConfirmDialog from "../../common/confirm-dialog";
 
 // Funkcja konwertująca liczbę na słowa (po polsku)
 const numberToWords = (num: number): string => {
@@ -495,6 +496,8 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
   const [attachmentsLoading, setAttachmentsLoading] = useState(false);
   const [uploadingAttachment, setUploadingAttachment] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [attachmentToDelete, setAttachmentToDelete] =
+    useState<InvoiceAttachment | null>(null);
 
   // Audit logs state
   const [auditLogs, setAuditLogs] = useState<InvoiceAuditLog[]>([]);
@@ -1077,13 +1080,23 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
   // Handle attachment delete
   const handleAttachmentDelete = async (attachmentId: string) => {
     if (!details) return;
-    if (!window.confirm("Czy na pewno chcesz usunąć ten załącznik?")) return;
+    const target = attachments.find(
+      (attachment) => attachment.id === attachmentId,
+    );
+    setAttachmentToDelete(target ?? null);
+  };
+
+  const confirmAttachmentDelete = async () => {
+    if (!details || !attachmentToDelete) return;
 
     try {
       await handleApiResponse(
-        () => AccountingService.deleteAttachment(details.id, attachmentId),
+        () =>
+          AccountingService.deleteAttachment(details.id, attachmentToDelete.id),
         () => {
-          setAttachments((prev) => prev.filter((a) => a.id !== attachmentId));
+          setAttachments((prev) =>
+            prev.filter((a) => a.id !== attachmentToDelete.id),
+          );
           toast.success("Załącznik został usunięty");
         },
         undefined,
@@ -1091,6 +1104,8 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
       );
     } catch {
       // Error handled by handleApiResponse
+    } finally {
+      setAttachmentToDelete(null);
     }
   };
 
@@ -2737,6 +2752,20 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
           </Button>
         </DialogActions>
       </AppDialog>
+
+      <ConfirmDialog
+        open={Boolean(attachmentToDelete)}
+        onClose={() => setAttachmentToDelete(null)}
+        onConfirm={confirmAttachmentDelete}
+        title="Usuń załącznik"
+        content={
+          attachmentToDelete
+            ? `Czy na pewno chcesz usunąć załącznik "${attachmentToDelete.fileName}"?`
+            : "Czy na pewno chcesz usunąć ten załącznik?"
+        }
+        confirmText="Usuń"
+        confirmColor="error"
+      />
     </AppDialog>
   );
 };
