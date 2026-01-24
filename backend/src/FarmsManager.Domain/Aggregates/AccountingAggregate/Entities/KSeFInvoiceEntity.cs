@@ -44,6 +44,7 @@ public class KSeFInvoiceEntity : Entity
     /// <param name="farmId">Identyfikator fermy (opcjonalnie)</param>
     /// <param name="cycleId">Identyfikator cyklu (opcjonalnie)</param>
     /// <param name="paymentDate">Data płatności (opcjonalnie)</param>
+    /// <param name="quantity">Ilość (opcjonalnie)</param>
     public static KSeFInvoiceEntity CreateNew(
         string kSeFNumber,
         string invoiceNumber,
@@ -73,7 +74,8 @@ public class KSeFInvoiceEntity : Entity
         Guid? taxBusinessEntityId = null,
         Guid? farmId = null,
         Guid? cycleId = null,
-        DateOnly? paymentDate = null)
+        DateOnly? paymentDate = null,
+        decimal? quantity = null)
     {
         return new KSeFInvoiceEntity
         {
@@ -105,7 +107,8 @@ public class KSeFInvoiceEntity : Entity
             TaxBusinessEntityId = taxBusinessEntityId,
             FarmId = farmId,
             AssignedCycleId = cycleId,
-            PaymentDate = paymentDate
+            PaymentDate = paymentDate,
+            Quantity = quantity
         };
     }
 
@@ -193,6 +196,11 @@ public class KSeFInvoiceEntity : Entity
     /// Kwota VAT faktury
     /// </summary>
     public decimal VatAmount { get; init; }
+
+    /// <summary>
+    /// Ilość (opcjonalnie)
+    /// </summary>
+    public decimal? Quantity { get; init; }
 
     /// <summary>
     /// Kierunek faktury (sprzedaż/zakup)

@@ -402,7 +402,7 @@ const AccountingPage: React.FC = () => {
       ? JSON.parse(savedState)
       : {
           columns: {
-            columnVisibilityModel: { id: false },
+            columnVisibilityModel: { id: false, quantity: false },
           },
         };
   });

@@ -1640,6 +1640,35 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                     })()}
                   </Box>
 
+                  {details.moduleType === ModuleType.Gas &&
+                    (details.gasQuantity ||
+                      details.gasUnitPrice ||
+                      details.gasInvoiceTotal) && (
+                      <Box sx={{ mb: 2 }}>
+                        <Typography variant="subtitle2" fontWeight={600}>
+                          Dane dostawy gazu
+                        </Typography>
+                        <DetailRow
+                          label="Ilość [l]"
+                          value={
+                            details.gasQuantity?.toLocaleString("pl-PL") || "—"
+                          }
+                        />
+                        <DetailRow
+                          label="Cena jedn. [zł/l]"
+                          value={formatCurrency(
+                            details.gasUnitPrice ?? undefined,
+                          )}
+                        />
+                        <DetailRow
+                          label="Kwota brutto [zł]"
+                          value={formatCurrency(
+                            details.gasInvoiceTotal ?? undefined,
+                          )}
+                        />
+                      </Box>
+                    )}
+
                   {/* Footer / Notes / Additional Descriptions */}
                   {(parsedXml?.footer ||
                     details.comment ||
@@ -2309,6 +2338,8 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                           parsedXml?.additionalDescriptions,
                         bankAccountNumber:
                           parsedXml?.payment?.bankAccounts?.[0]?.accountNumber,
+                        gasQuantity: details.gasQuantity,
+                        gasUnitPrice: details.gasUnitPrice,
                       }}
                       farms={farms}
                       selectedFarmId={editForm.farmId}
@@ -2337,40 +2368,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                       onChange={(e) => {
                         const newFarmId = e.target.value;
                         handleFormChange("farmId", newFarmId);
-
-                        // If this is a non-KSeF invoice with an accepted status and has a module entry,
-                        // update the farm in the respective module
-                        if (
-                          details?.source === InvoiceSource.Manual &&
-                          details?.status === KSeFInvoiceStatus.Accepted &&
-                          details?.assignedEntityInvoiceId &&
-                          details?.moduleType &&
-                          [
-                            ModuleType.Feeds,
-                            ModuleType.Gas,
-                            ModuleType.ProductionExpenses,
-                            ModuleType.Sales,
-                          ].includes(details.moduleType as ModuleType)
-                        ) {
-                          // Update module entity farm
-                          handleApiResponse(
-                            () =>
-                              AccountingService.updateModuleEntityFarm(
-                                details.assignedEntityInvoiceId!,
-                                details.moduleType!,
-                                newFarmId,
-                              ),
-                            () => {
-                              toast.success(
-                                "Lokalizacja została zaktualizowana w module",
-                              );
-                            },
-                            undefined,
-                            "Błąd podczas aktualizacji lokalizacji w module",
-                          );
-                        }
                       }}
-                      disabled={details?.source === InvoiceSource.KSeF} // Disable for KSeF invoices
                     >
                       <MenuItem value="">
                         <em>Brak</em>
@@ -2381,15 +2379,6 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                         </MenuItem>
                       ))}
                     </Select>
-                    {details?.source === InvoiceSource.KSeF && (
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ mt: 0.5 }}
-                      >
-                        Lokalizacja faktur KSeF nie może być zmieniana
-                      </Typography>
-                    )}
                   </FormControl>
 
                   <FormControl
@@ -2597,14 +2586,20 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                     </Button>
                   )}
 
-                  {/* Save changes button for accepted invoices - only when payment status or payment date changed */}
+                  {/* Save changes button for accepted invoices - when any field changed */}
                   {details.status === KSeFInvoiceStatus.Accepted &&
                     (editForm.paymentStatus !== details.paymentStatus ||
                       editForm.paymentDate !==
                         (details.paymentDate
                           ? dayjs(details.paymentDate).format("YYYY-MM-DD")
                           : "") ||
-                      editForm.comment !== details.comment) && (
+                      editForm.comment !== details.comment ||
+                      editForm.farmId !== details.farmId ||
+                      editForm.cycleId !== details.cycleId ||
+                      editForm.vatDeductionType !== details.vatDeductionType ||
+                      editForm.assignedUserId !== details.assignedUserId ||
+                      editForm.relatedInvoiceNumber !==
+                        details.relatedInvoiceNumber) && (
                       <Button
                         variant="contained"
                         color="primary"
@@ -2612,6 +2607,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                         onClick={async () => {
                           setSaving(true);
                           try {
+                            // Update the invoice first
                             await handleApiResponse(
                               () =>
                                 AccountingService.updateInvoice(details.id, {
@@ -2620,8 +2616,43 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                                   dueDate: editForm.dueDate || null,
                                   vatDeductionType: editForm.vatDeductionType,
                                   comment: editForm.comment,
+                                  farmId: editForm.farmId || null,
+                                  cycleId: editForm.cycleId || null,
+                                  assignedUserId:
+                                    editForm.assignedUserId || null,
+                                  relatedInvoiceNumber:
+                                    editForm.relatedInvoiceNumber,
                                 }),
-                              () => {
+                              async () => {
+                                // If invoice has a module entry and farm/cycle changed, update module entity
+                                if (
+                                  details?.assignedEntityInvoiceId &&
+                                  details?.moduleType &&
+                                  [
+                                    ModuleType.Feeds,
+                                    ModuleType.Gas,
+                                    ModuleType.ProductionExpenses,
+                                    ModuleType.Sales,
+                                  ].includes(
+                                    details.moduleType as ModuleType,
+                                  ) &&
+                                  (editForm.farmId !== details.farmId ||
+                                    editForm.cycleId !== details.cycleId)
+                                ) {
+                                  await handleApiResponse(
+                                    () =>
+                                      AccountingService.updateModuleEntityFarmAndCycle(
+                                        details.assignedEntityInvoiceId!,
+                                        details.moduleType!,
+                                        editForm.farmId || "",
+                                        editForm.cycleId || "",
+                                      ),
+                                    () => {},
+                                    undefined,
+                                    "Błąd podczas aktualizacji danych w module",
+                                  );
+                                }
+
                                 toast.success("Zmiany zostały zapisane");
                                 // Update local state to reflect saved changes
                                 setDetails((prev) =>
@@ -2634,6 +2665,13 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                                         paymentDueDate:
                                           editForm.dueDate || null,
                                         comment: editForm.comment,
+                                        farmId: editForm.farmId,
+                                        cycleId: editForm.cycleId,
+                                        assignedUserId: editForm.assignedUserId,
+                                        vatDeductionType:
+                                          editForm.vatDeductionType,
+                                        relatedInvoiceNumber:
+                                          editForm.relatedInvoiceNumber,
                                       }
                                     : null,
                                 );

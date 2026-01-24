@@ -137,6 +137,9 @@ export interface KSeFInvoiceDetails extends KSeFInvoiceListModel {
   paymentDate: string | null;
   paymentDueDate: string | null;
   assignedEntityInvoiceId: string | null;
+  gasQuantity?: number | null;
+  gasUnitPrice?: number | null;
+  gasInvoiceTotal?: number | null;
   createdAt: string;
   createdBy: string | null;
   filePath: string | null;

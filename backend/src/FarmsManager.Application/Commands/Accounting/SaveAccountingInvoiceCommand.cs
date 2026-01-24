@@ -48,6 +48,7 @@ public record SaveAccountingInvoiceDto
     public string Comment { get; init; }
     public string PaymentStatus { get; init; }
     public DateOnly? PaymentDate { get; init; }
+    public decimal? Quantity { get; init; }
     
     // Module-specific data
     public SaveFeedInvoiceDto FeedData { get; init; }
@@ -73,6 +74,7 @@ public record SaveFeedInvoiceDto
 public record SaveGasDeliveryDto
 {
     public Guid FarmId { get; init; }
+    public Guid? CycleId { get; init; }
     public Guid? ContractorId { get; init; }
     public decimal UnitPrice { get; init; }
     public decimal Quantity { get; init; }
@@ -215,6 +217,7 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
                 break;
             case ModuleType.Gas:
                 farmId = data.GasData?.FarmId;
+                cycleId = data.GasData?.CycleId;
                 break;
             case ModuleType.ProductionExpenses:
                 farmId = data.ExpenseData?.FarmId;
@@ -254,7 +257,8 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
             taxBusinessEntityId: taxBusinessEntityId,
             farmId: farmId,
             cycleId: cycleId,
-            paymentDate: data.PaymentDate
+            paymentDate: data.PaymentDate,
+            quantity: data.Quantity
         );
         
         await _invoiceRepository.AddAsync(invoice, cancellationToken);
@@ -423,9 +427,25 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
             case ModuleType.Gas:
                 if (data.GasData != null)
                 {
+                    Guid contractorId;
+                    
+                    if (data.GasData.ContractorId.HasValue)
+                    {
+                        contractorId = data.GasData.ContractorId.Value;
+                    }
+                    else
+                    {
+                        // Create contractor from invoice data
+                        contractorId = await FindOrCreateGasContractor(
+                            data.SellerNip,
+                            data.SellerName,
+                            userId,
+                            cancellationToken);
+                    }
+                    
                     var gasDelivery = GasDeliveryEntity.CreateNew(
                         data.GasData.FarmId,
-                        data.GasData.ContractorId ?? Guid.Empty,
+                        contractorId,
                         data.InvoiceNumber,
                         data.InvoiceDate,
                         data.GrossAmount,
@@ -645,6 +665,36 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
             userId);
         
         await _expenseContractorRepository.AddAsync(newContractor, cancellationToken);
+        return newContractor.Id;
+    }
+
+    private async Task<Guid> FindOrCreateGasContractor(string nip, string name, Guid userId, CancellationToken cancellationToken)
+    {
+        if (!string.IsNullOrWhiteSpace(nip))
+        {
+            var normalizedNip = nip.Replace("PL", "").Replace("-", "").Replace(" ", "").Trim();
+            var contractor = await _gasContractorRepository.FirstOrDefaultAsync(
+                new GasContractorByNipSpec(normalizedNip), cancellationToken);
+            if (contractor != null)
+                return contractor.Id;
+        }
+
+        if (!string.IsNullOrWhiteSpace(name))
+        {
+            var contractor = await _gasContractorRepository.FirstOrDefaultAsync(
+                new GasContractorByNameSpec(name), cancellationToken);
+            if (contractor != null)
+                return contractor.Id;
+        }
+
+        // Create new contractor
+        var newContractor = GasContractorEntity.CreateNew(
+            name ?? "Nieznany kontrahent",
+            nip ?? "",
+            "",
+            userId);
+        
+        await _gasContractorRepository.AddAsync(newContractor, cancellationToken);
         return newContractor.Id;
     }
 }

@@ -61,6 +61,8 @@ public class GetKSeFInvoiceDetailsQueryHandler
 
         var dto = _mapper.Map<KSeFInvoiceDetailsDto>(invoice);
 
+        dto.AssignedEntityInvoiceId = invoice.AssignedEntityInvoiceId;
+
         // Pobierz dane z encji modułowej jeśli istnieje
         if (invoice.AssignedEntityInvoiceId.HasValue)
         {
@@ -93,6 +95,9 @@ public class GetKSeFInvoiceDetailsQueryHandler
                         filePath = gasDelivery.FilePath;
                         farmId = gasDelivery.FarmId;
                         location = gasDelivery.Farm?.Name;
+                        dto.GasQuantity = gasDelivery.Quantity;
+                        dto.GasUnitPrice = gasDelivery.UnitPrice;
+                        dto.GasInvoiceTotal = gasDelivery.InvoiceTotal;
                     }
                     break;
 

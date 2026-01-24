@@ -8,6 +8,7 @@ using FarmsManager.Application.Specifications.Gas;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Entities;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.AccountingAggregate.XmlModels;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
@@ -499,6 +500,9 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
         // Parsuj datę płatności z XML (DataZaplaty)
         var paymentDate = ParsePaymentDate(parsedInvoice?.Fa?.Platnosc?.DataZaplaty);
 
+        // Wyciągnij ilość z pozycji faktury (suma wszystkich pozycji)
+        var quantity = ExtractQuantity(parsedInvoice);
+
         return KSeFInvoiceEntity.CreateNew(
             kSeFNumber: invoiceItem.KsefNumber,
             invoiceNumber: invoiceItem.InvoiceNumber,
@@ -523,7 +527,8 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
             taxBusinessEntityId: taxBusinessEntityId,
             farmId: farmId,
             cycleId: cycleId,
-            paymentDate: paymentDate
+            paymentDate: paymentDate,
+            quantity: quantity
         );
     }
 
@@ -598,6 +603,21 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
             return null;
 
         return DateOnly.FromDateTime(dataZaplaty.Value);
+    }
+
+    /// <summary>
+    /// Wyciąga ilość z pozycji faktury (suma wszystkich pozycji)
+    /// </summary>
+    private static decimal? ExtractQuantity(KSeFInvoiceXml parsedInvoice)
+    {
+        if (parsedInvoice?.Fa?.FaWiersze == null || parsedInvoice.Fa.FaWiersze.Count == 0)
+            return null;
+
+        var totalQuantity = parsedInvoice.Fa.FaWiersze
+            .Where(w => w.P_8B.HasValue)
+            .Sum(w => w.P_8B.Value);
+
+        return totalQuantity > 0 ? totalQuantity : null;
     }
 
     /// <summary>

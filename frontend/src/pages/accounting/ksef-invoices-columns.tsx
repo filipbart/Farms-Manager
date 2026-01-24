@@ -263,6 +263,19 @@ export const getKSeFInvoicesColumns = ({
       }) ?? "—",
   },
   {
+    field: "quantity",
+    headerName: "Ilość",
+    width: 100,
+    type: "number",
+    headerAlign: "left",
+    align: "left",
+    valueFormatter: (value: number | null) =>
+      value?.toLocaleString("pl-PL", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }) ?? "—",
+  },
+  {
     field: "actions",
     type: "actions",
     headerName: "Akcje",

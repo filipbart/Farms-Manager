@@ -51,6 +51,8 @@ interface ModuleEntityFormProps {
     footer?: string;
     additionalDescriptions?: { key?: string; value?: string }[];
     bankAccountNumber?: string;
+    gasQuantity?: number | null;
+    gasUnitPrice?: number | null;
   };
   farms: FarmRowModel[];
   selectedFarmId: string;
@@ -185,8 +187,8 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
         invoiceNumber: invoiceData.invoiceNumber,
         invoiceDate: dayjs(invoiceData.invoiceDate).format("YYYY-MM-DD"),
         invoiceTotal: invoiceData.grossAmount,
-        unitPrice: 0,
-        quantity: 0,
+        unitPrice: invoiceData.gasUnitPrice || 0,
+        quantity: invoiceData.gasQuantity || 0,
         comment: "",
       },
     });
@@ -485,32 +487,43 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
           break;
         }
         case ModuleType.Gas: {
-          // For gas: sum quantity, get unit price from line items or calculate
-          gasForm.setValue("quantity", totalQuantity);
+          // For gas: use pre-extracted data if available (Manual invoices), otherwise calculate from line items
+          if (invoiceData.gasQuantity && invoiceData.gasUnitPrice) {
+            // Use pre-extracted data from backend (for Manual invoices)
+            gasForm.setValue("quantity", invoiceData.gasQuantity);
+            gasForm.setValue("unitPrice", invoiceData.gasUnitPrice);
+          } else {
+            // Calculate from line items (for KSeF invoices)
+            gasForm.setValue("quantity", totalQuantity);
 
-          // Try to get unit price from first line item
-          const firstGasItem = invoiceData.lineItems[0];
-          if (firstGasItem?.unitPriceGross && firstGasItem.unitPriceGross > 0) {
-            // Use unit price from line item
-            gasForm.setValue(
-              "unitPrice",
-              Math.round(firstGasItem.unitPriceGross * 100) / 100,
-            );
-          } else if (
-            firstGasItem?.unitPriceNet &&
-            firstGasItem.unitPriceNet > 0
-          ) {
-            // Use net price if gross not available
-            gasForm.setValue(
-              "unitPrice",
-              Math.round(firstGasItem.unitPriceNet * 100) / 100,
-            );
-          } else if (totalQuantity > 0) {
-            // Fallback: calculate from gross amount
-            gasForm.setValue(
-              "unitPrice",
-              Math.round((invoiceData.grossAmount / totalQuantity) * 100) / 100,
-            );
+            // Try to get unit price from first line item
+            const firstGasItem = invoiceData.lineItems?.[0];
+            if (
+              firstGasItem?.unitPriceGross &&
+              firstGasItem.unitPriceGross > 0
+            ) {
+              // Use unit price from line item
+              gasForm.setValue(
+                "unitPrice",
+                Math.round(firstGasItem.unitPriceGross * 100) / 100,
+              );
+            } else if (
+              firstGasItem?.unitPriceNet &&
+              firstGasItem.unitPriceNet > 0
+            ) {
+              // Use net price if gross not available
+              gasForm.setValue(
+                "unitPrice",
+                Math.round(firstGasItem.unitPriceNet * 100) / 100,
+              );
+            } else if (totalQuantity > 0) {
+              // Fallback: calculate from gross amount
+              gasForm.setValue(
+                "unitPrice",
+                Math.round((invoiceData.grossAmount / totalQuantity) * 100) /
+                  100,
+              );
+            }
           }
           break;
         }
@@ -528,6 +541,8 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
       invoiceData.lineItems,
       invoiceData.grossAmount,
       invoiceData.netAmount,
+      invoiceData.gasQuantity,
+      invoiceData.gasUnitPrice,
       feedForm,
       gasForm,
       expenseForm,

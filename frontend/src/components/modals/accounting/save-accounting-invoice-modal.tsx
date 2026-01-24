@@ -85,6 +85,7 @@ interface SaveAccountingInvoiceFormData {
   feedUnitPrice: number;
   // Gas module fields
   gasFarmId: string;
+  gasCycleId: string;
   gasContractorId: string;
   gasUnitPrice: number;
   gasQuantity: number;
@@ -118,7 +119,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
 
   const [loading, setLoading] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [previewBlobUrl, setPreviewBlobUrl] = useState<string | null>(null);
+  const [previewFile, setPreviewFile] = useState<File | null>(null);
   const [savedCount, setSavedCount] = useState(0);
 
   // Module data states
@@ -155,6 +156,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
   const watchedModuleType = watch("moduleType");
   const watchedFeedFarmId = watch("feedFarmId");
   const watchedGasFarmId = watch("gasFarmId");
+  const watchedGasCycleId = watch("gasCycleId");
   const watchedExpenseFarmId = watch("expenseFarmId");
   const watchedSaleFarmId = watch("saleFarmId");
   const watchedExpenseContractorId = watch("expenseContractorId");
@@ -165,10 +167,8 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
   // Fetch file blob for preview
   useEffect(() => {
     let active = true;
-    let objectUrl: string | null = null;
-
     const fetchPreview = async () => {
-      setPreviewBlobUrl(null);
+      setPreviewFile(null);
       if (!draftInvoice?.filePath) {
         return;
       }
@@ -180,8 +180,8 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
         );
 
         if (active && blob) {
-          objectUrl = URL.createObjectURL(blob);
-          setPreviewBlobUrl(objectUrl);
+          const fileName = draftInvoice.filePath.split("/").pop() || "invoice";
+          setPreviewFile(new File([blob], fileName, { type: blob.type }));
         }
       } catch (err) {
         console.error("Failed to fetch preview blob", err);
@@ -192,9 +192,6 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
 
     return () => {
       active = false;
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
-      }
     };
   }, [draftInvoice?.filePath]);
 
@@ -237,12 +234,16 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
     }
   }, [watchedFeedFarmId, farms, fetchCycles, setValue]);
 
-  // Update cycles when gas farm changes
+  // Update cycles when gas farm changes and auto-select active cycle
   useEffect(() => {
     if (watchedGasFarmId && farms.length > 0) {
+      const farm = farms.find((f) => f.id === watchedGasFarmId);
       fetchCycles(watchedGasFarmId);
+      if (farm?.activeCycle && !watchedGasCycleId) {
+        setValue("gasCycleId", farm.activeCycle.id);
+      }
     }
-  }, [watchedGasFarmId, farms, fetchCycles]);
+  }, [watchedGasFarmId, watchedGasCycleId, farms, fetchCycles, setValue]);
 
   // Update cycles when expense farm changes and auto-select active cycle
   useEffect(() => {
@@ -559,6 +560,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
         feedUnitPrice:
           moduleType === ModuleType.Feeds ? ef.feedUnitPrice || 0 : 0,
         gasFarmId: moduleType === ModuleType.Gas ? ef.farmId || "" : "",
+        gasCycleId: moduleType === ModuleType.Gas ? ef.cycleId || "" : "",
         gasContractorId:
           moduleType === ModuleType.Gas ? ef.gasContractorId || "" : "",
         gasUnitPrice: moduleType === ModuleType.Gas ? ef.gasUnitPrice || 0 : 0,
@@ -611,6 +613,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
       case ModuleType.Gas:
         gasData = {
           farmId: formData.gasFarmId,
+          cycleId: formData.gasCycleId || undefined,
           contractorId: formData.gasContractorId || undefined,
           unitPrice: formData.gasUnitPrice,
           quantity: formData.gasQuantity,
@@ -676,12 +679,12 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
   };
 
   const renderPreview = () => {
-    const url = previewBlobUrl || draftInvoice?.fileUrl;
-    if (!url) return <Typography>Brak podglądu</Typography>;
+    const file = previewFile || draftInvoice?.fileUrl;
+    if (!file) return <Typography>Brak podglądu</Typography>;
 
     return (
       <FilePreview
-        file={url}
+        file={file}
         maxHeight={isLg ? 900 : isMd ? 700 : 500}
         showPreviewButton={true}
       />
@@ -949,16 +952,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                         name="gasContractorId"
                         control={control}
                         rules={{
-                          validate: (value) => {
-                            if (watchedModuleType !== ModuleType.Gas)
-                              return true;
-                            return (
-                              !!value ||
-                              draftInvoice?.extractedFields
-                                .isNewGasContractor ||
-                              "Dostawca gazu jest wymagany"
-                            );
-                          },
+                          required: false,
                         }}
                         render={({ field: { onChange, value } }) => (
                           <Autocomplete
@@ -979,15 +973,6 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                               <TextField
                                 {...params}
                                 label="Dostawca gazu (Sprzedawca)"
-                                required
-                                error={!!errors.gasContractorId}
-                                helperText={
-                                  errors.gasContractorId?.message ||
-                                  (draftInvoice?.extractedFields
-                                    .isNewGasContractor
-                                    ? "Nowy dostawca - zostanie utworzony przy zapisie"
-                                    : undefined)
-                                }
                               />
                             )}
                           />
@@ -1681,6 +1666,28 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                         {farms.map((farm) => (
                           <MenuItem key={farm.id} value={farm.id}>
                             {farm.name}
+                          </MenuItem>
+                        ))}
+                      </LoadingTextField>
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <LoadingTextField
+                        loading={loadingCycles}
+                        select
+                        label="Cykl"
+                        fullWidth
+                        required
+                        disabled={!watchedGasFarmId}
+                        value={watchedGasCycleId || ""}
+                        error={!!errors.gasCycleId}
+                        helperText={errors.gasCycleId?.message}
+                        {...register("gasCycleId", {
+                          required: "Cykl jest wymagany",
+                        })}
+                      >
+                        {cycles.map((cycle) => (
+                          <MenuItem key={cycle.id} value={cycle.id}>
+                            {cycle.identifier}/{cycle.year}
                           </MenuItem>
                         ))}
                       </LoadingTextField>

@@ -35,7 +35,11 @@ public class KSeFInvoiceDetailsDto
     public string Comment { get; set; }
     public Guid? AssignedUserId { get; set; }
     public string AssignedUserName { get; set; }
+    public Guid? AssignedEntityInvoiceId { get; set; }
     public string RelatedInvoiceNumber { get; set; }
+    public decimal? GasQuantity { get; set; }
+    public decimal? GasUnitPrice { get; set; }
+    public decimal? GasInvoiceTotal { get; set; }
     public DateTime CreatedAt { get; set; }
     public string CreatedBy { get; set; }
     public int AttachmentsCount { get; set; }

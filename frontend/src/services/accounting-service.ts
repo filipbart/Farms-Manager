@@ -117,6 +117,7 @@ export interface SaveFeedInvoiceData {
 
 export interface SaveGasDeliveryData {
   farmId: string;
+  cycleId?: string;
   contractorId?: string;
   unitPrice: number;
   quantity: number;
@@ -374,6 +375,25 @@ export class AccountingService {
       {
         moduleType,
         farmId: newFarmId,
+      },
+    );
+  }
+
+  /**
+   * Aktualizuje fermę i cykl w powiązanej encji modułu
+   */
+  public static async updateModuleEntityFarmAndCycle(
+    entityInvoiceId: string,
+    moduleType: string,
+    newFarmId: string,
+    newCycleId?: string,
+  ) {
+    return await AxiosWrapper.patch(
+      `${ApiUrl.AccountingInvoices}/${entityInvoiceId}/module-entity/farm-cycle`,
+      {
+        moduleType,
+        farmId: newFarmId,
+        cycleId: newCycleId || null,
       },
     );
   }

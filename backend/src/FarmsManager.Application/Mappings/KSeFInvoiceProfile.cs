@@ -52,6 +52,7 @@ public class KSeFInvoiceProfile : Profile
             .ForMember(d => d.HasPdf, opt => opt.MapFrom(s => false))
             .ForMember(d => d.AssignedUserId, opt => opt.MapFrom(s => s.AssignedUserId))
             .ForMember(d => d.AssignedUserName, opt => opt.MapFrom(s => s.AssignedUser != null ? s.AssignedUser.Name : null))
+            .ForMember(d => d.AssignedEntityInvoiceId, opt => opt.MapFrom(s => s.AssignedEntityInvoiceId))
             .ForMember(d => d.CreatedAt, opt => opt.MapFrom(s => s.DateCreatedUtc))
             .ForMember(d => d.CreatedBy, opt => opt.MapFrom(s => s.Creator != null ? s.Creator.Name : null))
             .ForMember(d => d.PaymentDate, opt => opt.MapFrom(s => s.PaymentDate))
