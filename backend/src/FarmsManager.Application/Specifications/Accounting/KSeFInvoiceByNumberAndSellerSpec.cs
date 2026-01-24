@@ -9,18 +9,19 @@ public sealed class KSeFInvoiceByNumberAndSellerSpec : BaseSpecification<KSeFInv
     public KSeFInvoiceByNumberAndSellerSpec(string invoiceNumber, string normalizedSellerNip, Guid? taxBusinessEntityId)
     {
         DisableTracking();
+        EnsureExists();
 
         if (taxBusinessEntityId.HasValue)
         {
-            Query.Where(i => 
-                i.InvoiceNumber == invoiceNumber && 
+            Query.Where(i =>
+                i.InvoiceNumber == invoiceNumber &&
                 i.Status != KSeFInvoiceStatus.Rejected &&
                 (i.SellerNip == normalizedSellerNip || i.TaxBusinessEntityId == taxBusinessEntityId));
         }
         else
         {
-            Query.Where(i => 
-                i.InvoiceNumber == invoiceNumber && 
+            Query.Where(i =>
+                i.InvoiceNumber == invoiceNumber &&
                 i.Status != KSeFInvoiceStatus.Rejected &&
                 i.SellerNip == normalizedSellerNip);
         }

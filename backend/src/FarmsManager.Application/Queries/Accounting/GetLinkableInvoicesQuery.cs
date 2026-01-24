@@ -1,5 +1,6 @@
 using Ardalis.Specification;
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Entities;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Interfaces;
 using KSeF.Client.Core.Models.Invoices.Common;
@@ -93,15 +94,16 @@ public class GetLinkableInvoicesQueryHandler : IRequestHandler<GetLinkableInvoic
     };
 }
 
-public class GetSourceInvoiceSpec : Specification<KSeFInvoiceEntity>, ISingleResultSpecification<KSeFInvoiceEntity>
+public class GetSourceInvoiceSpec : BaseSpecification<KSeFInvoiceEntity>, ISingleResultSpecification<KSeFInvoiceEntity>
 {
     public GetSourceInvoiceSpec(Guid invoiceId)
     {
-        Query.Where(x => x.Id == invoiceId && x.DateDeletedUtc == null);
+        EnsureExists();
+        Query.Where(x => x.Id == invoiceId);
     }
 }
 
-public class GetLinkableInvoicesSpec : Specification<KSeFInvoiceEntity>
+public class GetLinkableInvoicesSpec : BaseSpecification<KSeFInvoiceEntity>
 {
     public GetLinkableInvoicesSpec(
         Guid sourceInvoiceId,
@@ -112,7 +114,8 @@ public class GetLinkableInvoicesSpec : Specification<KSeFInvoiceEntity>
         int limit)
     {
         // Exclude the source invoice itself and deleted invoices
-        Query.Where(x => x.Id != sourceInvoiceId && x.DateDeletedUtc == null);
+        EnsureExists();
+        Query.Where(x => x.Id != sourceInvoiceId);
 
         // Filter by contractor (same seller or buyer NIP)
         if (!string.IsNullOrEmpty(sellerNip) || !string.IsNullOrEmpty(buyerNip))
