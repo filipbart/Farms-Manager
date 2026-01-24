@@ -118,6 +118,7 @@ export interface KSeFInvoiceListModel {
   grossAmount: number;
   netAmount: number;
   vatAmount: number;
+  quantity: number | null;
   hasXml: boolean;
   hasPdf: boolean;
   assignedUserId: string | null;

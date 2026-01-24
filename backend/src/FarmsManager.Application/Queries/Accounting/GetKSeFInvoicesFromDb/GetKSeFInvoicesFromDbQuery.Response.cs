@@ -29,6 +29,7 @@ public class KSeFInvoiceFromDbDto
     public decimal GrossAmount { get; set; }
     public decimal NetAmount { get; set; }
     public decimal VatAmount { get; set; }
+    public decimal? Quantity { get; set; }
     public bool HasXml { get; set; }
     public bool HasPdf { get; set; }
     public Guid? AssignedUserId { get; set; }

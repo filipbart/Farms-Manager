@@ -60,7 +60,7 @@ public class DeleteKSeFInvoiceCommandHandler : IRequestHandler<DeleteKSeFInvoice
         // Delete associated module entity if exists
         if (invoice.AssignedEntityInvoiceId.HasValue)
         {
-            await DeleteAssociatedModuleEntity(invoice.ModuleType, invoice.AssignedEntityInvoiceId.Value, cancellationToken);
+            await DeleteAssociatedModuleEntity(invoice.ModuleType, invoice.AssignedEntityInvoiceId.Value, invoice.InvoiceNumber, cancellationToken);
         }
 
         // Soft delete the KSeF invoice
@@ -70,7 +70,7 @@ public class DeleteKSeFInvoiceCommandHandler : IRequestHandler<DeleteKSeFInvoice
         return BaseResponse.EmptyResponse;
     }
 
-    private async Task DeleteAssociatedModuleEntity(ModuleType moduleType, Guid entityId, CancellationToken cancellationToken)
+    private async Task DeleteAssociatedModuleEntity(ModuleType moduleType, Guid entityId, string invoiceNumber, CancellationToken cancellationToken)
     {
         switch (moduleType)
         {
@@ -86,6 +86,15 @@ public class DeleteKSeFInvoiceCommandHandler : IRequestHandler<DeleteKSeFInvoice
                     new GetGasDeliveryByIdSpec(entityId), cancellationToken);
                 if (gasDelivery != null)
                     await _gasDeliveryRepository.DeleteAsync(gasDelivery, cancellationToken);
+                
+                // Usuń również powiązany wpis w Kosztach Produkcyjnych (tworzony razem z dostawą gazu)
+                if (!string.IsNullOrEmpty(invoiceNumber))
+                {
+                    var gasExpenseProduction = await _expenseProductionRepository.FirstOrDefaultAsync(
+                        new GetExpenseProductionInvoiceByInvoiceNumberSpec(invoiceNumber), cancellationToken);
+                    if (gasExpenseProduction != null)
+                        await _expenseProductionRepository.DeleteAsync(gasExpenseProduction, cancellationToken);
+                }
                 break;
             
             case ModuleType.ProductionExpenses:

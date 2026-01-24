@@ -26,6 +26,7 @@ public class KSeFInvoiceProfile : Profile
             .ForMember(d => d.Status, opt => opt.MapFrom(s => s.Status.ToString()))
             .ForMember(d => d.PaymentStatus, opt => opt.MapFrom(s => s.PaymentStatus.ToString()))
             .ForMember(d => d.PaymentType, opt => opt.MapFrom(s => s.PaymentType.ToString()))
+            .ForMember(d => d.Quantity, opt => opt.MapFrom(s => s.Quantity))
             .ForMember(d => d.HasXml, opt => opt.MapFrom(s => !string.IsNullOrEmpty(s.InvoiceXml)))
             .ForMember(d => d.HasPdf, opt => opt.MapFrom(s => false))
             .ForMember(d => d.AssignedUserId, opt => opt.MapFrom(s => s.AssignedUserId))

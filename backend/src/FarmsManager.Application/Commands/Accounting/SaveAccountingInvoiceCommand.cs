@@ -20,6 +20,7 @@ using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.SlaughterhouseAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
+using FarmsManager.Shared.Extensions;
 using FluentValidation;
 using KSeF.Client.Core.Models.Invoices.Common;
 using MediatR;
@@ -113,8 +114,11 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
     private readonly IFeedInvoiceRepository _feedInvoiceRepository;
     private readonly IExpenseProductionRepository _expenseProductionRepository;
     private readonly IExpenseContractorRepository _expenseContractorRepository;
+    private readonly IExpenseTypeRepository _expenseTypeRepository;
     private readonly ISaleInvoiceRepository _saleInvoiceRepository;
     private readonly ISlaughterhouseRepository _slaughterhouseRepository;
+
+    private const string GasExpenseTypeName = "Gaz";
 
     public SaveAccountingInvoiceCommandHandler(
         IKSeFInvoiceRepository invoiceRepository,
@@ -126,6 +130,7 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
         IFeedInvoiceRepository feedInvoiceRepository,
         IExpenseProductionRepository expenseProductionRepository,
         IExpenseContractorRepository expenseContractorRepository,
+        IExpenseTypeRepository expenseTypeRepository,
         ISaleInvoiceRepository saleInvoiceRepository,
         ISlaughterhouseRepository slaughterhouseRepository)
     {
@@ -138,6 +143,7 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
         _feedInvoiceRepository = feedInvoiceRepository;
         _expenseProductionRepository = expenseProductionRepository;
         _expenseContractorRepository = expenseContractorRepository;
+        _expenseTypeRepository = expenseTypeRepository;
         _saleInvoiceRepository = saleInvoiceRepository;
         _slaughterhouseRepository = slaughterhouseRepository;
     }
@@ -427,16 +433,16 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
             case ModuleType.Gas:
                 if (data.GasData != null)
                 {
-                    Guid contractorId;
+                    Guid gasContractorId;
                     
                     if (data.GasData.ContractorId.HasValue)
                     {
-                        contractorId = data.GasData.ContractorId.Value;
+                        gasContractorId = data.GasData.ContractorId.Value;
                     }
                     else
                     {
                         // Create contractor from invoice data
-                        contractorId = await FindOrCreateGasContractor(
+                        gasContractorId = await FindOrCreateGasContractor(
                             data.SellerNip,
                             data.SellerName,
                             userId,
@@ -445,7 +451,7 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
                     
                     var gasDelivery = GasDeliveryEntity.CreateNew(
                         data.GasData.FarmId,
-                        contractorId,
+                        gasContractorId,
                         data.InvoiceNumber,
                         data.InvoiceDate,
                         data.GrossAmount,
@@ -457,6 +463,26 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
                     gasDelivery.SetFilePath(filePath);
 
                     await _gasDeliveryRepository.AddAsync(gasDelivery, cancellationToken);
+                    
+                    // Również twórz wpis w Kosztach Produkcyjnych z typem wydatku "Gaz"
+                    if (data.GasData.CycleId.HasValue)
+                    {
+                        await CreateProductionExpenseForGasAsync(
+                            data.GasData.FarmId,
+                            data.GasData.CycleId.Value,
+                            data.SellerNip,
+                            data.SellerName,
+                            data.InvoiceNumber,
+                            data.GrossAmount,
+                            data.NetAmount,
+                            data.VatAmount,
+                            data.InvoiceDate,
+                            data.Comment,
+                            filePath,
+                            userId,
+                            cancellationToken);
+                    }
+                    
                     await _gasDeliveryRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
                     return gasDelivery.Id;
                 }
@@ -696,6 +722,72 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
         
         await _gasContractorRepository.AddAsync(newContractor, cancellationToken);
         return newContractor.Id;
+    }
+
+    /// <summary>
+    /// Tworzy wpis w Kosztach Produkcyjnych dla faktury gazowej z typem wydatku "Gaz"
+    /// </summary>
+    private async Task CreateProductionExpenseForGasAsync(
+        Guid farmId,
+        Guid cycleId,
+        string sellerNip,
+        string sellerName,
+        string invoiceNumber,
+        decimal grossAmount,
+        decimal netAmount,
+        decimal vatAmount,
+        DateOnly invoiceDate,
+        string comment,
+        string filePath,
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        // Znajdź lub utwórz typ wydatku "Gaz"
+        var gasExpenseTypeId = await FindOrCreateGasExpenseTypeAsync(userId, cancellationToken);
+        
+        // Znajdź lub utwórz ExpenseContractor
+        var expenseContractorId = await FindOrCreateExpenseContractor(
+            sellerNip,
+            sellerName,
+            gasExpenseTypeId,
+            userId,
+            cancellationToken);
+        
+        // Utwórz ExpenseProduction
+        var expenseProduction = ExpenseProductionEntity.CreateNew(
+            farmId,
+            cycleId,
+            expenseContractorId,
+            gasExpenseTypeId,
+            invoiceNumber,
+            grossAmount,
+            netAmount,
+            vatAmount,
+            invoiceDate,
+            comment,
+            userId);
+        
+        expenseProduction.SetFilePath(filePath);
+        
+        await _expenseProductionRepository.AddAsync(expenseProduction, cancellationToken);
+    }
+
+    /// <summary>
+    /// Znajduje lub tworzy typ wydatku "Gaz"
+    /// </summary>
+    private async Task<Guid> FindOrCreateGasExpenseTypeAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var existingType = await _expenseTypeRepository.FirstOrDefaultAsync(
+            new ExpenseTypeByNameSpec(GasExpenseTypeName), cancellationToken);
+        
+        if (existingType != null)
+            return existingType.Id;
+        
+        // Utwórz nowy typ wydatku "Gaz"
+        var newType = ExpenseTypeEntity.CreateNew(GasExpenseTypeName, userId);
+        await _expenseTypeRepository.AddAsync(newType, cancellationToken);
+        
+        return newType.Id;
     }
 }
 

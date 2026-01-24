@@ -8,7 +8,6 @@ public sealed class KSeFInvoiceByIdSpec : BaseSpecification<KSeFInvoiceEntity>,
 {
     public KSeFInvoiceByIdSpec(Guid id)
     {
-        DisableTracking();
         Query.Where(i => i.Id == id);
     }
 }
