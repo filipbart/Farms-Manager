@@ -57,10 +57,10 @@ public class DeleteKSeFInvoiceCommandHandler : IRequestHandler<DeleteKSeFInvoice
         if (invoice.InvoiceSource == KSeFInvoiceSource.KSeF)
             throw DomainException.BadRequest("Nie można usunąć faktury z KSeF. Można usuwać tylko faktury dodane ręcznie.");
 
-        // Delete associated module entity if exists
+        // Soft delete associated module entity if exists
         if (invoice.AssignedEntityInvoiceId.HasValue)
         {
-            await DeleteAssociatedModuleEntity(invoice.ModuleType, invoice.AssignedEntityInvoiceId.Value, invoice.InvoiceNumber, cancellationToken);
+            await SoftDeleteAssociatedModuleEntity(invoice.ModuleType, invoice.AssignedEntityInvoiceId.Value, invoice.InvoiceNumber, userId, cancellationToken);
         }
 
         // Soft delete the KSeF invoice
@@ -70,7 +70,7 @@ public class DeleteKSeFInvoiceCommandHandler : IRequestHandler<DeleteKSeFInvoice
         return BaseResponse.EmptyResponse;
     }
 
-    private async Task DeleteAssociatedModuleEntity(ModuleType moduleType, Guid entityId, string invoiceNumber, CancellationToken cancellationToken)
+    private async Task SoftDeleteAssociatedModuleEntity(ModuleType moduleType, Guid entityId, string invoiceNumber, Guid userId, CancellationToken cancellationToken)
     {
         switch (moduleType)
         {
@@ -78,14 +78,20 @@ public class DeleteKSeFInvoiceCommandHandler : IRequestHandler<DeleteKSeFInvoice
                 var feedInvoice = await _feedInvoiceRepository.FirstOrDefaultAsync(
                     new GetFeedInvoiceByIdSpec(entityId), cancellationToken);
                 if (feedInvoice != null)
-                    await _feedInvoiceRepository.DeleteAsync(feedInvoice, cancellationToken);
+                {
+                    feedInvoice.Delete(userId);
+                    await _feedInvoiceRepository.UpdateAsync(feedInvoice, cancellationToken);
+                }
                 break;
             
             case ModuleType.Gas:
                 var gasDelivery = await _gasDeliveryRepository.FirstOrDefaultAsync(
                     new GetGasDeliveryByIdSpec(entityId), cancellationToken);
                 if (gasDelivery != null)
-                    await _gasDeliveryRepository.DeleteAsync(gasDelivery, cancellationToken);
+                {
+                    gasDelivery.Delete(userId);
+                    await _gasDeliveryRepository.UpdateAsync(gasDelivery, cancellationToken);
+                }
                 
                 // Usuń również powiązany wpis w Kosztach Produkcyjnych (tworzony razem z dostawą gazu)
                 if (!string.IsNullOrEmpty(invoiceNumber))
@@ -93,7 +99,10 @@ public class DeleteKSeFInvoiceCommandHandler : IRequestHandler<DeleteKSeFInvoice
                     var gasExpenseProduction = await _expenseProductionRepository.FirstOrDefaultAsync(
                         new GetExpenseProductionInvoiceByInvoiceNumberSpec(invoiceNumber), cancellationToken);
                     if (gasExpenseProduction != null)
-                        await _expenseProductionRepository.DeleteAsync(gasExpenseProduction, cancellationToken);
+                    {
+                        gasExpenseProduction.Delete(userId);
+                        await _expenseProductionRepository.UpdateAsync(gasExpenseProduction, cancellationToken);
+                    }
                 }
                 break;
             
@@ -101,14 +110,20 @@ public class DeleteKSeFInvoiceCommandHandler : IRequestHandler<DeleteKSeFInvoice
                 var expenseProduction = await _expenseProductionRepository.FirstOrDefaultAsync(
                     new GetExpenseProductionByIdSpec(entityId), cancellationToken);
                 if (expenseProduction != null)
-                    await _expenseProductionRepository.DeleteAsync(expenseProduction, cancellationToken);
+                {
+                    expenseProduction.Delete(userId);
+                    await _expenseProductionRepository.UpdateAsync(expenseProduction, cancellationToken);
+                }
                 break;
             
             case ModuleType.Sales:
                 var saleInvoice = await _saleInvoiceRepository.FirstOrDefaultAsync(
                     new SaleInvoiceByIdSpec(entityId), cancellationToken);
                 if (saleInvoice != null)
-                    await _saleInvoiceRepository.DeleteAsync(saleInvoice, cancellationToken);
+                {
+                    saleInvoice.Delete(userId);
+                    await _saleInvoiceRepository.UpdateAsync(saleInvoice, cancellationToken);
+                }
                 break;
         }
     }
