@@ -404,6 +404,11 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
             case ModuleType.Feeds:
                 if (data.FeedData != null)
                 {
+                    // Calculate amounts based on quantity and unit price (like in SaveFeedInvoiceDataCommand)
+                    var feedNetAmount = data.FeedData.Quantity * data.FeedData.UnitPrice;
+                    var feedVatAmount = feedNetAmount * 0.23m; // 23% VAT
+                    var feedGrossAmount = feedNetAmount + feedVatAmount;
+                    
                     var feedInvoice = FeedInvoiceEntity.CreateNew(
                         data.FeedData.FarmId,
                         data.FeedData.CycleId,
@@ -416,9 +421,9 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
                         data.FeedData.UnitPrice,
                         data.InvoiceDate,
                         data.DueDate ?? data.InvoiceDate,
-                        data.GrossAmount,
-                        data.NetAmount,
-                        data.VatAmount,
+                        feedGrossAmount,
+                        feedNetAmount,
+                        feedVatAmount,
                         data.Comment,
                         userId);
                     

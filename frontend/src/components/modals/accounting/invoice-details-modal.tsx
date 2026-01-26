@@ -710,51 +710,30 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
       if (!details) return;
       setSaving(true);
       try {
-        // Check if we're changing from Accepted to Rejected and have a module entry
         const isChangingToRejected = newStatus === KSeFInvoiceStatus.Rejected;
-        const wasAccepted = details.status === KSeFInvoiceStatus.Accepted;
-        const hasModuleEntry =
-          details.assignedEntityInvoiceId && details.moduleType;
 
-        if (isChangingToRejected && wasAccepted && hasModuleEntry) {
-          // First delete the module entry, then update the status
+        if (isChangingToRejected) {
+          // Use dedicated reject endpoint
           await handleApiResponse(
-            () =>
-              AccountingService.deleteModuleEntity(
-                details.assignedEntityInvoiceId!,
-                details.moduleType!,
-              ),
+            () => AccountingService.rejectInvoice(details.id),
             () => {
-              // Module entry deleted successfully, now update the status
-              return handleApiResponse(
-                () =>
-                  AccountingService.updateInvoice(details.id, {
-                    status: newStatus,
-                  }),
-                () => {
-                  toast.success(
-                    "Status faktury został zmieniony i wpis w module usunięty",
-                  );
-                  setDetails((prev) =>
-                    prev
-                      ? {
-                          ...prev,
-                          status: newStatus,
-                          assignedEntityInvoiceId: null,
-                        }
-                      : null,
-                  );
-                  onSave?.();
-                },
-                undefined,
-                "Błąd podczas zmiany statusu",
+              toast.success("Faktura została odrzucona");
+              setDetails((prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      status: newStatus,
+                      assignedEntityInvoiceId: null,
+                    }
+                  : null,
               );
+              onSave?.();
             },
             undefined,
-            "Błąd podczas usuwania wpisu z modułu",
+            "Błąd podczas odrzucania faktury",
           );
         } else {
-          // Normal status change without module entry deletion
+          // Normal status change for other statuses
           await handleApiResponse(
             () =>
               AccountingService.updateInvoice(details.id, {
@@ -836,19 +815,28 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
   const handleAcceptClick = useCallback(async () => {
     if (!details) return;
 
-    // Validate farm and cycle are selected
-    if (!editForm.farmId) {
+    // Validate farm and cycle are selected for modules that require them
+    const currentModule = editForm.moduleType || ModuleType.None;
+    const requiresFarmAndCycle = [
+      ModuleType.Feeds,
+      ModuleType.Gas,
+      ModuleType.ProductionExpenses,
+      ModuleType.Sales,
+    ].includes(currentModule as ModuleType);
+
+    const requiresFarmOnly = currentModule === ModuleType.Investments;
+
+    if ((requiresFarmAndCycle || requiresFarmOnly) && !editForm.farmId) {
       toast.warning(
         "Wybierz lokalizację (fermę) przed zaakceptowaniem faktury",
       );
       return;
     }
-    if (!editForm.cycleId) {
+    if (requiresFarmAndCycle && !editForm.cycleId) {
       toast.warning("Wybierz cykl przed zaakceptowaniem faktury");
       return;
     }
 
-    const currentModule = editForm.moduleType || ModuleType.None;
     if (moduleRequiresEntity(currentModule)) {
       // Submit the module form directly (creates entry and changes status)
       if (moduleFormRef.current) {
@@ -1809,9 +1797,32 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                           {details.paymentDate && (
                             <DetailRow
                               label="Data płatności"
-                              value={dayjs(details.paymentDate).format(
-                                "YYYY-MM-DD",
-                              )}
+                              value={
+                                <Box
+                                  sx={{
+                                    backgroundColor:
+                                      details.paymentStatus ===
+                                        KSeFPaymentStatus.PaidCash ||
+                                      details.paymentStatus ===
+                                        KSeFPaymentStatus.PaidTransfer
+                                        ? "yellow.light"
+                                        : "transparent",
+                                    padding:
+                                      details.paymentStatus ===
+                                        KSeFPaymentStatus.PaidCash ||
+                                      details.paymentStatus ===
+                                        KSeFPaymentStatus.PaidTransfer
+                                        ? "2px 6px"
+                                        : "0",
+                                    borderRadius: 1,
+                                    display: "inline-block",
+                                  }}
+                                >
+                                  {dayjs(details.paymentDate).format(
+                                    "YYYY-MM-DD",
+                                  )}
+                                </Box>
+                              }
                             />
                           )}
                         </Box>
@@ -2360,50 +2371,63 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                     />
                   )}
 
-                  <FormControl fullWidth size="small">
-                    <InputLabel>Lokalizacja (Ferma)</InputLabel>
-                    <Select
-                      value={editForm.farmId}
-                      label="Lokalizacja (Ferma)"
-                      onChange={(e) => {
-                        const newFarmId = e.target.value;
-                        handleFormChange("farmId", newFarmId);
-                      }}
-                    >
-                      <MenuItem value="">
-                        <em>Brak</em>
-                      </MenuItem>
-                      {farms.map((farm) => (
-                        <MenuItem key={farm.id} value={farm.id}>
-                          {farm.name}
+                  {/* Farm field - show for Feeds, Gas, ProductionExpenses, Sales, Investments */}
+                  {(editForm.moduleType === ModuleType.Feeds ||
+                    editForm.moduleType === ModuleType.Gas ||
+                    editForm.moduleType === ModuleType.ProductionExpenses ||
+                    editForm.moduleType === ModuleType.Sales ||
+                    editForm.moduleType === ModuleType.Investments) && (
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Lokalizacja (Ferma)</InputLabel>
+                      <Select
+                        value={editForm.farmId}
+                        label="Lokalizacja (Ferma)"
+                        onChange={(e) => {
+                          const newFarmId = e.target.value;
+                          handleFormChange("farmId", newFarmId);
+                        }}
+                      >
+                        <MenuItem value="">
+                          <em>Brak</em>
                         </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                        {farms.map((farm) => (
+                          <MenuItem key={farm.id} value={farm.id}>
+                            {farm.name}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  )}
 
-                  <FormControl
-                    fullWidth
-                    size="small"
-                    disabled={!editForm.farmId}
-                  >
-                    <InputLabel>Cykl</InputLabel>
-                    <Select
-                      value={editForm.cycleId}
-                      label="Cykl"
-                      onChange={(e) =>
-                        handleFormChange("cycleId", e.target.value)
-                      }
+                  {/* Cycle field - show only for Feeds, Gas, ProductionExpenses, Sales (NOT for Investments) */}
+                  {(editForm.moduleType === ModuleType.Feeds ||
+                    editForm.moduleType === ModuleType.Gas ||
+                    editForm.moduleType === ModuleType.ProductionExpenses ||
+                    editForm.moduleType === ModuleType.Sales) && (
+                    <FormControl
+                      fullWidth
+                      size="small"
+                      disabled={!editForm.farmId}
                     >
-                      <MenuItem value="">
-                        <em>Brak</em>
-                      </MenuItem>
-                      {cycles.map((cycle) => (
-                        <MenuItem key={cycle.id} value={cycle.id}>
-                          {cycle.identifier}/{cycle.year}
+                      <InputLabel>Cykl</InputLabel>
+                      <Select
+                        value={editForm.cycleId}
+                        label="Cykl"
+                        onChange={(e) =>
+                          handleFormChange("cycleId", e.target.value)
+                        }
+                      >
+                        <MenuItem value="">
+                          <em>Brak</em>
                         </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                        {cycles.map((cycle) => (
+                          <MenuItem key={cycle.id} value={cycle.id}>
+                            {cycle.identifier}/{cycle.year}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  )}
 
                   <FormControl fullWidth size="small">
                     <InputLabel>Typ odliczenia VAT</InputLabel>

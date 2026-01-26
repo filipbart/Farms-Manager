@@ -361,6 +361,19 @@ public class AccountingController : BaseController
     }
 
     /// <summary>
+    /// Odrzuca fakturę i usuwa powiązany wpis z modułu (jeśli istnieje).
+    /// Zmienia status faktury na "Rejected".
+    /// </summary>
+    [HttpPost("invoices/{invoiceId:guid}/reject")]
+    [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> RejectInvoice(Guid invoiceId)
+    {
+        var result = await _mediator.Send(new RejectKSeFInvoiceCommand(invoiceId));
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Synchronizuje status płatności między fakturą KSeF a powiązanym modułem
     /// </summary>
     [HttpPost("invoices/{invoiceId:guid}/sync-payment-status")]

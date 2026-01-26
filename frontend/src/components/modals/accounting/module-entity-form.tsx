@@ -23,6 +23,10 @@ import { ExpensesService } from "../../../services/expenses-service";
 import { SlaughterhousesService } from "../../../services/slaughterhouses-service";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
 import {
+  formatNumberWithSpaces,
+  parseFormattedNumber,
+} from "../../../utils/number-format";
+import {
   ModuleType,
   type KSeFLineItem,
 } from "../../../models/accounting/ksef-invoice";
@@ -767,23 +771,22 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
           <TextField
             label="Ilość [kg]"
             size="small"
-            type="number"
-            value={feedForm.watch("quantity")}
-            onChange={(e) =>
-              feedForm.setValue("quantity", parseFloat(e.target.value) || 0)
-            }
+            value={formatNumberWithSpaces(feedForm.watch("quantity") || "")}
+            onChange={(e) => {
+              const parsed = parseFormattedNumber(e.target.value);
+              feedForm.setValue("quantity", parsed ? Number(parsed) : 0);
+            }}
             sx={{ flex: 1 }}
             required
           />
           <TextField
             label="Cena jedn. [zł/kg]"
             size="small"
-            type="number"
-            inputProps={{ step: "0.01" }}
-            value={feedForm.watch("unitPrice")}
-            onChange={(e) =>
-              feedForm.setValue("unitPrice", parseFloat(e.target.value) || 0)
-            }
+            value={formatNumberWithSpaces(feedForm.watch("unitPrice") || "")}
+            onChange={(e) => {
+              const parsed = parseFormattedNumber(e.target.value);
+              feedForm.setValue("unitPrice", parsed ? Number(parsed) : 0);
+            }}
             sx={{ flex: 1 }}
             required
           />
@@ -793,34 +796,31 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
           <TextField
             label="Netto [zł]"
             size="small"
-            type="number"
-            inputProps={{ step: "0.01" }}
-            value={feedForm.watch("subTotal")}
-            onChange={(e) =>
-              feedForm.setValue("subTotal", parseFloat(e.target.value) || 0)
-            }
+            value={formatNumberWithSpaces(feedForm.watch("subTotal") || "")}
+            onChange={(e) => {
+              const parsed = parseFormattedNumber(e.target.value);
+              feedForm.setValue("subTotal", parsed ? Number(parsed) : 0);
+            }}
             sx={{ flex: 1 }}
           />
           <TextField
             label="VAT [zł]"
             size="small"
-            type="number"
-            inputProps={{ step: "0.01" }}
-            value={feedForm.watch("vatAmount")}
-            onChange={(e) =>
-              feedForm.setValue("vatAmount", parseFloat(e.target.value) || 0)
-            }
+            value={formatNumberWithSpaces(feedForm.watch("vatAmount") || "")}
+            onChange={(e) => {
+              const parsed = parseFormattedNumber(e.target.value);
+              feedForm.setValue("vatAmount", parsed ? Number(parsed) : 0);
+            }}
             sx={{ flex: 1 }}
           />
           <TextField
             label="Brutto [zł]"
             size="small"
-            type="number"
-            inputProps={{ step: "0.01" }}
-            value={feedForm.watch("invoiceTotal")}
-            onChange={(e) =>
-              feedForm.setValue("invoiceTotal", parseFloat(e.target.value) || 0)
-            }
+            value={formatNumberWithSpaces(feedForm.watch("invoiceTotal") || "")}
+            onChange={(e) => {
+              const parsed = parseFormattedNumber(e.target.value);
+              feedForm.setValue("invoiceTotal", parsed ? Number(parsed) : 0);
+            }}
             sx={{ flex: 1 }}
           />
         </Box>
@@ -870,24 +870,22 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
           <TextField
             label="Ilość [l]"
             size="small"
-            type="number"
-            inputProps={{ step: "0.01" }}
-            value={gasForm.watch("quantity")}
-            onChange={(e) =>
-              gasForm.setValue("quantity", parseFloat(e.target.value) || 0)
-            }
+            value={formatNumberWithSpaces(gasForm.watch("quantity") || "")}
+            onChange={(e) => {
+              const parsed = parseFormattedNumber(e.target.value);
+              gasForm.setValue("quantity", parsed ? Number(parsed) : 0);
+            }}
             sx={{ flex: 1 }}
             required
           />
           <TextField
             label="Cena jedn. [zł/l]"
             size="small"
-            type="number"
-            inputProps={{ step: "0.01" }}
-            value={gasForm.watch("unitPrice")}
-            onChange={(e) =>
-              gasForm.setValue("unitPrice", parseFloat(e.target.value) || 0)
-            }
+            value={formatNumberWithSpaces(gasForm.watch("unitPrice") || "")}
+            onChange={(e) => {
+              const parsed = parseFormattedNumber(e.target.value);
+              gasForm.setValue("unitPrice", parsed ? Number(parsed) : 0);
+            }}
             sx={{ flex: 1 }}
             required
           />
@@ -896,12 +894,12 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
         <TextField
           label="Kwota brutto [zł]"
           size="small"
-          type="number"
-          inputProps={{ step: "0.01" }}
-          value={gasForm.watch("invoiceTotal")}
-          onChange={(e) =>
-            gasForm.setValue("invoiceTotal", parseFloat(e.target.value) || 0)
-          }
+          value={formatNumberWithSpaces(gasForm.watch("invoiceTotal") || "")}
+          onChange={(e) => {
+            const parsed = parseFormattedNumber(e.target.value);
+            gasForm.setValue("invoiceTotal", parsed ? Number(parsed) : 0);
+          }}
+          required
         />
       </Box>
     );
@@ -973,37 +971,33 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
           <TextField
             label="Netto [zł]"
             size="small"
-            type="number"
-            inputProps={{ step: "0.01" }}
-            value={expenseForm.watch("subTotal")}
-            onChange={(e) =>
-              expenseForm.setValue("subTotal", parseFloat(e.target.value) || 0)
-            }
+            value={formatNumberWithSpaces(expenseForm.watch("subTotal") || "")}
+            onChange={(e) => {
+              const parsed = parseFormattedNumber(e.target.value);
+              expenseForm.setValue("subTotal", parsed ? Number(parsed) : 0);
+            }}
             sx={{ flex: 1 }}
           />
           <TextField
             label="VAT [zł]"
             size="small"
-            type="number"
-            inputProps={{ step: "0.01" }}
-            value={expenseForm.watch("vatAmount")}
-            onChange={(e) =>
-              expenseForm.setValue("vatAmount", parseFloat(e.target.value) || 0)
-            }
+            value={formatNumberWithSpaces(expenseForm.watch("vatAmount") || "")}
+            onChange={(e) => {
+              const parsed = parseFormattedNumber(e.target.value);
+              expenseForm.setValue("vatAmount", parsed ? Number(parsed) : 0);
+            }}
             sx={{ flex: 1 }}
           />
           <TextField
             label="Brutto [zł]"
             size="small"
-            type="number"
-            inputProps={{ step: "0.01" }}
-            value={expenseForm.watch("invoiceTotal")}
-            onChange={(e) =>
-              expenseForm.setValue(
-                "invoiceTotal",
-                parseFloat(e.target.value) || 0,
-              )
-            }
+            value={formatNumberWithSpaces(
+              expenseForm.watch("invoiceTotal") || "",
+            )}
+            onChange={(e) => {
+              const parsed = parseFormattedNumber(e.target.value);
+              expenseForm.setValue("invoiceTotal", parsed ? Number(parsed) : 0);
+            }}
             sx={{ flex: 1 }}
           />
         </Box>
@@ -1044,34 +1038,31 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
           <TextField
             label="Netto [zł]"
             size="small"
-            type="number"
-            inputProps={{ step: "0.01" }}
-            value={saleForm.watch("subTotal")}
-            onChange={(e) =>
-              saleForm.setValue("subTotal", parseFloat(e.target.value) || 0)
-            }
+            value={formatNumberWithSpaces(saleForm.watch("subTotal") || "")}
+            onChange={(e) => {
+              const parsed = parseFormattedNumber(e.target.value);
+              saleForm.setValue("subTotal", parsed ? Number(parsed) : 0);
+            }}
             sx={{ flex: 1 }}
           />
           <TextField
             label="VAT [zł]"
             size="small"
-            type="number"
-            inputProps={{ step: "0.01" }}
-            value={saleForm.watch("vatAmount")}
-            onChange={(e) =>
-              saleForm.setValue("vatAmount", parseFloat(e.target.value) || 0)
-            }
+            value={formatNumberWithSpaces(saleForm.watch("vatAmount") || "")}
+            onChange={(e) => {
+              const parsed = parseFormattedNumber(e.target.value);
+              saleForm.setValue("vatAmount", parsed ? Number(parsed) : 0);
+            }}
             sx={{ flex: 1 }}
           />
           <TextField
             label="Brutto [zł]"
             size="small"
-            type="number"
-            inputProps={{ step: "0.01" }}
-            value={saleForm.watch("invoiceTotal")}
-            onChange={(e) =>
-              saleForm.setValue("invoiceTotal", parseFloat(e.target.value) || 0)
-            }
+            value={formatNumberWithSpaces(saleForm.watch("invoiceTotal") || "")}
+            onChange={(e) => {
+              const parsed = parseFormattedNumber(e.target.value);
+              saleForm.setValue("invoiceTotal", parsed ? Number(parsed) : 0);
+            }}
             sx={{ flex: 1 }}
           />
         </Box>

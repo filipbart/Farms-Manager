@@ -353,6 +353,17 @@ export class AccountingService {
   }
 
   /**
+   * Odrzuca fakturę i usuwa powiązany wpis z modułu (jeśli istnieje).
+   * Zmienia status faktury na "Rejected".
+   */
+  public static async rejectInvoice(invoiceId: string) {
+    return await AxiosWrapper.post(
+      ApiUrl.AccountingRejectInvoice(invoiceId),
+      {},
+    );
+  }
+
+  /**
    * Wstrzymuje fakturę i przypisuje ją do innego pracownika (nie zmienia statusu)
    */
   public static async holdInvoice(invoiceId: string, data: HoldInvoiceData) {

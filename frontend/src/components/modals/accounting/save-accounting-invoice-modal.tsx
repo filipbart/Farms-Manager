@@ -29,6 +29,10 @@ import FilePreview from "../../common/file-preview";
 import { Controller, useForm } from "react-hook-form";
 import LoadingButton from "../../common/loading-button";
 import LoadingTextField from "../../common/loading-textfield";
+import {
+  formatNumberWithSpaces,
+  parseFormattedNumber,
+} from "../../../utils/number-format";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
@@ -155,6 +159,8 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
 
   const watchedModuleType = watch("moduleType");
   const watchedFeedFarmId = watch("feedFarmId");
+  const watchedFeedQuantity = watch("feedQuantity");
+  const watchedFeedUnitPrice = watch("feedUnitPrice");
   const watchedGasFarmId = watch("gasFarmId");
   const watchedGasCycleId = watch("gasCycleId");
   const watchedExpenseFarmId = watch("expenseFarmId");
@@ -438,7 +444,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
         setValue("saleSlaughterhouseId", matchedSlaughterhouse.id);
       }
     }
-  }, [watchedModuleType, draftInvoice, slaughterhouses, setValue]);
+  }, [watchedModuleType, draftInvoice, slaughterhouses, setValue, savedCount]);
 
   // Auto-set payment date when payment status changes to paid
   useEffect(() => {
@@ -582,6 +588,39 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
     }
   }, [currentIndex, draftInvoices, reset, open, handleClose]);
 
+  // Auto-calculate amounts for Feeds module based on quantity and unit price
+  useEffect(() => {
+    if (
+      watchedModuleType === ModuleType.Feeds &&
+      watchedFeedQuantity &&
+      watchedFeedUnitPrice
+    ) {
+      const quantity = Number(watchedFeedQuantity);
+      const unitPrice = Number(watchedFeedUnitPrice);
+
+      if (
+        !isNaN(quantity) &&
+        !isNaN(unitPrice) &&
+        quantity > 0 &&
+        unitPrice > 0
+      ) {
+        // Calculate net amount (quantity * unit price)
+        const netAmount = quantity * unitPrice;
+
+        // Calculate VAT amount (23% of net amount)
+        const vatAmount = netAmount * 0.23;
+
+        // Calculate gross amount (net + VAT)
+        const grossAmount = netAmount + vatAmount;
+
+        // Round to 2 decimal places
+        setValue("netAmount", Math.round(netAmount * 100) / 100);
+        setValue("vatAmount", Math.round(vatAmount * 100) / 100);
+        setValue("grossAmount", Math.round(grossAmount * 100) / 100);
+      }
+    }
+  }, [watchedModuleType, watchedFeedQuantity, watchedFeedUnitPrice, setValue]);
+
   const handleSave = async (formData: SaveAccountingInvoiceFormData) => {
     if (!draftInvoice) return;
 
@@ -694,6 +733,313 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
   if (!draftInvoice) {
     return null;
   }
+
+  const invoiceDetailsSection = (
+    <>
+      <Grid size={12}>
+        <Divider>
+          <Typography variant="caption">Dane faktury</Typography>
+        </Divider>
+      </Grid>
+
+      <Grid size={{ xs: 12, sm: 4 }}>
+        <TextField
+          label="Numer faktury"
+          error={!!errors.invoiceNumber}
+          helperText={errors.invoiceNumber?.message}
+          {...register("invoiceNumber", {
+            required: "Numer faktury jest wymagany",
+          })}
+          fullWidth
+          slotProps={{ inputLabel: { shrink: true } }}
+        />
+      </Grid>
+
+      <Grid size={{ xs: 12, sm: 4 }}>
+        <Controller
+          name="invoiceDate"
+          control={control}
+          rules={{
+            required: "Data wystawienia faktury jest wymagana",
+          }}
+          render={({ field }) => (
+            <DatePicker
+              label="Data wystawienia"
+              format="DD.MM.YYYY"
+              value={field.value ? dayjs(field.value) : null}
+              onChange={(date) =>
+                field.onChange(date ? dayjs(date).format("YYYY-MM-DD") : "")
+              }
+              slotProps={{
+                textField: {
+                  fullWidth: true,
+                  error: !!errors.invoiceDate,
+                  helperText: errors.invoiceDate?.message,
+                },
+              }}
+            />
+          )}
+        />
+      </Grid>
+
+      <Grid size={{ xs: 12, sm: 4 }}>
+        <Controller
+          name="dueDate"
+          control={control}
+          rules={{
+            required: "Termin płatności jest wymagany",
+            validate: (value) => {
+              if (!value) {
+                return "Termin płatności jest wymagany - uzupełnij to pole";
+              }
+              return true;
+            },
+          }}
+          render={({ field }) => (
+            <DatePicker
+              label="Termin płatności"
+              format="DD.MM.YYYY"
+              value={field.value ? dayjs(field.value) : null}
+              onChange={(date) =>
+                field.onChange(date ? dayjs(date).format("YYYY-MM-DD") : "")
+              }
+              slotProps={{
+                textField: {
+                  fullWidth: true,
+                  error: !!errors.dueDate,
+                  helperText: errors.dueDate?.message,
+                },
+              }}
+            />
+          )}
+        />
+      </Grid>
+
+      <Grid size={{ xs: 12, sm: 4 }}>
+        <Controller
+          name="netAmount"
+          control={control}
+          rules={{
+            required: "Kwota netto jest wymagana",
+            validate: (value) => {
+              const num = Number(value);
+              return (
+                (!isNaN(num) && num >= 0) ||
+                "Kwota musi być liczbą większą lub równą 0"
+              );
+            },
+          }}
+          render={({ field }) => (
+            <TextField
+              label="Kwota netto [zł]"
+              value={formatNumberWithSpaces(field.value || "")}
+              onChange={(e) => {
+                const parsed = parseFormattedNumber(e.target.value);
+                field.onChange(parsed ? Number(parsed) : "");
+              }}
+              error={!!errors.netAmount}
+              helperText={errors.netAmount?.message}
+              fullWidth
+              required
+              slotProps={{
+                inputLabel: { shrink: true },
+              }}
+            />
+          )}
+        />
+      </Grid>
+
+      <Grid size={{ xs: 12, sm: 4 }}>
+        <Controller
+          name="vatAmount"
+          control={control}
+          rules={{
+            required: "Kwota VAT jest wymagana",
+            validate: (value) => {
+              const num = Number(value);
+              return (
+                (!isNaN(num) && num >= 0) ||
+                "Kwota musi być liczbą większą lub równą 0"
+              );
+            },
+          }}
+          render={({ field }) => (
+            <TextField
+              label="Kwota VAT [zł]"
+              value={formatNumberWithSpaces(field.value || "")}
+              onChange={(e) => {
+                const parsed = parseFormattedNumber(e.target.value);
+                field.onChange(parsed ? Number(parsed) : "");
+              }}
+              error={!!errors.vatAmount}
+              helperText={errors.vatAmount?.message}
+              fullWidth
+              required
+              slotProps={{
+                inputLabel: { shrink: true },
+              }}
+            />
+          )}
+        />
+      </Grid>
+
+      <Grid size={{ xs: 12, sm: 4 }}>
+        <Controller
+          name="grossAmount"
+          control={control}
+          rules={{
+            required: "Kwota brutto jest wymagana",
+            validate: (value) => {
+              const num = Number(value);
+              return (
+                (!isNaN(num) && num >= 0) ||
+                "Kwota musi być liczbą większą lub równą 0"
+              );
+            },
+          }}
+          render={({ field }) => (
+            <TextField
+              label="Kwota brutto [zł]"
+              value={formatNumberWithSpaces(field.value || "")}
+              onChange={(e) => {
+                const parsed = parseFormattedNumber(e.target.value);
+                field.onChange(parsed ? Number(parsed) : "");
+              }}
+              error={!!errors.grossAmount}
+              helperText={errors.grossAmount?.message}
+              fullWidth
+              required
+              slotProps={{
+                inputLabel: { shrink: true },
+              }}
+            />
+          )}
+        />
+      </Grid>
+    </>
+  );
+
+  const classificationSection = (
+    <>
+      <Grid size={12}>
+        <Divider>
+          <Typography variant="caption">Klasyfikacja faktury</Typography>
+        </Divider>
+      </Grid>
+
+      <Grid size={{ xs: 12, sm: 6 }}>
+        <FormControl fullWidth>
+          <InputLabel id="document-type-label">Typ dokumentu</InputLabel>
+          <Select
+            labelId="document-type-label"
+            label="Typ dokumentu"
+            defaultValue={InvoiceDocumentType.Vat}
+            {...register("documentType")}
+          >
+            {Object.entries(InvoiceDocumentTypeLabels).map(([key, label]) => (
+              <MenuItem key={key} value={key}>
+                {label}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Grid>
+
+      <Grid size={{ xs: 12, sm: 6 }}>
+        <FormControl fullWidth>
+          <InputLabel id="vat-deduction-label">Odliczenie VAT</InputLabel>
+          <Select
+            labelId="vat-deduction-label"
+            label="Odliczenie VAT"
+            defaultValue={VatDeductionType.Full}
+            {...register("vatDeductionType")}
+          >
+            {Object.entries(VatDeductionTypeLabels).map(([key, label]) => (
+              <MenuItem key={key} value={key}>
+                {label}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Grid>
+    </>
+  );
+
+  const statusSection = (
+    <>
+      <Grid size={12}>
+        <Divider>
+          <Typography variant="caption">Status faktury</Typography>
+        </Divider>
+      </Grid>
+
+      <Grid size={{ xs: 12, sm: 4 }}>
+        <FormControl fullWidth>
+          <InputLabel id="invoice-status-label">Status faktury</InputLabel>
+          <Select
+            labelId="invoice-status-label"
+            label="Status faktury"
+            defaultValue={KSeFInvoiceStatus.Accepted}
+            {...register("status")}
+          >
+            {Object.entries(KSeFInvoiceStatusLabels).map(([key, label]) => (
+              <MenuItem key={key} value={key}>
+                {label}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Grid>
+
+      <Grid size={{ xs: 12, sm: 4 }}>
+        <FormControl fullWidth>
+          <InputLabel id="payment-status-label">Status płatności</InputLabel>
+          <Select
+            labelId="payment-status-label"
+            label="Status płatności"
+            defaultValue={KSeFPaymentStatus.Unpaid}
+            {...register("paymentStatus")}
+          >
+            {Object.entries(KSeFPaymentStatusLabels).map(([key, label]) => (
+              <MenuItem key={key} value={key}>
+                {label}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Grid>
+
+      {(watchedPaymentStatus === KSeFPaymentStatus.PaidCash ||
+        watchedPaymentStatus === KSeFPaymentStatus.PaidTransfer) && (
+        <Grid size={{ xs: 12, sm: 4 }}>
+          <TextField
+            fullWidth
+            label="Data płatności"
+            type="date"
+            {...register("paymentDate")}
+            InputLabelProps={{ shrink: true }}
+            inputProps={{
+              max: new Date().toISOString().split("T")[0],
+            }}
+          />
+        </Grid>
+      )}
+    </>
+  );
+
+  const commentSection = (
+    <Grid size={12}>
+      <TextField
+        label="Komentarz"
+        error={!!errors.comment}
+        helperText={errors.comment?.message}
+        {...register("comment")}
+        fullWidth
+        multiline
+        rows={2}
+      />
+    </Grid>
+  );
 
   return (
     <AppDialog open={open} onClose={handleClose} fullWidth maxWidth="xl">
@@ -1194,269 +1540,20 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                   </>
                 )}
 
-                <Grid size={12}>
-                  <Divider>
-                    <Typography variant="caption">Dane faktury</Typography>
-                  </Divider>
-                </Grid>
-
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <TextField
-                    label="Numer faktury"
-                    error={!!errors.invoiceNumber}
-                    helperText={errors.invoiceNumber?.message}
-                    {...register("invoiceNumber", {
-                      required: "Numer faktury jest wymagany",
-                    })}
-                    fullWidth
-                    slotProps={{ inputLabel: { shrink: true } }}
-                  />
-                </Grid>
-
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <Controller
-                    name="invoiceDate"
-                    control={control}
-                    rules={{
-                      required: "Data wystawienia faktury jest wymagana",
-                    }}
-                    render={({ field }) => (
-                      <DatePicker
-                        label="Data wystawienia"
-                        format="DD.MM.YYYY"
-                        value={field.value ? dayjs(field.value) : null}
-                        onChange={(date) =>
-                          field.onChange(
-                            date ? dayjs(date).format("YYYY-MM-DD") : "",
-                          )
-                        }
-                        slotProps={{
-                          textField: {
-                            fullWidth: true,
-                            error: !!errors.invoiceDate,
-                            helperText: errors.invoiceDate?.message,
-                          },
-                        }}
-                      />
-                    )}
-                  />
-                </Grid>
-
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <Controller
-                    name="dueDate"
-                    control={control}
-                    rules={{
-                      required: "Termin płatności jest wymagany",
-                      validate: (value) => {
-                        if (!value) {
-                          return "Termin płatności jest wymagany - uzupełnij to pole";
-                        }
-                        return true;
-                      },
-                    }}
-                    render={({ field }) => (
-                      <DatePicker
-                        label="Termin płatności"
-                        format="DD.MM.YYYY"
-                        value={field.value ? dayjs(field.value) : null}
-                        onChange={(date) =>
-                          field.onChange(
-                            date ? dayjs(date).format("YYYY-MM-DD") : "",
-                          )
-                        }
-                        slotProps={{
-                          textField: {
-                            fullWidth: true,
-                            error: !!errors.dueDate,
-                            helperText: errors.dueDate?.message,
-                          },
-                        }}
-                      />
-                    )}
-                  />
-                </Grid>
-
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <TextField
-                    label="Kwota netto [zł]"
-                    type="number"
-                    slotProps={{
-                      htmlInput: { min: 0, step: "0.01" },
-                      inputLabel: { shrink: true },
-                    }}
-                    error={!!errors.netAmount}
-                    helperText={errors.netAmount?.message}
-                    {...register("netAmount", {
-                      required: "Kwota netto jest wymagana",
-                      valueAsNumber: true,
-                    })}
-                    fullWidth
-                  />
-                </Grid>
-
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <TextField
-                    label="Kwota VAT [zł]"
-                    type="number"
-                    slotProps={{
-                      htmlInput: { min: 0, step: "0.01" },
-                      inputLabel: { shrink: true },
-                    }}
-                    error={!!errors.vatAmount}
-                    helperText={errors.vatAmount?.message}
-                    {...register("vatAmount", {
-                      required: "Kwota VAT jest wymagana",
-                      valueAsNumber: true,
-                    })}
-                    fullWidth
-                  />
-                </Grid>
-
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <TextField
-                    label="Kwota brutto [zł]"
-                    type="number"
-                    slotProps={{
-                      htmlInput: { min: 0, step: "0.01" },
-                      inputLabel: { shrink: true },
-                    }}
-                    error={!!errors.grossAmount}
-                    helperText={errors.grossAmount?.message}
-                    {...register("grossAmount", {
-                      required: "Kwota brutto jest wymagana",
-                      valueAsNumber: true,
-                    })}
-                    fullWidth
-                  />
-                </Grid>
-
-                <Grid size={12}>
-                  <Divider>
-                    <Typography variant="caption">
-                      Klasyfikacja faktury
-                    </Typography>
-                  </Divider>
-                </Grid>
-
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <FormControl fullWidth>
-                    <InputLabel id="document-type-label">
-                      Typ dokumentu
-                    </InputLabel>
-                    <Select
-                      labelId="document-type-label"
-                      label="Typ dokumentu"
-                      defaultValue={InvoiceDocumentType.Vat}
-                      {...register("documentType")}
-                    >
-                      {Object.entries(InvoiceDocumentTypeLabels).map(
-                        ([key, label]) => (
-                          <MenuItem key={key} value={key}>
-                            {label}
-                          </MenuItem>
-                        ),
-                      )}
-                    </Select>
-                  </FormControl>
-                </Grid>
-
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <FormControl fullWidth>
-                    <InputLabel id="vat-deduction-label">
-                      Odliczenie VAT
-                    </InputLabel>
-                    <Select
-                      labelId="vat-deduction-label"
-                      label="Odliczenie VAT"
-                      defaultValue={VatDeductionType.Full}
-                      {...register("vatDeductionType")}
-                    >
-                      {Object.entries(VatDeductionTypeLabels).map(
-                        ([key, label]) => (
-                          <MenuItem key={key} value={key}>
-                            {label}
-                          </MenuItem>
-                        ),
-                      )}
-                    </Select>
-                  </FormControl>
-                </Grid>
-
-                <Grid size={12}>
-                  <Divider>
-                    <Typography variant="caption">Status faktury</Typography>
-                  </Divider>
-                </Grid>
-
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <FormControl fullWidth>
-                    <InputLabel id="invoice-status-label">
-                      Status faktury
-                    </InputLabel>
-                    <Select
-                      labelId="invoice-status-label"
-                      label="Status faktury"
-                      defaultValue={KSeFInvoiceStatus.Accepted}
-                      {...register("status")}
-                    >
-                      {Object.entries(KSeFInvoiceStatusLabels).map(
-                        ([key, label]) => (
-                          <MenuItem key={key} value={key}>
-                            {label}
-                          </MenuItem>
-                        ),
-                      )}
-                    </Select>
-                  </FormControl>
-                </Grid>
-
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <FormControl fullWidth>
-                    <InputLabel id="payment-status-label">
-                      Status płatności
-                    </InputLabel>
-                    <Select
-                      labelId="payment-status-label"
-                      label="Status płatności"
-                      defaultValue={KSeFPaymentStatus.Unpaid}
-                      {...register("paymentStatus")}
-                    >
-                      {Object.entries(KSeFPaymentStatusLabels).map(
-                        ([key, label]) => (
-                          <MenuItem key={key} value={key}>
-                            {label}
-                          </MenuItem>
-                        ),
-                      )}
-                    </Select>
-                  </FormControl>
-                </Grid>
-
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <TextField
-                    fullWidth
-                    label="Data płatności"
-                    type="date"
-                    {...register("paymentDate")}
-                    InputLabelProps={{ shrink: true }}
-                    inputProps={{
-                      max: new Date().toISOString().split("T")[0],
-                    }}
-                  />
-                </Grid>
-
-                <Grid size={12}>
-                  <TextField
-                    label="Komentarz"
-                    error={!!errors.comment}
-                    helperText={errors.comment?.message}
-                    {...register("comment")}
-                    fullWidth
-                    multiline
-                    rows={2}
-                  />
-                </Grid>
+                {watchedModuleType === ModuleType.Feeds ? (
+                  <>
+                    {classificationSection}
+                    {statusSection}
+                    {invoiceDetailsSection}
+                  </>
+                ) : (
+                  <>
+                    {invoiceDetailsSection}
+                    {classificationSection}
+                    {statusSection}
+                    {commentSection}
+                  </>
+                )}
 
                 {/* Module-specific fields */}
                 {watchedModuleType === ModuleType.Feeds && (
@@ -1569,51 +1666,73 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                       />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6 }}>
-                      <TextField
-                        label="Ilość [t]"
-                        type="number"
-                        fullWidth
-                        required
-                        slotProps={{
-                          htmlInput: { min: 0, step: "0.01" },
-                          inputLabel: { shrink: true },
-                        }}
-                        error={!!errors.feedQuantity}
-                        helperText={errors.feedQuantity?.message}
-                        {...register("feedQuantity", {
+                      <Controller
+                        name="feedQuantity"
+                        control={control}
+                        rules={{
                           required: "Ilość jest wymagana",
-                          valueAsNumber: true,
                           validate: (value) => {
-                            if (isNaN(value) || value <= 0) {
-                              return "Ilość musi być większa od 0";
-                            }
-                            return true;
+                            const num = Number(value);
+                            return (
+                              (!isNaN(num) && num > 0) ||
+                              "Ilość musi być liczbą większą od 0"
+                            );
                           },
-                        })}
+                        }}
+                        render={({ field }) => (
+                          <TextField
+                            label="Ilość [t]"
+                            value={formatNumberWithSpaces(field.value || "")}
+                            onChange={(e) => {
+                              const parsed = parseFormattedNumber(
+                                e.target.value,
+                              );
+                              field.onChange(parsed ? Number(parsed) : "");
+                            }}
+                            error={!!errors.feedQuantity}
+                            helperText={errors.feedQuantity?.message}
+                            fullWidth
+                            required
+                            slotProps={{
+                              inputLabel: { shrink: true },
+                            }}
+                          />
+                        )}
                       />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6 }}>
-                      <TextField
-                        label="Cena jednostkowa [zł/t]"
-                        type="number"
-                        fullWidth
-                        required
-                        slotProps={{
-                          htmlInput: { min: 0, step: "0.01" },
-                          inputLabel: { shrink: true },
-                        }}
-                        error={!!errors.feedUnitPrice}
-                        helperText={errors.feedUnitPrice?.message}
-                        {...register("feedUnitPrice", {
+                      <Controller
+                        name="feedUnitPrice"
+                        control={control}
+                        rules={{
                           required: "Cena jest wymagana",
-                          valueAsNumber: true,
                           validate: (value) => {
-                            if (isNaN(value) || value <= 0) {
-                              return "Cena musi być większa od 0";
-                            }
-                            return true;
+                            const num = Number(value);
+                            return (
+                              (!isNaN(num) && num > 0) ||
+                              "Cena musi być liczbą większą od 0"
+                            );
                           },
-                        })}
+                        }}
+                        render={({ field }) => (
+                          <TextField
+                            label="Cena jednostkowa [zł/t]"
+                            value={formatNumberWithSpaces(field.value || "")}
+                            onChange={(e) => {
+                              const parsed = parseFormattedNumber(
+                                e.target.value,
+                              );
+                              field.onChange(parsed ? Number(parsed) : "");
+                            }}
+                            error={!!errors.feedUnitPrice}
+                            helperText={errors.feedUnitPrice?.message}
+                            fullWidth
+                            required
+                            slotProps={{
+                              inputLabel: { shrink: true },
+                            }}
+                          />
+                        )}
                       />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6 }}>
@@ -1653,14 +1772,14 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                       <LoadingTextField
                         loading={loadingFarms}
                         select
-                        label="Ferma"
+                        label="Lokalizacja (Ferma)"
                         fullWidth
                         required
                         value={watchedGasFarmId || ""}
                         error={!!errors.gasFarmId}
                         helperText={errors.gasFarmId?.message}
                         {...register("gasFarmId", {
-                          required: "Ferma jest wymagana",
+                          required: "Lokalizacja jest wymagana",
                         })}
                       >
                         {farms.map((farm) => (
@@ -1693,33 +1812,73 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                       </LoadingTextField>
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6 }}>
-                      <TextField
-                        label="Ilość [l]"
-                        type="number"
-                        fullWidth
-                        required
-                        slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
-                        error={!!errors.gasQuantity}
-                        helperText={errors.gasQuantity?.message}
-                        {...register("gasQuantity", {
+                      <Controller
+                        name="gasQuantity"
+                        control={control}
+                        rules={{
                           required: "Ilość jest wymagana",
-                          valueAsNumber: true,
-                        })}
+                          validate: (value) => {
+                            const num = Number(value);
+                            return (
+                              (!isNaN(num) && num > 0) ||
+                              "Ilość musi być liczbą większą od 0"
+                            );
+                          },
+                        }}
+                        render={({ field }) => (
+                          <TextField
+                            label="Ilość [l]"
+                            value={formatNumberWithSpaces(field.value || "")}
+                            onChange={(e) => {
+                              const parsed = parseFormattedNumber(
+                                e.target.value,
+                              );
+                              field.onChange(parsed ? Number(parsed) : "");
+                            }}
+                            error={!!errors.gasQuantity}
+                            helperText={errors.gasQuantity?.message}
+                            fullWidth
+                            required
+                            slotProps={{
+                              inputLabel: { shrink: true },
+                            }}
+                          />
+                        )}
                       />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6 }}>
-                      <TextField
-                        label="Cena jednostkowa [zł/l]"
-                        type="number"
-                        fullWidth
-                        required
-                        slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
-                        error={!!errors.gasUnitPrice}
-                        helperText={errors.gasUnitPrice?.message}
-                        {...register("gasUnitPrice", {
+                      <Controller
+                        name="gasUnitPrice"
+                        control={control}
+                        rules={{
                           required: "Cena jest wymagana",
-                          valueAsNumber: true,
-                        })}
+                          validate: (value) => {
+                            const num = Number(value);
+                            return (
+                              (!isNaN(num) && num > 0) ||
+                              "Cena musi być liczbą większą od 0"
+                            );
+                          },
+                        }}
+                        render={({ field }) => (
+                          <TextField
+                            label="Cena jednostkowa [zł/l]"
+                            value={formatNumberWithSpaces(field.value || "")}
+                            onChange={(e) => {
+                              const parsed = parseFormattedNumber(
+                                e.target.value,
+                              );
+                              field.onChange(parsed ? Number(parsed) : "");
+                            }}
+                            error={!!errors.gasUnitPrice}
+                            helperText={errors.gasUnitPrice?.message}
+                            fullWidth
+                            required
+                            slotProps={{
+                              inputLabel: { shrink: true },
+                            }}
+                          />
+                        )}
                       />
                     </Grid>
                   </>
@@ -1738,14 +1897,14 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                       <LoadingTextField
                         loading={loadingFarms}
                         select
-                        label="Ferma"
+                        label="Lokalizacja (Ferma)"
                         fullWidth
                         required
                         value={watchedSaleFarmId || ""}
                         error={!!errors.saleFarmId}
                         helperText={errors.saleFarmId?.message}
                         {...register("saleFarmId", {
-                          required: "Ferma jest wymagana",
+                          required: "Lokalizacja jest wymagana",
                         })}
                       >
                         {farms.map((farm) => (
@@ -1773,6 +1932,28 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                         {cycles.map((cycle) => (
                           <MenuItem key={cycle.id} value={cycle.id}>
                             {cycle.identifier}/{cycle.year}
+                          </MenuItem>
+                        ))}
+                      </LoadingTextField>
+                    </Grid>
+                  </>
+                )}
+
+                {/* Investments module - only location, no cycle */}
+                {watchedModuleType === ModuleType.Investments && (
+                  <>
+                    <Grid size={{ xs: 12, sm: 6 }}>
+                      <LoadingTextField
+                        loading={loadingFarms}
+                        select
+                        label="Lokalizacja (Ferma)"
+                        fullWidth
+                        value={watch("feedFarmId") || ""}
+                        {...register("feedFarmId")}
+                      >
+                        {farms.map((farm) => (
+                          <MenuItem key={farm.id} value={farm.id}>
+                            {farm.name}
                           </MenuItem>
                         ))}
                       </LoadingTextField>

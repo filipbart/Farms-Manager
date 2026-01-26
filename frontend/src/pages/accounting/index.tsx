@@ -1,11 +1,14 @@
 import {
   Box,
   Button,
+  Collapse,
+  Grid,
   Tab,
   Tabs,
   tablePaginationClasses,
   Typography,
 } from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { MdAdd, MdSync, MdDeleteForever } from "react-icons/md";
 import React, {
   useCallback,
@@ -41,7 +44,8 @@ import InvoiceDetailsModal from "../../components/modals/accounting/invoice-deta
 import UploadInvoiceModal from "../../components/modals/accounting/upload-invoice-modal";
 import SaveAccountingInvoiceModal from "../../components/modals/accounting/save-accounting-invoice-modal";
 import type { DraftAccountingInvoice } from "../../services/accounting-service";
-import FiltersForm from "../../components/filters/filters-form";
+import { RenderFilterField } from "../../components/filters/render-filter-field";
+import type { FilterConfig } from "../../components/filters/filter-types";
 import { getAccountingFiltersConfig } from "./filter-config.accounting";
 import {
   getSortOptionsFromGridModel,
@@ -95,6 +99,7 @@ const AccountingPage: React.FC = () => {
   const [deletingInvoiceId, setDeletingInvoiceId] = useState<string | null>(
     null,
   );
+  const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false);
   const [deleteAllDialogOpen, setDeleteAllDialogOpen] = useState(false);
   const [invoiceToDelete, setInvoiceToDelete] =
     useState<KSeFInvoiceListModel | null>(null);
@@ -134,6 +139,155 @@ const AccountingPage: React.FC = () => {
         farms: farms.map((f) => ({ value: f.id, label: f.name })),
       }),
     [users, farms],
+  );
+
+  const filterConfigMap = useMemo(() => {
+    return filterConfig.reduce(
+      (acc, filter) => {
+        acc[filter.key] = filter;
+        return acc;
+      },
+      {} as Record<keyof KSeFInvoicesFilters, FilterConfig>,
+    );
+  }, [filterConfig]);
+
+  const renderFilterField = useCallback(
+    (
+      filters: KSeFInvoicesFilters,
+      dispatch: React.Dispatch<
+        | { type: "set"; key: keyof KSeFInvoicesFilters; value: any }
+        | { type: "setMultiple"; payload: Partial<KSeFInvoicesFilters> }
+      >,
+      key: keyof KSeFInvoicesFilters,
+      gridProps: { xs?: number; sm?: number; md?: number; lg?: number } = {},
+    ) => {
+      const filter = filterConfigMap[key];
+      if (!filter) return null;
+      return (
+        <Grid key={key} size={gridProps}>
+          <RenderFilterField
+            filter={filter}
+            value={(filters[key] as string | string[] | boolean | null) ?? null}
+            onChange={(val) =>
+              dispatch({
+                type: "setMultiple",
+                payload: { [key]: val } as Partial<KSeFInvoicesFilters>,
+              })
+            }
+          />
+        </Grid>
+      );
+    },
+    [filterConfigMap],
+  );
+
+  const renderFilters = (
+    filters: KSeFInvoicesFilters,
+    dispatch: React.Dispatch<
+      | { type: "set"; key: keyof KSeFInvoicesFilters; value: any }
+      | { type: "setMultiple"; payload: Partial<KSeFInvoicesFilters> }
+    >,
+  ) => (
+    <Box sx={{ maxWidth: 1100, width: "100%" }}>
+      <Grid container spacing={2} mb={2}>
+        {renderFilterField(filters, dispatch, "buyerName", {
+          xs: 12,
+          sm: 6,
+          md: 4,
+          lg: 3,
+        })}
+        {renderFilterField(filters, dispatch, "sellerName", {
+          xs: 12,
+          sm: 6,
+          md: 4,
+          lg: 3,
+        })}
+        {renderFilterField(filters, dispatch, "invoiceNumber", {
+          xs: 12,
+          sm: 6,
+          md: 4,
+          lg: 3,
+        })}
+        {renderFilterField(filters, dispatch, "farmId", {
+          xs: 12,
+          sm: 6,
+          md: 4,
+          lg: 3,
+        })}
+      </Grid>
+      <Grid container spacing={2} mb={2}>
+        {renderFilterField(filters, dispatch, "status", {
+          xs: 12,
+          sm: 6,
+          md: 4,
+        })}
+        {renderFilterField(filters, dispatch, "assignedUserId", {
+          xs: 12,
+          sm: 6,
+          md: 4,
+        })}
+        {renderFilterField(filters, dispatch, "paymentStatus", {
+          xs: 12,
+          sm: 6,
+          md: 4,
+        })}
+      </Grid>
+      <Button
+        variant="text"
+        color="primary"
+        onClick={() => setAdvancedFiltersOpen((prev) => !prev)}
+        endIcon={
+          <ExpandMoreIcon
+            sx={{
+              transform: advancedFiltersOpen ? "rotate(180deg)" : "rotate(0)",
+              transition: "transform 0.2s",
+            }}
+          />
+        }
+      >
+        Zaawansowane filtry
+      </Button>
+      <Collapse in={advancedFiltersOpen} timeout="auto" unmountOnExit>
+        <Box mt={2}>
+          <Grid container spacing={2} mb={2}>
+            {renderFilterField(filters, dispatch, "invoiceDateFrom", {
+              xs: 12,
+              sm: 6,
+              md: 6,
+            })}
+            {renderFilterField(filters, dispatch, "invoiceDateTo", {
+              xs: 12,
+              sm: 6,
+              md: 6,
+            })}
+          </Grid>
+          <Grid container spacing={2} mb={2}>
+            {renderFilterField(filters, dispatch, "paymentDueDateFrom", {
+              xs: 12,
+              sm: 6,
+              md: 6,
+            })}
+            {renderFilterField(filters, dispatch, "paymentDueDateTo", {
+              xs: 12,
+              sm: 6,
+              md: 6,
+            })}
+          </Grid>
+          <Grid container spacing={2}>
+            {renderFilterField(filters, dispatch, "source", {
+              xs: 12,
+              sm: 6,
+              md: 6,
+            })}
+            {renderFilterField(filters, dispatch, "moduleType", {
+              xs: 12,
+              sm: 6,
+              md: 6,
+            })}
+          </Grid>
+        </Box>
+      </Collapse>
+    </Box>
   );
 
   const handleUploadedInvoices = (files: DraftAccountingInvoice[]) => {
@@ -544,27 +698,15 @@ const AccountingPage: React.FC = () => {
       </Box>
 
       <TabPanel value={tabValue} index={0}>
-        <FiltersForm
-          config={filterConfig}
-          filters={allFilters}
-          dispatch={dispatchAllFilters}
-        />
+        {renderFilters(allFilters, dispatchAllFilters)}
         <Box mt={3}>{renderDataGrid()}</Box>
       </TabPanel>
       <TabPanel value={tabValue} index={1}>
-        <FiltersForm
-          config={filterConfig}
-          filters={salesFilters}
-          dispatch={dispatchSalesFilters}
-        />
+        {renderFilters(salesFilters, dispatchSalesFilters)}
         <Box mt={3}>{renderDataGrid()}</Box>
       </TabPanel>
       <TabPanel value={tabValue} index={2}>
-        <FiltersForm
-          config={filterConfig}
-          filters={purchaseFilters}
-          dispatch={dispatchPurchaseFilters}
-        />
+        {renderFilters(purchaseFilters, dispatchPurchaseFilters)}
         <Box mt={3}>{renderDataGrid()}</Box>
       </TabPanel>
 

@@ -399,6 +399,8 @@ export default class ApiUrl {
     this.AccountingInvoices + "/" + id + "/create-module-entity";
   public static AccountingAcceptInvoice = (id: string) =>
     this.AccountingInvoices + "/" + id + "/accept";
+  public static AccountingRejectInvoice = (id: string) =>
+    this.AccountingInvoices + "/" + id + "/reject";
   public static AccountingHoldInvoice = (id: string) =>
     this.AccountingInvoices + "/" + id + "/hold";
   public static AccountingDownloadZip =
