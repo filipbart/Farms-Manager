@@ -5,6 +5,7 @@ public class NotificationData
     public NotificationInfo SalesInvoices { get; set; } = new();
     public NotificationInfo FeedDeliveries { get; set; } = new();
     public NotificationInfo Employees { get; set; } = new();
+    public NotificationInfo AccountingInvoices { get; set; } = new();
 }
 
 public record NotificationInfo

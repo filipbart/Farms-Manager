@@ -4,7 +4,8 @@ export type NotificationType =
   | "SaleInvoice"
   | "FeedInvoice"
   | "EmployeeContract"
-  | "EmployeeReminder";
+  | "EmployeeReminder"
+  | "AccountingInvoice";
 
 export interface DashboardNotificationItem {
   description: string;

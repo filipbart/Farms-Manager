@@ -11,6 +11,8 @@ using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.UserAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.AccountingAggregate.Interfaces;
+using FarmsManager.Application.Specifications.Accounting;
 using FarmsManager.Domain.Exceptions;
 using MediatR;
 
@@ -32,13 +34,17 @@ public class
     private readonly ISaleInvoiceRepository _saleInvoiceRepository;
     private readonly IFeedInvoiceRepository _feedInvoiceRepository;
     private readonly IEmployeeReminderRepository _employeeReminderRepository;
+    private readonly IKSeFInvoiceRepository _ksefInvoiceRepository;
 
     private const int DaysForMediumLevel = 3;
+    private const int AccountingDaysForLowLevel = 14;
+    private const int AccountingDaysForMediumLevel = 8;
+    private const int AccountingDaysForHighLevel = 4;
 
     public GetNotificationsQueryHandler(IUserDataResolver userDataResolver,
         IEmployeeRepository employeeRepository, ISaleInvoiceRepository saleInvoiceRepository,
         IFeedInvoiceRepository feedInvoiceRepository, IEmployeeReminderRepository employeeReminderRepository,
-        IUserRepository userRepository)
+        IUserRepository userRepository, IKSeFInvoiceRepository ksefInvoiceRepository)
     {
         _userDataResolver = userDataResolver;
         _employeeRepository = employeeRepository;
@@ -46,8 +52,8 @@ public class
         _feedInvoiceRepository = feedInvoiceRepository;
         _employeeReminderRepository = employeeReminderRepository;
         _userRepository = userRepository;
+        _ksefInvoiceRepository = ksefInvoiceRepository;
     }
-
 
     public async Task<BaseResponse<GetNotificationsQueryResponse>> Handle(GetNotificationsQuery request,
         CancellationToken cancellationToken)
@@ -91,6 +97,14 @@ public class
 
         ProcessNotifications(employeeNotificationItems, date => date, notificationData.Employees, now);
 
+        // 4. Faktury Księgowe (z nowymi regułami priorytetów)
+        var fourteenDaysFromNow = now.AddDays(AccountingDaysForLowLevel);
+        var accountingInvoices =
+            await _ksefInvoiceRepository.ListAsync(
+                new GetOverdueAndUpcomingAccountingInvoicesSpec(fourteenDaysFromNow, userId, farmIds),
+                cancellationToken);
+        ProcessAccountingNotifications(accountingInvoices.Where(i => i.PaymentDueDate.HasValue).Select(i => i.PaymentDueDate!.Value), notificationData.AccountingInvoices, now);
+
         return BaseResponse.CreateResponse(new GetNotificationsQueryResponse
         {
             Data = notificationData
@@ -127,6 +141,45 @@ public class
             return NotificationPriority.Medium;
         }
 
+        return NotificationPriority.Low;
+    }
+
+    private void ProcessAccountingNotifications(IEnumerable<DateOnly> dueDates, NotificationInfo notificationInfo, DateOnly now)
+    {
+        foreach (var dueDate in dueDates)
+        {
+            var daysUntilDue = dueDate.DayNumber - now.DayNumber;
+
+            // Skip if 14 or more days until due (no alert)
+            if (daysUntilDue >= AccountingDaysForLowLevel)
+                continue;
+
+            notificationInfo.Count++;
+
+            var currentPriority = GetAccountingPriority(daysUntilDue);
+
+            if (currentPriority > notificationInfo.Priority)
+            {
+                notificationInfo.Priority = currentPriority;
+            }
+        }
+    }
+
+    private static NotificationPriority GetAccountingPriority(int daysUntilDue)
+    {
+        // Po terminie lub 1-3 dni do terminu -> czerwony (High)
+        if (daysUntilDue <= 3)
+        {
+            return NotificationPriority.High;
+        }
+
+        // 4-7 dni do terminu -> pomarańczowy (Medium)
+        if (daysUntilDue <= 7)
+        {
+            return NotificationPriority.Medium;
+        }
+
+        // 8-13 dni do terminu -> żółty (Low)
         return NotificationPriority.Low;
     }
 }

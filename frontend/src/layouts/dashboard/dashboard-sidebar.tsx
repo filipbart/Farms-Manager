@@ -140,6 +140,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           to="/accounting"
           title="Księgowość"
           icon={<FaFileInvoiceDollar />}
+          notificationCount={notifications?.accountingInvoices?.count}
+          notificationPriority={notifications?.accountingInvoices?.priority}
         />
       )}
       {hasPermission("insertions:view") && (

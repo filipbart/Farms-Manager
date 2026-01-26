@@ -110,7 +110,8 @@ public enum NotificationType
     SaleInvoice,
     FeedInvoice,
     EmployeeContract,
-    EmployeeReminder
+    EmployeeReminder,
+    AccountingInvoice
 }
 
 public record DashboardNotificationItem

@@ -20,7 +20,6 @@ using FarmsManager.Domain.Aggregates.SaleAggregate.Entities;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.SlaughterhouseAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
-using FarmsManager.Shared.Extensions;
 using FluentValidation;
 using KSeF.Client.Core.Models.Invoices.Common;
 using MediatR;

@@ -57,6 +57,7 @@ import type { UserListModel } from "../../models/users/users";
 import { FarmsService } from "../../services/farms-service";
 import type FarmRowModel from "../../models/farms/farm-row-model";
 import ConfirmDialog from "../../components/common/confirm-dialog";
+import { getAccountingDueDateClassName } from "../../utils/due-date-helper";
 
 interface TabPanelProps {
   children: React.ReactNode;
@@ -609,12 +610,36 @@ const AccountingPage: React.FC = () => {
         pageSizeOptions={[10, 25, 50, 100]}
         slots={{ noRowsOverlay: NoRowsOverlay }}
         showToolbar
+        getRowClassName={(params) =>
+          getAccountingDueDateClassName(
+            params.row.paymentDueDate,
+            params.row.paymentDate,
+          )
+        }
         sx={{
           [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },
           [`& .${tablePaginationClasses.input}`]: { display: "inline-flex" },
           minHeight: 400,
           "& .MuiDataGrid-row:hover": {
             cursor: "pointer",
+          },
+          "& .payment-overdue .MuiDataGrid-cell": {
+            backgroundColor: "#ffebee",
+          },
+          "& .payment-overdue:hover .MuiDataGrid-cell": {
+            backgroundColor: "#ffcdd2",
+          },
+          "& .payment-due-soon .MuiDataGrid-cell": {
+            backgroundColor: "#fff3e0",
+          },
+          "& .payment-due-soon:hover .MuiDataGrid-cell": {
+            backgroundColor: "#ffe0b2",
+          },
+          "& .payment-due-warning .MuiDataGrid-cell": {
+            backgroundColor: "#fffde7",
+          },
+          "& .payment-due-warning:hover .MuiDataGrid-cell": {
+            backgroundColor: "#fff9c4",
           },
         }}
         sortingMode="server"
