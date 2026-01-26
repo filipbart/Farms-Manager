@@ -97,6 +97,8 @@ export interface SaveAccountingInvoiceData {
   vatDeductionType?: string;
   moduleType: string;
   comment?: string;
+  assignedUserId?: string;
+  relatedInvoiceNumber?: string;
   // Module-specific data
   feedData?: SaveFeedInvoiceData;
   gasData?: SaveGasDeliveryData;
@@ -259,6 +261,20 @@ export class AccountingService {
       cycleId?: string | null;
       assignedUserId?: string | null;
       relatedInvoiceNumber?: string;
+      // Additional fields for non-KSeF invoices
+      invoiceNumber?: string;
+      invoiceDate?: string;
+      sellerName?: string;
+      sellerNip?: string;
+      buyerName?: string;
+      buyerNip?: string;
+      grossAmount?: number;
+      netAmount?: number;
+      vatAmount?: number;
+      documentType?: string;
+      // Gas module fields
+      gasQuantity?: number;
+      gasUnitPrice?: number;
     },
   ) {
     return await AxiosWrapper.patch(

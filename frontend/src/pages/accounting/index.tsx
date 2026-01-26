@@ -41,6 +41,7 @@ import {
 } from "../../models/accounting/ksef-invoice";
 import { getKSeFInvoicesColumns } from "./ksef-invoices-columns";
 import InvoiceDetailsModal from "../../components/modals/accounting/invoice-details-modal";
+import NonKSeFInvoiceDetailsModal from "../../components/modals/accounting/non-ksef-invoice-details-modal";
 import UploadInvoiceModal from "../../components/modals/accounting/upload-invoice-modal";
 import SaveAccountingInvoiceModal from "../../components/modals/accounting/save-accounting-invoice-modal";
 import type { DraftAccountingInvoice } from "../../services/accounting-service";
@@ -711,24 +712,40 @@ const AccountingPage: React.FC = () => {
       </TabPanel>
 
       {/* Modals */}
-      <InvoiceDetailsModal
-        open={detailsModalOpen}
-        onClose={() => {
-          setDetailsModalOpen(false);
-          setSelectedInvoice(null);
-          if (sequentialMode) {
-            setSequentialMode(false);
-          }
-        }}
-        onSave={fetchInvoices}
-        invoice={selectedInvoice}
-        sequentialMode={sequentialMode}
-        currentIndex={sequentialIndex}
-        totalCount={invoices.length}
-        onNext={handleSequentialNext}
-        onPrevious={handleSequentialPrevious}
-        onExitSequential={handleExitSequential}
-      />
+      {/* Modal for KSeF invoices */}
+      {selectedInvoice?.source !== "Manual" && (
+        <InvoiceDetailsModal
+          open={detailsModalOpen}
+          onClose={() => {
+            setDetailsModalOpen(false);
+            setSelectedInvoice(null);
+            if (sequentialMode) {
+              setSequentialMode(false);
+            }
+          }}
+          onSave={fetchInvoices}
+          invoice={selectedInvoice}
+          sequentialMode={sequentialMode}
+          currentIndex={sequentialIndex}
+          totalCount={invoices.length}
+          onNext={handleSequentialNext}
+          onPrevious={handleSequentialPrevious}
+          onExitSequential={handleExitSequential}
+        />
+      )}
+
+      {/* Modal for non-KSeF (Manual) invoices */}
+      {selectedInvoice?.source === "Manual" && (
+        <NonKSeFInvoiceDetailsModal
+          open={detailsModalOpen}
+          onClose={() => {
+            setDetailsModalOpen(false);
+            setSelectedInvoice(null);
+          }}
+          onSave={fetchInvoices}
+          invoice={selectedInvoice}
+        />
+      )}
 
       <UploadInvoiceModal
         open={uploadModalOpen}

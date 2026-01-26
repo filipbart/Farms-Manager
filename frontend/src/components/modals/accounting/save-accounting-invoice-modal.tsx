@@ -59,6 +59,9 @@ import type { ExpenseContractorRow } from "../../../models/expenses/expenses-con
 import type { ExpenseTypeRow } from "../../../models/expenses/expenses-types";
 import type { SlaughterhouseRowModel } from "../../../models/slaughterhouses/slaughterhouse-row-model";
 import type { FeedsNamesRow } from "../../../models/feeds/feeds-names";
+import { UsersService } from "../../../services/users-service";
+import type { UserListModel } from "../../../models/users/users";
+import { useAuth } from "../../../auth/useAuth";
 
 interface SaveAccountingInvoiceFormData {
   invoiceNumber: string;
@@ -78,6 +81,8 @@ interface SaveAccountingInvoiceFormData {
   paymentStatus: KSeFPaymentStatus;
   paymentDate: string;
   comment: string;
+  assignedUserId: string;
+  relatedInvoiceNumber: string;
   // Feed module fields
   feedFarmId: string;
   feedCycleId: string;
@@ -89,7 +94,6 @@ interface SaveAccountingInvoiceFormData {
   feedUnitPrice: number;
   // Gas module fields
   gasFarmId: string;
-  gasCycleId: string;
   gasContractorId: string;
   gasUnitPrice: number;
   gasQuantity: number;
@@ -120,6 +124,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
   const theme = useTheme();
   const isMd = useMediaQuery(theme.breakpoints.up("md"));
   const isLg = useMediaQuery(theme.breakpoints.up("lg"));
+  const { userData } = useAuth();
 
   const [loading, setLoading] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -143,6 +148,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
   const [slaughterhouses, setSlaughterhouses] = useState<
     SlaughterhouseRowModel[]
   >([]);
+  const [users, setUsers] = useState<UserListModel[]>([]);
 
   const {
     register,
@@ -162,7 +168,6 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
   const watchedFeedQuantity = watch("feedQuantity");
   const watchedFeedUnitPrice = watch("feedUnitPrice");
   const watchedGasFarmId = watch("gasFarmId");
-  const watchedGasCycleId = watch("gasCycleId");
   const watchedExpenseFarmId = watch("expenseFarmId");
   const watchedSaleFarmId = watch("saleFarmId");
   const watchedExpenseContractorId = watch("expenseContractorId");
@@ -240,16 +245,12 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
     }
   }, [watchedFeedFarmId, farms, fetchCycles, setValue]);
 
-  // Update cycles when gas farm changes and auto-select active cycle
+  // Update cycles when gas farm changes
   useEffect(() => {
     if (watchedGasFarmId && farms.length > 0) {
-      const farm = farms.find((f) => f.id === watchedGasFarmId);
       fetchCycles(watchedGasFarmId);
-      if (farm?.activeCycle && !watchedGasCycleId) {
-        setValue("gasCycleId", farm.activeCycle.id);
-      }
     }
-  }, [watchedGasFarmId, watchedGasCycleId, farms, fetchCycles, setValue]);
+  }, [watchedGasFarmId, farms, fetchCycles]);
 
   // Update cycles when expense farm changes and auto-select active cycle
   useEffect(() => {
@@ -503,6 +504,13 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
       (data) => setSlaughterhouses(data.responseData?.items ?? []),
       () => setSlaughterhouses([]),
     );
+
+    // Users
+    handleApiResponse(
+      () => UsersService.getUsers({ page: 0, pageSize: 100 }),
+      (data) => setUsers(data.responseData?.items ?? []),
+      () => setUsers([]),
+    );
   }, [open, fetchFarms, savedCount]);
 
   // Reset saved count when modal closes
@@ -550,6 +558,8 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
           (ef.paymentStatus as KSeFPaymentStatus) || KSeFPaymentStatus.Unpaid,
         paymentDate: ef.paymentDate || "",
         comment: "",
+        assignedUserId: userData?.id || "",
+        relatedInvoiceNumber: "",
         // Module-specific fields from AI extraction
         feedFarmId: moduleType === ModuleType.Feeds ? ef.farmId || "" : "",
         feedCycleId: moduleType === ModuleType.Feeds ? ef.cycleId || "" : "",
@@ -566,7 +576,6 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
         feedUnitPrice:
           moduleType === ModuleType.Feeds ? ef.feedUnitPrice || 0 : 0,
         gasFarmId: moduleType === ModuleType.Gas ? ef.farmId || "" : "",
-        gasCycleId: moduleType === ModuleType.Gas ? ef.cycleId || "" : "",
         gasContractorId:
           moduleType === ModuleType.Gas ? ef.gasContractorId || "" : "",
         gasUnitPrice: moduleType === ModuleType.Gas ? ef.gasUnitPrice || 0 : 0,
@@ -586,7 +595,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
           moduleType === ModuleType.Sales ? ef.slaughterhouseId || "" : "",
       });
     }
-  }, [currentIndex, draftInvoices, reset, open, handleClose]);
+  }, [currentIndex, draftInvoices, reset, open, handleClose, userData?.id]);
 
   // Auto-calculate amounts for Feeds module based on quantity and unit price
   useEffect(() => {
@@ -652,7 +661,6 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
       case ModuleType.Gas:
         gasData = {
           farmId: formData.gasFarmId,
-          cycleId: formData.gasCycleId || undefined,
           contractorId: formData.gasContractorId || undefined,
           unitPrice: formData.gasUnitPrice,
           quantity: formData.gasQuantity,
@@ -701,6 +709,8 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
           paymentStatus: formData.paymentStatus,
           paymentDate: formData.paymentDate || undefined,
           comment: formData.comment || undefined,
+          assignedUserId: formData.assignedUserId || undefined,
+          relatedInvoiceNumber: formData.relatedInvoiceNumber || undefined,
           feedData,
           gasData,
           expenseData,
@@ -962,6 +972,16 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
           </Select>
         </FormControl>
       </Grid>
+
+      <Grid size={{ xs: 12, sm: 6 }}>
+        <TextField
+          label="Powiązanie faktury"
+          fullWidth
+          placeholder="Numer powiązanej faktury"
+          slotProps={{ inputLabel: { shrink: true } }}
+          {...register("relatedInvoiceNumber")}
+        />
+      </Grid>
     </>
   );
 
@@ -1127,6 +1147,26 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                       </FormControl>
                     )}
                   />
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <FormControl fullWidth>
+                    <InputLabel id="assigned-user-label">
+                      Przypisany pracownik
+                    </InputLabel>
+                    <Select
+                      labelId="assigned-user-label"
+                      label="Przypisany pracownik"
+                      {...register("assignedUserId")}
+                      value={watch("assignedUserId") || ""}
+                    >
+                      {users.map((user) => (
+                        <MenuItem key={user.id} value={user.id}>
+                          {user.name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
                 </Grid>
 
                 <Grid size={12}>
@@ -1785,28 +1825,6 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                         {farms.map((farm) => (
                           <MenuItem key={farm.id} value={farm.id}>
                             {farm.name}
-                          </MenuItem>
-                        ))}
-                      </LoadingTextField>
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <LoadingTextField
-                        loading={loadingCycles}
-                        select
-                        label="Cykl"
-                        fullWidth
-                        required
-                        disabled={!watchedGasFarmId}
-                        value={watchedGasCycleId || ""}
-                        error={!!errors.gasCycleId}
-                        helperText={errors.gasCycleId?.message}
-                        {...register("gasCycleId", {
-                          required: "Cykl jest wymagany",
-                        })}
-                      >
-                        {cycles.map((cycle) => (
-                          <MenuItem key={cycle.id} value={cycle.id}>
-                            {cycle.identifier}/{cycle.year}
                           </MenuItem>
                         ))}
                       </LoadingTextField>
