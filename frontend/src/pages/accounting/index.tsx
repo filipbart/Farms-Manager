@@ -9,7 +9,7 @@ import {
   Typography,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { MdAdd, MdSync, MdDeleteForever } from "react-icons/md";
+import { MdAdd, MdSync } from "react-icons/md";
 import React, {
   useCallback,
   useEffect,
@@ -97,12 +97,10 @@ const AccountingPage: React.FC = () => {
     type: "include",
     ids: new Set(),
   });
-  const [deleting, setDeleting] = useState(false);
   const [deletingInvoiceId, setDeletingInvoiceId] = useState<string | null>(
     null,
   );
   const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false);
-  const [deleteAllDialogOpen, setDeleteAllDialogOpen] = useState(false);
   const [invoiceToDelete, setInvoiceToDelete] =
     useState<KSeFInvoiceListModel | null>(null);
   const [users, setUsers] = useState<UserListModel[]>([]);
@@ -391,30 +389,6 @@ const AccountingPage: React.FC = () => {
     }
   }, [getCurrentFilters]);
 
-  const handleDeleteAllInvoices = async () => {
-    setDeleteAllDialogOpen(true);
-  };
-
-  const confirmDeleteAllInvoices = async () => {
-    setDeleting(true);
-    try {
-      await handleApiResponse(
-        () => AccountingService.deleteAllInvoices(),
-        (data) => {
-          toast.success(
-            `Usunięto ${data.responseData?.deletedCount || 0} faktur`,
-          );
-          fetchInvoices();
-        },
-        undefined,
-        "Błąd podczas usuwania faktur",
-      );
-    } finally {
-      setDeleting(false);
-      setDeleteAllDialogOpen(false);
-    }
-  };
-
   const handleDeleteInvoice = useCallback(
     async (invoice: KSeFInvoiceListModel) => {
       setInvoiceToDelete(invoice);
@@ -683,15 +657,6 @@ const AccountingPage: React.FC = () => {
           </Button>
           <Button
             variant="outlined"
-            color="error"
-            startIcon={<MdDeleteForever />}
-            onClick={handleDeleteAllInvoices}
-            disabled={deleting}
-          >
-            Usuń wszystkie
-          </Button>
-          <Button
-            variant="outlined"
             color="primary"
             startIcon={<MdSync className={syncing ? "animate-spin" : ""} />}
             onClick={handleSyncKSeF}
@@ -798,16 +763,6 @@ const AccountingPage: React.FC = () => {
           }}
         />
       )}
-
-      <ConfirmDialog
-        open={deleteAllDialogOpen}
-        onClose={() => setDeleteAllDialogOpen(false)}
-        onConfirm={confirmDeleteAllInvoices}
-        title="Usuń wszystkie faktury"
-        content="Czy na pewno chcesz usunąć WSZYSTKIE faktury? Ta operacja jest nieodwracalna!"
-        confirmText="Usuń"
-        confirmColor="error"
-      />
 
       <ConfirmDialog
         open={Boolean(invoiceToDelete)}

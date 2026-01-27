@@ -8,7 +8,6 @@ using KSeF.Client.Core.Interfaces.Clients;
 using KSeF.Client.Core.Interfaces.Services;
 using KSeF.Client.Core.Models.Authorization;
 using KSeF.Client.Core.Models.Invoices;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace FarmsManager.Application.Services;
@@ -25,23 +24,19 @@ public class KSeFService : IKSeFService
 
     private string _sessionToken;
     private string _sessionRefreshToken;
-
-    private readonly string _nip;
-    private readonly string _tokenKSeF;
+    private string _currentNip;
+    private string _currentTokenKSeF;
 
     public KSeFService(
         IKSeFClient ksefClient,
         ILogger<KSeFService> logger,
         ICryptographyService cryptographyService,
-        IKSeFInvoiceXmlParser xmlParser,
-        IConfiguration configuration)
+        IKSeFInvoiceXmlParser xmlParser)
     {
         _ksefClient = ksefClient;
         _logger = logger;
         _cryptographyService = cryptographyService;
         _xmlParser = xmlParser;
-        _tokenKSeF = configuration.GetSection("KSeFDev").GetValue<string>("Token");
-        _nip = configuration.GetSection("KSeFDev").GetValue<string>("NIP");
     }
 
     /// <summary>
@@ -70,7 +65,6 @@ public class KSeFService : IKSeFService
             var invoicesMetadata =
                 await _ksefClient.QueryInvoiceMetadataAsync(filters, _sessionToken, request.PageNumber,
                     request.PageSize, cancellationToken: cancellationToken);
-
 
             var responseList = invoicesMetadata.Invoices.Select(t => new KSeFInvoiceItem
             {
@@ -107,10 +101,15 @@ public class KSeFService : IKSeFService
     /// łącząc wyniki dla Subject1 (sprzedawca) i Subject2 (kupujący),
     /// z pełnym przejściem po stronach.
     /// </summary>
-    public async Task<List<KSeFInvoiceSyncItem>> GetInvoicesForSyncAsync(CancellationToken cancellationToken)
+    public async Task<List<KSeFInvoiceSyncItem>> GetInvoicesForSyncAsync(string ksefToken, string nip, CancellationToken cancellationToken)
     {
         try
         {
+            _currentTokenKSeF = ksefToken;
+            _currentNip = nip;
+            _sessionToken = null;
+            _sessionRefreshToken = null;
+
             await EnsureSessionAsync(cancellationToken);
 
             var now = DateTime.Now;
@@ -263,10 +262,17 @@ public class KSeFService : IKSeFService
     /// </summary>
     public async Task<string> GetInvoiceXmlAsync(
         string invoiceReferenceNumber,
+        string ksefToken,
+        string nip,
         CancellationToken cancellationToken)
     {
         try
         {
+            _currentTokenKSeF = ksefToken;
+            _currentNip = nip;
+            _sessionToken = null;
+            _sessionRefreshToken = null;
+
             await EnsureSessionAsync(cancellationToken);
 
             var invoiceXml = await _ksefClient.GetInvoiceAsync(
@@ -292,7 +298,7 @@ public class KSeFService : IKSeFService
         await EnsureSessionAsync(cancellationToken);
 
         var preparedContent = fileContent
-            .Replace("#nip#", _nip)
+            .Replace("#nip#", _currentNip ?? "")
             .Replace("#invoice_number#", "1/12/2025");
 
         var encryptionData = _cryptographyService.GetEncryptionData();
@@ -349,7 +355,7 @@ public class KSeFService : IKSeFService
         var challenge = await _ksefClient.GetAuthChallengeAsync(cancellationToken);
         var timestamp = challenge.Timestamp.ToUnixTimeMilliseconds();
 
-        var tokenWithTimestamp = $"{_tokenKSeF}|{timestamp}";
+        var tokenWithTimestamp = $"{_currentTokenKSeF}|{timestamp}";
         var tokenBytes = Encoding.UTF8.GetBytes(tokenWithTimestamp);
         var encryptedBytes = _cryptographyService.EncryptKsefTokenWithRSAUsingPublicKey(tokenBytes);
         var encryptedTokenBase64 = Convert.ToBase64String(encryptedBytes);
@@ -357,7 +363,7 @@ public class KSeFService : IKSeFService
         var authRequest = AuthKsefTokenRequestBuilder
             .Create()
             .WithChallenge(challenge.Challenge)
-            .WithContext(AuthenticationTokenContextIdentifierType.Nip, _nip)
+            .WithContext(AuthenticationTokenContextIdentifierType.Nip, _currentNip)
             .WithEncryptedToken(encryptedTokenBase64)
             .Build();
 

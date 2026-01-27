@@ -164,17 +164,6 @@ public class AccountingController : BaseController
     }
 
     /// <summary>
-    /// Usuwa wszystkie faktury KSeF (tylko do testów!)
-    /// </summary>
-    [HttpDelete("invoices/delete-all")]
-    [ProducesResponseType(typeof(BaseResponse<DeleteAllKSeFInvoicesCommandResponse>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> DeleteAllInvoices()
-    {
-        var result = await _mediator.Send(new DeleteAllKSeFInvoicesCommand());
-        return Ok(result);
-    }
-
-    /// <summary>
     /// Zapisuje fakturę po zaczytaniu przez AI
     /// </summary>
     [HttpPost("invoices/save")]

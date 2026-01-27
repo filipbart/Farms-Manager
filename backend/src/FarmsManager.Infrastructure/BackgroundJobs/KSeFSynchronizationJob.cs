@@ -95,6 +95,7 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
         var dbContext = scope.ServiceProvider.GetRequiredService<FarmsManagerContext>();
         var invoiceAssignmentService = scope.ServiceProvider.GetRequiredService<IInvoiceAssignmentService>();
         var contractorAutoCreationService = scope.ServiceProvider.GetRequiredService<IContractorAutoCreationService>();
+        var encryptionService = scope.ServiceProvider.GetRequiredService<IEncryptionService>();
         
         // Add repositories for fetching authoritative entity names
         var gasContractorRepository = scope.ServiceProvider.GetRequiredService<IGasContractorRepository>();
@@ -127,9 +128,69 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                 "Starting KSeF synchronization. Manual: {IsManual}",
                 isManual);
 
-            // 1. Pobierz wszystkie faktury z KSeF
-            var invoices = await ksefService.GetInvoicesForSyncAsync(cancellationToken);
+            // 1. Pobierz wszystkie podmioty gospodarcze z tokenami KSeF
+            var entitiesWithTokens = taxBusinessEntities
+                .Where(t => !string.IsNullOrWhiteSpace(t.KSeFToken))
+                .ToList();
+
+            if (entitiesWithTokens.Count == 0)
+            {
+                _logger.LogWarning("No TaxBusinessEntity with KSeF token found. Skipping synchronization.");
+                log.MarkAsCompleted(0, 0);
+                return;
+            }
+
+            _logger.LogInformation(
+                "Found {Count} TaxBusinessEntity with KSeF tokens",
+                entitiesWithTokens.Count);
+
+            var allInvoices = new List<KSeFInvoiceSyncItem>();
+            
+            // 2. Pobierz faktury z KSeF dla każdego podmiotu
+            foreach (var entity in entitiesWithTokens)
+            {
+                try
+                {
+                    _logger.LogInformation(
+                        "Fetching invoices for TaxBusinessEntity: {Name} (NIP: {Nip})",
+                        entity.Name, entity.Nip);
+                    
+                    // Odszyfruj token przed użyciem
+                    var decryptedToken = encryptionService.Decrypt(entity.KSeFToken);
+                    
+                    var entityInvoices = await ksefService.GetInvoicesForSyncAsync(
+                        decryptedToken, 
+                        entity.Nip, 
+                        cancellationToken);
+                    
+                    _logger.LogInformation(
+                        "Found {Count} invoices for {Name}",
+                        entityInvoices.Count, entity.Name);
+                    
+                    allInvoices.AddRange(entityInvoices);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, 
+                        "Failed to fetch invoices for TaxBusinessEntity: {Name} (NIP: {Nip})",
+                        entity.Name, entity.Nip);
+                    log.ErrorsCount++;
+                    if (isManual)
+                        throw;
+                }
+            }
+
+            // Deduplikacja faktur po KsefNumber (mogą się powtarzać między podmiotami)
+            var invoices = allInvoices
+                .Where(inv => !string.IsNullOrWhiteSpace(inv.KsefNumber))
+                .DistinctBy(inv => inv.KsefNumber, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            
             var downloadedCount = invoices.Count;
+            
+            _logger.LogInformation(
+                "Total unique invoices found: {Count} (before deduplication: {BeforeDedup})",
+                downloadedCount, allInvoices.Count);
 
             if (downloadedCount == 0)
             {
@@ -160,7 +221,27 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
             {
                 try
                 {
-                    var invoiceXml = await ksefService.GetInvoiceXmlAsync(invoiceSummary.KsefNumber, cancellationToken);
+                    // Znajdź podmiot gospodarczy, który odpowiada tej fakturze
+                    var matchingEntity = entitiesWithTokens.FirstOrDefault(e => 
+                        e.Nip == NormalizeNip(invoiceSummary.SellerNip) || 
+                        e.Nip == NormalizeNip(invoiceSummary.BuyerNip));
+                    
+                    if (matchingEntity == null)
+                    {
+                        _logger.LogWarning(
+                            "No matching TaxBusinessEntity found for invoice {KsefNumber}. Using first available entity.",
+                            invoiceSummary.KsefNumber);
+                        matchingEntity = entitiesWithTokens.First();
+                    }
+                    
+                    // Odszyfruj token przed użyciem
+                    var decryptedToken = encryptionService.Decrypt(matchingEntity.KSeFToken);
+                    
+                    var invoiceXml = await ksefService.GetInvoiceXmlAsync(
+                        invoiceSummary.KsefNumber, 
+                        decryptedToken,
+                        matchingEntity.Nip,
+                        cancellationToken);
 
                     // Krok 1: Dopasuj podmiot gospodarczy po NIP lub nazwie
                     var (taxBusinessEntityId, fallbackFarmId, fallbackCycleId) =

@@ -72,10 +72,6 @@ export interface UploadXmlInvoicesResponse {
   errors: string[];
 }
 
-export interface DeleteAllInvoicesResponse {
-  deletedCount: number;
-}
-
 export interface SaveAccountingInvoiceData {
   draftId: string;
   filePath: string;
@@ -225,15 +221,6 @@ export class AccountingService {
         },
         signal,
       },
-    );
-  }
-
-  /**
-   * Usuwa wszystkie faktury KSeF (tylko do testów!)
-   */
-  public static async deleteAllInvoices() {
-    return await AxiosWrapper.delete<DeleteAllInvoicesResponse>(
-      ApiUrl.AccountingDeleteAllInvoices,
     );
   }
 
