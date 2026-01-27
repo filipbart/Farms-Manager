@@ -13,6 +13,7 @@ namespace FarmsManager.Application.Commands.Feeds.Deliveries;
 public record MarkPaymentAsCompletedCommandDto
 {
     public string Comment { get; init; }
+    public DateOnly PaymentDate { get; init; }
 }
 
 public record MarkPaymentAsCompletedCommand(Guid Id, MarkPaymentAsCompletedCommandDto Data) 
@@ -67,7 +68,9 @@ public class MarkPaymentAsCompletedCommandHandler
 
             if (ksefInvoice != null)
             {
-                ksefInvoice.Update(paymentStatus: KSeFPaymentStatus.PaidTransfer);
+                ksefInvoice.Update(
+                    paymentStatus: KSeFPaymentStatus.PaidTransfer,
+                    paymentDate: request.Data.PaymentDate);
                 ksefInvoice.SetModified(userId);
                 await _ksefInvoiceRepository.UpdateAsync(ksefInvoice, cancellationToken);
             }

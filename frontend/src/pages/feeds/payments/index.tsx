@@ -35,13 +35,13 @@ const FeedsPaymentsPage: React.FC = () => {
 
   const [loading, setLoading] = useState(false);
   const [feedsPayments, setFeedsPayments] = useState<FeedPaymentListModel[]>(
-    []
+    [],
   );
   const [totalRows, setTotalRows] = useState(0);
 
   const [downloadFilePath, setDownloadFilePath] = useState<string | null>(null);
   const [selectedPaymentId, setSelectedPaymentId] = useState<string | null>(
-    null
+    null,
   );
   const [isMarkCompletedModalOpen, setIsMarkCompletedModalOpen] =
     useState(false);
@@ -62,7 +62,7 @@ const FeedsPaymentsPage: React.FC = () => {
           setTotalRows(data.responseData?.totalRows ?? 0);
         },
         undefined,
-        "Błąd podczas pobierania przelewów"
+        "Błąd podczas pobierania przelewów",
       );
     } catch {
       toast.error("Błąd podczas pobierania przelewów");
@@ -81,7 +81,7 @@ const FeedsPaymentsPage: React.FC = () => {
           await fetchFeedsPayments();
         },
         undefined,
-        "Błąd podczas usuwania przelewu"
+        "Błąd podczas usuwania przelewu",
       );
     } catch {
       toast.error("Błąd podczas usuwania przelewu");
@@ -111,14 +111,20 @@ const FeedsPaymentsPage: React.FC = () => {
     setIsMarkCompletedModalOpen(true);
   };
 
-  const handleConfirmMarkAsCompleted = async (comment: string) => {
+  const handleConfirmMarkAsCompleted = async (
+    comment: string,
+    paymentDate: string,
+  ) => {
     if (!selectedPaymentId) return;
 
     try {
       setLoading(true);
       await handleApiResponse(
         () =>
-          FeedsService.markPaymentAsCompleted(selectedPaymentId, { comment }),
+          FeedsService.markPaymentAsCompleted(selectedPaymentId, {
+            comment,
+            paymentDate,
+          }),
         async () => {
           toast.success("Przelew został oznaczony jako zrealizowany");
           setIsMarkCompletedModalOpen(false);
@@ -126,7 +132,7 @@ const FeedsPaymentsPage: React.FC = () => {
           await fetchFeedsPayments();
         },
         undefined,
-        "Błąd podczas oznaczania przelewu jako zrealizowany"
+        "Błąd podczas oznaczania przelewu jako zrealizowany",
       );
     } catch {
       toast.error("Błąd podczas oznaczania przelewu jako zrealizowany");
@@ -140,7 +146,7 @@ const FeedsPaymentsPage: React.FC = () => {
         () => FeedsService.getDictionaries(),
         (data) => setDictionary(data.responseData),
         undefined,
-        "Błąd podczas pobierania słowników filtrów"
+        "Błąd podczas pobierania słowników filtrów",
       );
     } catch {
       toast.error("Błąd podczas pobierania słowników filtrów");
@@ -156,7 +162,7 @@ const FeedsPaymentsPage: React.FC = () => {
         onMarkAsCompleted: handleMarkAsCompleted,
         isAdmin,
       }),
-    [downloadFilePath, isAdmin]
+    [downloadFilePath, isAdmin],
   );
 
   useEffect(() => {
@@ -197,7 +203,7 @@ const FeedsPaymentsPage: React.FC = () => {
           dictionary,
           uniqueCycles,
           filters,
-          isAdmin
+          isAdmin,
         )}
         filters={filters}
         dispatch={dispatch}
@@ -250,7 +256,7 @@ const FeedsPaymentsPage: React.FC = () => {
             const sortOptions = getSortOptionsFromGridModel(
               model,
               FeedsPaymentsOrderType,
-              mapFeedsPaymentsOrderTypeToField
+              mapFeedsPaymentsOrderTypeToField,
             );
             const payload =
               model.length > 0

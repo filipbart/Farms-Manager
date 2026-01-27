@@ -84,6 +84,12 @@ public class GetKSeFInvoiceDetailsQueryHandler
                         farmId = feedInvoice.FarmId;
                         cycleId = feedInvoice.CycleId;
                         location = feedInvoice.Farm?.Name;
+                        dto.FeedHenhouseId = feedInvoice.HenhouseId;
+                        dto.FeedItemName = feedInvoice.ItemName;
+                        dto.FeedQuantity = feedInvoice.Quantity;
+                        dto.FeedUnitPrice = feedInvoice.UnitPrice;
+                        dto.FeedVendorName = feedInvoice.VendorName;
+                        dto.FeedBankAccountNumber = feedInvoice.BankAccountNumber;
                     }
                     break;
 
@@ -98,6 +104,7 @@ public class GetKSeFInvoiceDetailsQueryHandler
                         dto.GasQuantity = gasDelivery.Quantity;
                         dto.GasUnitPrice = gasDelivery.UnitPrice;
                         dto.GasInvoiceTotal = gasDelivery.InvoiceTotal;
+                        dto.GasContractorId = gasDelivery.GasContractorId;
                     }
                     break;
 
@@ -110,6 +117,8 @@ public class GetKSeFInvoiceDetailsQueryHandler
                         farmId = expenseProduction.FarmId;
                         cycleId = expenseProduction.CycleId;
                         location = expenseProduction.Farm?.Name;
+                        dto.ExpenseContractorId = expenseProduction.ExpenseContractorId;
+                        dto.ExpenseTypeId = expenseProduction.ExpenseTypeId;
                     }
                     break;
 
@@ -122,6 +131,7 @@ public class GetKSeFInvoiceDetailsQueryHandler
                         farmId = saleInvoice.FarmId;
                         cycleId = saleInvoice.CycleId;
                         location = saleInvoice.Farm?.Name;
+                        dto.SaleSlaughterhouseId = saleInvoice.SlaughterhouseId;
                     }
                     break;
             }

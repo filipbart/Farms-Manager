@@ -104,7 +104,7 @@ public class AcceptKSeFInvoiceCommandHandler
 
         var previousStatus = invoice.Status;
 
-        // Sprawdź czy faktura nie została już zaakceptowana
+        // Sprawdź czy faktura nie została już zaakceptowana (pozwalamy na ponowną akceptację odrzuconych faktur)
         if (invoice.Status == KSeFInvoiceStatus.Accepted)
         {
             throw DomainException.BadRequest("Faktura została już zaakceptowana.");
@@ -200,6 +200,13 @@ public class AcceptKSeFInvoiceCommandHandler
             data.Comment,
             userId);
 
+        // Set file path from accounting invoice
+        var invoice = await _ksefInvoiceRepository.GetAsync(new KSeFInvoiceByIdSpec(data.InvoiceId), ct);
+        if (!string.IsNullOrEmpty(invoice.FilePath))
+        {
+            newFeedInvoice.SetFilePath(invoice.FilePath);
+        }
+
         var feedPrices = await _feedPriceRepository.GetFeedPricesForInvoiceDateAsync(
             farm.Id, cycle.Id, data.ItemName, data.InvoiceDate);
         newFeedInvoice.CheckUnitPrice(feedPrices);
@@ -235,6 +242,13 @@ public class AcceptKSeFInvoiceCommandHandler
             data.Quantity,
             data.Comment,
             userId);
+
+        // Set file path from accounting invoice
+        var invoice = await _ksefInvoiceRepository.GetAsync(new KSeFInvoiceByIdSpec(data.InvoiceId), ct);
+        if (!string.IsNullOrEmpty(invoice.FilePath))
+        {
+            newGasDelivery.SetFilePath(invoice.FilePath);
+        }
 
         await _gasDeliveryRepository.AddAsync(newGasDelivery, ct);
         return newGasDelivery.Id;
@@ -299,6 +313,13 @@ public class AcceptKSeFInvoiceCommandHandler
             data.InvoiceDate,
             data.Comment,
             userId);
+
+        // Set file path from accounting invoice
+        var invoice = await _ksefInvoiceRepository.GetAsync(new KSeFInvoiceByIdSpec(data.InvoiceId), ct);
+        if (!string.IsNullOrEmpty(invoice.FilePath))
+        {
+            newExpenseProduction.SetFilePath(invoice.FilePath);
+        }
 
         await _expenseProductionRepository.AddAsync(newExpenseProduction, ct);
         return newExpenseProduction.Id;
@@ -370,6 +391,13 @@ public class AcceptKSeFInvoiceCommandHandler
             data.SubTotal,
             data.VatAmount,
             userId);
+
+        // Set file path from accounting invoice
+        var invoice = await _ksefInvoiceRepository.GetAsync(new KSeFInvoiceByIdSpec(data.InvoiceId), ct);
+        if (!string.IsNullOrEmpty(invoice.FilePath))
+        {
+            newSaleInvoice.SetFilePath(invoice.FilePath);
+        }
 
         await _saleInvoiceRepository.AddAsync(newSaleInvoice, ct);
         return newSaleInvoice.Id;

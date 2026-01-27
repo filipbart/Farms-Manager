@@ -96,7 +96,7 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
         var invoiceAssignmentService = scope.ServiceProvider.GetRequiredService<IInvoiceAssignmentService>();
         var contractorAutoCreationService = scope.ServiceProvider.GetRequiredService<IContractorAutoCreationService>();
         var encryptionService = scope.ServiceProvider.GetRequiredService<IEncryptionService>();
-        
+
         // Add repositories for fetching authoritative entity names
         var gasContractorRepository = scope.ServiceProvider.GetRequiredService<IGasContractorRepository>();
         var expenseContractorRepository = scope.ServiceProvider.GetRequiredService<IExpenseContractorRepository>();
@@ -145,7 +145,7 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                 entitiesWithTokens.Count);
 
             var allInvoices = new List<KSeFInvoiceSyncItem>();
-            
+
             // 2. Pobierz faktury z KSeF dla każdego podmiotu
             foreach (var entity in entitiesWithTokens)
             {
@@ -154,24 +154,24 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                     _logger.LogInformation(
                         "Fetching invoices for TaxBusinessEntity: {Name} (NIP: {Nip})",
                         entity.Name, entity.Nip);
-                    
+
                     // Odszyfruj token przed użyciem
                     var decryptedToken = encryptionService.Decrypt(entity.KSeFToken);
-                    
+
                     var entityInvoices = await ksefService.GetInvoicesForSyncAsync(
-                        decryptedToken, 
-                        entity.Nip, 
+                        decryptedToken,
+                        entity.Nip,
                         cancellationToken);
-                    
+
                     _logger.LogInformation(
                         "Found {Count} invoices for {Name}",
                         entityInvoices.Count, entity.Name);
-                    
+
                     allInvoices.AddRange(entityInvoices);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, 
+                    _logger.LogError(ex,
                         "Failed to fetch invoices for TaxBusinessEntity: {Name} (NIP: {Nip})",
                         entity.Name, entity.Nip);
                     log.ErrorsCount++;
@@ -185,9 +185,9 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                 .Where(inv => !string.IsNullOrWhiteSpace(inv.KsefNumber))
                 .DistinctBy(inv => inv.KsefNumber, StringComparer.OrdinalIgnoreCase)
                 .ToList();
-            
+
             var downloadedCount = invoices.Count;
-            
+
             _logger.LogInformation(
                 "Total unique invoices found: {Count} (before deduplication: {BeforeDedup})",
                 downloadedCount, allInvoices.Count);
@@ -222,10 +222,10 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                 try
                 {
                     // Znajdź podmiot gospodarczy, który odpowiada tej fakturze
-                    var matchingEntity = entitiesWithTokens.FirstOrDefault(e => 
-                        e.Nip == NormalizeNip(invoiceSummary.SellerNip) || 
+                    var matchingEntity = entitiesWithTokens.FirstOrDefault(e =>
+                        e.Nip == NormalizeNip(invoiceSummary.SellerNip) ||
                         e.Nip == NormalizeNip(invoiceSummary.BuyerNip));
-                    
+
                     if (matchingEntity == null)
                     {
                         _logger.LogWarning(
@@ -233,19 +233,20 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                             invoiceSummary.KsefNumber);
                         matchingEntity = entitiesWithTokens.First();
                     }
-                    
+
                     // Odszyfruj token przed użyciem
                     var decryptedToken = encryptionService.Decrypt(matchingEntity.KSeFToken);
-                    
+
                     var invoiceXml = await ksefService.GetInvoiceXmlAsync(
-                        invoiceSummary.KsefNumber, 
+                        invoiceSummary.KsefNumber,
                         decryptedToken,
                         matchingEntity.Nip,
                         cancellationToken);
 
                     // Krok 1: Dopasuj podmiot gospodarczy po NIP lub nazwie
                     var (taxBusinessEntityId, fallbackFarmId, fallbackCycleId) =
-                        MatchTaxBusinessEntityAndFarm(invoiceSummary, taxBusinessEntities, allFarms, invoiceXml, xmlParser);
+                        MatchTaxBusinessEntityAndFarm(invoiceSummary, taxBusinessEntities, allFarms, invoiceXml,
+                            xmlParser);
 
                     // Krok 2: Utwórz encję faktury (bez fermy na razie - ferma będzie przypisana przez reguły lub fallback)
                     var invoiceEntity = CreateInvoiceEntity(invoiceSummary, invoiceXml, xmlParser, taxBusinessEntityId,
@@ -258,21 +259,23 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                     }
 
                     // Krok 3: PRIORYTET 1 - Automatyczne przypisanie fermy na podstawie reguł (InvoiceFarmAssignmentRuleEntity)
-                    var ruleAssignedFarmId = await invoiceAssignmentService.FindFarmForInvoiceAsync(invoiceEntity, cancellationToken);
+                    var ruleAssignedFarmId =
+                        await invoiceAssignmentService.FindFarmForInvoiceAsync(invoiceEntity, cancellationToken);
                     if (ruleAssignedFarmId.HasValue)
                     {
                         var assignedFarm = allFarms.FirstOrDefault(f => f.Id == ruleAssignedFarmId.Value);
                         var assignedCycleId = assignedFarm?.ActiveCycleId;
-                        
+
                         invoiceEntity.Update(farmId: ruleAssignedFarmId.Value, cycleId: assignedCycleId);
-                        _logger.LogDebug("Invoice {KsefNumber} assigned to farm {FarmId} by RULE with cycle {CycleId}", 
+                        _logger.LogDebug("Invoice {KsefNumber} assigned to farm {FarmId} by RULE with cycle {CycleId}",
                             invoiceSummary.KsefNumber, ruleAssignedFarmId.Value, assignedCycleId);
                     }
                     // Krok 4: PRIORYTET 2 - Fallback do dopasowania po NIP/nazwie (jeśli reguły nie dopasowały)
                     else if (fallbackFarmId.HasValue)
                     {
                         invoiceEntity.Update(farmId: fallbackFarmId.Value, cycleId: fallbackCycleId);
-                        _logger.LogDebug("Invoice {KsefNumber} assigned to farm {FarmId} by NIP/NAME match with cycle {CycleId}", 
+                        _logger.LogDebug(
+                            "Invoice {KsefNumber} assigned to farm {FarmId} by NIP/NAME match with cycle {CycleId}",
                             invoiceSummary.KsefNumber, fallbackFarmId.Value, fallbackCycleId);
                     }
 
@@ -305,7 +308,7 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                                 null,
                                 assignedModule.Value,
                                 cancellationToken);
-                            
+
                             // After contractor creation, fetch authoritative names and update invoice
                             await UpdateInvoiceWithAuthoritativeNamesAsync(
                                 invoiceEntity,
@@ -320,7 +323,7 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                         }
                         catch (Exception ex)
                         {
-                            _logger.LogWarning(ex, "Failed to auto-create contractor for invoice {KsefNumber}", 
+                            _logger.LogWarning(ex, "Failed to auto-create contractor for invoice {KsefNumber}",
                                 invoiceSummary.KsefNumber);
                         }
                     }
@@ -396,11 +399,11 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
         {
             var parsedXml = xmlParser.ParseInvoiceXml(invoiceXml);
             var parts = new List<string>();
-            
+
             // Stopka faktury (np. "Miejsce rozładunku: Jaworowo Kłódź K5")
             if (!string.IsNullOrWhiteSpace(parsedXml?.Stopka?.Informacje?.StopkaFaktury))
                 parts.Add(parsedXml.Stopka.Informacje.StopkaFaktury);
-            
+
             // Dodatkowe opisy (DodatkowyOpis - klucz/wartość, zgodne z FA(4))
             if (parsedXml?.Fa?.DodatkoweOpisy != null)
             {
@@ -412,7 +415,7 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                         parts.Add(opis.Wartosc);
                 }
             }
-            
+
             if (parts.Count > 0)
                 additionalText = string.Join(" ", parts).ToLowerInvariant();
         }
@@ -427,7 +430,7 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
         // 2. Jeśli nie znaleziono po NIP, szukaj po nazwie
         if (matchedEntity == null)
         {
-            matchedEntity = taxBusinessEntities.FirstOrDefault(t =>
+            var entitiesMatchedByName = taxBusinessEntities.Where(t =>
             {
                 var entityName = t.Name?.ToLowerInvariant();
                 if (string.IsNullOrEmpty(entityName))
@@ -437,7 +440,35 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                        (!string.IsNullOrEmpty(buyerName) && buyerName.Contains(entityName)) ||
                        (!string.IsNullOrEmpty(sellerName) && entityName.Contains(sellerName)) ||
                        (!string.IsNullOrEmpty(buyerName) && entityName.Contains(buyerName));
-            });
+            }).ToList();
+
+            if (entitiesMatchedByName.Count == 1)
+            {
+                matchedEntity = entitiesMatchedByName.First();
+            }
+            else if (entitiesMatchedByName.Count > 1)
+            {
+                // 2a. Szukaj po typie podmiotu w nazwie sprzedawcy/nabywcy
+                matchedEntity = entitiesMatchedByName.FirstOrDefault(t =>
+                {
+                    var businessType = t.BusinessType?.ToLowerInvariant();
+                    if (string.IsNullOrEmpty(businessType))
+                        return false;
+
+                    return (!string.IsNullOrEmpty(sellerName) && sellerName.Contains(businessType)) ||
+                           (!string.IsNullOrEmpty(buyerName) && buyerName.Contains(businessType));
+                });
+
+                // 2b. Jeśli nie znaleziono po typie, wybierz podmiot z typem "Faktura prywatna" lub "Nieruchomości"
+                if (matchedEntity == null)
+                {
+                    matchedEntity = entitiesMatchedByName.FirstOrDefault(t =>
+                    {
+                        var businessType = t.BusinessType?.ToLowerInvariant();
+                        return businessType is "faktura prywatna" or "nieruchomości";
+                    });
+                }
+            }
         }
 
         if (matchedEntity != null)
@@ -588,7 +619,8 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
             kSeFNumber: invoiceItem.KsefNumber,
             invoiceNumber: invoiceItem.InvoiceNumber,
             invoiceDate: invoiceItem.InvoiceDate,
-            paymentDueDate: ParsePaymentDueDate(parsedInvoice?.Fa?.Platnosc?.TerminyPlatnosci?.FirstOrDefault()?.Termin),
+            paymentDueDate:
+            ParsePaymentDueDate(parsedInvoice?.Fa?.Platnosc?.TerminyPlatnosci?.FirstOrDefault()?.Termin),
             sellerNip: invoiceItem.SellerNip,
             sellerName: invoiceItem.SellerName,
             buyerNip: invoiceItem.BuyerNip,
@@ -736,6 +768,7 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                         authoritativeSellerNip = gasContractor.Nip;
                     }
                 }
+
                 break;
 
             case ModuleType.ProductionExpenses:
@@ -749,6 +782,7 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                         authoritativeSellerNip = expenseContractor.Nip;
                     }
                 }
+
                 break;
 
             case ModuleType.Sales:
@@ -762,6 +796,7 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                         authoritativeBuyerNip = slaughterhouse.Nip;
                     }
                 }
+
                 break;
 
             case ModuleType.Feeds:
@@ -775,11 +810,12 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                         authoritativeSellerNip = feedContractor.Nip;
                     }
                 }
+
                 break;
         }
 
         // Update invoice with authoritative names if any were found
-        if (authoritativeSellerName != null || authoritativeSellerNip != null || 
+        if (authoritativeSellerName != null || authoritativeSellerNip != null ||
             authoritativeBuyerName != null || authoritativeBuyerNip != null)
         {
             invoiceEntity.UpdateSellerBuyerInfo(

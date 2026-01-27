@@ -147,7 +147,7 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
         () => {
           setCycles([]);
         },
-        "Nie udało się pobrać listy cykli."
+        "Nie udało się pobrać listy cykli.",
       );
       setLoadingCycles(false);
     };
@@ -172,7 +172,7 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
 
     if (henhouseName && henhouses.length > 0) {
       const matchedHenhouse = henhouses.find(
-        (h) => h.name.toLowerCase() === henhouseName
+        (h) => h.name.toLowerCase() === henhouseName,
       );
 
       if (matchedHenhouse) {
@@ -196,7 +196,7 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
         onSave(draftFeed);
       },
       undefined,
-      "Wystąpił błąd podczas zapisywania danych faktury"
+      "Wystąpił błąd podczas zapisywania danych faktury",
     );
     setLoading(false);
   };
@@ -210,7 +210,7 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
 
   const inferFarmId = (
     draft: DraftFeedInvoice,
-    allFarms: typeof farms
+    allFarms: typeof farms,
   ): string | undefined => {
     if (draft.extractedFields.farmId) return draft.extractedFields.farmId;
 
@@ -219,7 +219,7 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
       (f) =>
         f.nip === draft.extractedFields.nip ||
         f.name?.toLowerCase() ===
-          draft.extractedFields.customerName?.toLowerCase()
+          draft.extractedFields.customerName?.toLowerCase(),
     );
 
     if (matchedFarms.length === 1) return matchedFarms[0].id;
@@ -227,8 +227,8 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
     if (matchedFarms.length > 1 && henhouseName) {
       return matchedFarms.find((farm) =>
         farm.henhouses?.some(
-          (house) => house.name?.toLowerCase() === henhouseName
-        )
+          (house) => house.name?.toLowerCase() === henhouseName,
+        ),
       )?.id;
     }
 
@@ -485,7 +485,7 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
                           value={field.value ? dayjs(field.value) : null}
                           onChange={(date) =>
                             field.onChange(
-                              date ? dayjs(date).format("YYYY-MM-DD") : ""
+                              date ? dayjs(date).format("YYYY-MM-DD") : "",
                             )
                           }
                           slotProps={{
@@ -514,7 +514,7 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
                           value={field.value ? dayjs(field.value) : null}
                           onChange={(date) =>
                             field.onChange(
-                              date ? dayjs(date).format("YYYY-MM-DD") : ""
+                              date ? dayjs(date).format("YYYY-MM-DD") : "",
                             )
                           }
                           slotProps={{
@@ -654,7 +654,7 @@ const SaveInvoiceModal: React.FC<SaveInvoiceModalProps> = ({
             <Button
               onClick={() =>
                 setCurrentIndex((prev) =>
-                  Math.min(draftFeedInvoices.length - 1, prev + 1)
+                  Math.min(draftFeedInvoices.length - 1, prev + 1),
                 )
               }
               disabled={currentIndex === draftFeedInvoices.length - 1}

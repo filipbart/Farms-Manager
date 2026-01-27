@@ -141,9 +141,15 @@ export class AccountingService {
    * Pobiera listę faktur KSeF z paginacją i filtrami
    */
   public static async getKSeFInvoices(filters: KSeFInvoicesFilters) {
+    const { paymentStatus, ...restFilters } = filters;
+    const params = {
+      ...restFilters,
+      paymentStatuses: paymentStatus?.length ? paymentStatus : undefined,
+    };
+
     return await AxiosWrapper.get<PaginateModel<KSeFInvoiceListModel>>(
       ApiUrl.AccountingInvoices,
-      { ...filters },
+      params,
     );
   }
 
@@ -537,6 +543,7 @@ export interface HoldInvoiceData {
 
 // Types for module entity creation
 export interface CreateFeedInvoiceFromKSeFData {
+  invoiceId: string;
   farmId: string;
   cycleId: string;
   henhouseId: string;
@@ -555,6 +562,7 @@ export interface CreateFeedInvoiceFromKSeFData {
 }
 
 export interface CreateGasDeliveryFromKSeFData {
+  invoiceId: string;
   farmId: string;
   contractorId?: string;
   contractorNip?: string;
@@ -568,6 +576,7 @@ export interface CreateGasDeliveryFromKSeFData {
 }
 
 export interface CreateExpenseProductionFromKSeFData {
+  invoiceId: string;
   farmId: string;
   cycleId: string;
   expenseContractorId?: string;
@@ -583,6 +592,7 @@ export interface CreateExpenseProductionFromKSeFData {
 }
 
 export interface CreateSaleInvoiceFromKSeFData {
+  invoiceId: string;
   farmId: string;
   cycleId: string;
   slaughterhouseId?: string;

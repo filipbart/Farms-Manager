@@ -312,175 +312,179 @@ public class KSeFInvoiceEntity : Entity
     /// </summary>
     public DateOnly? PaymentDate { get; private set; }
 
-    /// <summary>
-    /// Logi audytowe faktury
-    /// </summary>
-    public virtual ICollection<KSeFInvoiceAuditLogEntity> AuditLogs { get; init; } = new List<KSeFInvoiceAuditLogEntity>();
+/// <summary>
+/// Logi audytowe faktury
+/// </summary>
+public virtual ICollection<KSeFInvoiceAuditLogEntity> AuditLogs { get; init; } = new List<KSeFInvoiceAuditLogEntity>();
 
-    /// <summary>
-    /// Załączniki faktury
-    /// </summary>
-    public virtual ICollection<KSeFInvoiceAttachmentEntity> Attachments { get; init; } = new List<KSeFInvoiceAttachmentEntity>();
+/// <summary>
+/// Ścieżka do pliku faktury w storage (S3)
+/// </summary>
+public string FilePath { get; private set; }
 
-    /// <summary>
-    /// Aktualizuje edytowalne pola faktury
-    /// </summary>
-    public void Update(
-        KSeFInvoiceStatus? status = null,
-        KSeFPaymentStatus? paymentStatus = null,
-        DateOnly? paymentDate = null,
-        DateOnly? dueDate = null,
-        ModuleType? moduleType = null,
-        KSeFVatDeductionType? vatDeductionType = null,
-        string comment = null,
-        Guid? farmId = null,
-        Guid? cycleId = null,
-        Guid? assignedUserId = null,
-        string relatedInvoiceNumber = null)
+/// <summary>
+/// Załączniki faktury
+/// </summary>
+public virtual ICollection<KSeFInvoiceAttachmentEntity> Attachments { get; init; } = new List<KSeFInvoiceAttachmentEntity>();
+
+/// <summary>
+/// Aktualizuje edytowalne pola faktury
+/// </summary>
+public void Update(
+    KSeFInvoiceStatus? status = null,
+    KSeFPaymentStatus? paymentStatus = null,
+    DateOnly? paymentDate = null,
+    DateOnly? dueDate = null,
+    ModuleType? moduleType = null,
+    KSeFVatDeductionType? vatDeductionType = null,
+    string comment = null,
+    Guid? farmId = null,
+    Guid? cycleId = null,
+    Guid? assignedUserId = null,
+    string relatedInvoiceNumber = null)
+{
+    if (status.HasValue)
+        Status = status.Value;
+
+    if (paymentStatus.HasValue)
     {
-        if (status.HasValue)
-            Status = status.Value;
-
-        if (paymentStatus.HasValue)
+        PaymentStatus = paymentStatus.Value;
+        
+        // Automatycznie ustaw datę płatności gdy status zmienia się na opłaconą
+        if (paymentStatus.Value == KSeFPaymentStatus.PaidCash || 
+            paymentStatus.Value == KSeFPaymentStatus.PaidTransfer)
         {
-            PaymentStatus = paymentStatus.Value;
-            
-            // Automatycznie ustaw datę płatności gdy status zmienia się na opłaconą
-            if (paymentStatus.Value == KSeFPaymentStatus.PaidCash || 
-                paymentStatus.Value == KSeFPaymentStatus.PaidTransfer)
+            if (!PaymentDate.HasValue && !paymentDate.HasValue)
             {
-                if (!PaymentDate.HasValue && !paymentDate.HasValue)
-                {
-                    PaymentDate = DateOnly.FromDateTime(DateTime.Today);
-                }
+                PaymentDate = DateOnly.FromDateTime(DateTime.Today);
             }
         }
-
-        // Ustaw datę płatności jeśli została przekazana
-        if (paymentDate.HasValue)
-        {
-            PaymentDate = paymentDate.Value;
-        }
-
-        // Ustaw termin płatności jeśli został przekazany
-        if (dueDate.HasValue)
-        {
-            PaymentDueDate = dueDate.Value;
-        }
-
-        if (moduleType.HasValue)
-            ModuleType = moduleType.Value;
-
-        if (vatDeductionType.HasValue)
-            VatDeductionType = vatDeductionType.Value;
-
-        if (comment != null)
-            Comment = comment;
-
-        if (farmId.HasValue)
-            FarmId = farmId.Value == Guid.Empty ? null : farmId.Value;
-
-        if (cycleId.HasValue)
-            AssignedCycleId = cycleId.Value == Guid.Empty ? null : cycleId.Value;
-
-        if (assignedUserId.HasValue)
-            AssignedUserId = assignedUserId.Value == Guid.Empty ? null : assignedUserId.Value;
-
-        if (relatedInvoiceNumber != null)
-            RelatedInvoiceNumber = relatedInvoiceNumber;
     }
 
-    /// <summary>
-    /// Aktualizuje dane sprzedawcy i nabywcy
-    /// </summary>
-    public void UpdateSellerBuyerInfo(
-        string sellerName = null,
-        string sellerNip = null,
-        string buyerName = null,
-        string buyerNip = null)
+    // Ustaw datę płatności jeśli została przekazana
+    if (paymentDate.HasValue)
     {
-        if (sellerName != null)
-            SellerName = sellerName;
-
-        if (sellerNip != null)
-            SellerNip = sellerNip;
-
-        if (buyerName != null)
-            BuyerName = buyerName;
-
-        if (buyerNip != null)
-            BuyerNip = buyerNip;
+        PaymentDate = paymentDate.Value;
     }
 
-    /// <summary>
-    /// Oznacza fakturę jako wymagającą powiązania
-    /// </summary>
-    public void MarkAsRequiresLinking()
+    // Ustaw termin płatności jeśli został przekazany
+    if (dueDate.HasValue)
     {
-        RequiresLinking = true;
-        Status = KSeFInvoiceStatus.RequiresLinking;
-        LinkingReminderDate = DateTime.UtcNow.AddDays(3);
+        PaymentDueDate = dueDate.Value;
     }
 
-    /// <summary>
-    /// Oznacza fakturę jako powiązaną (usuwa wymóg powiązania)
-    /// </summary>
-    public void MarkAsLinked()
-    {
-        RequiresLinking = false;
-        LinkingAccepted = false;
-        LinkingReminderDate = null;
-        if (Status == KSeFInvoiceStatus.RequiresLinking)
-        {
-            Status = KSeFInvoiceStatus.New;
-        }
-    }
+    if (moduleType.HasValue)
+        ModuleType = moduleType.Value;
 
-    /// <summary>
-    /// Akceptuje brak powiązania (użytkownik świadomie rezygnuje z powiązania)
-    /// </summary>
-    public void AcceptNoLinking()
-    {
-        LinkingAccepted = true;
-        LinkingReminderDate = null;
-        if (Status == KSeFInvoiceStatus.RequiresLinking)
-        {
-            Status = KSeFInvoiceStatus.New;
-        }
-    }
+    if (vatDeductionType.HasValue)
+        VatDeductionType = vatDeductionType.Value;
 
-    /// <summary>
-    /// Odkłada przypomnienie o powiązaniu
-    /// </summary>
-    public void PostponeLinkingReminder(int days = 3)
-    {
-        LinkingReminderDate = DateTime.UtcNow.AddDays(days);
-        LinkingReminderCount++;
-    }
+    if (comment != null)
+        Comment = comment;
 
-    /// <summary>
-    /// Ustawia identyfikator encji w module (np. FeedInvoice, GasDelivery, ExpenseProduction, SaleInvoice)
-    /// </summary>
-    /// <param name="entityId">Identyfikator encji w module lub null aby usunąć powiązanie</param>
-    public void SetAssignedEntityInvoiceId(Guid? entityId)
-    {
-        AssignedEntityInvoiceId = entityId;
-    }
+    if (farmId.HasValue)
+        FarmId = farmId.Value == Guid.Empty ? null : farmId.Value;
 
-    /// <summary>
-    /// Czyści powiązanie z encją modułową (ustawia AssignedEntityInvoiceId na null)
-    /// </summary>
-    public void ClearAssignedEntityInvoiceId()
-    {
-        AssignedEntityInvoiceId = null;
-    }
+    if (cycleId.HasValue)
+        AssignedCycleId = cycleId.Value == Guid.Empty ? null : cycleId.Value;
 
-    /// <summary>
-    /// Ustawia datę płatności faktury
-    /// </summary>
-    /// <param name="paymentDate">Data płatności lub null aby usunąć</param>
-    public void SetPaymentDate(DateOnly? paymentDate)
+    if (assignedUserId.HasValue)
+        AssignedUserId = assignedUserId.Value == Guid.Empty ? null : assignedUserId.Value;
+
+    if (relatedInvoiceNumber != null)
+        RelatedInvoiceNumber = relatedInvoiceNumber;
+}
+
+/// <summary>
+/// Aktualizuje dane sprzedawcy i nabywcy
+/// </summary>
+public void UpdateSellerBuyerInfo(
+    string sellerName = null,
+    string sellerNip = null,
+    string buyerName = null,
+    string buyerNip = null)
+{
+    if (sellerName != null)
+        SellerName = sellerName;
+
+    if (sellerNip != null)
+        SellerNip = sellerNip;
+
+    if (buyerName != null)
+        BuyerName = buyerName;
+
+    if (buyerNip != null)
+        BuyerNip = buyerNip;
+}
+
+/// <summary>
+/// Oznacza fakturę jako wymagającą powiązania
+/// </summary>
+public void MarkAsRequiresLinking()
+{
+    RequiresLinking = true;
+    Status = KSeFInvoiceStatus.RequiresLinking;
+    LinkingReminderDate = DateTime.UtcNow.AddDays(3);
+}
+
+/// <summary>
+/// Oznacza fakturę jako powiązaną (usuwa wymóg powiązania)
+/// </summary>
+public void MarkAsLinked()
+{
+    RequiresLinking = false;
+    LinkingAccepted = false;
+    LinkingReminderDate = null;
+    if (Status == KSeFInvoiceStatus.RequiresLinking)
     {
-        PaymentDate = paymentDate;
+        Status = KSeFInvoiceStatus.Accepted;
     }
+}
+
+/// <summary>
+/// Ustawia ID powiązanej encji modułowej
+/// </summary>
+public void SetAssignedEntityInvoiceId(Guid? entityInvoiceId)
+{
+    AssignedEntityInvoiceId = entityInvoiceId;
+}
+
+/// <summary>
+/// Czyści ID powiązanej encji modułowej
+/// </summary>
+public void ClearAssignedEntityInvoiceId()
+{
+    AssignedEntityInvoiceId = null;
+}
+
+/// <summary>
+/// Ustawia ścieżkę do pliku faktury
+/// </summary>
+public void SetFilePath(string filePath)
+{
+    FilePath = filePath;
+}
+
+/// <summary>
+/// Akceptuje brak powiązania dla faktury
+/// </summary>
+public void AcceptNoLinking()
+{
+    LinkingAccepted = true;
+    RequiresLinking = false;
+    LinkingReminderDate = null;
+    if (Status == KSeFInvoiceStatus.RequiresLinking)
+    {
+        Status = KSeFInvoiceStatus.New;
+    }
+}
+
+/// <summary>
+/// Odkłada przypomnienie o powiązaniu faktury
+/// </summary>
+public void PostponeLinkingReminder(int days)
+{
+    LinkingReminderDate = DateTime.UtcNow.AddDays(days);
+    LinkingReminderCount++;
+}
 }

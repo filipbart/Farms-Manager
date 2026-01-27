@@ -150,7 +150,17 @@ const UploadInvoiceModal: React.FC<UploadInvoiceModalProps> = ({
             ),
           (data) => {
             if (data && data.responseData) {
-              onUpload(data.responseData.files);
+              const filesWithPaymentStatus = data.responseData.files.map(
+                (file) => ({
+                  ...file,
+                  extractedFields: {
+                    ...file.extractedFields,
+                    paymentStatus,
+                    paymentDate: paymentDate || "",
+                  },
+                }),
+              );
+              onUpload(filesWithPaymentStatus);
             }
             toast.success("Faktury zostały wgrane pomyślnie");
           },

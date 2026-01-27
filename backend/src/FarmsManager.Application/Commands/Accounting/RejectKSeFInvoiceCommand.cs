@@ -89,13 +89,17 @@ public class RejectKSeFInvoiceCommandHandler : IRequestHandler<RejectKSeFInvoice
 
     private async Task DeleteModuleEntityAsync(ModuleType moduleType, Guid entityId, CancellationToken cancellationToken)
     {
+        var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
+        
         switch (moduleType)
         {
             case ModuleType.Feeds:
                 var feedInvoice = await _feedInvoiceRepository.GetByIdAsync(entityId, cancellationToken);
                 if (feedInvoice != null)
                 {
-                    await _feedInvoiceRepository.DeleteAsync(feedInvoice, cancellationToken);
+                    // Soft delete without removing file (file is in AccountingInvoice folder)
+                    feedInvoice.Delete(userId);
+                    await _feedInvoiceRepository.UpdateAsync(feedInvoice, cancellationToken);
                 }
                 break;
 
@@ -103,7 +107,9 @@ public class RejectKSeFInvoiceCommandHandler : IRequestHandler<RejectKSeFInvoice
                 var gasDelivery = await _gasDeliveryRepository.GetByIdAsync(entityId, cancellationToken);
                 if (gasDelivery != null)
                 {
-                    await _gasDeliveryRepository.DeleteAsync(gasDelivery, cancellationToken);
+                    // Soft delete without removing file (file is in AccountingInvoice folder)
+                    gasDelivery.Delete(userId);
+                    await _gasDeliveryRepository.UpdateAsync(gasDelivery, cancellationToken);
                 }
                 break;
 
@@ -111,7 +117,9 @@ public class RejectKSeFInvoiceCommandHandler : IRequestHandler<RejectKSeFInvoice
                 var expense = await _expenseProductionRepository.GetByIdAsync(entityId, cancellationToken);
                 if (expense != null)
                 {
-                    await _expenseProductionRepository.DeleteAsync(expense, cancellationToken);
+                    // Soft delete without removing file (file is in AccountingInvoice folder)
+                    expense.Delete(userId);
+                    await _expenseProductionRepository.UpdateAsync(expense, cancellationToken);
                 }
                 break;
 
@@ -119,7 +127,9 @@ public class RejectKSeFInvoiceCommandHandler : IRequestHandler<RejectKSeFInvoice
                 var saleInvoice = await _saleInvoiceRepository.GetByIdAsync(entityId, cancellationToken);
                 if (saleInvoice != null)
                 {
-                    await _saleInvoiceRepository.DeleteAsync(saleInvoice, cancellationToken);
+                    // Soft delete without removing file (file is in AccountingInvoice folder)
+                    saleInvoice.Delete(userId);
+                    await _saleInvoiceRepository.UpdateAsync(saleInvoice, cancellationToken);
                 }
                 break;
         }

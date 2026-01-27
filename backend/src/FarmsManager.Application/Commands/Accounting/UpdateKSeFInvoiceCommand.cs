@@ -117,6 +117,16 @@ public class UpdateKSeFInvoiceCommandHandler : IRequestHandler<UpdateKSeFInvoice
             await UpdateModuleEntityDueDateAsync(invoice.ModuleType, invoice.AssignedEntityInvoiceId.Value, request.Data.DueDate.Value, cancellationToken);
         }
 
+        // Synchronizuj status płatności do SaleInvoiceEntity dla modułu Sprzedaż
+        if (request.Data.PaymentStatus.HasValue && invoice.ModuleType == ModuleType.Sales && invoice.AssignedEntityInvoiceId.HasValue)
+        {
+            await UpdateSaleInvoicePaymentStatusAsync(
+                invoice.AssignedEntityInvoiceId.Value, 
+                request.Data.PaymentStatus.Value, 
+                request.Data.PaymentDate ?? invoice.PaymentDate, 
+                cancellationToken);
+        }
+
         return BaseResponse.EmptyResponse;
     }
 
@@ -161,5 +171,26 @@ public class UpdateKSeFInvoiceCommandHandler : IRequestHandler<UpdateKSeFInvoice
                 }
                 break;
         }
+    }
+
+    private async Task UpdateSaleInvoicePaymentStatusAsync(Guid saleInvoiceId, KSeFPaymentStatus paymentStatus, DateOnly? paymentDate, CancellationToken cancellationToken)
+    {
+        var saleInvoice = await _saleInvoiceRepository.GetByIdAsync(saleInvoiceId, cancellationToken);
+        if (saleInvoice == null)
+            return;
+
+        // Jeśli faktura jest oznaczona jako opłacona (gotówka lub przelew)
+        if (paymentStatus == KSeFPaymentStatus.PaidCash || paymentStatus == KSeFPaymentStatus.PaidTransfer)
+        {
+            var effectivePaymentDate = paymentDate ?? DateOnly.FromDateTime(DateTime.Today);
+            saleInvoice.MarkAsCompleted(effectivePaymentDate);
+        }
+        // Jeśli faktura jest oznaczona jako nieopłacona
+        else if (paymentStatus == KSeFPaymentStatus.Unpaid)
+        {
+            saleInvoice.MarkAsUnrealized();
+        }
+
+        await _saleInvoiceRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

@@ -1805,7 +1805,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                                         KSeFPaymentStatus.PaidCash ||
                                       details.paymentStatus ===
                                         KSeFPaymentStatus.PaidTransfer
-                                        ? "yellow.light"
+                                        ? "#fff9c4"
                                         : "transparent",
                                     padding:
                                       details.paymentStatus ===

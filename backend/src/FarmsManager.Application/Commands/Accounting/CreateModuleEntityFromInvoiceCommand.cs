@@ -43,6 +43,7 @@ public class CreateModuleEntityFromInvoiceRequest
 
 public record CreateFeedInvoiceFromKSeFDto
 {
+    public Guid InvoiceId { get; init; }
     public Guid FarmId { get; init; }
     public Guid CycleId { get; init; }
     public Guid HenhouseId { get; init; }
@@ -62,6 +63,7 @@ public record CreateFeedInvoiceFromKSeFDto
 
 public record CreateGasDeliveryFromKSeFDto
 {
+    public Guid InvoiceId { get; init; }
     public Guid FarmId { get; init; }
     public Guid? ContractorId { get; init; }
     public string ContractorNip { get; init; }
@@ -76,6 +78,7 @@ public record CreateGasDeliveryFromKSeFDto
 
 public record CreateExpenseProductionFromKSeFDto
 {
+    public Guid InvoiceId { get; init; }
     public Guid FarmId { get; init; }
     public Guid CycleId { get; init; }
     public Guid? ExpenseContractorId { get; init; }
@@ -92,6 +95,7 @@ public record CreateExpenseProductionFromKSeFDto
 
 public record CreateSaleInvoiceFromKSeFDto
 {
+    public Guid InvoiceId { get; init; }
     public Guid FarmId { get; init; }
     public Guid CycleId { get; init; }
     public Guid? SlaughterhouseId { get; init; }

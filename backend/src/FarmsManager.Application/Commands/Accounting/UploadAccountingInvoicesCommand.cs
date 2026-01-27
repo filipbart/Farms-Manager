@@ -172,8 +172,8 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
             var extension = Path.GetExtension(file.FileName);
             var newFileName = fileId + extension;
 
-            // Determine FileType based on module type
-            var fileType = GetFileTypeForModule(request.Data.ModuleType);
+            // Always use AccountingInvoice FileType for manual invoice uploads
+            var fileType = FileType.AccountingInvoice;
             var filePath = $"draft/{fileId}{extension}";
 
             using var memoryStream = new MemoryStream();
@@ -194,7 +194,8 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
             var matchedFarm = await MatchFarmEntityAsync(
                 extractedFields.SellerNip, extractedFields.SellerName,
                 extractedFields.BuyerNip, extractedFields.BuyerName,
-                isSalesModule, cancellationToken);
+                isSalesModule, cancellationToken,
+                extractedFields.SellerAddress, extractedFields.BuyerAddress);
 
             // Przetwórz moduł-specyficzne dane (kontrahenci, duplikaty, itp.)
             var moduleData = await ProcessModuleSpecificDataAsync(
@@ -419,54 +420,108 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
 
     private async Task<FarmEntity> MatchFarmEntityAsync(
         string sellerNip, string sellerName, string buyerNip, string buyerName,
-        bool isSalesModule, CancellationToken cancellationToken)
+        bool isSalesModule, CancellationToken cancellationToken,
+        string sellerAddress = null, string buyerAddress = null)
     {
-        FarmEntity farm = null;
-
         // Dla Sales: ferma = Seller (my sprzedajemy), dla pozostałych: ferma = Buyer (my kupujemy)
-        var (primaryNip, primaryName, secondaryNip, secondaryName) = isSalesModule
-            ? (sellerNip, sellerName, buyerNip, buyerName)
-            : (buyerNip, buyerName, sellerNip, sellerName);
+        var (nip, name, address) = isSalesModule
+            ? (sellerNip, sellerName, sellerAddress)
+            : (buyerNip, buyerName, buyerAddress);
 
-        // 1. Szukaj fermy bezpośrednio po NIP
-        if (!string.IsNullOrWhiteSpace(primaryNip))
+        // Pobierz wszystkie fermy raz (jak w KSeFSynchronizationJob)
+        var allFarms = await _farmRepository.ListAsync(new AllActiveFarmsSpec(), cancellationToken);
+
+        // Normalizuj NIP-y
+        var normalizeNip = NormalizeNip(nip);
+        var nameLower = name?.ToLowerInvariant();
+        var addressLower = address?.ToLowerInvariant();
+
+        // Połącz wszystkie teksty do wyszukiwania nazwy fermy
+        var additionalText = string.Join(" ",
+            new[] { nameLower, addressLower }
+                .Where(s => !string.IsNullOrEmpty(s)));
+
+        FarmEntity matchedFarm = null;
+
+        // 1. Szukaj ferm po NIP (primary najpierw)
+        var farmsMatchedByNip = allFarms.Where(f =>
         {
-            farm = await _farmRepository.FirstOrDefaultAsync(
-                new FarmByNipSpec(primaryNip), cancellationToken);
+            var farmNip = NormalizeNip(f.Nip);
+            return farmNip == normalizeNip;
+        }).ToList();
+
+        if (farmsMatchedByNip.Count == 1)
+        {
+            // Tylko jedna ferma z tym NIP - użyj jej
+            matchedFarm = farmsMatchedByNip.First();
+        }
+        else if (farmsMatchedByNip.Count > 1)
+        {
+            // Wiele ferm z tym samym NIP - doszukaj po nazwie (w danych faktury i adresach)
+            matchedFarm = farmsMatchedByNip.FirstOrDefault(f =>
+            {
+                var farmName = f.Name?.ToLowerInvariant();
+                if (string.IsNullOrEmpty(farmName))
+                    return false;
+
+                // Sprawdź w adresach (mogą zawierać informacje o miejscu dostawy)
+                if (!string.IsNullOrEmpty(additionalText) && additionalText.Contains(farmName))
+                {
+                    return true;
+                }
+
+                // Sprawdź w nazwie sprzedawcy/nabywcy
+                if ((!string.IsNullOrEmpty(nameLower) && nameLower.Contains(farmName)) ||
+                    (!string.IsNullOrEmpty(nameLower) && farmName.Contains(nameLower)))
+                {
+                    return true;
+                }
+
+
+                return false;
+            });
+            // Nie przypisuj fermy jeśli nie udało się jednoznacznie dopasować po nazwie
         }
 
-        if (farm is null && !string.IsNullOrWhiteSpace(secondaryNip))
+        // 2. Jeśli nie znaleziono po NIP, szukaj po nazwie (w danych faktury i adresach)
+        if (matchedFarm == null)
         {
-            farm = await _farmRepository.FirstOrDefaultAsync(
-                new FarmByNipSpec(secondaryNip), cancellationToken);
+            matchedFarm = allFarms.FirstOrDefault(f =>
+            {
+                var farmName = f.Name?.ToLowerInvariant();
+                if (string.IsNullOrEmpty(farmName))
+                    return false;
+
+                // Sprawdź w adresach (mogą zawierać informacje o miejscu dostawy)
+                if (!string.IsNullOrEmpty(additionalText) && additionalText.Contains(farmName))
+                {
+                    return true;
+                }
+
+
+                // Sprawdź w nazwie sprzedawcy/nabywcy
+                if ((!string.IsNullOrEmpty(nameLower) && nameLower.Contains(farmName)) ||
+                    (!string.IsNullOrEmpty(nameLower) && farmName.Contains(nameLower)))
+                {
+                    return true;
+                }
+
+                return false;
+            });
         }
 
-        // 2. Szukaj po nazwie
-        if (farm is null && !string.IsNullOrWhiteSpace(primaryName))
+        // 3. Fallback: szukaj przez TaxBusinessEntity (jeśli nadal nie znaleziono)
+        if (matchedFarm == null)
         {
-            farm = await _farmRepository.FirstOrDefaultAsync(
-                new FarmByNameSpec(primaryName), cancellationToken);
+            matchedFarm =
+                await MatchFarmViaTaxBusinessEntityAsync(normalizeNip, nameLower, allFarms, cancellationToken);
         }
 
-        if (farm is null && !string.IsNullOrWhiteSpace(secondaryName))
-        {
-            farm = await _farmRepository.FirstOrDefaultAsync(
-                new FarmByNameSpec(secondaryName), cancellationToken);
-        }
-
-        // 3. Fallback: szukaj przez TaxBusinessEntity
-        if (farm is null)
-        {
-            farm = await MatchFarmViaTaxBusinessEntityAsync(primaryNip, primaryName, secondaryNip, secondaryName,
-                cancellationToken);
-        }
-
-        return farm;
+        return matchedFarm;
     }
 
     private async Task<FarmEntity> MatchFarmViaTaxBusinessEntityAsync(
-        string sellerNip, string sellerName, string buyerNip, string buyerName,
-        CancellationToken cancellationToken)
+        string primaryNip, string primaryName, List<FarmEntity> allFarms, CancellationToken cancellationToken)
     {
         var taxBusinessEntities = await _taxBusinessEntityRepository.ListAsync(
             new AllActiveTaxBusinessEntitiesSpec(),
@@ -475,36 +530,37 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
         if (taxBusinessEntities.Count == 0)
             return null;
 
-        sellerNip = NormalizeNip(sellerNip);
-        buyerNip = NormalizeNip(buyerNip);
-
+        // Szukaj podmiotu po NIP
         var matchedEntity = taxBusinessEntities.FirstOrDefault(t =>
-            (t.Nip != null && (t.Nip == sellerNip || t.Nip == buyerNip)));
+            t.Nip != null && t.Nip == primaryNip);
 
+        // Jeśli nie znaleziono po NIP, szukaj po nazwie
         if (matchedEntity == null)
         {
-            var sellerNameLower = sellerName?.ToLowerInvariant();
-            var buyerNameLower = buyerName?.ToLowerInvariant();
-
             matchedEntity = taxBusinessEntities.FirstOrDefault(t =>
             {
                 var entityName = t.Name?.ToLowerInvariant();
                 if (string.IsNullOrEmpty(entityName))
                     return false;
 
-                return (!string.IsNullOrEmpty(sellerNameLower) && sellerNameLower.Contains(entityName)) ||
-                       (!string.IsNullOrEmpty(buyerNameLower) && buyerNameLower.Contains(entityName)) ||
-                       (!string.IsNullOrEmpty(sellerNameLower) && entityName.Contains(sellerNameLower)) ||
-                       (!string.IsNullOrEmpty(buyerNameLower) && entityName.Contains(buyerNameLower));
+                return (!string.IsNullOrEmpty(primaryName) && primaryName.Contains(entityName)) ||
+                       (!string.IsNullOrEmpty(primaryName) && entityName.Contains(primaryName));
             });
         }
 
-        // Jeśli znaleziono podmiot i ma on dokładnie jedną fermę, zwróć ją
-        if (matchedEntity != null && matchedEntity.Farms.Count == 1)
+        if (matchedEntity == null)
+            return null;
+
+        // Jeśli podmiot ma dokładnie jedną fermę, zwróć ją
+        if (matchedEntity.Farms.Count == 1)
         {
-            return matchedEntity.Farms.First();
+            var entityFarm = matchedEntity.Farms.First();
+            // Zwróć fermę z allFarms (ma ActiveCycle)
+            return allFarms.FirstOrDefault(f => f.Id == entityFarm.Id);
         }
 
+        // Jeśli podmiot ma więcej niż 1 fermę - nie przypisuj fermy automatycznie
+        // (użytkownik musi wybrać ręcznie)
         return null;
     }
 
@@ -561,6 +617,7 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
             SellerNip = model.VendorNip,
             BuyerName = model.CustomerName,
             BuyerNip = model.CustomerNip,
+            BuyerAddress = model.CustomerAddress,
             GrossAmount = model.InvoiceTotal,
             NetAmount = model.SubTotal,
             VatAmount = model.VatAmount,

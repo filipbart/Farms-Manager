@@ -58,6 +58,7 @@ import { FarmsService } from "../../services/farms-service";
 import type FarmRowModel from "../../models/farms/farm-row-model";
 import ConfirmDialog from "../../components/common/confirm-dialog";
 import { getAccountingDueDateClassName } from "../../utils/due-date-helper";
+import { useNotifications } from "../../context/notification-context";
 
 interface TabPanelProps {
   children: React.ReactNode;
@@ -77,6 +78,7 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, index, value }) => (
 );
 
 const AccountingPage: React.FC = () => {
+  const { fetchNotifications } = useNotifications();
   const [tabValue, setTabValue] = useState(0);
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
@@ -713,7 +715,10 @@ const AccountingPage: React.FC = () => {
               setSequentialMode(false);
             }
           }}
-          onSave={fetchInvoices}
+          onSave={() => {
+            fetchInvoices();
+            fetchNotifications();
+          }}
           invoice={selectedInvoice}
           sequentialMode={sequentialMode}
           currentIndex={sequentialIndex}
@@ -731,9 +736,21 @@ const AccountingPage: React.FC = () => {
           onClose={() => {
             setDetailsModalOpen(false);
             setSelectedInvoice(null);
+            if (sequentialMode) {
+              setSequentialMode(false);
+            }
           }}
-          onSave={fetchInvoices}
+          onSave={() => {
+            fetchInvoices();
+            fetchNotifications();
+          }}
           invoice={selectedInvoice}
+          sequentialMode={sequentialMode}
+          currentIndex={sequentialIndex}
+          totalCount={invoices.length}
+          onNext={handleSequentialNext}
+          onPrevious={handleSequentialPrevious}
+          onExitSequential={handleExitSequential}
         />
       )}
 
@@ -757,6 +774,7 @@ const AccountingPage: React.FC = () => {
             );
             // Always refresh the table after each save
             fetchInvoices();
+            fetchNotifications();
             if (draftInvoices.length <= 1) {
               setSaveModalOpen(false);
             }

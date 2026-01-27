@@ -112,6 +112,11 @@ public sealed class GetKSeFInvoicesFromDbSpec : BaseSpecification<KSeFInvoiceEnt
             Query.Where(x => x.AssignedUserId == filters.AssignedUserId.Value);
         }
 
+        if (filters.FarmId.HasValue)
+        {
+            Query.Where(x => x.FarmId == filters.FarmId.Value);
+        }
+
         // Wyszukiwanie tekstowe (ogólne)
         if (filters.SearchQuery.IsNotEmpty())
         {

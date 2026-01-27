@@ -10,6 +10,7 @@ public sealed class GetOverdueAndUpcomingAccountingInvoicesSpec : BaseSpecificat
         EnsureExists();
 
         // Filter by accessible farms if provided
+        // If user has farm restrictions, only show invoices for those farms (exclude invoices without farm assignment)
         if (accessibleFarmIds is not null && accessibleFarmIds.Count != 0)
             Query.Where(p => p.FarmId.HasValue && accessibleFarmIds.Contains(p.FarmId.Value));
 

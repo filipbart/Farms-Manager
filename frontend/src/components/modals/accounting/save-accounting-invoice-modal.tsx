@@ -16,7 +16,7 @@ import {
   FormHelperText,
   Autocomplete,
 } from "@mui/material";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { MdSave } from "react-icons/md";
 import type { DraftAccountingInvoice } from "../../../services/accounting-service";
 import { AccountingService } from "../../../services/accounting-service";
@@ -71,9 +71,9 @@ interface SaveAccountingInvoiceFormData {
   sellerNip: string;
   buyerName: string;
   buyerNip: string;
-  grossAmount: number;
-  netAmount: number;
-  vatAmount: number;
+  grossAmount: string | number;
+  netAmount: string | number;
+  vatAmount: string | number;
   documentType: InvoiceDocumentType;
   status: KSeFInvoiceStatus;
   vatDeductionType: VatDeductionType;
@@ -90,13 +90,14 @@ interface SaveAccountingInvoiceFormData {
   feedBankAccountNumber: string;
   feedVendorName: string;
   feedItemName: string;
-  feedQuantity: number;
-  feedUnitPrice: number;
+  feedQuantity: string | number;
+  feedUnitPrice: string | number;
   // Gas module fields
   gasFarmId: string;
+  gasCycleId: string;
   gasContractorId: string;
-  gasUnitPrice: number;
-  gasQuantity: number;
+  gasUnitPrice: string | number;
+  gasQuantity: string | number;
   // Expense module fields
   expenseFarmId: string;
   expenseCycleId: string;
@@ -130,6 +131,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [previewFile, setPreviewFile] = useState<File | null>(null);
   const [savedCount, setSavedCount] = useState(0);
+  const isResettingRef = useRef(false);
 
   // Module data states
   const [farms, setFarms] = useState<FarmRowModel[]>([]);
@@ -159,7 +161,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
     watch,
     setValue,
   } = useForm<SaveAccountingInvoiceFormData>({
-    shouldUnregister: true,
+    shouldUnregister: false,
     mode: "onSubmit",
   });
 
@@ -172,6 +174,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
   const watchedSaleFarmId = watch("saleFarmId");
   const watchedExpenseContractorId = watch("expenseContractorId");
   const watchedPaymentStatus = watch("paymentStatus");
+  const watchedInvoiceDate = watch("invoiceDate");
 
   const draftInvoice = draftInvoices[currentIndex];
 
@@ -245,12 +248,17 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
     }
   }, [watchedFeedFarmId, farms, fetchCycles, setValue]);
 
-  // Update cycles when gas farm changes
+  // Update cycles when gas farm changes and auto-select active cycle
   useEffect(() => {
     if (watchedGasFarmId && farms.length > 0) {
+      const farm = farms.find((f) => f.id === watchedGasFarmId);
       fetchCycles(watchedGasFarmId);
+      // Auto-select active cycle for production expense entry
+      if (farm?.activeCycle) {
+        setValue("gasCycleId", farm.activeCycle.id);
+      }
     }
-  }, [watchedGasFarmId, farms, fetchCycles]);
+  }, [watchedGasFarmId, farms, fetchCycles, setValue]);
 
   // Update cycles when expense farm changes and auto-select active cycle
   useEffect(() => {
@@ -449,20 +457,32 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
 
   // Auto-set payment date when payment status changes to paid
   useEffect(() => {
+    // Skip auto-set during form reset to prevent overwriting values from new invoice
+    if (isResettingRef.current) return;
+
     const isPaidStatus =
       watchedPaymentStatus === KSeFPaymentStatus.PaidCash ||
       watchedPaymentStatus === KSeFPaymentStatus.PaidTransfer;
 
     const currentPaymentDate = watch("paymentDate");
 
-    if (isPaidStatus && !currentPaymentDate) {
-      // Set today's date if no payment date is set
-      setValue("paymentDate", new Date().toISOString().split("T")[0]);
+    if (isPaidStatus) {
+      // For cash payment, use invoice date; for transfer, use today's date
+      const newDate =
+        watchedPaymentStatus === KSeFPaymentStatus.PaidCash &&
+        watchedInvoiceDate
+          ? watchedInvoiceDate
+          : new Date().toISOString().split("T")[0];
+
+      // Update date if it's empty or different from what it should be
+      if (!currentPaymentDate || currentPaymentDate !== newDate) {
+        setValue("paymentDate", newDate);
+      }
     } else if (!isPaidStatus) {
       // Clear payment date if status is not paid
       setValue("paymentDate", "");
     }
-  }, [watchedPaymentStatus, setValue, watch]);
+  }, [watchedPaymentStatus, watchedInvoiceDate, setValue, watch]);
 
   // Fetch module-specific data
   useEffect(() => {
@@ -539,6 +559,19 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
       const ef = currentDraft.extractedFields;
       const moduleType = (ef.moduleType as ModuleType) || ModuleType.None;
 
+      // Set flag to prevent payment date effect from running during reset
+      isResettingRef.current = true;
+
+      // Auto-set payment date based on payment status
+      let paymentDateValue = ef.paymentDate || "";
+      if (ef.paymentStatus === "PaidCash" && ef.invoiceDate) {
+        // For cash payment, use invoice date
+        paymentDateValue = ef.invoiceDate;
+      } else if (ef.paymentStatus === "PaidTransfer" && !ef.paymentDate) {
+        // For transfer without date, use today
+        paymentDateValue = new Date().toISOString().split("T")[0];
+      }
+
       reset({
         invoiceNumber: ef.invoiceNumber || "",
         invoiceDate: ef.invoiceDate || "",
@@ -547,16 +580,16 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
         sellerNip: ef.sellerNip || "",
         buyerName: ef.buyerName || "",
         buyerNip: ef.buyerNip || "",
-        grossAmount: ef.grossAmount || 0,
-        netAmount: ef.netAmount || 0,
-        vatAmount: ef.vatAmount || 0,
+        grossAmount: ef.grossAmount != null ? String(ef.grossAmount) : "",
+        netAmount: ef.netAmount != null ? String(ef.netAmount) : "",
+        vatAmount: ef.vatAmount != null ? String(ef.vatAmount) : "",
         documentType: InvoiceDocumentType.Vat,
         status: KSeFInvoiceStatus.Accepted,
         vatDeductionType: VatDeductionType.Full,
         moduleType: moduleType,
         paymentStatus:
           (ef.paymentStatus as KSeFPaymentStatus) || KSeFPaymentStatus.Unpaid,
-        paymentDate: ef.paymentDate || "",
+        paymentDate: paymentDateValue,
         comment: "",
         assignedUserId: userData?.id || "",
         relatedInvoiceNumber: "",
@@ -572,14 +605,17 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
         feedItemName:
           moduleType === ModuleType.Feeds ? ef.feedItemName || "" : "",
         feedQuantity:
-          moduleType === ModuleType.Feeds ? ef.feedQuantity || 0 : 0,
+          moduleType === ModuleType.Feeds ? String(ef.feedQuantity || 0) : 0,
         feedUnitPrice:
-          moduleType === ModuleType.Feeds ? ef.feedUnitPrice || 0 : 0,
+          moduleType === ModuleType.Feeds ? String(ef.feedUnitPrice || 0) : 0,
         gasFarmId: moduleType === ModuleType.Gas ? ef.farmId || "" : "",
+        gasCycleId: moduleType === ModuleType.Gas ? ef.cycleId || "" : "",
         gasContractorId:
           moduleType === ModuleType.Gas ? ef.gasContractorId || "" : "",
-        gasUnitPrice: moduleType === ModuleType.Gas ? ef.gasUnitPrice || 0 : 0,
-        gasQuantity: moduleType === ModuleType.Gas ? ef.gasQuantity || 0 : 0,
+        gasUnitPrice:
+          moduleType === ModuleType.Gas ? String(ef.gasUnitPrice || 0) : 0,
+        gasQuantity:
+          moduleType === ModuleType.Gas ? String(ef.gasQuantity || 0) : 0,
         expenseFarmId:
           moduleType === ModuleType.ProductionExpenses ? ef.farmId || "" : "",
         expenseCycleId:
@@ -594,6 +630,11 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
         saleSlaughterhouseId:
           moduleType === ModuleType.Sales ? ef.slaughterhouseId || "" : "",
       });
+
+      // Reset flag after form reset completes
+      setTimeout(() => {
+        isResettingRef.current = false;
+      }, 0);
     }
   }, [currentIndex, draftInvoices, reset, open, handleClose, userData?.id]);
 
@@ -604,8 +645,20 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
       watchedFeedQuantity &&
       watchedFeedUnitPrice
     ) {
-      const quantity = Number(watchedFeedQuantity);
-      const unitPrice = Number(watchedFeedUnitPrice);
+      // Parse values that might be strings with commas/dots
+      const parsedQty =
+        typeof watchedFeedQuantity === "string"
+          ? parseFormattedNumber(watchedFeedQuantity)
+          : String(watchedFeedQuantity);
+      const parsedPrice =
+        typeof watchedFeedUnitPrice === "string"
+          ? parseFormattedNumber(watchedFeedUnitPrice)
+          : String(watchedFeedUnitPrice);
+
+      if (!parsedQty || !parsedPrice) return;
+
+      const quantity = Number(parsedQty);
+      const unitPrice = Number(parsedPrice);
 
       if (
         !isNaN(quantity) &&
@@ -622,16 +675,23 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
         // Calculate gross amount (net + VAT)
         const grossAmount = netAmount + vatAmount;
 
-        // Round to 2 decimal places
-        setValue("netAmount", Math.round(netAmount * 100) / 100);
-        setValue("vatAmount", Math.round(vatAmount * 100) / 100);
-        setValue("grossAmount", Math.round(grossAmount * 100) / 100);
+        // Round to 2 decimal places and convert to string
+        setValue("netAmount", String(Math.round(netAmount * 100) / 100));
+        setValue("vatAmount", String(Math.round(vatAmount * 100) / 100));
+        setValue("grossAmount", String(Math.round(grossAmount * 100) / 100));
       }
     }
   }, [watchedModuleType, watchedFeedQuantity, watchedFeedUnitPrice, setValue]);
 
   const handleSave = async (formData: SaveAccountingInvoiceFormData) => {
     if (!draftInvoice) return;
+
+    // Helper function to convert string | number to number
+    const toNumber = (value: string | number): number => {
+      if (typeof value === "number") return value;
+      const parsed = parseFormattedNumber(value);
+      return parsed ? Number(parsed) : 0;
+    };
 
     // Build module-specific data
     let feedData: Parameters<
@@ -654,16 +714,17 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
           bankAccountNumber: formData.feedBankAccountNumber,
           vendorName: formData.feedVendorName || formData.sellerName,
           itemName: formData.feedItemName,
-          quantity: formData.feedQuantity,
-          unitPrice: formData.feedUnitPrice,
+          quantity: toNumber(formData.feedQuantity),
+          unitPrice: toNumber(formData.feedUnitPrice),
         };
         break;
       case ModuleType.Gas:
         gasData = {
           farmId: formData.gasFarmId,
+          cycleId: formData.gasCycleId || undefined,
           contractorId: formData.gasContractorId || undefined,
-          unitPrice: formData.gasUnitPrice,
-          quantity: formData.gasQuantity,
+          unitPrice: toNumber(formData.gasUnitPrice),
+          quantity: toNumber(formData.gasQuantity),
         };
         break;
       case ModuleType.ProductionExpenses:
@@ -698,9 +759,9 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
           sellerNip: formData.sellerNip,
           buyerName: formData.buyerName,
           buyerNip: formData.buyerNip,
-          grossAmount: formData.grossAmount,
-          netAmount: formData.netAmount,
-          vatAmount: formData.vatAmount,
+          grossAmount: toNumber(formData.grossAmount),
+          netAmount: toNumber(formData.netAmount),
+          vatAmount: toNumber(formData.vatAmount),
           invoiceType: draftInvoice.extractedFields.invoiceType,
           documentType: formData.documentType,
           status: formData.status,
@@ -832,7 +893,8 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
           rules={{
             required: "Kwota netto jest wymagana",
             validate: (value) => {
-              const num = Number(value);
+              const parsed = parseFormattedNumber(String(value || ""));
+              const num = Number(parsed);
               return (
                 (!isNaN(num) && num >= 0) ||
                 "Kwota musi być liczbą większą lub równą 0"
@@ -844,8 +906,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
               label="Kwota netto [zł]"
               value={formatNumberWithSpaces(field.value || "")}
               onChange={(e) => {
-                const parsed = parseFormattedNumber(e.target.value);
-                field.onChange(parsed ? Number(parsed) : "");
+                field.onChange(e.target.value);
               }}
               error={!!errors.netAmount}
               helperText={errors.netAmount?.message}
@@ -866,7 +927,8 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
           rules={{
             required: "Kwota VAT jest wymagana",
             validate: (value) => {
-              const num = Number(value);
+              const parsed = parseFormattedNumber(String(value || ""));
+              const num = Number(parsed);
               return (
                 (!isNaN(num) && num >= 0) ||
                 "Kwota musi być liczbą większą lub równą 0"
@@ -878,8 +940,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
               label="Kwota VAT [zł]"
               value={formatNumberWithSpaces(field.value || "")}
               onChange={(e) => {
-                const parsed = parseFormattedNumber(e.target.value);
-                field.onChange(parsed ? Number(parsed) : "");
+                field.onChange(e.target.value);
               }}
               error={!!errors.vatAmount}
               helperText={errors.vatAmount?.message}
@@ -900,7 +961,8 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
           rules={{
             required: "Kwota brutto jest wymagana",
             validate: (value) => {
-              const num = Number(value);
+              const parsed = parseFormattedNumber(String(value || ""));
+              const num = Number(parsed);
               return (
                 (!isNaN(num) && num >= 0) ||
                 "Kwota musi być liczbą większą lub równą 0"
@@ -912,8 +974,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
               label="Kwota brutto [zł]"
               value={formatNumberWithSpaces(field.value || "")}
               onChange={(e) => {
-                const parsed = parseFormattedNumber(e.target.value);
-                field.onChange(parsed ? Number(parsed) : "");
+                field.onChange(e.target.value);
               }}
               error={!!errors.grossAmount}
               helperText={errors.grossAmount?.message}
@@ -994,39 +1055,53 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
       </Grid>
 
       <Grid size={{ xs: 12, sm: 4 }}>
-        <FormControl fullWidth>
-          <InputLabel id="invoice-status-label">Status faktury</InputLabel>
-          <Select
-            labelId="invoice-status-label"
-            label="Status faktury"
-            defaultValue={KSeFInvoiceStatus.Accepted}
-            {...register("status")}
-          >
-            {Object.entries(KSeFInvoiceStatusLabels).map(([key, label]) => (
-              <MenuItem key={key} value={key}>
-                {label}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        <Controller
+          name="status"
+          control={control}
+          defaultValue={KSeFInvoiceStatus.Accepted}
+          render={({ field }) => (
+            <FormControl fullWidth>
+              <InputLabel id="invoice-status-label">Status faktury</InputLabel>
+              <Select
+                {...field}
+                labelId="invoice-status-label"
+                label="Status faktury"
+              >
+                {Object.entries(KSeFInvoiceStatusLabels).map(([key, label]) => (
+                  <MenuItem key={key} value={key}>
+                    {label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
+        />
       </Grid>
 
       <Grid size={{ xs: 12, sm: 4 }}>
-        <FormControl fullWidth>
-          <InputLabel id="payment-status-label">Status płatności</InputLabel>
-          <Select
-            labelId="payment-status-label"
-            label="Status płatności"
-            defaultValue={KSeFPaymentStatus.Unpaid}
-            {...register("paymentStatus")}
-          >
-            {Object.entries(KSeFPaymentStatusLabels).map(([key, label]) => (
-              <MenuItem key={key} value={key}>
-                {label}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        <Controller
+          name="paymentStatus"
+          control={control}
+          defaultValue={KSeFPaymentStatus.Unpaid}
+          render={({ field }) => (
+            <FormControl fullWidth>
+              <InputLabel id="payment-status-label">
+                Status płatności
+              </InputLabel>
+              <Select
+                {...field}
+                labelId="payment-status-label"
+                label="Status płatności"
+              >
+                {Object.entries(KSeFPaymentStatusLabels).map(([key, label]) => (
+                  <MenuItem key={key} value={key}>
+                    {label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
+        />
       </Grid>
 
       {(watchedPaymentStatus === KSeFPaymentStatus.PaidCash ||
@@ -1712,7 +1787,10 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                         rules={{
                           required: "Ilość jest wymagana",
                           validate: (value) => {
-                            const num = Number(value);
+                            const parsed = parseFormattedNumber(
+                              String(value || ""),
+                            );
+                            const num = Number(parsed);
                             return (
                               (!isNaN(num) && num > 0) ||
                               "Ilość musi być liczbą większą od 0"
@@ -1722,12 +1800,9 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                         render={({ field }) => (
                           <TextField
                             label="Ilość [t]"
-                            value={formatNumberWithSpaces(field.value || "")}
+                            value={field.value || ""}
                             onChange={(e) => {
-                              const parsed = parseFormattedNumber(
-                                e.target.value,
-                              );
-                              field.onChange(parsed ? Number(parsed) : "");
+                              field.onChange(e.target.value);
                             }}
                             error={!!errors.feedQuantity}
                             helperText={errors.feedQuantity?.message}
@@ -1747,7 +1822,10 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                         rules={{
                           required: "Cena jest wymagana",
                           validate: (value) => {
-                            const num = Number(value);
+                            const parsed = parseFormattedNumber(
+                              String(value || ""),
+                            );
+                            const num = Number(parsed);
                             return (
                               (!isNaN(num) && num > 0) ||
                               "Cena musi być liczbą większą od 0"
@@ -1757,12 +1835,9 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                         render={({ field }) => (
                           <TextField
                             label="Cena jednostkowa [zł/t]"
-                            value={formatNumberWithSpaces(field.value || "")}
+                            value={field.value || ""}
                             onChange={(e) => {
-                              const parsed = parseFormattedNumber(
-                                e.target.value,
-                              );
-                              field.onChange(parsed ? Number(parsed) : "");
+                              field.onChange(e.target.value);
                             }}
                             error={!!errors.feedUnitPrice}
                             helperText={errors.feedUnitPrice?.message}
@@ -1830,13 +1905,34 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                       </LoadingTextField>
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6 }}>
+                      <LoadingTextField
+                        loading={loadingCycles}
+                        select
+                        label="Cykl (dla kosztów produkcyjnych)"
+                        fullWidth
+                        disabled={!watchedGasFarmId}
+                        value={watch("gasCycleId") || ""}
+                        helperText="Opcjonalne - jeśli wybrane, zostanie utworzony wpis w kosztach produkcyjnych"
+                        {...register("gasCycleId")}
+                      >
+                        {cycles.map((cycle) => (
+                          <MenuItem key={cycle.id} value={cycle.id}>
+                            {cycle.identifier}/{cycle.year}
+                          </MenuItem>
+                        ))}
+                      </LoadingTextField>
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 6 }}>
                       <Controller
                         name="gasQuantity"
                         control={control}
                         rules={{
                           required: "Ilość jest wymagana",
                           validate: (value) => {
-                            const num = Number(value);
+                            const parsed = parseFormattedNumber(
+                              String(value || ""),
+                            );
+                            const num = Number(parsed);
                             return (
                               (!isNaN(num) && num > 0) ||
                               "Ilość musi być liczbą większą od 0"
@@ -1846,12 +1942,9 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                         render={({ field }) => (
                           <TextField
                             label="Ilość [l]"
-                            value={formatNumberWithSpaces(field.value || "")}
+                            value={field.value || ""}
                             onChange={(e) => {
-                              const parsed = parseFormattedNumber(
-                                e.target.value,
-                              );
-                              field.onChange(parsed ? Number(parsed) : "");
+                              field.onChange(e.target.value);
                             }}
                             error={!!errors.gasQuantity}
                             helperText={errors.gasQuantity?.message}
@@ -1871,7 +1964,10 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                         rules={{
                           required: "Cena jest wymagana",
                           validate: (value) => {
-                            const num = Number(value);
+                            const parsed = parseFormattedNumber(
+                              String(value || ""),
+                            );
+                            const num = Number(parsed);
                             return (
                               (!isNaN(num) && num > 0) ||
                               "Cena musi być liczbą większą od 0"
@@ -1881,12 +1977,9 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                         render={({ field }) => (
                           <TextField
                             label="Cena jednostkowa [zł/l]"
-                            value={formatNumberWithSpaces(field.value || "")}
+                            value={field.value || ""}
                             onChange={(e) => {
-                              const parsed = parseFormattedNumber(
-                                e.target.value,
-                              );
-                              field.onChange(parsed ? Number(parsed) : "");
+                              field.onChange(e.target.value);
                             }}
                             error={!!errors.gasUnitPrice}
                             helperText={errors.gasUnitPrice?.message}

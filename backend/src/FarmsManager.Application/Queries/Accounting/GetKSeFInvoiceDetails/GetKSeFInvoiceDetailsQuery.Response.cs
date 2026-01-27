@@ -37,9 +37,28 @@ public class KSeFInvoiceDetailsDto
     public string AssignedUserName { get; set; }
     public Guid? AssignedEntityInvoiceId { get; set; }
     public string RelatedInvoiceNumber { get; set; }
+    
+    // Gas module fields
     public decimal? GasQuantity { get; set; }
     public decimal? GasUnitPrice { get; set; }
     public decimal? GasInvoiceTotal { get; set; }
+    public Guid? GasContractorId { get; set; }
+    
+    // Feeds module fields
+    public Guid? FeedHenhouseId { get; set; }
+    public string FeedItemName { get; set; }
+    public decimal? FeedQuantity { get; set; }
+    public decimal? FeedUnitPrice { get; set; }
+    public string FeedVendorName { get; set; }
+    public string FeedBankAccountNumber { get; set; }
+    
+    // Expenses module fields
+    public Guid? ExpenseContractorId { get; set; }
+    public Guid? ExpenseTypeId { get; set; }
+    
+    // Sales module fields
+    public Guid? SaleSlaughterhouseId { get; set; }
+    
     public DateTime CreatedAt { get; set; }
     public string CreatedBy { get; set; }
     public int AttachmentsCount { get; set; }

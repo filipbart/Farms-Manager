@@ -7,24 +7,41 @@ export const formatNumberWithSpaces = (value: string | number): string => {
   if (value === "" || value === null || value === undefined) return "";
 
   const numStr = String(value);
-  const parts = numStr.split(".");
+
+  // Detect which separator is used (comma or dot)
+  const hasComma = numStr.includes(",");
+  const separator = hasComma ? "," : ".";
+
+  // Check if value ends with separator (user is typing decimal part)
+  const endsWithSeparator = numStr.endsWith(",") || numStr.endsWith(".");
+
+  // Normalize to dot for processing, then split
+  const normalized = numStr.replace(",", ".");
+  const parts = normalized.split(".");
   const integerPart = parts[0].replace(/\s/g, "");
   const decimalPart = parts[1] || "";
 
   // Add spaces as thousand separators
   const formatted = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 
-  return decimalPart ? `${formatted}.${decimalPart}` : formatted;
+  // Preserve trailing separator if user just typed it
+  if (endsWithSeparator && !decimalPart) {
+    return `${formatted}${numStr.slice(-1)}`;
+  }
+
+  // Use the original separator (comma or dot) in output
+  return decimalPart ? `${formatted}${separator}${decimalPart}` : formatted;
 };
 
 /**
  * Parses a formatted number string back to plain number
  * @param value - The formatted string to parse
- * @returns Plain number string without spaces
+ * @returns Plain number string without spaces, with comma replaced by dot
  */
 export const parseFormattedNumber = (value: string): string => {
   if (!value) return "";
-  return value.replace(/\s/g, "");
+  // Remove spaces and replace comma with dot (Polish decimal separator to standard)
+  return value.replace(/\s/g, "").replace(",", ".");
 };
 
 /**

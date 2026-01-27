@@ -33,13 +33,13 @@ export interface InvoiceFormData {
   feedBankAccountNumber: string;
   feedVendorName: string;
   feedItemName: string;
-  feedQuantity: number;
-  feedUnitPrice: number;
+  feedQuantity: string | number;
+  feedUnitPrice: string | number;
   // Gas module fields
   gasFarmId: string;
   gasContractorId: string;
-  gasUnitPrice: number;
-  gasQuantity: number;
+  gasUnitPrice: string | number;
+  gasQuantity: string | number;
   // Expense module fields
   expenseFarmId: string;
   expenseCycleId: string;
@@ -51,9 +51,7 @@ export interface InvoiceFormData {
   saleSlaughterhouseId: string;
 }
 
-export const getFarmIdForModule = (
-  formData: InvoiceFormData,
-): string => {
+export const getFarmIdForModule = (formData: InvoiceFormData): string => {
   switch (formData.moduleType) {
     case ModuleType.Feeds:
       return formData.feedFarmId;
@@ -68,9 +66,7 @@ export const getFarmIdForModule = (
   }
 };
 
-export const getCycleIdForModule = (
-  formData: InvoiceFormData,
-): string => {
+export const getCycleIdForModule = (formData: InvoiceFormData): string => {
   switch (formData.moduleType) {
     case ModuleType.Feeds:
       return formData.feedCycleId;

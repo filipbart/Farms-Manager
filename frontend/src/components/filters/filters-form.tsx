@@ -21,8 +21,9 @@ function FiltersForm<T extends Record<string, any>>({
     <Grid container spacing={2}>
       {config.map((filter) => {
         const key = filter.key as keyof T;
+        const gridSize = filter.gridSize || { xs: 12, sm: 6, md: 4, lg: 3 };
         return (
-          <Grid key={key as string}>
+          <Grid key={key as string} size={gridSize}>
             <RenderFilterField
               filter={filter}
               value={filters[key]}

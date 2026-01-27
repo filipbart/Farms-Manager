@@ -140,6 +140,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           to="/accounting"
           title="Księgowość"
           icon={<FaFileInvoiceDollar />}
+          badgeLabel="Nowa"
           notificationCount={notifications?.accountingInvoices?.count}
           notificationPriority={notifications?.accountingInvoices?.priority}
         />

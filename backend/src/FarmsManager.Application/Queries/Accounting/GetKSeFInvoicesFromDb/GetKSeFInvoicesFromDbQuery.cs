@@ -131,6 +131,11 @@ public record GetKSeFInvoicesFromDbQueryFilters : OrderedPaginationParams<KSeFIn
     /// Filtrowanie po przypisanym pracowniku
     /// </summary>
     public Guid? AssignedUserId { get; init; }
+
+    /// <summary>
+    /// Filtrowanie po lokalizacji (fermie)
+    /// </summary>
+    public Guid? FarmId { get; init; }
 }
 
 public record GetKSeFInvoicesFromDbQuery(GetKSeFInvoicesFromDbQueryFilters Filters) 

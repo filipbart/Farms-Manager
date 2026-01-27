@@ -138,9 +138,28 @@ export interface KSeFInvoiceDetails extends KSeFInvoiceListModel {
   paymentDate: string | null;
   paymentDueDate: string | null;
   assignedEntityInvoiceId: string | null;
+
+  // Gas module fields
   gasQuantity?: number | null;
   gasUnitPrice?: number | null;
   gasInvoiceTotal?: number | null;
+  gasContractorId?: string | null;
+
+  // Feeds module fields
+  feedHenhouseId?: string | null;
+  feedItemName?: string | null;
+  feedQuantity?: number | null;
+  feedUnitPrice?: number | null;
+  feedVendorName?: string | null;
+  feedBankAccountNumber?: string | null;
+
+  // Expenses module fields
+  expenseContractorId?: string | null;
+  expenseTypeId?: string | null;
+
+  // Sales module fields
+  saleSlaughterhouseId?: string | null;
+
   createdAt: string;
   createdBy: string | null;
   filePath: string | null;

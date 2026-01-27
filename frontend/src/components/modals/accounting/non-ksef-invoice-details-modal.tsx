@@ -17,6 +17,7 @@ import {
   Box,
   CircularProgress,
   ButtonGroup,
+  Autocomplete,
 } from "@mui/material";
 import { useState, useEffect, useCallback } from "react";
 import { MdSave } from "react-icons/md";
@@ -60,9 +61,19 @@ import type {
   KSeFInvoiceListModel,
 } from "../../../models/accounting/ksef-invoice";
 import type FarmRowModel from "../../../models/farms/farm-row-model";
+import type CycleDto from "../../../models/farms/latest-cycle";
 import { UsersService } from "../../../services/users-service";
 import type { UserListModel } from "../../../models/users/users";
 import { useAuth } from "../../../auth/useAuth";
+import { FeedsService } from "../../../services/feeds-service";
+import type { FeedsNamesRow } from "../../../models/feeds/feeds-names";
+import { GasService } from "../../../services/gas-service";
+import type { GasContractorRow } from "../../../models/gas/gas-contractors";
+import { ExpensesService } from "../../../services/expenses-service";
+import type { ExpenseContractorRow } from "../../../models/expenses/expenses-contractors";
+import type { ExpenseTypeRow } from "../../../models/expenses/expenses-types";
+import { SlaughterhousesService } from "../../../services/slaughterhouses-service";
+import type { SlaughterhouseRowModel } from "../../../models/slaughterhouses/slaughterhouse-row-model";
 import ConfirmDialog from "../../common/confirm-dialog";
 import {
   type InvoiceFormData,
@@ -76,6 +87,13 @@ interface NonKSeFInvoiceDetailsModalProps {
   onClose: () => void;
   onSave?: () => void;
   invoice: KSeFInvoiceListModel | null;
+  // Sequential processing props
+  sequentialMode?: boolean;
+  currentIndex?: number;
+  totalCount?: number;
+  onNext?: () => void;
+  onPrevious?: () => void;
+  onExitSequential?: () => void;
 }
 
 const NonKSeFInvoiceDetailsModal: React.FC<NonKSeFInvoiceDetailsModalProps> = ({
@@ -83,6 +101,12 @@ const NonKSeFInvoiceDetailsModal: React.FC<NonKSeFInvoiceDetailsModalProps> = ({
   onClose,
   onSave,
   invoice,
+  sequentialMode = false,
+  currentIndex = 0,
+  totalCount = 0,
+  onNext,
+  onPrevious,
+  onExitSequential,
 }) => {
   const theme = useTheme();
   const isMd = useMediaQuery(theme.breakpoints.up("md"));
@@ -97,6 +121,20 @@ const NonKSeFInvoiceDetailsModal: React.FC<NonKSeFInvoiceDetailsModalProps> = ({
   // Module data states
   const [farms, setFarms] = useState<FarmRowModel[]>([]);
   const [loadingFarms, setLoadingFarms] = useState(false);
+  const [cycles, setCycles] = useState<CycleDto[]>([]);
+  const [loadingCycles, setLoadingCycles] = useState(false);
+  const [henhouses, setHenhouses] = useState<{ id: string; name: string }[]>(
+    [],
+  );
+  const [feedNames, setFeedNames] = useState<FeedsNamesRow[]>([]);
+  const [gasContractors, setGasContractors] = useState<GasContractorRow[]>([]);
+  const [expenseContractors, setExpenseContractors] = useState<
+    ExpenseContractorRow[]
+  >([]);
+  const [expenseTypes, setExpenseTypes] = useState<ExpenseTypeRow[]>([]);
+  const [slaughterhouses, setSlaughterhouses] = useState<
+    SlaughterhouseRowModel[]
+  >([]);
   const [users, setUsers] = useState<UserListModel[]>([]);
 
   // Attachments hook
@@ -131,8 +169,18 @@ const NonKSeFInvoiceDetailsModal: React.FC<NonKSeFInvoiceDetailsModalProps> = ({
   });
 
   const watchedModuleType = watch("moduleType");
+  const watchedFeedFarmId = watch("feedFarmId");
   const watchedGasFarmId = watch("gasFarmId");
+  const watchedExpenseFarmId = watch("expenseFarmId");
+  const watchedSaleFarmId = watch("saleFarmId");
+  const watchedExpenseContractorId = watch("expenseContractorId");
   const watchedPaymentStatus = watch("paymentStatus");
+  const watchedInvoiceDate = watch("invoiceDate");
+  const watchedSellerNip = watch("sellerNip");
+  const watchedStatus = watch("status");
+  const isPaidPaymentStatus =
+    watchedPaymentStatus === KSeFPaymentStatus.PaidCash ||
+    watchedPaymentStatus === KSeFPaymentStatus.PaidTransfer;
 
   // Fetch invoice details
   useEffect(() => {
@@ -216,6 +264,32 @@ const NonKSeFInvoiceDetailsModal: React.FC<NonKSeFInvoiceDetailsModalProps> = ({
     setLoadingFarms(false);
   }, []);
 
+  const fetchCycles = useCallback(async (farmId: string) => {
+    if (!farmId) {
+      setCycles([]);
+      return;
+    }
+    setLoadingCycles(true);
+    await handleApiResponse(
+      () => FarmsService.getFarmCycles(farmId),
+      (data) => setCycles(data.responseData ?? []),
+      () => setCycles([]),
+    );
+    setLoadingCycles(false);
+  }, []);
+
+  // Update henhouses and cycles when feed farm changes
+  useEffect(() => {
+    if (watchedFeedFarmId && farms.length > 0) {
+      const farm = farms.find((f) => f.id === watchedFeedFarmId);
+      setHenhouses(farm?.henhouses || []);
+      fetchCycles(watchedFeedFarmId);
+      if (farm?.activeCycle) {
+        setValue("feedCycleId", farm.activeCycle.id);
+      }
+    }
+  }, [watchedFeedFarmId, farms, fetchCycles, setValue]);
+
   // Auto-set payment date when payment status changes to paid
   useEffect(() => {
     const isPaidStatus =
@@ -224,26 +298,108 @@ const NonKSeFInvoiceDetailsModal: React.FC<NonKSeFInvoiceDetailsModalProps> = ({
 
     const currentPaymentDate = watch("paymentDate");
 
-    if (isPaidStatus && !currentPaymentDate) {
-      setValue("paymentDate", new Date().toISOString().split("T")[0]);
+    if (isPaidStatus) {
+      // For cash payment, use invoice date; for transfer, use today's date
+      const newDate =
+        watchedPaymentStatus === KSeFPaymentStatus.PaidCash &&
+        watchedInvoiceDate
+          ? watchedInvoiceDate
+          : new Date().toISOString().split("T")[0];
+
+      // Update date if it's empty or different from what it should be
+      if (!currentPaymentDate || currentPaymentDate !== newDate) {
+        setValue("paymentDate", newDate);
+      }
     } else if (!isPaidStatus) {
       setValue("paymentDate", "");
     }
-  }, [watchedPaymentStatus, setValue, watch]);
+  }, [watchedPaymentStatus, watchedInvoiceDate, setValue, watch]);
 
   // Fetch module-specific data
   useEffect(() => {
-    if (!open) return;
-
     fetchFarms();
-
-    // Users
+    // Fetch feed names for autocomplete
+    handleApiResponse(
+      () => FeedsService.getFeedsNames(),
+      (data) => setFeedNames(data.responseData?.fields || []),
+      () => setFeedNames([]),
+    );
+    // Fetch gas contractors
+    handleApiResponse(
+      () => GasService.getGasContractors(),
+      (data) => setGasContractors(data.responseData?.contractors || []),
+      () => setGasContractors([]),
+    );
+    // Fetch expense contractors
+    handleApiResponse(
+      () => ExpensesService.getExpensesContractors({}),
+      (data) => setExpenseContractors(data.responseData?.contractors || []),
+      () => setExpenseContractors([]),
+    );
+    // Fetch expense types
+    handleApiResponse(
+      () => ExpensesService.getExpensesTypes(),
+      (data) => setExpenseTypes(data.responseData?.types || []),
+      () => setExpenseTypes([]),
+    );
+    // Fetch slaughterhouses
+    handleApiResponse(
+      () => SlaughterhousesService.getAllSlaughterhouses(),
+      (data) => setSlaughterhouses(data.responseData?.items || []),
+      () => setSlaughterhouses([]),
+    );
+    // Fetch users
     handleApiResponse(
       () => UsersService.getUsers({ page: 0, pageSize: 100 }),
       (data) => setUsers(data.responseData?.items ?? []),
       () => setUsers([]),
     );
-  }, [open, fetchFarms]);
+  }, [fetchFarms]);
+
+  useEffect(() => {
+    if (watchedExpenseFarmId && farms.length > 0) {
+      fetchCycles(watchedExpenseFarmId);
+    }
+  }, [watchedExpenseFarmId, farms, fetchCycles]);
+
+  // Fetch cycles when sale farm changes
+  useEffect(() => {
+    if (watchedSaleFarmId && farms.length > 0) {
+      fetchCycles(watchedSaleFarmId);
+      const farm = farms.find((f) => f.id === watchedSaleFarmId);
+      if (farm?.activeCycle) {
+        setValue("saleCycleId", farm.activeCycle.id);
+      }
+    }
+  }, [watchedSaleFarmId, farms, fetchCycles, setValue]);
+
+  // Auto-select contractor by NIP for Production Expenses module when rejected or no contractor assigned
+  useEffect(() => {
+    if (
+      watchedModuleType === ModuleType.ProductionExpenses &&
+      watchedSellerNip &&
+      expenseContractors.length > 0 &&
+      (!watchedExpenseContractorId ||
+        watchedStatus === KSeFInvoiceStatus.Rejected)
+    ) {
+      const matchingContractor = expenseContractors.find(
+        (c) => c.nip === watchedSellerNip,
+      );
+      if (
+        matchingContractor &&
+        matchingContractor.id !== watchedExpenseContractorId
+      ) {
+        setValue("expenseContractorId", matchingContractor.id);
+      }
+    }
+  }, [
+    watchedModuleType,
+    watchedSellerNip,
+    watchedExpenseContractorId,
+    watchedStatus,
+    expenseContractors,
+    setValue,
+  ]);
 
   // Initialize form with invoice details
   useEffect(() => {
@@ -281,16 +437,33 @@ const NonKSeFInvoiceDetailsModal: React.FC<NonKSeFInvoiceDetailsModalProps> = ({
       // Module-specific fields
       feedFarmId: moduleType === ModuleType.Feeds ? details.farmId || "" : "",
       feedCycleId: moduleType === ModuleType.Feeds ? details.cycleId || "" : "",
-      feedHenhouseId: "",
-      feedBankAccountNumber: "",
-      feedVendorName: details.sellerName || "",
-      feedItemName: "",
-      feedQuantity: 0,
-      feedUnitPrice: 0,
+      feedHenhouseId:
+        moduleType === ModuleType.Feeds ? details.feedHenhouseId || "" : "",
+      feedBankAccountNumber:
+        moduleType === ModuleType.Feeds
+          ? details.feedBankAccountNumber || ""
+          : "",
+      feedVendorName:
+        moduleType === ModuleType.Feeds
+          ? details.feedVendorName || details.sellerName || ""
+          : details.sellerName || "",
+      feedItemName:
+        moduleType === ModuleType.Feeds ? details.feedItemName || "" : "",
+      feedQuantity:
+        moduleType === ModuleType.Feeds
+          ? String(details.feedQuantity || 0)
+          : "",
+      feedUnitPrice:
+        moduleType === ModuleType.Feeds
+          ? String(details.feedUnitPrice || 0)
+          : "",
       gasFarmId: moduleType === ModuleType.Gas ? details.farmId || "" : "",
-      gasContractorId: "",
-      gasUnitPrice: details.gasUnitPrice || 0,
-      gasQuantity: details.gasQuantity || 0,
+      gasContractorId:
+        moduleType === ModuleType.Gas ? details.gasContractorId || "" : "",
+      gasUnitPrice:
+        moduleType === ModuleType.Gas ? String(details.gasUnitPrice || 0) : "",
+      gasQuantity:
+        moduleType === ModuleType.Gas ? String(details.gasQuantity || 0) : "",
       expenseFarmId:
         moduleType === ModuleType.ProductionExpenses
           ? details.farmId || ""
@@ -299,11 +472,20 @@ const NonKSeFInvoiceDetailsModal: React.FC<NonKSeFInvoiceDetailsModalProps> = ({
         moduleType === ModuleType.ProductionExpenses
           ? details.cycleId || ""
           : "",
-      expenseContractorId: "",
-      expenseTypeId: "",
+      expenseContractorId:
+        moduleType === ModuleType.ProductionExpenses
+          ? details.expenseContractorId || ""
+          : "",
+      expenseTypeId:
+        moduleType === ModuleType.ProductionExpenses
+          ? details.expenseTypeId || ""
+          : "",
       saleFarmId: moduleType === ModuleType.Sales ? details.farmId || "" : "",
       saleCycleId: moduleType === ModuleType.Sales ? details.cycleId || "" : "",
-      saleSlaughterhouseId: "",
+      saleSlaughterhouseId:
+        moduleType === ModuleType.Sales
+          ? details.saleSlaughterhouseId || ""
+          : "",
     });
   }, [details, reset, userData?.id]);
 
@@ -431,6 +613,13 @@ const NonKSeFInvoiceDetailsModal: React.FC<NonKSeFInvoiceDetailsModalProps> = ({
   };
 
   // Handle accept
+  // Helper function to convert string | number to number
+  const toNumber = (value: string | number): number => {
+    if (typeof value === "number") return value;
+    const parsed = parseFormattedNumber(String(value));
+    return parsed ? Number(parsed) : 0;
+  };
+
   const handleAcceptClick = async () => {
     if (!details) return;
 
@@ -460,8 +649,95 @@ const NonKSeFInvoiceDetailsModal: React.FC<NonKSeFInvoiceDetailsModalProps> = ({
     // First save all changes
     await handleSubmit(async (formData) => {
       await handleSave(formData);
-      // Then change status to accepted
-      await handleStatusChange(KSeFInvoiceStatus.Accepted);
+
+      // Build AcceptInvoiceRequest based on module type
+      setSaving(true);
+      try {
+        await handleApiResponse(
+          () => {
+            const acceptData: any = {
+              moduleType: formData.moduleType,
+            };
+
+            // Build module-specific data based on module type
+            if (formData.moduleType === ModuleType.Feeds) {
+              acceptData.feedData = {
+                invoiceId: details.id,
+                farmId: formData.feedFarmId,
+                cycleId: formData.feedCycleId,
+                henhouseId: formData.feedHenhouseId || undefined,
+                invoiceNumber: formData.invoiceNumber,
+                bankAccountNumber: formData.feedBankAccountNumber || "",
+                vendorName: formData.feedVendorName || formData.sellerName,
+                itemName: formData.feedItemName,
+                quantity: toNumber(formData.feedQuantity),
+                unitPrice: toNumber(formData.feedUnitPrice),
+                invoiceDate: formData.invoiceDate,
+                dueDate: formData.dueDate || formData.invoiceDate,
+                invoiceTotal: formData.grossAmount,
+                subTotal: formData.netAmount,
+                vatAmount: formData.vatAmount,
+                comment: formData.comment || "",
+              };
+            } else if (formData.moduleType === ModuleType.Gas) {
+              acceptData.gasData = {
+                invoiceId: details.id,
+                farmId: formData.gasFarmId,
+                contractorId: formData.gasContractorId || undefined,
+                contractorNip: formData.sellerNip,
+                contractorName: formData.sellerName,
+                invoiceNumber: formData.invoiceNumber,
+                invoiceDate: formData.invoiceDate,
+                invoiceTotal: formData.grossAmount,
+                unitPrice: toNumber(formData.gasUnitPrice),
+                quantity: toNumber(formData.gasQuantity),
+                comment: formData.comment || "",
+              };
+            } else if (formData.moduleType === ModuleType.ProductionExpenses) {
+              acceptData.expenseData = {
+                invoiceId: details.id,
+                farmId: formData.expenseFarmId,
+                cycleId: formData.expenseCycleId,
+                expenseContractorId: formData.expenseContractorId || undefined,
+                expenseTypeId: formData.expenseTypeId || undefined,
+                contractorNip: formData.sellerNip,
+                contractorName: formData.sellerName,
+                invoiceNumber: formData.invoiceNumber,
+                invoiceTotal: formData.grossAmount,
+                subTotal: formData.netAmount,
+                vatAmount: formData.vatAmount,
+                invoiceDate: formData.invoiceDate,
+                comment: formData.comment || "",
+              };
+            } else if (formData.moduleType === ModuleType.Sales) {
+              acceptData.saleData = {
+                invoiceId: details.id,
+                farmId: formData.saleFarmId,
+                cycleId: formData.saleCycleId,
+                slaughterhouseId: formData.saleSlaughterhouseId || undefined,
+                slaughterhouseNip: formData.buyerNip,
+                slaughterhouseName: formData.buyerName,
+                invoiceNumber: formData.invoiceNumber,
+                invoiceDate: formData.invoiceDate,
+                dueDate: formData.dueDate || formData.invoiceDate,
+                invoiceTotal: formData.grossAmount,
+                subTotal: formData.netAmount,
+                vatAmount: formData.vatAmount,
+              };
+            }
+
+            return AccountingService.acceptInvoice(details.id, acceptData);
+          },
+          () => {
+            toast.success("Faktura została zaakceptowana i dodana do modułu");
+            onSave?.();
+          },
+          undefined,
+          "Błąd podczas akceptowania faktury",
+        );
+      } finally {
+        setSaving(false);
+      }
     })();
   };
 
@@ -471,7 +747,7 @@ const NonKSeFInvoiceDetailsModal: React.FC<NonKSeFInvoiceDetailsModalProps> = ({
     return (
       <FilePreview
         file={previewFile}
-        maxHeight={isLg ? 600 : isMd ? 500 : 400}
+        maxHeight={isLg ? 800 : isMd ? 650 : 500}
         showPreviewButton={true}
       />
     );
@@ -749,7 +1025,7 @@ const NonKSeFInvoiceDetailsModal: React.FC<NonKSeFInvoiceDetailsModalProps> = ({
           <Select
             labelId="payment-status-label"
             label="Status płatności"
-            defaultValue={KSeFPaymentStatus.Unpaid}
+            value={watch("paymentStatus") || KSeFPaymentStatus.Unpaid}
             {...register("paymentStatus")}
           >
             {Object.entries(KSeFPaymentStatusLabels).map(([key, label]) => (
@@ -761,19 +1037,26 @@ const NonKSeFInvoiceDetailsModal: React.FC<NonKSeFInvoiceDetailsModalProps> = ({
         </FormControl>
       </Grid>
 
-      {(watchedPaymentStatus === KSeFPaymentStatus.PaidCash ||
-        watchedPaymentStatus === KSeFPaymentStatus.PaidTransfer) && (
+      {isPaidPaymentStatus && (
         <Grid size={{ xs: 12, sm: 4 }}>
-          <TextField
-            fullWidth
-            label="Data płatności"
-            type="date"
-            {...register("paymentDate")}
-            InputLabelProps={{ shrink: true }}
-            inputProps={{
-              max: new Date().toISOString().split("T")[0],
+          <Box
+            sx={{
+              backgroundColor: "#fff9c4",
+              padding: "2px 6px",
+              borderRadius: 1,
             }}
-          />
+          >
+            <TextField
+              fullWidth
+              label="Data płatności"
+              type="date"
+              {...register("paymentDate")}
+              InputLabelProps={{ shrink: true }}
+              inputProps={{
+                max: new Date().toISOString().split("T")[0],
+              }}
+            />
+          </Box>
         </Grid>
       )}
     </>
@@ -1133,6 +1416,210 @@ const NonKSeFInvoiceDetailsModal: React.FC<NonKSeFInvoiceDetailsModalProps> = ({
                   {statusSection}
                   {commentSection}
 
+                  {/* Feeds module fields */}
+                  {watchedModuleType === ModuleType.Feeds && (
+                    <>
+                      <Grid size={12}>
+                        <Divider>
+                          <Typography variant="caption">
+                            Dane dostawy paszy
+                          </Typography>
+                        </Divider>
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <LoadingTextField
+                          loading={loadingFarms}
+                          select
+                          label="Ferma"
+                          fullWidth
+                          required
+                          value={watchedFeedFarmId || ""}
+                          error={!!errors.feedFarmId}
+                          helperText={errors.feedFarmId?.message}
+                          {...register("feedFarmId", {
+                            required: "Ferma jest wymagana",
+                          })}
+                        >
+                          {farms.map((farm) => (
+                            <MenuItem key={farm.id} value={farm.id}>
+                              {farm.name}
+                            </MenuItem>
+                          ))}
+                        </LoadingTextField>
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <LoadingTextField
+                          loading={loadingCycles}
+                          select
+                          label="Cykl"
+                          fullWidth
+                          required
+                          disabled={!watchedFeedFarmId}
+                          value={watch("feedCycleId") || ""}
+                          error={!!errors.feedCycleId}
+                          helperText={errors.feedCycleId?.message}
+                          {...register("feedCycleId", {
+                            required: "Cykl jest wymagany",
+                          })}
+                        >
+                          {cycles.map((cycle) => (
+                            <MenuItem key={cycle.id} value={cycle.id}>
+                              {cycle.identifier}/{cycle.year}
+                            </MenuItem>
+                          ))}
+                        </LoadingTextField>
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <TextField
+                          select
+                          label="Kurnik"
+                          fullWidth
+                          required
+                          disabled={!watchedFeedFarmId}
+                          value={watch("feedHenhouseId") || ""}
+                          error={!!errors.feedHenhouseId}
+                          helperText={errors.feedHenhouseId?.message}
+                          {...register("feedHenhouseId", {
+                            required: "Kurnik jest wymagany",
+                          })}
+                        >
+                          {henhouses.map((h) => (
+                            <MenuItem key={h.id} value={h.id}>
+                              {h.name}
+                            </MenuItem>
+                          ))}
+                        </TextField>
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <Controller
+                          name="feedItemName"
+                          control={control}
+                          rules={{
+                            validate: (value) => {
+                              if (watchedModuleType !== ModuleType.Feeds)
+                                return true;
+                              return !!value || "Nazwa paszy jest wymagana";
+                            },
+                          }}
+                          render={({ field: { onChange, value, ref } }) => (
+                            <Autocomplete
+                              freeSolo
+                              options={feedNames.map((f) => f.name)}
+                              value={value || ""}
+                              onChange={(_, newValue) =>
+                                onChange(newValue || "")
+                              }
+                              onInputChange={(_, newInputValue) => {
+                                onChange(newInputValue);
+                              }}
+                              renderInput={(params) => (
+                                <TextField
+                                  {...params}
+                                  label="Nazwa paszy"
+                                  inputRef={ref}
+                                  required
+                                  error={!!errors.feedItemName}
+                                  helperText={errors.feedItemName?.message}
+                                />
+                              )}
+                            />
+                          )}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <Controller
+                          name="feedQuantity"
+                          control={control}
+                          rules={{
+                            required: "Ilość jest wymagana",
+                            validate: (value) => {
+                              const parsed = parseFormattedNumber(
+                                String(value || ""),
+                              );
+                              const num = Number(parsed);
+                              return (
+                                (!isNaN(num) && num > 0) ||
+                                "Ilość musi być liczbą większą od 0"
+                              );
+                            },
+                          }}
+                          render={({ field }) => (
+                            <TextField
+                              label="Ilość [t]"
+                              value={field.value || ""}
+                              onChange={(e) => {
+                                field.onChange(e.target.value);
+                              }}
+                              error={!!errors.feedQuantity}
+                              helperText={errors.feedQuantity?.message}
+                              fullWidth
+                              required
+                              slotProps={{
+                                inputLabel: { shrink: true },
+                              }}
+                            />
+                          )}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <Controller
+                          name="feedUnitPrice"
+                          control={control}
+                          rules={{
+                            required: "Cena jest wymagana",
+                            validate: (value) => {
+                              const parsed = parseFormattedNumber(
+                                String(value || ""),
+                              );
+                              const num = Number(parsed);
+                              return (
+                                (!isNaN(num) && num > 0) ||
+                                "Cena musi być liczbą większą od 0"
+                              );
+                            },
+                          }}
+                          render={({ field }) => (
+                            <TextField
+                              label="Cena jednostkowa [zł/t]"
+                              value={field.value || ""}
+                              onChange={(e) => {
+                                field.onChange(e.target.value);
+                              }}
+                              error={!!errors.feedUnitPrice}
+                              helperText={errors.feedUnitPrice?.message}
+                              fullWidth
+                              required
+                              slotProps={{
+                                inputLabel: { shrink: true },
+                              }}
+                            />
+                          )}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <TextField
+                          label="Dostawca"
+                          fullWidth
+                          slotProps={{ inputLabel: { shrink: true } }}
+                          {...register("feedVendorName")}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <TextField
+                          label="Nr konta bankowego"
+                          fullWidth
+                          required
+                          slotProps={{ inputLabel: { shrink: true } }}
+                          error={!!errors.feedBankAccountNumber}
+                          helperText={errors.feedBankAccountNumber?.message}
+                          {...register("feedBankAccountNumber", {
+                            required: "Nr konta bankowego jest wymagany",
+                          })}
+                        />
+                      </Grid>
+                    </>
+                  )}
+
                   {/* Gas module fields */}
                   {watchedModuleType === ModuleType.Gas && (
                     <>
@@ -1234,6 +1721,297 @@ const NonKSeFInvoiceDetailsModal: React.FC<NonKSeFInvoiceDetailsModalProps> = ({
                           )}
                         />
                       </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <Controller
+                          name="gasContractorId"
+                          control={control}
+                          render={({ field: { onChange, value } }) => (
+                            <Autocomplete
+                              options={gasContractors}
+                              getOptionLabel={(option) =>
+                                typeof option === "string"
+                                  ? option
+                                  : `${option.name} (${option.nip})`
+                              }
+                              value={
+                                gasContractors.find((c) => c.id === value) ||
+                                null
+                              }
+                              onChange={(_, newValue) =>
+                                onChange(newValue?.id || "")
+                              }
+                              renderInput={(params) => (
+                                <TextField
+                                  {...params}
+                                  label="Kontrahent (Dostawca gazu)"
+                                  error={!!errors.gasContractorId}
+                                  helperText={errors.gasContractorId?.message}
+                                />
+                              )}
+                            />
+                          )}
+                        />
+                      </Grid>
+                    </>
+                  )}
+
+                  {/* Production Expenses module fields */}
+                  {watchedModuleType === ModuleType.ProductionExpenses && (
+                    <>
+                      <Grid size={12}>
+                        <Divider>
+                          <Typography variant="caption">
+                            Dane kosztów produkcyjnych
+                          </Typography>
+                        </Divider>
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <LoadingTextField
+                          loading={loadingFarms}
+                          select
+                          label="Ferma"
+                          fullWidth
+                          required
+                          value={watchedExpenseFarmId || ""}
+                          error={!!errors.expenseFarmId}
+                          helperText={errors.expenseFarmId?.message}
+                          {...register("expenseFarmId", {
+                            required: "Ferma jest wymagana",
+                          })}
+                        >
+                          {farms.map((farm) => (
+                            <MenuItem key={farm.id} value={farm.id}>
+                              {farm.name}
+                            </MenuItem>
+                          ))}
+                        </LoadingTextField>
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <LoadingTextField
+                          loading={loadingCycles}
+                          select
+                          label="Cykl"
+                          fullWidth
+                          required
+                          disabled={!watchedExpenseFarmId}
+                          value={watch("expenseCycleId") || ""}
+                          error={!!errors.expenseCycleId}
+                          helperText={errors.expenseCycleId?.message}
+                          {...register("expenseCycleId", {
+                            required: "Cykl jest wymagany",
+                          })}
+                        >
+                          {cycles.map((cycle) => (
+                            <MenuItem key={cycle.id} value={cycle.id}>
+                              {cycle.identifier}/{cycle.year}
+                            </MenuItem>
+                          ))}
+                        </LoadingTextField>
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <Controller
+                          name="expenseContractorId"
+                          control={control}
+                          rules={{
+                            validate: (value) => {
+                              if (
+                                watchedModuleType !==
+                                ModuleType.ProductionExpenses
+                              )
+                                return true;
+                              return !!value || "Kontrahent jest wymagany";
+                            },
+                          }}
+                          render={({ field: { onChange, value } }) => (
+                            <Autocomplete
+                              options={expenseContractors}
+                              getOptionLabel={(option) => option.name || ""}
+                              value={
+                                expenseContractors.find(
+                                  (c) => c.id === value,
+                                ) || null
+                              }
+                              onChange={(_, newValue) => {
+                                onChange(newValue?.id || "");
+                                // Clear expense type if contractor changes
+                                if (newValue) {
+                                  const currentExpenseTypeId =
+                                    watch("expenseTypeId");
+                                  const hasCurrentType =
+                                    newValue.expenseTypes.some(
+                                      (t) => t.id === currentExpenseTypeId,
+                                    );
+                                  if (!hasCurrentType) {
+                                    setValue("expenseTypeId", "");
+                                  }
+                                } else {
+                                  setValue("expenseTypeId", "");
+                                }
+                              }}
+                              renderInput={(params) => (
+                                <TextField
+                                  {...params}
+                                  label="Kontrahent (Sprzedawca)"
+                                  required
+                                  error={!!errors.expenseContractorId}
+                                  helperText={
+                                    errors.expenseContractorId?.message
+                                  }
+                                />
+                              )}
+                            />
+                          )}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <Controller
+                          name="expenseTypeId"
+                          control={control}
+                          rules={{
+                            required: "Typ wydatku jest wymagany",
+                          }}
+                          render={({ field }) => (
+                            <FormControl
+                              fullWidth
+                              required
+                              error={!!errors.expenseTypeId}
+                            >
+                              <InputLabel>Typ wydatku</InputLabel>
+                              <Select
+                                label="Typ wydatku"
+                                value={field.value || ""}
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                              >
+                                {(() => {
+                                  const selectedContractor =
+                                    expenseContractors.find(
+                                      (c) =>
+                                        c.id === watchedExpenseContractorId,
+                                    );
+
+                                  if (
+                                    selectedContractor &&
+                                    selectedContractor.expenseTypes.length > 0
+                                  ) {
+                                    return selectedContractor.expenseTypes.map(
+                                      (type) => (
+                                        <MenuItem key={type.id} value={type.id}>
+                                          {type.name}
+                                        </MenuItem>
+                                      ),
+                                    );
+                                  }
+
+                                  return expenseTypes.map((type) => (
+                                    <MenuItem key={type.id} value={type.id}>
+                                      {type.name}
+                                    </MenuItem>
+                                  ));
+                                })()}
+                              </Select>
+                              {errors.expenseTypeId && (
+                                <FormHelperText>
+                                  {errors.expenseTypeId.message}
+                                </FormHelperText>
+                              )}
+                            </FormControl>
+                          )}
+                        />
+                      </Grid>
+                    </>
+                  )}
+
+                  {/* Sales module fields */}
+                  {watchedModuleType === ModuleType.Sales && (
+                    <>
+                      <Grid size={12}>
+                        <Divider>
+                          <Typography variant="caption">
+                            Dane faktury sprzedaży
+                          </Typography>
+                        </Divider>
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <LoadingTextField
+                          loading={loadingFarms}
+                          select
+                          label="Lokalizacja (Ferma)"
+                          fullWidth
+                          required
+                          value={watch("saleFarmId") || ""}
+                          error={!!errors.saleFarmId}
+                          helperText={errors.saleFarmId?.message}
+                          {...register("saleFarmId", {
+                            required: "Lokalizacja jest wymagana",
+                          })}
+                        >
+                          {farms.map((farm) => (
+                            <MenuItem key={farm.id} value={farm.id}>
+                              {farm.name}
+                            </MenuItem>
+                          ))}
+                        </LoadingTextField>
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <LoadingTextField
+                          loading={loadingCycles}
+                          select
+                          label="Cykl"
+                          fullWidth
+                          required
+                          disabled={!watch("saleFarmId")}
+                          value={watch("saleCycleId") || ""}
+                          error={!!errors.saleCycleId}
+                          helperText={errors.saleCycleId?.message}
+                          {...register("saleCycleId", {
+                            required: "Cykl jest wymagany",
+                          })}
+                        >
+                          {cycles.map((cycle) => (
+                            <MenuItem key={cycle.id} value={cycle.id}>
+                              {cycle.identifier}/{cycle.year}
+                            </MenuItem>
+                          ))}
+                        </LoadingTextField>
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <Controller
+                          name="saleSlaughterhouseId"
+                          control={control}
+                          rules={{
+                            validate: (value) => {
+                              if (watchedModuleType !== ModuleType.Sales)
+                                return true;
+                              return !!value || "Ubojnia jest wymagana";
+                            },
+                          }}
+                          render={({ field: { onChange, value } }) => (
+                            <Autocomplete
+                              options={slaughterhouses}
+                              getOptionLabel={(option) => option.name || ""}
+                              value={
+                                slaughterhouses.find((s) => s.id === value) ||
+                                null
+                              }
+                              onChange={(_, newValue) =>
+                                onChange(newValue?.id || "")
+                              }
+                              renderInput={(params) => (
+                                <TextField
+                                  {...params}
+                                  label="Ubojnia (Nabywca)"
+                                  required
+                                  error={!!errors.saleSlaughterhouseId}
+                                  helperText={
+                                    errors.saleSlaughterhouseId?.message
+                                  }
+                                />
+                              )}
+                            />
+                          )}
+                        />
+                      </Grid>
                     </>
                   )}
                 </Grid>
@@ -1241,20 +2019,58 @@ const NonKSeFInvoiceDetailsModal: React.FC<NonKSeFInvoiceDetailsModalProps> = ({
             </Grid>
           </DialogContent>
 
-          <DialogActions>
-            <Button onClick={onClose} disabled={saving}>
-              Zamknij
-            </Button>
-            <LoadingButton
-              type="submit"
-              variant="contained"
-              color="primary"
-              startIcon={<MdSave />}
-              disabled={saving}
-              loading={saving}
-            >
-              Zapisz zmiany
-            </LoadingButton>
+          <DialogActions
+            sx={{
+              justifyContent: sequentialMode ? "space-between" : "flex-end",
+            }}
+          >
+            {sequentialMode && (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Button
+                  onClick={onPrevious}
+                  disabled={currentIndex === 0}
+                  variant="outlined"
+                  size="small"
+                >
+                  Poprzednia
+                </Button>
+                <Typography variant="body2" sx={{ mx: 1 }}>
+                  {currentIndex + 1} / {totalCount}
+                </Typography>
+                <Button
+                  onClick={onNext}
+                  disabled={currentIndex >= totalCount - 1}
+                  variant="outlined"
+                  size="small"
+                >
+                  Następna
+                </Button>
+              </Box>
+            )}
+            <Box sx={{ display: "flex", gap: 1 }}>
+              {sequentialMode && (
+                <Button
+                  onClick={onExitSequential}
+                  color="warning"
+                  variant="outlined"
+                >
+                  Zakończ przeglądanie
+                </Button>
+              )}
+              <Button onClick={onClose} disabled={saving}>
+                Zamknij
+              </Button>
+              <LoadingButton
+                type="submit"
+                variant="contained"
+                color="primary"
+                startIcon={<MdSave />}
+                disabled={saving}
+                loading={saving}
+              >
+                Zapisz zmiany
+              </LoadingButton>
+            </Box>
           </DialogActions>
         </form>
       ) : (

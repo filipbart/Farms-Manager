@@ -268,17 +268,20 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
         
         await _invoiceRepository.AddAsync(invoice, cancellationToken);
 
-        // Construct permanent path in saved folder using module-specific FileType
+        // Construct permanent path in saved folder - always use AccountingInvoice folder
+        // This ensures files are preserved even when module entities are deleted/rejected
         var extension = Path.GetExtension(data.FilePath);
-        var fileType = GetFileTypeForModule(data.ModuleType);
+        var fileType = FileType.AccountingInvoice;
         var relativePath = $"saved/{invoice.Id}{extension}";
         
         // Move file from draft to saved
         await _s3Service.MoveFileAsync(fileType, data.FilePath, relativePath);
         
-        // Store full path with module prefix for frontend retrieval
-        var modulePrefix = GetModulePrefixForFileType(fileType);
-        var fullPath = $"{modulePrefix}/{relativePath}";
+        // Store full path with accounting prefix
+        var fullPath = $"accounting/{relativePath}";
+        
+        // Set file path on invoice entity
+        invoice.SetFilePath(fullPath);
 
         // Utwórz encję modułową jeśli wymagane
         if (shouldCreateModuleEntity)
