@@ -1,5 +1,6 @@
 using Ardalis.Specification;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Entities;
+using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
 
 namespace FarmsManager.Application.Specifications.Accounting;
 
@@ -23,10 +24,13 @@ public sealed class GetOverdueAndUpcomingAccountingInvoicesSpec : BaseSpecificat
         // Due date within range (up to 14 days from now)
         Query.Where(t => t.PaymentDueDate.Value <= date);
 
-        // Filter by assigned user: show if assigned to current user OR not assigned to anyone
+        // Exclude Feeds module invoices - they are already reminded in the Feeds module
+        Query.Where(t => t.ModuleType != ModuleType.Feeds);
+
+        // Filter by assigned user: show only invoices assigned to current user
         if (userId.HasValue)
         {
-            Query.Where(t => t.AssignedUserId == null || t.AssignedUserId == userId.Value);
+            Query.Where(t => t.AssignedUserId == userId.Value);
         }
     }
 }

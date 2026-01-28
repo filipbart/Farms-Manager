@@ -359,6 +359,11 @@ public void Update(
                 PaymentDate = DateOnly.FromDateTime(DateTime.Today);
             }
         }
+        // Wyczyść datę płatności gdy status zmienia się na nieopłaconą
+        else if (paymentStatus.Value == KSeFPaymentStatus.Unpaid)
+        {
+            PaymentDate = null;
+        }
     }
 
     // Ustaw datę płatności jeśli została przekazana

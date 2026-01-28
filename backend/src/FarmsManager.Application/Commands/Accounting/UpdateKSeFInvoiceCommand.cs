@@ -2,6 +2,7 @@ using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
@@ -33,19 +34,22 @@ public class UpdateKSeFInvoiceCommandHandler : IRequestHandler<UpdateKSeFInvoice
     private readonly IInvoiceAuditService _auditService;
     private readonly IFeedInvoiceRepository _feedInvoiceRepository;
     private readonly ISaleInvoiceRepository _saleInvoiceRepository;
+    private readonly IFeedPaymentRepository _feedPaymentRepository;
 
     public UpdateKSeFInvoiceCommandHandler(
         IKSeFInvoiceRepository repository, 
         IUserDataResolver userDataResolver,
         IInvoiceAuditService auditService,
         IFeedInvoiceRepository feedInvoiceRepository,
-        ISaleInvoiceRepository saleInvoiceRepository)
+        ISaleInvoiceRepository saleInvoiceRepository,
+        IFeedPaymentRepository feedPaymentRepository)
     {
         _repository = repository;
         _userDataResolver = userDataResolver;
         _auditService = auditService;
         _feedInvoiceRepository = feedInvoiceRepository;
         _saleInvoiceRepository = saleInvoiceRepository;
+        _feedPaymentRepository = feedPaymentRepository;
     }
 
     public async Task<EmptyBaseResponse> Handle(UpdateKSeFInvoiceCommand request, CancellationToken cancellationToken)
@@ -117,14 +121,28 @@ public class UpdateKSeFInvoiceCommandHandler : IRequestHandler<UpdateKSeFInvoice
             await UpdateModuleEntityDueDateAsync(invoice.ModuleType, invoice.AssignedEntityInvoiceId.Value, request.Data.DueDate.Value, cancellationToken);
         }
 
-        // Synchronizuj status płatności do SaleInvoiceEntity dla modułu Sprzedaż
-        if (request.Data.PaymentStatus.HasValue && invoice.ModuleType == ModuleType.Sales && invoice.AssignedEntityInvoiceId.HasValue)
+        // Synchronizuj status płatności do modułowych encji (Feeds i Sales)
+        if (request.Data.PaymentStatus.HasValue && invoice.AssignedEntityInvoiceId.HasValue)
         {
-            await UpdateSaleInvoicePaymentStatusAsync(
-                invoice.AssignedEntityInvoiceId.Value, 
-                request.Data.PaymentStatus.Value, 
-                request.Data.PaymentDate ?? invoice.PaymentDate, 
-                cancellationToken);
+            if (invoice.ModuleType == ModuleType.Feeds)
+            {
+                await UpdateFeedInvoicePaymentStatusAsync(
+                    invoice.AssignedEntityInvoiceId.Value, 
+                    request.Data.PaymentStatus.Value, 
+                    request.Data.PaymentDate ?? invoice.PaymentDate,
+                    invoice.FarmId ?? Guid.Empty,
+                    invoice.AssignedCycleId ?? Guid.Empty,
+                    userId,
+                    cancellationToken);
+            }
+            else if (invoice.ModuleType == ModuleType.Sales)
+            {
+                await UpdateSaleInvoicePaymentStatusAsync(
+                    invoice.AssignedEntityInvoiceId.Value, 
+                    request.Data.PaymentStatus.Value, 
+                    request.Data.PaymentDate ?? invoice.PaymentDate, 
+                    cancellationToken);
+            }
         }
 
         return BaseResponse.EmptyResponse;
@@ -170,6 +188,48 @@ public class UpdateKSeFInvoiceCommandHandler : IRequestHandler<UpdateKSeFInvoice
                     await _saleInvoiceRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
                 }
                 break;
+        }
+    }
+
+    private async Task UpdateFeedInvoicePaymentStatusAsync(
+        Guid feedInvoiceId, 
+        KSeFPaymentStatus paymentStatus, 
+        DateOnly? paymentDate,
+        Guid farmId,
+        Guid cycleId,
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        var feedInvoice = await _feedInvoiceRepository.GetByIdAsync(feedInvoiceId, cancellationToken);
+        if (feedInvoice == null)
+            return;
+
+        // Jeśli faktura jest oznaczona jako opłacona (gotówka lub przelew)
+        if (paymentStatus == KSeFPaymentStatus.PaidCash || paymentStatus == KSeFPaymentStatus.PaidTransfer)
+        {
+            // Jeśli faktura nie ma jeszcze przypisanego PaymentId, utwórz nowy FeedPayment
+            if (!feedInvoice.PaymentId.HasValue)
+            {
+                var payment = FeedPaymentEntity.CreateNew(
+                    farmId,
+                    cycleId,
+                    "Przelew z księgowości",
+                    string.Empty,
+                    userId);
+                payment.MarkAsCompleted($"Automatycznie utworzony z księgowości w dniu {DateTime.Now:yyyy-MM-dd}");
+                
+                await _feedPaymentRepository.AddAsync(payment, cancellationToken);
+                await _feedPaymentRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
+                
+                feedInvoice.MarkAsPaid(payment.Id);
+                await _feedInvoiceRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
+            }
+        }
+        // Jeśli faktura jest oznaczona jako nieopłacona
+        else if (paymentStatus == KSeFPaymentStatus.Unpaid)
+        {
+            feedInvoice.MarkAsUnpaid();
+            await _feedInvoiceRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
         }
     }
 
