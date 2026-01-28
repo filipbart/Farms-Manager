@@ -99,13 +99,14 @@ public class UploadExpensesInvoicesCommandHandler : IRequestHandler<UploadExpens
 
             // Szukaj fermy najpierw po NIP, potem po nazwie
             FarmEntity farm = null;
+
             if (!string.IsNullOrWhiteSpace(expenseProductionInvoiceModel.CustomerNip))
             {
                 farm = await _farmRepository.FirstOrDefaultAsync(
                     new FarmByNipSpec(expenseProductionInvoiceModel.CustomerNip?.Replace("-", "")),
                     cancellationToken);
             }
-            
+
             if (farm is null && !string.IsNullOrWhiteSpace(expenseProductionInvoiceModel.CustomerName))
             {
                 farm = await _farmRepository.FirstOrDefaultAsync(
@@ -129,7 +130,8 @@ public class UploadExpensesInvoicesCommandHandler : IRequestHandler<UploadExpens
             if (expenseContractor is not null)
             {
                 var existedInvoice = await _expenseProductionRepository.FirstOrDefaultAsync(
-                    new GetExpenseProductionInvoiceByInvoiceNumberAndContractorSpec(extractedFields.InvoiceNumber, expenseContractor.Id),
+                    new GetExpenseProductionInvoiceByInvoiceNumberAndContractorSpec(extractedFields.InvoiceNumber,
+                        expenseContractor.Id),
                     cancellationToken);
 
                 if (existedInvoice is not null)
