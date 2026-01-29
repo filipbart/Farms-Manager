@@ -142,8 +142,8 @@ public class UploadExpensesInvoicesCommandHandler : IRequestHandler<UploadExpens
             extractedFields.FarmId = farm?.Id;
             extractedFields.CycleId = farm?.ActiveCycleId;
             extractedFields.ContractorId = expenseContractor?.Id;
-            extractedFields.ExpenseTypeId = expenseContractor?.ExpenseTypeId;
-            extractedFields.ExpenseTypeName = expenseContractor?.ExpenseType?.Name;
+            extractedFields.ExpenseTypeId = null;
+            extractedFields.ExpenseTypeName = null;
 
             response.ResponseData.Files.Add(new UploadExpensesInvoicesData
             {

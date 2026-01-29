@@ -1,4 +1,4 @@
-﻿using System.Security.Cryptography;
+using System.Security.Cryptography;
 using FarmsManager.Application.Interfaces;
 
 namespace FarmsManager.Application.Services;
@@ -12,8 +12,7 @@ public class AuthService : IPasswordHasher
     public string HashPassword(string password)
     {
         var salt = RandomNumberGenerator.GetBytes(SaltSize);
-        using var pbkdf2 = new Rfc2898DeriveBytes(password, salt, Iterations, HashAlgorithmName.SHA256);
-        var hash = pbkdf2.GetBytes(HashSize);
+        var hash = Rfc2898DeriveBytes.Pbkdf2(password, salt, Iterations, HashAlgorithmName.SHA256, HashSize);
 
         var result = new byte[SaltSize + HashSize];
         Buffer.BlockCopy(salt, 0, result, 0, SaltSize);
@@ -32,8 +31,7 @@ public class AuthService : IPasswordHasher
         Buffer.BlockCopy(decoded, 0, salt, 0, SaltSize);
         Buffer.BlockCopy(decoded, SaltSize, originalHash, 0, HashSize);
 
-        using var pbkdf2 = new Rfc2898DeriveBytes(password, salt, Iterations, HashAlgorithmName.SHA256);
-        var computedHash = pbkdf2.GetBytes(HashSize);
+        var computedHash = Rfc2898DeriveBytes.Pbkdf2(password, salt, Iterations, HashAlgorithmName.SHA256, HashSize);
 
         return CryptographicOperations.FixedTimeEquals(computedHash, originalHash);
     }

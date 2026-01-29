@@ -1,4 +1,5 @@
-﻿using FarmsManager.Domain.Aggregates.EmployeeAggregate.Entities;
+﻿using FarmsManager.Domain.Aggregates.AccountingAggregate.Entities;
+using FarmsManager.Domain.Aggregates.EmployeeAggregate.Entities;
 using FarmsManager.Domain.SeedWork;
 
 namespace FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
@@ -15,6 +16,16 @@ public class FarmEntity : Entity
     public Guid? ActiveCycleId { get; protected internal set; }
     public string ProducerNumber { get; protected internal set; }
     public virtual CycleEntity ActiveCycle { get; protected internal set; }
+
+    /// <summary>
+    /// Identyfikator podmiotu gospodarczego (nullable - do przypisania później)
+    /// </summary>
+    public Guid? TaxBusinessEntityId { get; protected internal set; }
+
+    /// <summary>
+    /// Podmiot gospodarczy przypisany do fermy
+    /// </summary>
+    public virtual TaxBusinessEntity TaxBusinessEntity { get; protected internal set; }
 
     /// <summary>
     /// Kurniki
@@ -46,12 +57,13 @@ public class FarmEntity : Entity
         };
     }
 
-    public void Update(string name, string producerNumber, string nip, string address)
+    public void Update(string name, string producerNumber, string nip, string address, Guid? taxBusinessEntityId = null)
     {
         Name = name;
         ProducerNumber = producerNumber.Replace(" ", "").Trim();
         Nip = nip.Replace("PL", "").Replace("-", "").Replace(" ", "").Trim();
         Address = address;
+        TaxBusinessEntityId = taxBusinessEntityId;
     }
 
 

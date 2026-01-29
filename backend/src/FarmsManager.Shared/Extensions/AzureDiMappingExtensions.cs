@@ -64,6 +64,33 @@ public static class AzureDiMappingExtensions
     {
         if (fieldValue.FieldType == DocumentFieldType.String)
         {
+            // Handle DateOnly conversion from string
+            if (propType == typeof(DateOnly) || propType == typeof(DateOnly?))
+            {
+                var stringValue = fieldValue.ValueString;
+                if (string.IsNullOrWhiteSpace(stringValue))
+                {
+                    return null;
+                }
+
+                if (DateOnly.TryParse(stringValue, out var parsedDate))
+                {
+                    return parsedDate;
+                }
+                
+                // Try common date formats if direct parsing fails
+                var formats = new[] { "yyyy-MM-dd", "dd/MM/yyyy", "MM/dd/yyyy", "dd-MM-yyyy", "MM-dd-yyyy" };
+                foreach (var format in formats)
+                {
+                    if (DateOnly.TryParseExact(stringValue, format, null, System.Globalization.DateTimeStyles.None, out var exactDate))
+                    {
+                        return exactDate;
+                    }
+                }
+                
+                return null;
+            }
+
             return fieldValue.ValueString;
         }
 

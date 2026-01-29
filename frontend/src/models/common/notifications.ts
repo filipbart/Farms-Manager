@@ -13,6 +13,7 @@ export interface NotificationData {
   salesInvoices: NotificationInfo;
   feedDeliveries: NotificationInfo;
   employees: NotificationInfo;
+  accountingInvoices: NotificationInfo;
 }
 
 export interface NotificationDataQueryResponse {

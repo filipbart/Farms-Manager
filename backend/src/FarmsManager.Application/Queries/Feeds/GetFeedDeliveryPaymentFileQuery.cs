@@ -354,7 +354,7 @@ public class GetFeedDeliveryPaymentFileQueryHandler : IRequestHandler<GetFeedDel
         .ToList();
     }
 
-    private static string FormatBankAccountNumber(string? accountNumber)
+    private static string FormatBankAccountNumber(string accountNumber)
     {
         if (string.IsNullOrWhiteSpace(accountNumber))
         {

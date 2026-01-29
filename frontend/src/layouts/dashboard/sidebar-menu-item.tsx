@@ -25,6 +25,7 @@ interface SidebarMenuItemProps {
   onClick?: () => void;
   notificationCount?: number;
   notificationPriority?: NotificationPriority;
+  badgeLabel?: string;
 }
 
 const ListItemStyle: any = styled((props) => (
@@ -69,6 +70,7 @@ const SidebarMenuItem: React.FC<SidebarMenuItemProps> = ({
   onClick,
   notificationCount,
   notificationPriority,
+  badgeLabel,
 }) => {
   const location = useLocation();
   const theme = useTheme();
@@ -118,6 +120,30 @@ const SidebarMenuItem: React.FC<SidebarMenuItemProps> = ({
     );
   };
 
+  const renderLabel = () => {
+    if (!badgeLabel) {
+      return null;
+    }
+    return (
+      <Box
+        sx={{
+          px: 1.25,
+          py: 0.3,
+          borderRadius: 999,
+          backgroundColor: theme.palette.error.main,
+          color: theme.palette.getContrastText(theme.palette.error.main),
+          fontSize: "0.7rem",
+          fontWeight: "bold",
+          lineHeight: 1,
+          ml: 1,
+          marginRight: 1,
+        }}
+      >
+        {badgeLabel}
+      </Box>
+    );
+  };
+
   if (!children) {
     return (
       <ListItemStyle
@@ -136,6 +162,7 @@ const SidebarMenuItem: React.FC<SidebarMenuItemProps> = ({
             fontWeight: location.pathname === to ? "bold" : "normal",
           }}
         />
+        {renderLabel()}
         {renderBadge()}
       </ListItemStyle>
     );
@@ -162,6 +189,7 @@ const SidebarMenuItem: React.FC<SidebarMenuItemProps> = ({
               childrenActive || location.pathname === to ? "bold" : "normal",
           }}
         />
+        {renderLabel()}
         {renderBadge()}
         {isOpen ? <MdExpandLess /> : <MdExpandMore />}
       </ListItemStyle>

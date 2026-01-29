@@ -13,7 +13,7 @@ namespace FarmsManager.Application.Commands.ExpenseAdvanceColumnSettings;
 public record UpdateUserExpenseAdvanceColumnSettingsData
 {
     public Guid UserId { get; init; }
-    public List<string> VisibleColumns { get; init; } = new();
+    public List<string> VisibleColumns { get; init; } = [];
 }
 
 public record UpdateUserExpenseAdvanceColumnSettingsCommand(UpdateUserExpenseAdvanceColumnSettingsData Data) 

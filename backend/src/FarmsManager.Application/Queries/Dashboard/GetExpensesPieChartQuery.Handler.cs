@@ -196,7 +196,7 @@ public class
 
         foreach (var expense in expenses)
         {
-            var expenseType = expense.ExpenseContractor?.ExpenseType?.Name ?? string.Empty;
+            var expenseType = expense.ExpenseType?.Name ?? string.Empty;
             var amount = expense.SubTotal;
 
             if (string.Equals(expenseType, ExpenseTypeGas, StringComparison.OrdinalIgnoreCase))

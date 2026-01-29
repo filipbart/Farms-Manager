@@ -12,4 +12,6 @@ export default interface FarmRowModel extends AuditFields {
   dateCreatedUtc: Date;
   henhouses: HouseRowModel[];
   activeCycle: CycleDto;
+  taxBusinessEntityId: string | null;
+  taxBusinessEntityName: string | null;
 }

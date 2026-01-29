@@ -135,6 +135,16 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       )}
 
       <Typography sx={headingStyles}>Produkcja i Finanse</Typography>
+      {hasPermission("accounting:view") && (
+        <SidebarMenuItem
+          to="/accounting"
+          title="Księgowość"
+          icon={<FaFileInvoiceDollar />}
+          badgeLabel="Nowa"
+          notificationCount={notifications?.accountingInvoices?.count}
+          notificationPriority={notifications?.accountingInvoices?.priority}
+        />
+      )}
       {hasPermission("insertions:view") && (
         <SidebarMenuItem
           to="/insertions"
@@ -403,6 +413,13 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           isOpen={openItems.includes("Dane")}
           onClick={() => handleItemClick("Dane", true)}
         >
+          {hasPermission("data:taxbusinessentities:manage") && (
+            <SidebarMenuItem
+              to="/data/tax-business-entities"
+              title="Podmioty"
+              icon={<FaBuilding />}
+            />
+          )}
           {hasPermission("data:farms:manage") && (
             <SidebarMenuItem
               to="/data/farms"
@@ -462,6 +479,21 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
               icon={<MdTimelapse />}
             />
           )}
+          <SidebarMenuItem
+            to="/settings/invoice-assignment-rules"
+            title="Reguły faktur (pracownicy)"
+            icon={<FaGear />}
+          />
+          <SidebarMenuItem
+            to="/settings/invoice-module-assignment-rules"
+            title="Reguły faktur (moduły)"
+            icon={<FaGear />}
+          />
+          <SidebarMenuItem
+            to="/settings/invoice-farm-assignment-rules"
+            title="Reguły faktur (lokalizacje)"
+            icon={<FaGear />}
+          />
         </SidebarMenuItem>
       )}
     </List>

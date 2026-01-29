@@ -65,19 +65,19 @@ export class FeedsService {
   }
 
   public static async getFeedsPrices(
-    filters: FeedsPricesFilterPaginationModel
+    filters: FeedsPricesFilterPaginationModel,
   ) {
     return await AxiosWrapper.get<PaginateModel<FeedPriceListModel>>(
       ApiUrl.FeedsPrices,
       {
         ...filters,
-      }
+      },
     );
   }
 
   public static async updateFeedPrice(
     id: string,
-    data: UpdateFeedPriceFormData
+    data: UpdateFeedPriceFormData,
   ) {
     return await AxiosWrapper.patch(ApiUrl.UpdateFeedPrice + "/" + id, data);
   }
@@ -100,7 +100,7 @@ export class FeedsService {
           "Content-Type": "multipart/form-data",
         },
         signal: signal,
-      }
+      },
     );
   }
 
@@ -109,11 +109,11 @@ export class FeedsService {
   }
 
   public static async getFeedsPayments(
-    filters: FeedsPaymentsFilterPaginationModel
+    filters: FeedsPaymentsFilterPaginationModel,
   ) {
     return await AxiosWrapper.get<PaginateModel<FeedPaymentListModel>>(
       ApiUrl.FeedsPayments,
-      { ...filters }
+      { ...filters },
     );
   }
 
@@ -123,22 +123,22 @@ export class FeedsService {
 
   public static async markPaymentAsCompleted(
     id: string,
-    data: { comment?: string }
+    data: { comment?: string; paymentDate: string },
   ) {
     return await AxiosWrapper.patch(
       ApiUrl.MarkPaymentAsCompleted + "/" + id,
-      data
+      data,
     );
   }
 
   public static async getFeedsDeliveries(
-    filters: FeedsDeliveriesFilterPaginationModel
+    filters: FeedsDeliveriesFilterPaginationModel,
   ) {
     return await AxiosWrapper.get<PaginateModel<FeedDeliveryListModel>>(
       ApiUrl.FeedsDeliveries,
       {
         ...filters,
-      }
+      },
     );
   }
 
@@ -148,7 +148,7 @@ export class FeedsService {
 
   public static async updateFeedDelivery(
     id: string,
-    data: FeedDeliveryListModel
+    data: FeedDeliveryListModel,
   ) {
     return await AxiosWrapper.patch(ApiUrl.UpdateFeedDelivery + "/" + id, data);
   }

@@ -35,7 +35,7 @@ public sealed class EmployeePayslipsByFarmsSpec : BaseSpecification<EmployeePays
 
 public sealed class FeedsDeliveriesByHenhousesSpec : BaseSpecification<FeedInvoiceEntity>
 {
-    public FeedsDeliveriesByHenhousesSpec(List<Guid> henhousesIds, List<Guid>? cycleIds = null)
+    public FeedsDeliveriesByHenhousesSpec(List<Guid> henhousesIds, List<Guid> cycleIds = null)
     {
         EnsureExists();
         DisableTracking();

@@ -7,21 +7,32 @@ export type FilterType =
   | "multiSelectSearch"
   | "checkbox";
 
+export interface GridSize {
+  xs?: number;
+  sm?: number;
+  md?: number;
+  lg?: number;
+  xl?: number;
+}
+
 interface BaseFilterConfig<K extends string> {
   key: K;
   label: string;
   type: FilterType;
   disabled?: boolean;
+  gridSize?: GridSize;
 }
 
-export interface MultiSelectFilter<K extends string>
-  extends BaseFilterConfig<K> {
+export interface MultiSelectFilter<
+  K extends string,
+> extends BaseFilterConfig<K> {
   type: "multiSelect";
   options: { value: string; label: string }[];
 }
 
-export interface MultiSelectSearchFilter<K extends string>
-  extends BaseFilterConfig<K> {
+export interface MultiSelectSearchFilter<
+  K extends string,
+> extends BaseFilterConfig<K> {
   type: "multiSelectSearch";
   options: { value: string; label: string }[];
 }

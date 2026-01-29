@@ -6,6 +6,7 @@ import DashboardPage from "../pages/dashboard";
 import InsertionsPage from "../pages/insertions";
 import { useRouter } from "./use-router";
 import { RouteName } from "./route-names";
+import TaxBusinessEntitiesPage from "../pages/data/tax-business-entities";
 import FarmsPage from "../pages/data/farms";
 import HousesPage from "../pages/data/houses";
 import HatcheriesPage from "../pages/data/hatcheries";
@@ -31,6 +32,9 @@ import EmployeePayslipsPage from "../pages/employees/payslips";
 import UserProfilePage from "../pages/user-profile";
 import SalesInvoicesPage from "../pages/sales/invoices";
 import SettingsCyclesPage from "../pages/settings/cycle-settings";
+import InvoiceAssignmentRulesPage from "../pages/settings/invoice-assignment-rules";
+import InvoiceModuleAssignmentRulesPage from "../pages/settings/invoice-module-assignment-rules";
+import InvoiceFarmAssignmentRulesPage from "../pages/settings/invoice-farm-assignment-rules";
 import ExpenseAdvancesPage from "../pages/expenses/advances";
 import ExpenseAdvanceDetailsPage from "../pages/expenses/advances/details";
 import UtilizationPlantsPage from "../pages/data/utilization-plants";
@@ -41,6 +45,7 @@ import ProductionDataFlockLossPage from "../pages/production-data/flock-loss";
 import UsersPage from "../pages/settings/users/users";
 import UserDetailsPage from "../pages/settings/users/details";
 import ForbiddenPage from "../pages/forbidden-page";
+import AccountingPage from "../pages/accounting";
 
 const DefaultRouter: React.FC = () => {
   const { getRoute } = useRouter();
@@ -50,10 +55,18 @@ const DefaultRouter: React.FC = () => {
       <Route path="/" element={<DashboardLayout />}>
         <Route path="" element={<DashboardPage />} />
         <Route
+          path={getRoute(RouteName.Accounting)}
+          element={<AccountingPage />}
+        />
+        <Route
           path={getRoute(RouteName.Insertions)}
           element={<InsertionsPage />}
         />
         <Route path={getRoute(RouteName.SalesList)} element={<SalesPage />} />
+        <Route
+          path={getRoute(RouteName.TaxBusinessEntities)}
+          element={<TaxBusinessEntitiesPage />}
+        />
         <Route path={getRoute(RouteName.Farms)} element={<FarmsPage />} />
         <Route path={getRoute(RouteName.Houses)} element={<HousesPage />} />
         <Route
@@ -179,6 +192,18 @@ const DefaultRouter: React.FC = () => {
         <Route
           path={getRoute(RouteName.SettingsCycles)}
           element={<SettingsCyclesPage />}
+        />
+        <Route
+          path={getRoute(RouteName.SettingsInvoiceAssignmentRules)}
+          element={<InvoiceAssignmentRulesPage />}
+        />
+        <Route
+          path={getRoute(RouteName.SettingsInvoiceModuleAssignmentRules)}
+          element={<InvoiceModuleAssignmentRulesPage />}
+        />
+        <Route
+          path={getRoute(RouteName.SettingsInvoiceFarmAssignmentRules)}
+          element={<InvoiceFarmAssignmentRulesPage />}
         />
         <Route
           path={getRoute(RouteName.Forbidden)}

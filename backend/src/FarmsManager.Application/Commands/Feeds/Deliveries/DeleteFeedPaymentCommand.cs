@@ -1,7 +1,11 @@
 using Ardalis.Specification;
+using FarmsManager.Application.Commands.Accounting;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications;
+using FarmsManager.Application.Specifications.Feeds;
+using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
+using FarmsManager.Domain.Aggregates.AccountingAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
@@ -17,15 +21,18 @@ public class DeleteFeedPaymentCommandHandler : IRequestHandler<DeleteFeedPayment
     private readonly IFeedPaymentRepository _feedPaymentRepository;
     private readonly IFeedInvoiceRepository _feedInvoiceRepository;
     private readonly IFeedInvoiceCorrectionRepository _feedInvoiceCorrectionRepository;
+    private readonly IKSeFInvoiceRepository _ksefInvoiceRepository;
 
     public DeleteFeedPaymentCommandHandler(IUserDataResolver userDataResolver,
         IFeedPaymentRepository feedPaymentRepository, IFeedInvoiceRepository feedInvoiceRepository,
-        IFeedInvoiceCorrectionRepository feedInvoiceCorrectionRepository)
+        IFeedInvoiceCorrectionRepository feedInvoiceCorrectionRepository,
+        IKSeFInvoiceRepository ksefInvoiceRepository)
     {
         _userDataResolver = userDataResolver;
         _feedPaymentRepository = feedPaymentRepository;
         _feedInvoiceRepository = feedInvoiceRepository;
         _feedInvoiceCorrectionRepository = feedInvoiceCorrectionRepository;
+        _ksefInvoiceRepository = ksefInvoiceRepository;
     }
 
     public async Task<EmptyBaseResponse> Handle(DeleteFeedPaymentCommand request, CancellationToken cancellationToken)
@@ -42,6 +49,20 @@ public class DeleteFeedPaymentCommandHandler : IRequestHandler<DeleteFeedPayment
             foreach (var feedInvoiceEntity in feedInvoices)
             {
                 feedInvoiceEntity.MarkAsUnpaid();
+                
+                // Synchronizacja statusu płatności do księgowości (KSeF)
+                var ksefInvoice = await _ksefInvoiceRepository.FirstOrDefaultAsync(
+                    new KSeFInvoiceByAssignedEntityIdSpec(feedInvoiceEntity.Id),
+                    cancellationToken);
+
+                if (ksefInvoice != null)
+                {
+                    ksefInvoice.Update(
+                        paymentStatus: KSeFPaymentStatus.Unpaid,
+                        paymentDate: null);
+                    ksefInvoice.SetModified(userId);
+                    await _ksefInvoiceRepository.UpdateAsync(ksefInvoice, cancellationToken);
+                }
             }
 
             await _feedInvoiceRepository.UpdateRangeAsync(feedInvoices, cancellationToken);

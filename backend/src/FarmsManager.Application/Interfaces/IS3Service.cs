@@ -14,7 +14,7 @@ public interface IS3Service : IService
     Task MoveFileAsync(FileType fileType, string sourcePath, string destinationPath);
 
     Task<string> UploadFileAsync(byte[] fileBytes, FileType fileType, string path,
-        CancellationToken cancellationToken = default, bool publicRead = false);
+        CancellationToken cancellationToken = default, bool publicRead = false, string? contentType = null);
 
     Task<FileDirectoryModel> UploadFileToDirectoryAsync(byte[] fileBytes, FileType fileType,
         string directory, string fileName, bool publicRead = false);

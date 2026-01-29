@@ -14,7 +14,7 @@ namespace FarmsManager.Application.Queries.Dashboard;
 
 public sealed class GetSalesForDashboardSpec : BaseSpecification<SaleEntity>
 {
-    public GetSalesForDashboardSpec(IReadOnlyCollection<Guid>? farmIds = null, IReadOnlyCollection<Guid>? cycles = null,
+    public GetSalesForDashboardSpec(IReadOnlyCollection<Guid> farmIds = null, IReadOnlyCollection<Guid> cycles = null,
         DateOnly? dateSince = null,
         DateOnly? dateTo = null)
     {
@@ -47,8 +47,8 @@ public sealed class GetSalesForDashboardSpec : BaseSpecification<SaleEntity>
 
 public sealed class GetFeedsInvoicesForDashboardSpec : BaseSpecification<FeedInvoiceEntity>
 {
-    public GetFeedsInvoicesForDashboardSpec(IReadOnlyCollection<Guid>? farmIds = null,
-        IReadOnlyCollection<Guid>? cycles = null,
+    public GetFeedsInvoicesForDashboardSpec(IReadOnlyCollection<Guid> farmIds = null,
+        IReadOnlyCollection<Guid> cycles = null,
         DateOnly? dateSince = null,
         DateOnly? dateTo = null)
     {
@@ -82,8 +82,8 @@ public sealed class GetFeedsInvoicesForDashboardSpec : BaseSpecification<FeedInv
 
 public sealed class GetProductionExpensesForDashboardSpec : BaseSpecification<ExpenseProductionEntity>
 {
-    public GetProductionExpensesForDashboardSpec(IReadOnlyCollection<Guid>? farmIds = null,
-        IReadOnlyCollection<Guid>? cycles = null,
+    public GetProductionExpensesForDashboardSpec(IReadOnlyCollection<Guid> farmIds = null,
+        IReadOnlyCollection<Guid> cycles = null,
         DateOnly? dateSince = null, DateOnly? dateTo = null, bool? isGas = null)
     {
         EnsureExists();
@@ -91,9 +91,8 @@ public sealed class GetProductionExpensesForDashboardSpec : BaseSpecification<Ex
 
         Query.Include(t => t.Farm);
         Query.Include(t => t.Cycle);
-        // Dołączamy powiązane encje, aby móc filtrować po nazwie typu wydatku
-        Query.Include(t => t.ExpenseContractor)
-            .ThenInclude(ec => ec.ExpenseType);
+        Query.Include(t => t.ExpenseContractor);
+        Query.Include(t => t.ExpenseType);
 
         if (farmIds?.Any() == true)
         {
@@ -121,11 +120,11 @@ public sealed class GetProductionExpensesForDashboardSpec : BaseSpecification<Ex
             const string gasTypeName = "gaz";
             if (isGas.Value)
             {
-                Query.Where(e => EF.Functions.ILike(e.ExpenseContractor.ExpenseType.Name, gasTypeName));
+                Query.Where(e => e.ExpenseType != null && EF.Functions.ILike(e.ExpenseType.Name, gasTypeName));
             }
             else
             {
-                Query.Where(e => !EF.Functions.ILike(e.ExpenseContractor.ExpenseType.Name, gasTypeName));
+                Query.Where(e => e.ExpenseType == null || !EF.Functions.ILike(e.ExpenseType.Name, gasTypeName));
             }
         }
     }

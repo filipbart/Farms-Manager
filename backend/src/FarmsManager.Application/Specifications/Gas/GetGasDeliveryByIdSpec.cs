@@ -10,5 +10,6 @@ public class GetGasDeliveryByIdSpec : BaseSpecification<GasDeliveryEntity>,
     {
         EnsureExists();
         Query.Where(t => t.Id == id);
+        Query.Include(t => t.Farm);
     }
 }

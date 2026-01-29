@@ -15,6 +15,7 @@ public record UpdateFarmDto
     public string Nip { get; init; }
     public string ProducerNumber { get; init; }
     public string Address { get; init; }
+    public Guid? TaxBusinessEntityId { get; init; }
 }
 
 public record UpdateFarmCommand(Guid Id, UpdateFarmDto Data) : IRequest<EmptyBaseResponse>;
@@ -40,7 +41,8 @@ public class UpdateFarmCommandHandler : IRequestHandler<UpdateFarmCommand, Empty
             request.Data.Name,
             request.Data.ProducerNumber,
             request.Data.Nip,
-            request.Data.Address);
+            request.Data.Address,
+            request.Data.TaxBusinessEntityId);
 
         farmToUpdate.SetModified(userId);
 

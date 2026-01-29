@@ -5,9 +5,10 @@ import {
   Button,
   TextField,
   Box,
-  MenuItem,
+  Autocomplete,
+  Chip,
 } from "@mui/material";
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { toast } from "react-toastify";
 import { MdSave } from "react-icons/md";
 import type { ExpenseContractorRow } from "../../../../models/expenses/expenses-contractors";
@@ -15,19 +16,18 @@ import { ExpensesService } from "../../../../services/expenses-service";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import LoadingButton from "../../../common/loading-button";
 import { useExpensesTypes } from "../../../../hooks/expenses/useExpensesTypes";
-import LoadingTextField from "../../../common/loading-textfield";
 import AppDialog from "../../../common/app-dialog";
 import { isValidNip } from "../../../../utils/validation";
 
 const INITIAL_FORM_STATE = {
   name: "",
-  expenseTypeId: "",
+  expenseTypeIds: [] as string[],
   nip: "",
   address: "",
 };
 const INITIAL_ERRORS_STATE = {
   name: "",
-  expenseTypeId: "",
+  expenseTypeIds: "",
   nip: "",
   address: "",
 };
@@ -57,29 +57,16 @@ const EditExpenseContractorModal: React.FC<EditExpenseContractorModalProps> = ({
     }
   }, [open, fetchExpensesTypes]);
 
-  const expenseTypeMap = useMemo(() => {
-    return new Map(
-      expensesTypes.map((type) => [
-        type.name.trim().toLowerCase(),
-        String(type.id),
-      ])
-    );
-  }, [expensesTypes]);
-
   useEffect(() => {
-    if (open && contractorToEdit && expensesTypes.length > 0) {
-      const nameToFind =
-        contractorToEdit.expenseType?.trim().toLowerCase() || "";
-      const foundId = expenseTypeMap.get(nameToFind) || "";
-
+    if (open && contractorToEdit) {
       setForm({
         name: contractorToEdit.name,
         nip: contractorToEdit.nip,
         address: contractorToEdit.address,
-        expenseTypeId: foundId,
+        expenseTypeIds: contractorToEdit.expenseTypes?.map((t) => t.id) || [],
       });
     }
-  }, [contractorToEdit, open, expensesTypes.length, expenseTypeMap]);
+  }, [contractorToEdit, open]);
 
   const handleFieldChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -94,7 +81,10 @@ const EditExpenseContractorModal: React.FC<EditExpenseContractorModalProps> = ({
 
     const newErrors = {
       name: !form.name.trim() ? "Nazwa jest wymagana" : "",
-      expenseTypeId: !form.expenseTypeId ? "Typ jest wymagany" : "",
+      expenseTypeIds:
+        form.expenseTypeIds.length === 0
+          ? "Wymagany jest co najmniej jeden typ"
+          : "",
       nip: !form.nip.trim()
         ? "NIP jest wymagany"
         : isValidNip(form.nip)
@@ -111,12 +101,11 @@ const EditExpenseContractorModal: React.FC<EditExpenseContractorModalProps> = ({
 
     setLoading(true);
     try {
-      const selectedExpenseType = expensesTypes.find(
-        (type) => String(type.id) === form.expenseTypeId
-      );
       const dataToSave = {
-        ...form,
-        expenseType: selectedExpenseType?.name || "",
+        name: form.name,
+        nip: form.nip,
+        address: form.address,
+        expenseTypeIds: form.expenseTypeIds,
       };
 
       await handleApiResponse(
@@ -158,23 +147,38 @@ const EditExpenseContractorModal: React.FC<EditExpenseContractorModalProps> = ({
             helperText={errors.name}
             fullWidth
           />
-          <LoadingTextField
-            name="expenseTypeId"
-            label="Typ wydatku"
-            select
-            fullWidth
-            value={form.expenseTypeId}
-            onChange={handleFieldChange}
+          <Autocomplete
+            multiple
+            options={expensesTypes}
+            getOptionLabel={(option) => option.name}
             loading={loadingExpensesTypes}
-            error={!!errors.expenseTypeId}
-            helperText={errors.expenseTypeId}
-          >
-            {expensesTypes.map((type) => (
-              <MenuItem key={type.id} value={String(type.id)}>
-                {type.name}
-              </MenuItem>
-            ))}
-          </LoadingTextField>
+            value={expensesTypes.filter((t) =>
+              form.expenseTypeIds.includes(t.id)
+            )}
+            onChange={(_, newValue) => {
+              setForm((prev) => ({
+                ...prev,
+                expenseTypeIds: newValue.map((v) => v.id),
+              }));
+            }}
+            renderTags={(value, getTagProps) =>
+              value.map((option, index) => (
+                <Chip
+                  label={option.name}
+                  {...getTagProps({ index })}
+                  key={option.id}
+                />
+              ))
+            }
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Typy wydatków"
+                error={!!errors.expenseTypeIds}
+                helperText={errors.expenseTypeIds}
+              />
+            )}
+          />
           <TextField
             name="nip"
             label="NIP"

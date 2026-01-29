@@ -261,7 +261,7 @@ public class SummaryFinancialAnalysisQueryHandler : IRequestHandler<SummaryFinan
         IEnumerable<ExpenseProductionEntity> expenses, string expenseType)
     {
         var totalCost = expenses
-            .Where(e => string.Equals(e.ExpenseContractor.ExpenseType.Name, expenseType,
+            .Where(e => e.ExpenseType != null && string.Equals(e.ExpenseType.Name, expenseType,
                 StringComparison.OrdinalIgnoreCase))
             .Sum(e => e.SubTotal);
         return AllocateProportionalCost(insertion, allInsertions, totalCost);
@@ -272,7 +272,7 @@ public class SummaryFinancialAnalysisQueryHandler : IRequestHandler<SummaryFinan
         IEnumerable<ExpenseProductionEntity> expenses, string[] excludeExpenseTypes)
     {
         var totalCost = expenses
-            .Where(e => !excludeExpenseTypes.Contains(e.ExpenseContractor.ExpenseType.Name,
+            .Where(e => e.ExpenseType == null || !excludeExpenseTypes.Contains(e.ExpenseType.Name,
                 StringComparer.OrdinalIgnoreCase))
             .Sum(e => e.SubTotal);
         return AllocateProportionalCost(insertion, allInsertions, totalCost);

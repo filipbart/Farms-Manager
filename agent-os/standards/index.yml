@@ -1,0 +1,26 @@
+# Agent OS Standards Index
+
+backend:
+  api:
+    description: API Controller patterns including BaseResponse, BaseController, authorization, and routing conventions
+  domain:
+    description: Domain layer patterns including entity base class, property access control, and repository patterns
+  application:
+    description: Application layer patterns including CQRS, validation, and handler implementations
+
+frontend:
+  components:
+    description: React component patterns including modals, forms, loading states, and DataGrid cells
+  services:
+    description: Frontend service patterns for API communication and data handling
+
+global:
+  coding-style:
+    description: General coding conventions and patterns across the stack
+  error-handling:
+    description: Consistent error handling patterns across frontend and backend
+
+testing:
+  test-writing:
+    description: Needs description - run /index-standards
+

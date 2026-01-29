@@ -20,13 +20,995 @@ namespace FarmsManager.Infrastructure.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("farms_manager")
-                .HasAnnotation("ProductVersion", "9.0.6")
+                .HasAnnotation("ProductVersion", "10.0.0")
                 .HasAnnotation("Proxies:ChangeTracking", false)
                 .HasAnnotation("Proxies:CheckEquality", false)
                 .HasAnnotation("Proxies:LazyLoading", true)
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.InvoiceAssignmentRuleEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AssignedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("assigned_user_id");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("DateCreatedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_created_utc");
+
+                    b.Property<DateTime?>("DateDeletedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_deleted_utc");
+
+                    b.Property<DateTime?>("DateModifiedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_modified_utc");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("description");
+
+                    b.PrimitiveCollection<string>("ExcludeKeywords")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("exclude_keywords");
+
+                    b.Property<Guid?>("FarmId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("farm_id");
+
+                    b.PrimitiveCollection<string>("IncludeKeywords")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("include_keywords");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_active");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_by");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("name");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("integer")
+                        .HasColumnName("priority");
+
+                    b.Property<Guid?>("TaxBusinessEntityId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tax_business_entity_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_invoice_assignment_rules");
+
+                    b.HasIndex("AssignedUserId")
+                        .HasDatabaseName("ix_invoice_assignment_rules_assigned_user_id");
+
+                    b.HasIndex("CreatedBy")
+                        .HasDatabaseName("ix_invoice_assignment_rules_created_by");
+
+                    b.HasIndex("DeletedBy")
+                        .HasDatabaseName("ix_invoice_assignment_rules_deleted_by");
+
+                    b.HasIndex("FarmId")
+                        .HasDatabaseName("ix_invoice_assignment_rules_farm_id");
+
+                    b.HasIndex("IsActive")
+                        .HasDatabaseName("ix_invoice_assignment_rules_is_active");
+
+                    b.HasIndex("ModifiedBy")
+                        .HasDatabaseName("ix_invoice_assignment_rules_modified_by");
+
+                    b.HasIndex("Priority")
+                        .HasDatabaseName("ix_invoice_assignment_rules_priority");
+
+                    b.HasIndex("TaxBusinessEntityId")
+                        .HasDatabaseName("ix_invoice_assignment_rules_tax_business_entity_id");
+
+                    b.HasIndex("IsActive", "Priority")
+                        .HasDatabaseName("ix_invoice_assignment_rules_is_active_priority");
+
+                    b.ToTable("invoice_assignment_rules", "farms_manager");
+                });
+
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.InvoiceFarmAssignmentRuleEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("DateCreatedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_created_utc");
+
+                    b.Property<DateTime?>("DateDeletedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_deleted_utc");
+
+                    b.Property<DateTime?>("DateModifiedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_modified_utc");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("description");
+
+                    b.PrimitiveCollection<string>("ExcludeKeywords")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("exclude_keywords");
+
+                    b.PrimitiveCollection<string>("IncludeKeywords")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("include_keywords");
+
+                    b.Property<string>("InvoiceDirection")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("invoice_direction");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_active");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_by");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("integer")
+                        .HasColumnName("priority");
+
+                    b.Property<Guid>("TargetFarmId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("target_farm_id");
+
+                    b.Property<Guid?>("TaxBusinessEntityId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tax_business_entity_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_invoice_farm_assignment_rules");
+
+                    b.HasIndex("CreatedBy")
+                        .HasDatabaseName("ix_invoice_farm_assignment_rules_created_by");
+
+                    b.HasIndex("DeletedBy")
+                        .HasDatabaseName("ix_invoice_farm_assignment_rules_deleted_by");
+
+                    b.HasIndex("IsActive")
+                        .HasDatabaseName("ix_invoice_farm_assignment_rules_is_active");
+
+                    b.HasIndex("ModifiedBy")
+                        .HasDatabaseName("ix_invoice_farm_assignment_rules_modified_by");
+
+                    b.HasIndex("Priority")
+                        .HasDatabaseName("ix_invoice_farm_assignment_rules_priority");
+
+                    b.HasIndex("TargetFarmId")
+                        .HasDatabaseName("ix_invoice_farm_assignment_rules_target_farm_id");
+
+                    b.HasIndex("TaxBusinessEntityId")
+                        .HasDatabaseName("ix_invoice_farm_assignment_rules_tax_business_entity_id");
+
+                    b.ToTable("InvoiceFarmAssignmentRules", "farms_manager");
+                });
+
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.InvoiceModuleAssignmentRuleEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("DateCreatedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_created_utc");
+
+                    b.Property<DateTime?>("DateDeletedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_deleted_utc");
+
+                    b.Property<DateTime?>("DateModifiedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_modified_utc");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("description");
+
+                    b.PrimitiveCollection<string>("ExcludeKeywords")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("exclude_keywords");
+
+                    b.Property<Guid?>("FarmId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("farm_id");
+
+                    b.PrimitiveCollection<string>("IncludeKeywords")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("include_keywords");
+
+                    b.Property<string>("InvoiceDirection")
+                        .HasColumnType("text")
+                        .HasColumnName("invoice_direction");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_active");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_by");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("name");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("integer")
+                        .HasColumnName("priority");
+
+                    b.Property<string>("TargetModule")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("target_module");
+
+                    b.Property<Guid?>("TaxBusinessEntityId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tax_business_entity_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_invoice_module_assignment_rule");
+
+                    b.HasIndex("CreatedBy")
+                        .HasDatabaseName("ix_invoice_module_assignment_rule_created_by");
+
+                    b.HasIndex("DeletedBy")
+                        .HasDatabaseName("ix_invoice_module_assignment_rule_deleted_by");
+
+                    b.HasIndex("FarmId")
+                        .HasDatabaseName("ix_invoice_module_assignment_rule_farm_id");
+
+                    b.HasIndex("IsActive")
+                        .HasDatabaseName("ix_invoice_module_assignment_rule_is_active");
+
+                    b.HasIndex("ModifiedBy")
+                        .HasDatabaseName("ix_invoice_module_assignment_rule_modified_by");
+
+                    b.HasIndex("Priority")
+                        .HasDatabaseName("ix_invoice_module_assignment_rule_priority");
+
+                    b.HasIndex("TargetModule")
+                        .HasDatabaseName("ix_invoice_module_assignment_rule_target_module");
+
+                    b.HasIndex("TaxBusinessEntityId")
+                        .HasDatabaseName("ix_invoice_module_assignment_rule_tax_business_entity_id");
+
+                    b.HasIndex("IsActive", "Priority")
+                        .HasDatabaseName("ix_invoice_module_assignment_rule_is_active_priority");
+
+                    b.ToTable("invoice_module_assignment_rule", "farms_manager");
+                });
+
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.KSeFInvoiceAttachmentEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("content_type");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("DateCreatedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_created_utc");
+
+                    b.Property<DateTime?>("DateDeletedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_deleted_utc");
+
+                    b.Property<DateTime?>("DateModifiedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_modified_utc");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("file_name");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("file_path");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("bigint")
+                        .HasColumnName("file_size");
+
+                    b.Property<Guid>("InvoiceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("invoice_id");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_by");
+
+                    b.Property<Guid>("UploadedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("uploaded_by");
+
+                    b.HasKey("Id")
+                        .HasName("pk_ksef_invoice_attachment");
+
+                    b.HasIndex("CreatedBy")
+                        .HasDatabaseName("ix_ksef_invoice_attachment_created_by");
+
+                    b.HasIndex("DateCreatedUtc")
+                        .HasDatabaseName("ix_ksef_invoice_attachment_date_created_utc");
+
+                    b.HasIndex("DeletedBy")
+                        .HasDatabaseName("ix_ksef_invoice_attachment_deleted_by");
+
+                    b.HasIndex("InvoiceId")
+                        .HasDatabaseName("ix_ksef_invoice_attachment_invoice_id");
+
+                    b.HasIndex("ModifiedBy")
+                        .HasDatabaseName("ix_ksef_invoice_attachment_modified_by");
+
+                    b.HasIndex("UploadedBy")
+                        .HasDatabaseName("ix_ksef_invoice_attachment_uploaded_by");
+
+                    b.ToTable("ksef_invoice_attachment", "farms_manager");
+                });
+
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.KSeFInvoiceAuditLogEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("action");
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("comment");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("DateCreatedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_created_utc");
+
+                    b.Property<DateTime?>("DateDeletedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_deleted_utc");
+
+                    b.Property<DateTime?>("DateModifiedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_modified_utc");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<Guid>("InvoiceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("invoice_id");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_by");
+
+                    b.Property<int?>("NewStatus")
+                        .HasColumnType("integer")
+                        .HasColumnName("new_status");
+
+                    b.Property<int?>("PreviousStatus")
+                        .HasColumnType("integer")
+                        .HasColumnName("previous_status");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("user_name");
+
+                    b.HasKey("Id")
+                        .HasName("pk_ksef_invoice_audit_log");
+
+                    b.HasIndex("Action")
+                        .HasDatabaseName("ix_ksef_invoice_audit_log_action");
+
+                    b.HasIndex("CreatedBy")
+                        .HasDatabaseName("ix_ksef_invoice_audit_log_created_by");
+
+                    b.HasIndex("DateCreatedUtc")
+                        .HasDatabaseName("ix_ksef_invoice_audit_log_date_created_utc");
+
+                    b.HasIndex("DeletedBy")
+                        .HasDatabaseName("ix_ksef_invoice_audit_log_deleted_by");
+
+                    b.HasIndex("InvoiceId")
+                        .HasDatabaseName("ix_ksef_invoice_audit_log_invoice_id");
+
+                    b.HasIndex("ModifiedBy")
+                        .HasDatabaseName("ix_ksef_invoice_audit_log_modified_by");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_ksef_invoice_audit_log_user_id");
+
+                    b.ToTable("ksef_invoice_audit_log", "farms_manager");
+                });
+
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.KSeFInvoiceEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("AssignedCycleId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("assigned_cycle_id");
+
+                    b.Property<Guid?>("AssignedEntityInvoiceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("assigned_entity_invoice_id");
+
+                    b.Property<Guid?>("AssignedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("assigned_user_id");
+
+                    b.Property<string>("BuyerName")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("buyer_name");
+
+                    b.Property<string>("BuyerNip")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("buyer_nip");
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("comment");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("DateCreatedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_created_utc");
+
+                    b.Property<DateTime?>("DateDeletedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_deleted_utc");
+
+                    b.Property<DateTime?>("DateModifiedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_modified_utc");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<Guid?>("FarmId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("farm_id");
+
+                    b.Property<string>("FilePath")
+                        .HasColumnType("text")
+                        .HasColumnName("file_path");
+
+                    b.Property<decimal>("GrossAmount")
+                        .HasColumnType("numeric")
+                        .HasColumnName("gross_amount");
+
+                    b.Property<DateOnly>("InvoiceDate")
+                        .HasColumnType("date")
+                        .HasColumnName("invoice_date");
+
+                    b.Property<string>("InvoiceDirection")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("invoice_direction");
+
+                    b.Property<string>("InvoiceNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("invoice_number");
+
+                    b.Property<string>("InvoiceSource")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("invoice_source");
+
+                    b.Property<string>("InvoiceType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("invoice_type");
+
+                    b.Property<string>("InvoiceXml")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("invoice_xml");
+
+                    b.Property<string>("KSeFNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("ksef_number");
+
+                    b.Property<bool>("LinkingAccepted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("linking_accepted");
+
+                    b.Property<int>("LinkingReminderCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("linking_reminder_count");
+
+                    b.Property<DateTime?>("LinkingReminderDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("linking_reminder_date");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_by");
+
+                    b.Property<string>("ModuleType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("module_type");
+
+                    b.Property<decimal>("NetAmount")
+                        .HasColumnType("numeric")
+                        .HasColumnName("net_amount");
+
+                    b.Property<DateOnly?>("PaymentDate")
+                        .HasColumnType("date")
+                        .HasColumnName("payment_date");
+
+                    b.Property<DateOnly?>("PaymentDueDate")
+                        .HasColumnType("date")
+                        .HasColumnName("payment_due_date");
+
+                    b.Property<string>("PaymentStatus")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("payment_status");
+
+                    b.Property<string>("PaymentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("payment_type");
+
+                    b.Property<decimal?>("Quantity")
+                        .HasColumnType("numeric")
+                        .HasColumnName("quantity");
+
+                    b.Property<Guid?>("RelatedInvoiceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("related_invoice_id");
+
+                    b.Property<string>("RelatedInvoiceNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("related_invoice_number");
+
+                    b.Property<bool>("RequiresLinking")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("requires_linking");
+
+                    b.Property<string>("SellerName")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("seller_name");
+
+                    b.Property<string>("SellerNip")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("seller_nip");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("status");
+
+                    b.Property<Guid?>("TaxBusinessEntityId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tax_business_entity_id");
+
+                    b.Property<decimal>("VatAmount")
+                        .HasColumnType("numeric")
+                        .HasColumnName("vat_amount");
+
+                    b.Property<string>("VatDeductionType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("vat_deduction_type");
+
+                    b.HasKey("Id")
+                        .HasName("pk_ksef_invoice");
+
+                    b.HasIndex("AssignedCycleId")
+                        .HasDatabaseName("ix_ksef_invoice_assigned_cycle_id");
+
+                    b.HasIndex("AssignedUserId")
+                        .HasDatabaseName("ix_ksef_invoice_assigned_user_id");
+
+                    b.HasIndex("CreatedBy")
+                        .HasDatabaseName("ix_ksef_invoice_created_by");
+
+                    b.HasIndex("DeletedBy")
+                        .HasDatabaseName("ix_ksef_invoice_deleted_by");
+
+                    b.HasIndex("FarmId")
+                        .HasDatabaseName("ix_ksef_invoice_farm_id");
+
+                    b.HasIndex("InvoiceDate")
+                        .HasDatabaseName("ix_ksef_invoice_invoice_date");
+
+                    b.HasIndex("InvoiceNumber")
+                        .HasDatabaseName("ix_ksef_invoice_invoice_number");
+
+                    b.HasIndex("KSeFNumber")
+                        .IsUnique()
+                        .HasDatabaseName("ix_ksef_invoice_ksef_number");
+
+                    b.HasIndex("ModifiedBy")
+                        .HasDatabaseName("ix_ksef_invoice_modified_by");
+
+                    b.HasIndex("PaymentDate")
+                        .HasDatabaseName("ix_ksef_invoice_payment_date");
+
+                    b.HasIndex("RequiresLinking")
+                        .HasDatabaseName("ix_ksef_invoice_requires_linking");
+
+                    b.HasIndex("TaxBusinessEntityId")
+                        .HasDatabaseName("ix_ksef_invoice_tax_business_entity_id");
+
+                    b.ToTable("ksef_invoice", "farms_manager");
+                });
+
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.KSeFInvoiceRelationEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("DateCreatedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_created_utc");
+
+                    b.Property<DateTime?>("DateDeletedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_deleted_utc");
+
+                    b.Property<DateTime?>("DateModifiedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_modified_utc");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_by");
+
+                    b.Property<string>("RelationType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("relation_type");
+
+                    b.Property<Guid>("SourceInvoiceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("source_invoice_id");
+
+                    b.Property<Guid>("TargetInvoiceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("target_invoice_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_ksef_invoice_relation");
+
+                    b.HasIndex("CreatedBy")
+                        .HasDatabaseName("ix_ksef_invoice_relation_created_by");
+
+                    b.HasIndex("DeletedBy")
+                        .HasDatabaseName("ix_ksef_invoice_relation_deleted_by");
+
+                    b.HasIndex("ModifiedBy")
+                        .HasDatabaseName("ix_ksef_invoice_relation_modified_by");
+
+                    b.HasIndex("SourceInvoiceId")
+                        .HasDatabaseName("ix_ksef_invoice_relation_source_invoice_id");
+
+                    b.HasIndex("TargetInvoiceId")
+                        .HasDatabaseName("ix_ksef_invoice_relation_target_invoice_id");
+
+                    b.HasIndex("SourceInvoiceId", "TargetInvoiceId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_ksef_invoice_relation_source_invoice_id_target_invoice_id");
+
+                    b.ToTable("ksef_invoice_relation", "farms_manager");
+                });
+
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.KSeFSynchronizationLogEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("completed_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("DateCreatedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_created_utc");
+
+                    b.Property<DateTime?>("DateDeletedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_deleted_utc");
+
+                    b.Property<DateTime?>("DateModifiedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_modified_utc");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<double?>("DurationSeconds")
+                        .HasColumnType("double precision")
+                        .HasColumnName("duration_seconds");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("error_message");
+
+                    b.Property<int>("ErrorsCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("errors_count");
+
+                    b.Property<int>("InvoicesDownloaded")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("invoices_downloaded");
+
+                    b.Property<int>("InvoicesSaved")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("invoices_saved");
+
+                    b.Property<bool>("IsManual")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_manual");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_by");
+
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("started_at");
+
+                    b.Property<int>("Status")
+                        .HasMaxLength(100)
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
+
+                    b.HasKey("Id")
+                        .HasName("pk_ksef_synchronization_log");
+
+                    b.HasIndex("CreatedBy")
+                        .HasDatabaseName("ix_ksef_synchronization_log_created_by");
+
+                    b.HasIndex("DeletedBy")
+                        .HasDatabaseName("ix_ksef_synchronization_log_deleted_by");
+
+                    b.HasIndex("ModifiedBy")
+                        .HasDatabaseName("ix_ksef_synchronization_log_modified_by");
+
+                    b.HasIndex("StartedAt")
+                        .IsDescending()
+                        .HasDatabaseName("ix_ksef_synchronization_log_started_at");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("ix_ksef_synchronization_log_status");
+
+                    b.ToTable("ksef_synchronization_log", "farms_manager");
+                });
+
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.TaxBusinessEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("BusinessType")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("business_type");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("DateCreatedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_created_utc");
+
+                    b.Property<DateTime?>("DateDeletedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_deleted_utc");
+
+                    b.Property<DateTime?>("DateModifiedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_modified_utc");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("description");
+
+                    b.Property<string>("KSeFToken")
+                        .HasColumnType("text")
+                        .HasColumnName("ksef_token");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_by");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Nip")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("nip");
+
+                    b.HasKey("Id")
+                        .HasName("pk_tax_business_entity");
+
+                    b.HasIndex("CreatedBy")
+                        .HasDatabaseName("ix_tax_business_entity_created_by");
+
+                    b.HasIndex("DeletedBy")
+                        .HasDatabaseName("ix_tax_business_entity_deleted_by");
+
+                    b.HasIndex("ModifiedBy")
+                        .HasDatabaseName("ix_tax_business_entity_modified_by");
+
+                    b.HasIndex("Nip")
+                        .HasDatabaseName("ix_tax_business_entity_nip");
+
+                    b.HasIndex("Nip", "Name")
+                        .HasDatabaseName("ix_tax_business_entity_nip_name");
+
+                    b.ToTable("tax_business_entity", "farms_manager");
+                });
 
             modelBuilder.Entity("FarmsManager.Domain.Aggregates.EmployeeAggregate.Entities.EmployeeEntity", b =>
                 {
@@ -605,10 +1587,6 @@ namespace FarmsManager.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("deleted_by");
 
-                    b.Property<Guid?>("ExpenseTypeId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("expense_type_id");
-
                     b.Property<Guid?>("ModifiedBy")
                         .HasColumnType("uuid")
                         .HasColumnName("modified_by");
@@ -630,13 +1608,70 @@ namespace FarmsManager.Infrastructure.Migrations
                     b.HasIndex("DeletedBy")
                         .HasDatabaseName("ix_expense_contractor_deleted_by");
 
-                    b.HasIndex("ExpenseTypeId")
-                        .HasDatabaseName("ix_expense_contractor_expense_type_id");
-
                     b.HasIndex("ModifiedBy")
                         .HasDatabaseName("ix_expense_contractor_modified_by");
 
                     b.ToTable("expense_contractor", "farms_manager");
+                });
+
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities.ExpenseContractorExpenseTypeEntity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("DateCreatedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_created_utc");
+
+                    b.Property<DateTime?>("DateDeletedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_deleted_utc");
+
+                    b.Property<DateTime?>("DateModifiedUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_modified_utc");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<Guid>("ExpenseContractorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("expense_contractor_id");
+
+                    b.Property<Guid>("ExpenseTypeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("expense_type_id");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_by");
+
+                    b.HasKey("Id")
+                        .HasName("pk_expense_contractor_expense_type");
+
+                    b.HasIndex("CreatedBy")
+                        .HasDatabaseName("ix_expense_contractor_expense_type_created_by");
+
+                    b.HasIndex("DeletedBy")
+                        .HasDatabaseName("ix_expense_contractor_expense_type_deleted_by");
+
+                    b.HasIndex("ExpenseTypeId")
+                        .HasDatabaseName("ix_expense_contractor_expense_type_expense_type_id");
+
+                    b.HasIndex("ModifiedBy")
+                        .HasDatabaseName("ix_expense_contractor_expense_type_modified_by");
+
+                    b.HasIndex("ExpenseContractorId", "ExpenseTypeId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_expense_contractor_expense_type_expense_contractor_id_expen");
+
+                    b.ToTable("expense_contractor_expense_type", "farms_manager");
                 });
 
             modelBuilder.Entity("FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities.ExpenseProductionEntity", b =>
@@ -676,6 +1711,10 @@ namespace FarmsManager.Infrastructure.Migrations
                     b.Property<Guid>("ExpenseContractorId")
                         .HasColumnType("uuid")
                         .HasColumnName("expense_contractor_id");
+
+                    b.Property<Guid?>("ExpenseTypeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("expense_type_id");
 
                     b.Property<Guid>("FarmId")
                         .HasColumnType("uuid")
@@ -723,6 +1762,9 @@ namespace FarmsManager.Infrastructure.Migrations
 
                     b.HasIndex("ExpenseContractorId")
                         .HasDatabaseName("ix_expense_production_expense_contractor_id");
+
+                    b.HasIndex("ExpenseTypeId")
+                        .HasDatabaseName("ix_expense_production_expense_type_id");
 
                     b.HasIndex("FarmId")
                         .HasDatabaseName("ix_expense_production_farm_id");
@@ -1203,6 +2245,10 @@ namespace FarmsManager.Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("producer_number");
 
+                    b.Property<Guid?>("TaxBusinessEntityId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tax_business_entity_id");
+
                     b.HasKey("Id")
                         .HasName("pk_farm");
 
@@ -1217,6 +2263,9 @@ namespace FarmsManager.Infrastructure.Migrations
 
                     b.HasIndex("ModifiedBy")
                         .HasDatabaseName("ix_farm_modified_by");
+
+                    b.HasIndex("TaxBusinessEntityId")
+                        .HasDatabaseName("ix_farm_tax_business_entity_id");
 
                     b.ToTable("farm", "farms_manager");
                 });
@@ -3628,6 +4677,390 @@ namespace FarmsManager.Infrastructure.Migrations
                     b.ToTable("user_session", "farms_manager");
                 });
 
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.InvoiceAssignmentRuleEntity", b =>
+                {
+                    b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "AssignedUser")
+                        .WithMany()
+                        .HasForeignKey("AssignedUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_invoice_assignment_rules_user_entity_assigned_user_id");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Creator")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_invoice_assignment_rules_user_created_by");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Deleter")
+                        .WithMany()
+                        .HasForeignKey("DeletedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_invoice_assignment_rules_user_deleted_by");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.FarmAggregate.Entities.FarmEntity", "Farm")
+                        .WithMany()
+                        .HasForeignKey("FarmId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_invoice_assignment_rules_farm_entity_farm_id");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Modifier")
+                        .WithMany()
+                        .HasForeignKey("ModifiedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_invoice_assignment_rules_user_modified_by");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.TaxBusinessEntity", "TaxBusinessEntity")
+                        .WithMany()
+                        .HasForeignKey("TaxBusinessEntityId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_invoice_assignment_rules_tax_business_entity_tax_business_e");
+
+                    b.Navigation("AssignedUser");
+
+                    b.Navigation("Creator");
+
+                    b.Navigation("Deleter");
+
+                    b.Navigation("Farm");
+
+                    b.Navigation("Modifier");
+
+                    b.Navigation("TaxBusinessEntity");
+                });
+
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.InvoiceFarmAssignmentRuleEntity", b =>
+                {
+                    b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Creator")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_invoice_farm_assignment_rules_user_created_by");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Deleter")
+                        .WithMany()
+                        .HasForeignKey("DeletedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_invoice_farm_assignment_rules_user_deleted_by");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Modifier")
+                        .WithMany()
+                        .HasForeignKey("ModifiedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_invoice_farm_assignment_rules_user_modified_by");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.FarmAggregate.Entities.FarmEntity", "TargetFarm")
+                        .WithMany()
+                        .HasForeignKey("TargetFarmId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_invoice_farm_assignment_rules_farm_entity_target_farm_id");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.TaxBusinessEntity", "TaxBusinessEntity")
+                        .WithMany()
+                        .HasForeignKey("TaxBusinessEntityId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_invoice_farm_assignment_rules_tax_business_entity_tax_business");
+
+                    b.Navigation("Creator");
+
+                    b.Navigation("Deleter");
+
+                    b.Navigation("Modifier");
+
+                    b.Navigation("TargetFarm");
+
+                    b.Navigation("TaxBusinessEntity");
+                });
+
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.InvoiceModuleAssignmentRuleEntity", b =>
+                {
+                    b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Creator")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_invoice_module_assignment_rule_user_created_by");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Deleter")
+                        .WithMany()
+                        .HasForeignKey("DeletedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_invoice_module_assignment_rule_user_deleted_by");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.FarmAggregate.Entities.FarmEntity", "Farm")
+                        .WithMany()
+                        .HasForeignKey("FarmId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_invoice_module_assignment_rule_farm_entity_farm_id");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Modifier")
+                        .WithMany()
+                        .HasForeignKey("ModifiedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_invoice_module_assignment_rule_user_modified_by");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.TaxBusinessEntity", "TaxBusinessEntity")
+                        .WithMany()
+                        .HasForeignKey("TaxBusinessEntityId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_invoice_module_assignment_rule_tax_business_entity_tax_busi");
+
+                    b.Navigation("Creator");
+
+                    b.Navigation("Deleter");
+
+                    b.Navigation("Farm");
+
+                    b.Navigation("Modifier");
+
+                    b.Navigation("TaxBusinessEntity");
+                });
+
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.KSeFInvoiceAttachmentEntity", b =>
+                {
+                    b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Creator")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_ksef_invoice_attachment_user_created_by");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Deleter")
+                        .WithMany()
+                        .HasForeignKey("DeletedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_ksef_invoice_attachment_user_deleted_by");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.KSeFInvoiceEntity", "Invoice")
+                        .WithMany("Attachments")
+                        .HasForeignKey("InvoiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_ksef_invoice_attachment_k_se_f_invoice_entity_invoice_id");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Modifier")
+                        .WithMany()
+                        .HasForeignKey("ModifiedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_ksef_invoice_attachment_user_modified_by");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Uploader")
+                        .WithMany()
+                        .HasForeignKey("UploadedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_ksef_invoice_attachment_user_entity_uploaded_by");
+
+                    b.Navigation("Creator");
+
+                    b.Navigation("Deleter");
+
+                    b.Navigation("Invoice");
+
+                    b.Navigation("Modifier");
+
+                    b.Navigation("Uploader");
+                });
+
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.KSeFInvoiceAuditLogEntity", b =>
+                {
+                    b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Creator")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_ksef_invoice_audit_log_user_created_by");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Deleter")
+                        .WithMany()
+                        .HasForeignKey("DeletedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_ksef_invoice_audit_log_user_deleted_by");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.KSeFInvoiceEntity", "Invoice")
+                        .WithMany("AuditLogs")
+                        .HasForeignKey("InvoiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_ksef_invoice_audit_log_k_se_f_invoice_entity_invoice_id");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Modifier")
+                        .WithMany()
+                        .HasForeignKey("ModifiedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_ksef_invoice_audit_log_user_modified_by");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_ksef_invoice_audit_log_user_entity_user_id");
+
+                    b.Navigation("Creator");
+
+                    b.Navigation("Deleter");
+
+                    b.Navigation("Invoice");
+
+                    b.Navigation("Modifier");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.KSeFInvoiceEntity", b =>
+                {
+                    b.HasOne("FarmsManager.Domain.Aggregates.FarmAggregate.Entities.CycleEntity", "AssignedCycle")
+                        .WithMany()
+                        .HasForeignKey("AssignedCycleId")
+                        .HasConstraintName("fk_ksef_invoice_cycle_entity_assigned_cycle_id");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "AssignedUser")
+                        .WithMany()
+                        .HasForeignKey("AssignedUserId")
+                        .HasConstraintName("fk_ksef_invoice_user_entity_assigned_user_id");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Creator")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_ksef_invoice_user_created_by");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Deleter")
+                        .WithMany()
+                        .HasForeignKey("DeletedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_ksef_invoice_user_deleted_by");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.FarmAggregate.Entities.FarmEntity", "Farm")
+                        .WithMany()
+                        .HasForeignKey("FarmId")
+                        .HasConstraintName("fk_ksef_invoice_farm_entity_farm_id");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Modifier")
+                        .WithMany()
+                        .HasForeignKey("ModifiedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_ksef_invoice_user_modified_by");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.TaxBusinessEntity", "TaxBusinessEntity")
+                        .WithMany("Invoices")
+                        .HasForeignKey("TaxBusinessEntityId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_ksef_invoice_tax_business_entity_tax_business_entity_id");
+
+                    b.Navigation("AssignedCycle");
+
+                    b.Navigation("AssignedUser");
+
+                    b.Navigation("Creator");
+
+                    b.Navigation("Deleter");
+
+                    b.Navigation("Farm");
+
+                    b.Navigation("Modifier");
+
+                    b.Navigation("TaxBusinessEntity");
+                });
+
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.KSeFInvoiceRelationEntity", b =>
+                {
+                    b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Creator")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_ksef_invoice_relation_user_created_by");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Deleter")
+                        .WithMany()
+                        .HasForeignKey("DeletedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_ksef_invoice_relation_user_deleted_by");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Modifier")
+                        .WithMany()
+                        .HasForeignKey("ModifiedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_ksef_invoice_relation_user_modified_by");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.KSeFInvoiceEntity", "SourceInvoice")
+                        .WithMany("SourceRelations")
+                        .HasForeignKey("SourceInvoiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_ksef_invoice_relation_ksef_invoice_source_invoice_id");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.KSeFInvoiceEntity", "TargetInvoice")
+                        .WithMany("TargetRelations")
+                        .HasForeignKey("TargetInvoiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_ksef_invoice_relation_ksef_invoice_target_invoice_id");
+
+                    b.Navigation("Creator");
+
+                    b.Navigation("Deleter");
+
+                    b.Navigation("Modifier");
+
+                    b.Navigation("SourceInvoice");
+
+                    b.Navigation("TargetInvoice");
+                });
+
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.KSeFSynchronizationLogEntity", b =>
+                {
+                    b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Creator")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_ksef_synchronization_log_user_entity_created_by");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Deleter")
+                        .WithMany()
+                        .HasForeignKey("DeletedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_ksef_synchronization_log_user_entity_deleted_by");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Modifier")
+                        .WithMany()
+                        .HasForeignKey("ModifiedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_ksef_synchronization_log_user_entity_modified_by");
+
+                    b.Navigation("Creator");
+
+                    b.Navigation("Deleter");
+
+                    b.Navigation("Modifier");
+                });
+
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.TaxBusinessEntity", b =>
+                {
+                    b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Creator")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_tax_business_entity_user_created_by");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Deleter")
+                        .WithMany()
+                        .HasForeignKey("DeletedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_tax_business_entity_user_deleted_by");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Modifier")
+                        .WithMany()
+                        .HasForeignKey("ModifiedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_tax_business_entity_user_modified_by");
+
+                    b.Navigation("Creator");
+
+                    b.Navigation("Deleter");
+
+                    b.Navigation("Modifier");
+                });
+
             modelBuilder.Entity("FarmsManager.Domain.Aggregates.EmployeeAggregate.Entities.EmployeeEntity", b =>
                 {
                     b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Creator")
@@ -3919,12 +5352,6 @@ namespace FarmsManager.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_expense_contractor_user_deleted_by");
 
-                    b.HasOne("FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities.ExpenseTypeEntity", "ExpenseType")
-                        .WithMany()
-                        .HasForeignKey("ExpenseTypeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .HasConstraintName("fk_expense_contractor_expense_type_entity_expense_type_id");
-
                     b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Modifier")
                         .WithMany()
                         .HasForeignKey("ModifiedBy")
@@ -3934,6 +5361,49 @@ namespace FarmsManager.Infrastructure.Migrations
                     b.Navigation("Creator");
 
                     b.Navigation("Deleter");
+
+                    b.Navigation("Modifier");
+                });
+
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities.ExpenseContractorExpenseTypeEntity", b =>
+                {
+                    b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Creator")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_expense_contractor_expense_type_user_created_by");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Deleter")
+                        .WithMany()
+                        .HasForeignKey("DeletedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_expense_contractor_expense_type_user_deleted_by");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities.ExpenseContractorEntity", "ExpenseContractor")
+                        .WithMany("ExpenseTypes")
+                        .HasForeignKey("ExpenseContractorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_expense_contractor_expense_type_expense_contractor_expense_");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities.ExpenseTypeEntity", "ExpenseType")
+                        .WithMany()
+                        .HasForeignKey("ExpenseTypeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_expense_contractor_expense_type_expense_type_entity_expense");
+
+                    b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Modifier")
+                        .WithMany()
+                        .HasForeignKey("ModifiedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_expense_contractor_expense_type_user_modified_by");
+
+                    b.Navigation("Creator");
+
+                    b.Navigation("Deleter");
+
+                    b.Navigation("ExpenseContractor");
 
                     b.Navigation("ExpenseType");
 
@@ -3968,6 +5438,11 @@ namespace FarmsManager.Infrastructure.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_expense_production_expense_contractor_expense_contractor_id");
 
+                    b.HasOne("FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities.ExpenseTypeEntity", "ExpenseType")
+                        .WithMany()
+                        .HasForeignKey("ExpenseTypeId")
+                        .HasConstraintName("fk_expense_production_expense_type_entity_expense_type_id");
+
                     b.HasOne("FarmsManager.Domain.Aggregates.FarmAggregate.Entities.FarmEntity", "Farm")
                         .WithMany()
                         .HasForeignKey("FarmId")
@@ -3988,6 +5463,8 @@ namespace FarmsManager.Infrastructure.Migrations
                     b.Navigation("Deleter");
 
                     b.Navigation("ExpenseContractor");
+
+                    b.Navigation("ExpenseType");
 
                     b.Navigation("Farm");
 
@@ -4252,6 +5729,12 @@ namespace FarmsManager.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_farm_user_modified_by");
 
+                    b.HasOne("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.TaxBusinessEntity", "TaxBusinessEntity")
+                        .WithMany("Farms")
+                        .HasForeignKey("TaxBusinessEntityId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_farm_tax_business_entity_tax_business_entity_id");
+
                     b.Navigation("ActiveCycle");
 
                     b.Navigation("Creator");
@@ -4259,6 +5742,8 @@ namespace FarmsManager.Infrastructure.Migrations
                     b.Navigation("Deleter");
 
                     b.Navigation("Modifier");
+
+                    b.Navigation("TaxBusinessEntity");
                 });
 
             modelBuilder.Entity("FarmsManager.Domain.Aggregates.FarmAggregate.Entities.HenhouseEntity", b =>
@@ -5544,11 +7029,34 @@ namespace FarmsManager.Infrastructure.Migrations
                     b.Navigation("Modifier");
                 });
 
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.KSeFInvoiceEntity", b =>
+                {
+                    b.Navigation("Attachments");
+
+                    b.Navigation("AuditLogs");
+
+                    b.Navigation("SourceRelations");
+
+                    b.Navigation("TargetRelations");
+                });
+
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.TaxBusinessEntity", b =>
+                {
+                    b.Navigation("Farms");
+
+                    b.Navigation("Invoices");
+                });
+
             modelBuilder.Entity("FarmsManager.Domain.Aggregates.EmployeeAggregate.Entities.EmployeeEntity", b =>
                 {
                     b.Navigation("Files");
 
                     b.Navigation("Reminders");
+                });
+
+            modelBuilder.Entity("FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities.ExpenseContractorEntity", b =>
+                {
+                    b.Navigation("ExpenseTypes");
                 });
 
             modelBuilder.Entity("FarmsManager.Domain.Aggregates.FarmAggregate.Entities.FarmEntity", b =>

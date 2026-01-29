@@ -17,6 +17,7 @@ import {
   FaUserSlash,
   FaBell,
   FaBellSlash,
+  FaCalculator,
 } from "react-icons/fa6";
 import type { NotificationPriority } from "../../models/common/notifications";
 import type {
@@ -29,6 +30,7 @@ const notificationIcons: Record<NotificationType, React.ReactElement> = {
   FeedInvoice: <FaReceipt />,
   EmployeeContract: <FaUserSlash />,
   EmployeeReminder: <FaBell />,
+  AccountingInvoice: <FaCalculator />,
 };
 
 const priorityConfig: Record<
@@ -49,6 +51,8 @@ const getLinkPath = (notification: DashboardNotificationItem): string => {
     case "EmployeeContract":
     case "EmployeeReminder":
       return `/employees/${notification.sourceId}`;
+    case "AccountingInvoice":
+      return `/accounting`;
     default:
       return "#";
   }

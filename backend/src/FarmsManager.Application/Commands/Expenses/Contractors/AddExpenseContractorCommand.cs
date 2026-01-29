@@ -1,5 +1,4 @@
 ﻿using Ardalis.Specification;
-using FarmsManager.Application.Commands.Expenses.Types;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Common.Validators;
 using FarmsManager.Application.Interfaces;
@@ -18,7 +17,7 @@ public record AddExpenseContractorDto
     public string Name { get; init; }
     public string Nip { get; init; }
     public string Address { get; init; }
-    public Guid ExpenseTypeId { get; init; }
+    public List<Guid> ExpenseTypeIds { get; init; } = [];
 }
 
 public record AddExpenseContractorCommand(AddExpenseContractorDto Data) : IRequest<EmptyBaseResponse>;
@@ -43,9 +42,6 @@ public class AddExpenseContractorCommandHandler : IRequestHandler<AddExpenseCont
         var response = BaseResponse.EmptyResponse;
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
 
-        var expenseType = await _expenseTypeRepository.GetAsync(new GetExpenseTypeByIdSpec(request.Data.ExpenseTypeId),
-            cancellationToken);
-
         var existedExpenseContractor = await _expenseContractorRepository.FirstOrDefaultAsync(
             new GetExpenseContractorByNipOrNameSpec(request.Data.Nip, request.Data.Name), cancellationToken);
         if (existedExpenseContractor is not null)
@@ -54,8 +50,8 @@ public class AddExpenseContractorCommandHandler : IRequestHandler<AddExpenseCont
             return response;
         }
 
-        var newContractor = ExpenseContractorEntity.CreateNew(expenseType.Id, request.Data.Name,
-            request.Data.Nip, request.Data.Address, userId);
+        var newContractor = ExpenseContractorEntity.CreateNew(request.Data.Name,
+            request.Data.Nip, request.Data.Address, request.Data.ExpenseTypeIds, userId);
 
         await _expenseContractorRepository.AddAsync(newContractor, cancellationToken);
         return response;
@@ -70,7 +66,7 @@ public class AddExpenseContractorCommandValidator : AbstractValidator<AddExpense
         RuleFor(t => t.Data.Nip).NotEmpty().Must(ValidationHelpers.IsValidNip)
             .WithMessage("Podany numer NIP jest nieprawidłowy.");
         RuleFor(t => t.Data.Address).NotEmpty();
-        RuleFor(t => t.Data.ExpenseTypeId).NotEmpty();
+        RuleFor(t => t.Data.ExpenseTypeIds).NotEmpty().WithMessage("Wymagany jest co najmniej jeden typ wydatku.");
     }
 }
 

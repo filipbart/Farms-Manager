@@ -41,6 +41,9 @@ public class FeedDeliveryInvoiceModel
     [AzureDiField("CustomerTaxId")]
     public string CustomerNip { get; init; }
     
+    [AzureDiField("CustomerAddress")]
+    public string CustomerAddress { get; init; }
+    
     [AzureDiField("MiejsceRozładunku", customField: true)]
     public string HenhouseName { get; init; }
 }

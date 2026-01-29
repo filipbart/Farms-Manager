@@ -4,6 +4,7 @@ using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications.Feeds;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
+using FarmsManager.Shared.Extensions;
 using MediatR;
 
 namespace FarmsManager.Application.Commands.Feeds.Deliveries;
@@ -31,7 +32,8 @@ public class DeleteFeedDeliveryCommandHandler : IRequestHandler<DeleteFeedDelive
             await _feedInvoiceRepository.GetAsync(new GetFeedInvoiceByIdSpec(request.Id), cancellationToken);
 
         feedDelivery.Delete(userId);
-        await _s3Service.DeleteFileAsync(FileType.FeedDeliveryInvoice, feedDelivery.FilePath);
+        if (feedDelivery.FilePath.IsNotEmpty())
+            await _s3Service.DeleteFileAsync(FileType.FeedDeliveryInvoice, feedDelivery.FilePath);
         await _feedInvoiceRepository.UpdateAsync(feedDelivery, cancellationToken);
 
         return new EmptyBaseResponse();

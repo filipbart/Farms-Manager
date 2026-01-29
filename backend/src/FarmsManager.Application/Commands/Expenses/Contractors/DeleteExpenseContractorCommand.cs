@@ -41,9 +41,14 @@ public class DeleteExpenseContractorCommandHandler : IRequestHandler<DeleteExpen
 public sealed class GetExpenseContractorByIdSpec : BaseSpecification<ExpenseContractorEntity>,
     ISingleResultSpecification<ExpenseContractorEntity>
 {
-    public GetExpenseContractorByIdSpec(Guid id)
+    public GetExpenseContractorByIdSpec(Guid id, bool includeExpenseTypes = false)
     {
         EnsureExists();
         Query.Where(e => e.Id == id);
+        
+        if (includeExpenseTypes)
+        {
+            Query.Include(e => e.ExpenseTypes).ThenInclude(et => et.ExpenseType);
+        }
     }
 }

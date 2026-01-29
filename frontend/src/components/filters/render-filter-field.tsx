@@ -1,4 +1,10 @@
-import { TextField, MenuItem, Autocomplete, FormControlLabel, Checkbox } from "@mui/material";
+import {
+  TextField,
+  MenuItem,
+  Autocomplete,
+  FormControlLabel,
+  Checkbox,
+} from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs, { Dayjs } from "dayjs";
 import type { FilterConfig } from "./filter-types";
@@ -20,7 +26,7 @@ export const RenderFilterField = ({
         label={filter.label}
         select
         fullWidth
-        sx={{ minWidth: 200 }}
+        sx={{ minWidth: 0 }}
         value={Array.isArray(value) ? value : []}
         onChange={(e) =>
           onChange(Array.from(e.target.value as unknown as string[]))
@@ -36,7 +42,7 @@ export const RenderFilterField = ({
               }
               if (selectedItems.length === 1) {
                 return filter.options.find(
-                  (opt) => opt.value === selectedItems[0]
+                  (opt) => opt.value === selectedItems[0],
                 )?.label;
               }
               return `Wybrano: ${selectedItems.length}`;
@@ -65,7 +71,7 @@ export const RenderFilterField = ({
         options={filter.options}
         getOptionLabel={(option) => option.label}
         value={filter.options.filter((opt) =>
-          (value as string[])?.includes(opt.value)
+          (value as string[])?.includes(opt.value),
         )}
         onChange={(_event, newValues) => {
           onChange(newValues.map((val) => val.value));
@@ -81,8 +87,10 @@ export const RenderFilterField = ({
           }
           return `Wybrano: ${selectedOptions.length}`;
         }}
-        sx={{ minWidth: 250 }}
-        renderInput={(params) => <TextField {...params} label={filter.label} />}
+        sx={{ minWidth: 0 }}
+        renderInput={(params) => (
+          <TextField {...params} label={filter.label} fullWidth />
+        )}
       />
     );
   }
@@ -93,7 +101,7 @@ export const RenderFilterField = ({
         label={filter.label}
         select
         fullWidth
-        sx={{ minWidth: 200 }}
+        sx={{ minWidth: 0 }}
         value={value || ""}
         onChange={(e) => onChange(e.target.value)}
         disabled={filter.disabled}
@@ -120,9 +128,9 @@ export const RenderFilterField = ({
         onChange={(val: Dayjs | null) =>
           onChange(val ? val.format("YYYY-MM-DD") : "")
         }
-        sx={{ width: 200 }}
+        sx={{ width: "100%" }}
         slotProps={{
-          textField: { fullWidth: false },
+          textField: { fullWidth: true },
           actionBar: { actions: ["clear"] },
         }}
       />
@@ -135,7 +143,7 @@ export const RenderFilterField = ({
         label={filter.label}
         type="number"
         fullWidth
-        sx={{ minWidth: 200 }}
+        sx={{ minWidth: 0 }}
         value={value || ""}
         onChange={(e) => onChange(e.target.value)}
         disabled={filter.disabled}
@@ -149,7 +157,7 @@ export const RenderFilterField = ({
         label={filter.label}
         type="text"
         fullWidth
-        sx={{ minWidth: 250 }}
+        sx={{ minWidth: 0 }}
         value={value || ""}
         onChange={(e) => onChange(e.target.value)}
         disabled={filter.disabled}

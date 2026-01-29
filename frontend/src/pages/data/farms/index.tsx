@@ -1,6 +1,6 @@
 import { Box, Button, tablePaginationClasses, Typography } from "@mui/material";
 import { type GridColDef } from "@mui/x-data-grid";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { FarmsService } from "../../../services/farms-service";
 import AddFarmModal from "../../../components/modals/farms/add-farm-modal";
 import { handleApiResponse } from "../../../utils/axios/handle-api-response";
@@ -10,16 +10,7 @@ import ActionsCell from "../../../components/datagrid/actions-cell";
 import EditFarmModal from "../../../components/modals/farms/edit-farm-modal";
 import { useAuth } from "../../../auth/useAuth";
 import { getAuditColumns } from "../../../utils/audit-columns-helper";
-
-import type { AuditFields } from "../../../common/interfaces/audit-fields";
-
-type FarmRow = {
-  id: string;
-  name: string;
-  nip: string;
-  producerNumber: string;
-  address: string;
-} & AuditFields;
+import type FarmRowModel from "../../../models/farms/farm-row-model";
 
 const FarmsPage: React.FC = () => {
   const { userData } = useAuth();
@@ -28,9 +19,9 @@ const FarmsPage: React.FC = () => {
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [selectedFarm, setSelectedFarm] = useState<FarmRow | null>(null);
+  const [selectedFarm, setSelectedFarm] = useState<FarmRowModel | null>(null);
 
-  const handleEditOpen = (farm: FarmRow) => {
+  const handleEditOpen = (farm: FarmRowModel) => {
     setSelectedFarm(farm);
     setIsEditModalOpen(true);
   };
@@ -45,19 +36,22 @@ const FarmsPage: React.FC = () => {
     await fetchFarms();
   };
 
-  const handleDelete = async (id: string) => {
-    await handleApiResponse(
-      () => FarmsService.deleteFarmAsync(id),
-      async () => {
-        await fetchFarms();
-      },
-      undefined,
-      "Nie udało się usunąć farmy"
-    );
-  };
+  const handleDelete = useCallback(
+    async (id: string) => {
+      await handleApiResponse(
+        () => FarmsService.deleteFarmAsync(id),
+        async () => {
+          await fetchFarms();
+        },
+        undefined,
+        "Nie udało się usunąć farmy"
+      );
+    },
+    [fetchFarms]
+  );
 
-  const columns: GridColDef<FarmRow>[] = useMemo(() => {
-    const baseColumns: GridColDef<FarmRow>[] = [
+  const columns: GridColDef<FarmRowModel>[] = useMemo(() => {
+    const baseColumns: GridColDef<FarmRowModel>[] = [
       { field: "name", headerName: "Nazwa", flex: 1 },
       { field: "nip", headerName: "NIP", flex: 1 },
       { field: "producerNumber", headerName: "Numer producenta", flex: 1 },
@@ -87,10 +81,10 @@ const FarmsPage: React.FC = () => {
         ],
       },
     ];
-    
-    const auditColumns = getAuditColumns<FarmRow>(isAdmin);
+
+    const auditColumns = getAuditColumns<FarmRowModel>(isAdmin);
     return [...baseColumns, ...auditColumns];
-  }, [isAdmin]);
+  }, [isAdmin, handleDelete]);
 
   const handleAddOpen = () => setIsAddModalOpen(true);
   const handleAddClose = () => setIsAddModalOpen(false);

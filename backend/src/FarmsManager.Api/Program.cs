@@ -1,3 +1,4 @@
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
@@ -15,8 +16,7 @@ using FarmsManager.Infrastructure;
 using FarmsManager.Infrastructure.Autofac;
 using FarmsManager.Infrastructure.TypeHandlers;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Any;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using QuestPDF.Infrastructure;
 
 var webAppBuilder = WebApplication.CreateBuilder(args);
@@ -38,6 +38,7 @@ webAppBuilder.Host.GetBuilder()
     .AddInfrastructure()
     .AddJwt()
     .AddS3()
+    .AddKsEf()
     .AddAutoMapper(typeof(UserProfile).Assembly)
     .AddMediator(typeof(MeQuery).Assembly, typeof(CreateDevAccountCommand).Assembly)
     .AddSerilog();
@@ -66,8 +67,8 @@ webAppBuilder.Services
 
         options.MapType<TimeSpan>(() => new OpenApiSchema
         {
-            Type = "string",
-            Example = new OpenApiString("00:00:00")
+            Type = JsonSchemaType.String,
+            Example = JsonValue.Create("00:00:00")
         });
 
         options.DescribeAllParametersInCamelCase();
@@ -82,21 +83,11 @@ webAppBuilder.Services
             Scheme = "Bearer"
         });
 
-        options.AddSecurityRequirement(new OpenApiSecurityRequirement
+        options.AddSecurityRequirement(doc => new OpenApiSecurityRequirement
         {
             {
-                new OpenApiSecurityScheme
-                {
-                    Reference = new OpenApiReference
-                    {
-                        Type = ReferenceType.SecurityScheme,
-                        Id = "Bearer"
-                    },
-                    Scheme = "oauth2",
-                    Name = "Bearer",
-                    In = ParameterLocation.Header,
-                },
-                new List<string>()
+                new OpenApiSecuritySchemeReference("Bearer", doc),
+                []
             }
         });
     })

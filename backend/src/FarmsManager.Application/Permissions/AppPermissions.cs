@@ -15,6 +15,13 @@ public static class AppPermissions
         public const string View = "dashboard:view";
     }
 
+    [PermissionGroup("Księgowość")]
+    public static class Accounting
+    {
+        [Description("Dostęp i zarządzanie fakturami z KSeF")]
+        public const string Manage = "accounting:manage";
+    }
+
     [PermissionGroup("Wstawienia")]
     public static class Insertions
     {
@@ -146,6 +153,7 @@ public static class AppPermissions
         [Description("Dostęp do danych podstawowych (słowników)")]
         public const string View = "data:view";
 
+        [Description("Zarządzanie podmiotami gospodarczymi")] public const string TaxBusinessEntitiesManage = "data:taxbusinessentities:manage";
         [Description("Zarządzanie fermami")] public const string FarmsManage = "data:farms:manage";
         [Description("Zarządzanie kurnikami")] public const string HousesManage = "data:houses:manage";
 
@@ -181,6 +189,12 @@ public static class AppPermissions
         public static class Cycles
         {
             [Description("Zarządzanie cyklami")] public const string Manage = "settings:cycles:manage";
+        }
+
+        [PermissionGroup("Reguły przypisywania faktur")]
+        public static class InvoiceRules
+        {
+            [Description("Zarządzanie regułami przypisywania faktur")] public const string Manage = "settings:invoicerules:manage";
         }
     }
 }

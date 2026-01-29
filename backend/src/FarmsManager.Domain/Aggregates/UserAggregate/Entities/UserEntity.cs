@@ -55,8 +55,8 @@ public class UserEntity : Entity
     }
 
 
-    private readonly List<UserPermissionEntity> _permissions = new();
-    private readonly List<UserFarmEntity> _farms = new();
+    private readonly List<UserPermissionEntity> _permissions = [];
+    private readonly List<UserFarmEntity> _farms = [];
     public virtual IReadOnlyCollection<UserPermissionEntity> Permissions => _permissions;
     public virtual IReadOnlyCollection<UserFarmEntity> Farms => _farms;
 

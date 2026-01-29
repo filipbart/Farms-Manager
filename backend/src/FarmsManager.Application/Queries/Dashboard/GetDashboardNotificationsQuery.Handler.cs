@@ -1,42 +1,50 @@
-﻿
-using FarmsManager.Application.Common.Responses;
+﻿using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Models.Notifications;
 using FarmsManager.Application.Queries.User;
 using FarmsManager.Application.Specifications.Users;
 using FarmsManager.Domain.Aggregates.EmployeeAggregate.Entities;
 using FarmsManager.Domain.Aggregates.EmployeeAggregate.Interfaces;
-using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.UserAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.AccountingAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.AccountingAggregate.Entities;
+using FarmsManager.Application.Specifications.Accounting;
 using FarmsManager.Domain.Exceptions;
 using MediatR;
 
 namespace FarmsManager.Application.Queries.Dashboard;
 
-public class GetDashboardNotificationsQueryHandler : IRequestHandler<GetDashboardNotificationsQuery, BaseResponse<List<DashboardNotificationItem>>>
+public class GetDashboardNotificationsQueryHandler : IRequestHandler<GetDashboardNotificationsQuery,
+    BaseResponse<List<DashboardNotificationItem>>>
 {
     private readonly IUserRepository _userRepository;
     private readonly IUserDataResolver _userDataResolver;
-    private readonly IFarmRepository _farmRepository;
     private readonly ISaleInvoiceRepository _saleInvoiceRepository;
     private readonly IFeedInvoiceRepository _feedInvoiceRepository;
     private readonly IEmployeeRepository _employeeRepository;
     private readonly IEmployeeReminderRepository _employeeReminderRepository;
+    private readonly IKSeFInvoiceRepository _ksefInvoiceRepository;
 
-    public GetDashboardNotificationsQueryHandler(IUserRepository userRepository, IUserDataResolver userDataResolver, IFarmRepository farmRepository, ISaleInvoiceRepository saleInvoiceRepository, IFeedInvoiceRepository feedInvoiceRepository, IEmployeeRepository employeeRepository, IEmployeeReminderRepository employeeReminderRepository)
+    private const int AccountingDaysForLowLevel = 14;
+
+    public GetDashboardNotificationsQueryHandler(IUserRepository userRepository, IUserDataResolver userDataResolver,
+        ISaleInvoiceRepository saleInvoiceRepository, IFeedInvoiceRepository feedInvoiceRepository,
+        IEmployeeRepository employeeRepository, IEmployeeReminderRepository employeeReminderRepository,
+        IKSeFInvoiceRepository ksefInvoiceRepository)
     {
         _userRepository = userRepository;
         _userDataResolver = userDataResolver;
-        _farmRepository = farmRepository;
         _saleInvoiceRepository = saleInvoiceRepository;
         _feedInvoiceRepository = feedInvoiceRepository;
         _employeeRepository = employeeRepository;
         _employeeReminderRepository = employeeReminderRepository;
+        _ksefInvoiceRepository = ksefInvoiceRepository;
     }
 
-    public async Task<BaseResponse<List<DashboardNotificationItem>>> Handle(GetDashboardNotificationsQuery request, CancellationToken ct)
+    public async Task<BaseResponse<List<DashboardNotificationItem>>> Handle(GetDashboardNotificationsQuery request,
+        CancellationToken ct)
     {
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var user = await _userRepository.GetAsync(new UserByIdSpec(userId), ct);
@@ -52,14 +60,14 @@ public class GetDashboardNotificationsQueryHandler : IRequestHandler<GetDashboar
                 ? throw DomainException.Forbidden()
                 : new List<Guid> { request.Filters.FarmId.Value }
             : accessibleFarmIds;
-        
+
         var farmIds = user.NotificationFarmIds ?? filteredFarmIds;
 
-        var notifications = await BuildDashboardNotifications(farmIds, ct);
+        var notifications = await BuildDashboardNotifications(farmIds, userId, ct);
 
         return BaseResponse.CreateResponse(notifications);
     }
-    
+
     private record NotificationSource(
         DateOnly DueDate,
         NotificationType Type,
@@ -67,11 +75,12 @@ public class GetDashboardNotificationsQueryHandler : IRequestHandler<GetDashboar
         Guid SourceId,
         int SortPriority);
 
-    private async Task<List<DashboardNotificationItem>> BuildDashboardNotifications(List<Guid> farmIds,
+    private async Task<List<DashboardNotificationItem>> BuildDashboardNotifications(List<Guid> farmIds, Guid userId,
         CancellationToken ct)
     {
         var now = DateOnly.FromDateTime(DateTime.Now);
         var sevenDaysFromNow = now.AddDays(7);
+        var fourteenDaysFromNow = now.AddDays(AccountingDaysForLowLevel);
         const int daysForMediumPriority = 3;
 
         var allSources = new List<NotificationSource>();
@@ -99,6 +108,15 @@ public class GetDashboardNotificationsQueryHandler : IRequestHandler<GetDashboar
                 new GetOverdueAndUpcomingEmployeesRemindersSpec(now, sevenDaysFromNow, farmIds), ct);
         allSources.AddRange(employeeReminders.Select(rem =>
             new NotificationSource(rem.DueDate, NotificationType.EmployeeReminder, rem, rem.EmployeeId, 1)));
+
+        // Faktury księgowe (14 dni zakres, filtrowanie wg przypisanego użytkownika)
+        var accountingInvoices =
+            await _ksefInvoiceRepository.ListAsync(
+                new GetOverdueAndUpcomingAccountingInvoicesSpec(fourteenDaysFromNow, userId, farmIds), ct);
+        allSources.AddRange(accountingInvoices
+            .Where(inv => inv.PaymentDueDate.HasValue)
+            .Select(inv =>
+                new NotificationSource(inv.PaymentDueDate!.Value, NotificationType.AccountingInvoice, inv, inv.Id, 2)));
 
         var top5Notifications = allSources
             .OrderBy(s => s.SortPriority)
@@ -147,6 +165,8 @@ public class GetDashboardNotificationsQueryHandler : IRequestHandler<GetDashboar
                 $"Koniec umowy dla {(source.Entity as EmployeeEntity)?.FullName}: {dateString}{dayDifference}",
             NotificationType.EmployeeReminder =>
                 $"Przypomnienie '{(source.Entity as EmployeeReminderEntity)?.Title}': {dateString}{dayDifference}",
+            NotificationType.AccountingInvoice =>
+                $"Faktura księgowa {(source.Entity as KSeFInvoiceEntity)?.InvoiceNumber}: termin płatności {dateString}{dayDifference}",
             _ => "Nieznane powiadomienie"
         };
     }

@@ -132,9 +132,10 @@ const SaveExpensesInvoicesModal: React.FC<SaveExpensesInvoicesModalProps> = ({
   const handleContractorChange = useCallback(
     (contractorId: string) => {
       const selected = expensesContractors.find((c) => c.id === contractorId);
-      setValue("expenseTypeName", selected?.expenseType || "");
-      if (selected?.expenseType) {
-        setValue("expenseTypeId", selected.expenseTypeId || "");
+      const firstType = selected?.expenseTypes?.[0];
+      setValue("expenseTypeName", firstType?.name || "");
+      if (firstType) {
+        setValue("expenseTypeId", firstType.id || "");
       }
     },
     [expensesContractors, setValue]

@@ -1,5 +1,4 @@
-﻿using FarmsManager.Application.Commands.Expenses.Types;
-using FarmsManager.Application.Common.Responses;
+﻿using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Common.Validators;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
@@ -35,11 +34,8 @@ public class UpdateExpenseContractorCommandHandler : IRequestHandler<UpdateExpen
             await _expenseContractorRepository.GetAsync(new GetExpenseContractorByIdSpec(request.ExpenseContractorId),
                 cancellationToken);
 
-        var expenseType = await _expenseTypeRepository.GetAsync(new GetExpenseTypeByIdSpec(request.Data.ExpenseTypeId),
-            cancellationToken);
-
-
-        entity.Update(expenseType.Id, request.Data.Name, request.Data.Nip, request.Data.Address);
+        entity.Update(request.Data.Name, request.Data.Nip, request.Data.Address);
+        entity.SetExpenseTypes(request.Data.ExpenseTypeIds, userId);
         entity.SetModified(userId);
         await _expenseContractorRepository.UpdateAsync(entity, cancellationToken);
         return BaseResponse.EmptyResponse;
@@ -54,6 +50,6 @@ public class UpdateExpenseContractorCommandValidator : AbstractValidator<UpdateE
         RuleFor(t => t.Data.Nip).NotEmpty().Must(ValidationHelpers.IsValidNip)
             .WithMessage("Podany numer NIP jest nieprawidłowy.");
         RuleFor(t => t.Data.Address).NotEmpty();
-        RuleFor(t => t.Data.ExpenseTypeId).NotEmpty();
+        RuleFor(t => t.Data.ExpenseTypeIds).NotEmpty().WithMessage("Wymagany jest co najmniej jeden typ wydatku.");
     }
 }

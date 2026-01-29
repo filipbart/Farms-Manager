@@ -21,7 +21,6 @@ public class ExpensesController(IMediator mediator) : BaseController
     /// </summary>
     /// <returns></returns>
     [HttpGet("types")]
-    [HasPermission(AppPermissions.Expenses.TypesManage)]
     [ProducesResponseType(typeof(BaseResponse<GetExpensesTypesQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetExpensesTypes()

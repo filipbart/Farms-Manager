@@ -43,7 +43,7 @@ public class UserExpenseAdvanceColumnSettingsEntity : Entity
     public List<string> GetVisibleColumnsList()
     {
         if (string.IsNullOrWhiteSpace(VisibleColumns))
-            return new List<string>();
+            return [];
         
         return VisibleColumns.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
     }

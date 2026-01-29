@@ -3,10 +3,17 @@ using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.FileSystem;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications.Cycle;
+using FarmsManager.Application.Specifications.Expenses;
 using FarmsManager.Application.Specifications.Farms;
+using FarmsManager.Application.Specifications.Feeds;
+using FarmsManager.Application.Specifications.Gas;
+using FarmsManager.Application.Specifications.Sales;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.GasAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.SaleAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
 using FluentValidation;
 using MediatR;
@@ -19,6 +26,7 @@ public record AddExpenseProductionData
     public Guid FarmId { get; init; }
     public Guid CycleId { get; init; }
     public Guid ExpenseContractorId { get; init; }
+    public Guid ExpenseTypeId { get; init; }
     public string InvoiceNumber { get; init; }
     public decimal InvoiceTotal { get; init; }
     public decimal SubTotal { get; init; }
@@ -38,11 +46,17 @@ public class AddExpenseProductionCommandHandler : IRequestHandler<AddExpenseProd
     private readonly IUserDataResolver _userDataResolver;
     private readonly IExpenseContractorRepository _expenseContractorRepository;
     private readonly IExpenseProductionRepository _expenseProductionRepository;
+    private readonly IGasDeliveryRepository _gasDeliveryRepository;
+    private readonly IFeedInvoiceRepository _feedInvoiceRepository;
+    private readonly ISaleInvoiceRepository _saleInvoiceRepository;
 
     public AddExpenseProductionCommandHandler(IS3Service s3Service, IFarmRepository farmRepository,
         ICycleRepository cycleRepository, IUserDataResolver userDataResolver,
         IExpenseContractorRepository expenseContractorRepository,
-        IExpenseProductionRepository expenseProductionRepository)
+        IExpenseProductionRepository expenseProductionRepository,
+        IGasDeliveryRepository gasDeliveryRepository,
+        IFeedInvoiceRepository feedInvoiceRepository,
+        ISaleInvoiceRepository saleInvoiceRepository)
     {
         _s3Service = s3Service;
         _farmRepository = farmRepository;
@@ -50,6 +64,9 @@ public class AddExpenseProductionCommandHandler : IRequestHandler<AddExpenseProd
         _userDataResolver = userDataResolver;
         _expenseContractorRepository = expenseContractorRepository;
         _expenseProductionRepository = expenseProductionRepository;
+        _gasDeliveryRepository = gasDeliveryRepository;
+        _feedInvoiceRepository = feedInvoiceRepository;
+        _saleInvoiceRepository = saleInvoiceRepository;
     }
 
     public async Task<EmptyBaseResponse> Handle(AddExpenseProductionCommand request, CancellationToken ct)
@@ -61,9 +78,12 @@ public class AddExpenseProductionCommandHandler : IRequestHandler<AddExpenseProd
             await _expenseContractorRepository.GetAsync(
                 new GetExpenseContractorByIdSpec(request.Data.ExpenseContractorId), ct);
 
+        // Sprawdź duplikaty we wszystkich modułach
+        await CheckForDuplicatesAsync(request.Data.InvoiceNumber, ct);
+
         var newExpenseProduction = ExpenseProductionEntity.CreateNew(farm.Id, cycle.Id, expenseContractor.Id,
-            request.Data.InvoiceNumber, request.Data.InvoiceTotal, request.Data.SubTotal, request.Data.VatAmount,
-            request.Data.InvoiceDate, request.Data.Comment, userId);
+            request.Data.ExpenseTypeId, request.Data.InvoiceNumber, request.Data.InvoiceTotal, request.Data.SubTotal, 
+            request.Data.VatAmount, request.Data.InvoiceDate, request.Data.Comment, userId);
 
         if (request.Data.File != null)
         {
@@ -82,6 +102,49 @@ public class AddExpenseProductionCommandHandler : IRequestHandler<AddExpenseProd
         await _expenseProductionRepository.AddAsync(newExpenseProduction, ct);
         return new EmptyBaseResponse();
     }
+
+    private async Task CheckForDuplicatesAsync(string invoiceNumber, CancellationToken ct)
+    {
+        // Sprawdź duplikaty w kosztach produkcyjnych
+        var existsInExpenses = await _expenseProductionRepository.AnyAsync(
+            new GetExpenseProductionInvoiceByInvoiceNumberSpec(invoiceNumber),
+            ct);
+        
+        if (existsInExpenses)
+        {
+            throw DomainException.BadRequest($"Faktura o numerze '{invoiceNumber}' już istnieje w kosztach produkcyjnych.");
+        }
+        
+        // Sprawdź duplikaty w dostawach gazu
+        var existsInGas = await _gasDeliveryRepository.AnyAsync(
+            new GetGasDeliveryByInvoiceNumberSpec(invoiceNumber),
+            ct);
+        
+        if (existsInGas)
+        {
+            throw DomainException.BadRequest($"Faktura o numerze '{invoiceNumber}' już istnieje w dostawach gazu.");
+        }
+        
+        // Sprawdź duplikaty w dostawach pasz
+        var existsInFeeds = await _feedInvoiceRepository.AnyAsync(
+            new GetFeedInvoiceByInvoiceNumberSpec(invoiceNumber),
+            ct);
+        
+        if (existsInFeeds)
+        {
+            throw DomainException.BadRequest($"Faktura o numerze '{invoiceNumber}' już istnieje w dostawach pasz.");
+        }
+        
+        // Sprawdź duplikaty w fakturach sprzedażowych
+        var existsInSales = await _saleInvoiceRepository.AnyAsync(
+            new GetSaleInvoiceByInvoiceNumberSpec(invoiceNumber),
+            ct);
+        
+        if (existsInSales)
+        {
+            throw DomainException.BadRequest($"Faktura o numerze '{invoiceNumber}' już istnieje w fakturach sprzedażowych.");
+        }
+    }
 }
 
 public class AddExpenseProductionCommandValidator : AbstractValidator<AddExpenseProductionCommand>
@@ -91,6 +154,7 @@ public class AddExpenseProductionCommandValidator : AbstractValidator<AddExpense
         RuleFor(t => t.Data.FarmId).NotEmpty();
         RuleFor(t => t.Data.CycleId).NotEmpty();
         RuleFor(t => t.Data.ExpenseContractorId).NotEmpty();
+        RuleFor(t => t.Data.ExpenseTypeId).NotEmpty();
         RuleFor(t => t.Data.InvoiceNumber).NotEmpty();
         RuleFor(t => t.Data.Comment).MaximumLength(500);
     }

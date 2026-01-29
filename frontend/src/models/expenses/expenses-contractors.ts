@@ -1,10 +1,14 @@
 import type { AuditFields } from "../../common/interfaces/audit-fields";
 
+export interface ExpenseTypeSimple {
+  id: string;
+  name: string;
+}
+
 export interface ExpenseContractorRow extends AuditFields {
   id: string;
   name: string;
-  expenseType: string;
-  expenseTypeId: string;
+  expenseTypes: ExpenseTypeSimple[];
   nip: string;
   address: string;
   dateCreatedUtc: string;
@@ -18,8 +22,7 @@ export interface AddExpenseContractorData {
   name: string;
   nip: string;
   address: string;
-  expenseTypeId: string;
-  expenseType: string;
+  expenseTypeIds: string[];
 }
 
 export interface ExpensesContractorsFilterPaginationModel {

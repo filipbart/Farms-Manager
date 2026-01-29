@@ -25,6 +25,13 @@ export default class ApiUrl {
   public static GetFile = `${this.Files}/file`;
   public static FilesZip = `${this.Files}/files-zip`;
 
+  public static TaxBusinessEntities = this.BaseUrl + "tax-business-entities";
+  public static AddTaxBusinessEntity = this.TaxBusinessEntities + "/add";
+  public static UpdateTaxBusinessEntity = (id: string) =>
+    this.TaxBusinessEntities + "/update/" + id;
+  public static DeleteTaxBusinessEntity = (id: string) =>
+    this.TaxBusinessEntities + "/delete/" + id;
+
   public static Farms = this.BaseUrl + "farms";
   public static UpdateFarmCycle = this.Farms + "/update-cycle";
   public static AddFarm = this.Farms + "/add";
@@ -94,6 +101,18 @@ export default class ApiUrl {
   public static Settings = this.BaseUrl + "settings";
   public static IrzPlusCredentials =
     this.Settings + "/save-irzplus-credentials";
+  public static InvoiceAssignmentRules =
+    this.Settings + "/invoice-assignment-rules";
+  public static ReorderInvoiceAssignmentRules =
+    this.InvoiceAssignmentRules + "/reorder";
+  public static InvoiceModuleAssignmentRules =
+    this.Settings + "/invoice-module-assignment-rules";
+  public static ReorderInvoiceModuleAssignmentRules =
+    this.InvoiceModuleAssignmentRules + "/reorder";
+  public static InvoiceFarmAssignmentRules =
+    this.Settings + "/invoice-farm-assignment-rules";
+  public static ReorderInvoiceFarmAssignmentRules =
+    this.InvoiceFarmAssignmentRules + "/reorder";
 
   public static Sales = this.BaseUrl + "sales";
   public static SalesDict = this.Sales + "/dictionary";
@@ -348,4 +367,57 @@ export default class ApiUrl {
   public static AddColumnView = this.ColumnsViews + "/add";
   public static DeleteColumnView = (id: string) =>
     this.ColumnsViews + "/delete/" + id;
+
+  // Accounting / KSeF Invoices
+  public static Accounting = this.BaseUrl + "accounting";
+  public static AccountingInvoices = this.Accounting + "/invoices";
+  public static AccountingInvoiceDetails = (id: string) =>
+    this.AccountingInvoices + "/" + id;
+  public static AccountingInvoiceXml = (id: string) =>
+    this.AccountingInvoices + "/" + id + "/xml";
+  public static AccountingInvoicePdf = (id: string) =>
+    this.AccountingInvoices + "/" + id + "/pdf";
+  public static AccountingUploadInvoice = this.AccountingInvoices + "/upload";
+  public static AccountingUploadXmlInvoice =
+    this.AccountingInvoices + "/upload-xml";
+  public static AccountingSaveInvoice = this.AccountingInvoices + "/save";
+  public static AccountingUpdateInvoice = (id: string) =>
+    this.AccountingInvoices + "/" + id + "/update";
+  public static AccountingDeleteInvoice = (id: string) =>
+    this.AccountingInvoices + "/" + id + "/delete";
+  public static AccountingSyncKSeF = this.Accounting + "/sync-ksef-invoices";
+  public static AccountingLinkableInvoices = (id: string) =>
+    this.AccountingInvoices + "/" + id + "/linkable";
+  public static AccountingLinkInvoices = this.AccountingInvoices + "/link";
+  public static AccountingAcceptNoLinking = (id: string) =>
+    this.AccountingInvoices + "/" + id + "/accept-no-linking";
+  public static AccountingPostponeLinking = (id: string) =>
+    this.AccountingInvoices + "/" + id + "/postpone-linking";
+  public static AccountingCreateModuleEntity = (id: string) =>
+    this.AccountingInvoices + "/" + id + "/create-module-entity";
+  public static AccountingAcceptInvoice = (id: string) =>
+    this.AccountingInvoices + "/" + id + "/accept";
+  public static AccountingRejectInvoice = (id: string) =>
+    this.AccountingInvoices + "/" + id + "/reject";
+  public static AccountingHoldInvoice = (id: string) =>
+    this.AccountingInvoices + "/" + id + "/hold";
+  public static AccountingDownloadZip =
+    this.AccountingInvoices + "/download-zip";
+
+  // Accounting - Attachments
+  public static AccountingInvoiceAttachments = (invoiceId: string) =>
+    this.AccountingInvoices + "/" + invoiceId + "/attachments";
+  public static AccountingInvoiceAttachment = (
+    invoiceId: string,
+    attachmentId: string,
+  ) =>
+    this.AccountingInvoices + "/" + invoiceId + "/attachments/" + attachmentId;
+
+  // Accounting - Audit Logs
+  public static AccountingInvoiceAuditLogs = (invoiceId: string) =>
+    this.AccountingInvoices + "/" + invoiceId + "/audit-logs";
+
+  // Accounting - Payment Status Sync
+  public static AccountingSyncPaymentStatus = (invoiceId: string) =>
+    this.AccountingInvoices + "/" + invoiceId + "/sync-payment-status";
 }

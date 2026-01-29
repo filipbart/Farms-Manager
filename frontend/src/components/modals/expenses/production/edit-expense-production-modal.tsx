@@ -146,7 +146,10 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
 
   const handleContractorChange = (contractorId: string | null) => {
     const selected = expensesContractors.find((c) => c.id === contractorId);
-    setValue("expenseTypeNameDisplay", selected?.expenseType || "");
+    setValue(
+      "expenseTypeNameDisplay",
+      selected?.expenseTypes?.map((t) => t.name).join(", ") || ""
+    );
   };
 
   const handleClose = () => {

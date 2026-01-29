@@ -9,7 +9,7 @@ namespace FarmsManager.Application.Queries.ExpenseAdvanceColumnSettings;
 
 public record GetCurrentUserExpenseAdvanceColumnSettingsResponse
 {
-    public List<string> VisibleColumns { get; init; } = new();
+    public List<string> VisibleColumns { get; init; } = [];
     public bool IsAdmin { get; init; }
     public bool HasAllPermissions { get; init; }
 }
