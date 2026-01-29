@@ -175,6 +175,9 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
   const watchedExpenseContractorId = watch("expenseContractorId");
   const watchedPaymentStatus = watch("paymentStatus");
   const watchedInvoiceDate = watch("invoiceDate");
+  const watchedNetAmount = watch("netAmount");
+  const watchedVatAmount = watch("vatAmount");
+  const watchedGrossAmount = watch("grossAmount");
 
   const draftInvoice = draftInvoices[currentIndex];
 
@@ -669,19 +672,57 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
         // Calculate net amount (quantity * unit price)
         const netAmount = quantity * unitPrice;
 
-        // Calculate VAT amount (23% of net amount)
-        const vatAmount = netAmount * 0.23;
+        // Get current VAT amount from form (don't auto-calculate)
+        const currentVatAmount = watch("vatAmount");
+        const vatAmount = currentVatAmount
+          ? Number(parseFormattedNumber(String(currentVatAmount)))
+          : 0;
 
         // Calculate gross amount (net + VAT)
         const grossAmount = netAmount + vatAmount;
 
         // Round to 2 decimal places and convert to string
         setValue("netAmount", String(Math.round(netAmount * 100) / 100));
-        setValue("vatAmount", String(Math.round(vatAmount * 100) / 100));
         setValue("grossAmount", String(Math.round(grossAmount * 100) / 100));
       }
     }
-  }, [watchedModuleType, watchedFeedQuantity, watchedFeedUnitPrice, setValue]);
+  }, [
+    watchedModuleType,
+    watchedFeedQuantity,
+    watchedFeedUnitPrice,
+    setValue,
+    watch,
+  ]);
+
+  // Recalculate gross amount when net amount or VAT amount changes (for all module types)
+  useEffect(() => {
+    if (watchedNetAmount !== undefined && watchedVatAmount !== undefined) {
+      const netAmount = Number(
+        parseFormattedNumber(String(watchedNetAmount || 0)),
+      );
+      const vatAmount = Number(
+        parseFormattedNumber(String(watchedVatAmount || 0)),
+      );
+
+      if (
+        !isNaN(netAmount) &&
+        !isNaN(vatAmount) &&
+        netAmount >= 0 &&
+        vatAmount >= 0
+      ) {
+        // Calculate gross amount (net + VAT)
+        const grossAmount = netAmount + vatAmount;
+
+        // Only update if the calculated gross amount differs from current
+        const currentGross = Number(
+          parseFormattedNumber(String(watchedGrossAmount || 0)),
+        );
+        if (Math.abs(grossAmount - currentGross) > 0.01) {
+          setValue("grossAmount", String(Math.round(grossAmount * 100) / 100));
+        }
+      }
+    }
+  }, [watchedNetAmount, watchedVatAmount, watchedGrossAmount, setValue]);
 
   const handleSave = async (formData: SaveAccountingInvoiceFormData) => {
     if (!draftInvoice) return;
@@ -795,7 +836,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
     return (
       <FilePreview
         file={file}
-        maxHeight={isLg ? 1100 : isMd ? 900 : 600}
+        maxHeight={isLg ? 1400 : isMd ? 1100 : 800}
         showPreviewButton={true}
       />
     );
@@ -1154,7 +1195,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
         >
           <Grid container spacing={0} sx={{ height: "100%" }}>
             <Grid
-              size={{ md: 12, lg: 6, xl: 7 }}
+              size={{ md: 12, lg: 8, xl: 9 }}
               sx={{
                 height: { lg: "100%" },
                 overflowY: { lg: "auto" },
@@ -1168,7 +1209,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
             </Grid>
 
             <Grid
-              size={{ md: 12, lg: 6, xl: 5 }}
+              size={{ md: 12, lg: 4, xl: 3 }}
               sx={{
                 height: { lg: "100%" },
                 overflowY: { lg: "auto" },
