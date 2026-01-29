@@ -134,17 +134,19 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         <SidebarMenuItem to="/" title="Strona główna" icon={<IoHome />} />
       )}
 
-      <Typography sx={headingStyles}>Produkcja i Finanse</Typography>
+      <Typography sx={headingStyles}>Księgowość</Typography>
       {hasPermission("accounting:view") && (
         <SidebarMenuItem
           to="/accounting"
-          title="Księgowość"
+          title="Faktury"
           icon={<FaFileInvoiceDollar />}
           badgeLabel="Nowa"
           notificationCount={notifications?.accountingInvoices?.count}
           notificationPriority={notifications?.accountingInvoices?.priority}
         />
       )}
+
+      <Typography sx={headingStyles}>Produkcja i Finanse</Typography>
       {hasPermission("insertions:view") && (
         <SidebarMenuItem
           to="/insertions"
