@@ -2,9 +2,10 @@ using Ardalis.Specification;
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Specifications;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Entities;
+using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Interfaces;
-using KSeF.Client.Core.Models.Invoices.Common;
 using MediatR;
+using System.ComponentModel;
 
 namespace FarmsManager.Application.Queries.Accounting;
 
@@ -76,22 +77,13 @@ public class GetLinkableInvoicesQueryHandler : IRequestHandler<GetLinkableInvoic
         return BaseResponse.CreateResponse(result);
     }
 
-    private static string GetInvoiceTypeDescription(InvoiceType type) => type switch
+    private static string GetInvoiceTypeDescription(FarmsInvoiceType type)
     {
-        InvoiceType.Vat => "(FA) Podstawowa",
-        InvoiceType.Zal => "(FA) Zaliczkowa",
-        InvoiceType.Kor => "(FA) Korygująca",
-        InvoiceType.Roz => "(FA) Rozliczeniowa",
-        InvoiceType.Upr => "(FA) Uproszczona",
-        InvoiceType.KorZal => "(FA) Korygująca fakturę zaliczkową",
-        InvoiceType.KorRoz => "(FA) Korygująca fakturę rozliczeniową",
-        InvoiceType.VatPef => "(PEF) Podstawowa",
-        InvoiceType.VatPefSp => "(PEF) Specjalizowana",
-        InvoiceType.KorPef => "(PEF) Korygująca",
-        InvoiceType.VatRr => "(RR) Podstawowa",
-        InvoiceType.KorVatRr => "(RR) Korygująca",
-        _ => type.ToString()
-    };
+        var fieldInfo = type.GetType().GetField(type.ToString());
+        var attribute = fieldInfo?.GetCustomAttributes(typeof(DescriptionAttribute), false)
+            .FirstOrDefault() as DescriptionAttribute;
+        return attribute?.Description ?? type.ToString();
+    }
 }
 
 public class GetSourceInvoiceSpec : BaseSpecification<KSeFInvoiceEntity>, ISingleResultSpecification<KSeFInvoiceEntity>
@@ -107,7 +99,7 @@ public class GetLinkableInvoicesSpec : BaseSpecification<KSeFInvoiceEntity>
 {
     public GetLinkableInvoicesSpec(
         Guid sourceInvoiceId,
-        InvoiceType sourceInvoiceType,
+        FarmsInvoiceType sourceInvoiceType,
         string sellerNip,
         string buyerNip,
         string searchPhrase,
@@ -149,22 +141,23 @@ public class GetLinkableInvoicesSpec : BaseSpecification<KSeFInvoiceEntity>
         Query.Take(limit);
     }
 
-    private static List<InvoiceType> GetCompatibleInvoiceTypes(InvoiceType sourceType)
+    private static List<FarmsInvoiceType> GetCompatibleInvoiceTypes(FarmsInvoiceType sourceType)
     {
         return sourceType switch
         {
             // Korekty mogą być powiązane z fakturami podstawowymi tego samego typu
-            InvoiceType.Kor => [InvoiceType.Vat, InvoiceType.Upr],
-            InvoiceType.KorZal => [InvoiceType.Zal],
-            InvoiceType.KorRoz => [InvoiceType.Roz],
-            InvoiceType.KorPef => [InvoiceType.VatPef, InvoiceType.VatPefSp],
-            InvoiceType.KorVatRr => [InvoiceType.VatRr],
+            FarmsInvoiceType.Kor => [FarmsInvoiceType.Vat, FarmsInvoiceType.Upr],
+            FarmsInvoiceType.KorZal => [FarmsInvoiceType.Zal],
+            FarmsInvoiceType.KorRoz => [FarmsInvoiceType.Roz],
+            FarmsInvoiceType.KorPef => [FarmsInvoiceType.VatPef, FarmsInvoiceType.VatPefSp],
+            FarmsInvoiceType.KorVatRr => [FarmsInvoiceType.VatRr],
+            FarmsInvoiceType.CostInvoiceCorrection => [FarmsInvoiceType.CostInvoice],
 
             // Zaliczka może być powiązana z fakturą końcową/rozliczeniową
-            InvoiceType.Zal => [InvoiceType.Vat, InvoiceType.Roz],
+            FarmsInvoiceType.Zal => [FarmsInvoiceType.Vat, FarmsInvoiceType.Roz],
 
             // Rozliczeniowa może być powiązana z zaliczkami
-            InvoiceType.Roz => [InvoiceType.Zal],
+            FarmsInvoiceType.Roz => [FarmsInvoiceType.Zal],
 
             // Domyślnie - wszystkie typy (na wszelki wypadek)
             _ => []

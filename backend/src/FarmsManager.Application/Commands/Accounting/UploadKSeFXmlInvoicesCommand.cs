@@ -146,7 +146,7 @@ public class UploadKSeFXmlInvoicesCommandHandler : IRequestHandler<UploadKSeFXml
                     sellerName: sellerName,
                     buyerNip: buyerNip,
                     buyerName: buyerName,
-                    invoiceType: KSeF.Client.Core.Models.Invoices.Common.InvoiceType.Vat,
+                    invoiceType: FarmsInvoiceType.Vat,
                     status: KSeFInvoiceStatus.Accepted,
                     paymentStatus: paymentStatus,
                     paymentType: paymentType,

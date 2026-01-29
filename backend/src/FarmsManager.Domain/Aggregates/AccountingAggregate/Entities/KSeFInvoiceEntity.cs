@@ -2,7 +2,6 @@ using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
 using FarmsManager.Domain.Aggregates.UserAggregate.Entities;
 using FarmsManager.Domain.SeedWork;
-using KSeF.Client.Core.Models.Invoices.Common;
 
 namespace FarmsManager.Domain.Aggregates.AccountingAggregate.Entities;
 
@@ -23,7 +22,7 @@ public class KSeFInvoiceEntity : Entity
     /// <param name="sellerName">Nazwa sprzedawcy</param>
     /// <param name="buyerNip">NIP nabywcy</param>
     /// <param name="buyerName">Nazwa nabywcy</param>
-    /// <param name="invoiceType">Typ faktury</param>
+    /// <param name="invoiceType">Typ faktury (FarmsInvoiceType)</param>
     /// <param name="status">Status faktury w KSeF</param>
     /// <param name="paymentStatus">Status płatności</param>
     /// <param name="paymentType">Forma płatności</param>
@@ -54,7 +53,7 @@ public class KSeFInvoiceEntity : Entity
         string sellerName,
         string buyerNip,
         string buyerName,
-        InvoiceType invoiceType,
+        FarmsInvoiceType invoiceType,
         KSeFInvoiceStatus status,
         KSeFPaymentStatus paymentStatus,
         KSeFInvoicePaymentType paymentType,
@@ -155,7 +154,7 @@ public class KSeFInvoiceEntity : Entity
     /// <summary>
     /// Typ faktury (np. podstawowa, zaliczkowa, korygująca)
     /// </summary>
-    public InvoiceType InvoiceType { get; init; }
+    public FarmsInvoiceType InvoiceType { get; init; }
 
     /// <summary>
     /// Status faktury w KSeF

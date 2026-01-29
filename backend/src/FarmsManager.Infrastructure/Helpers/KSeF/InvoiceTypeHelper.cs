@@ -1,4 +1,4 @@
-using KSeF.Client.Core.Models.Invoices.Common;
+using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
 
 namespace FarmsManager.Infrastructure.Helpers.KSeF;
 
@@ -7,25 +7,30 @@ public static class InvoiceTypeHelper
     /// <summary>
     /// Zwraca opis typu faktury w języku polskim.
     /// </summary>
-    public static string ToDescription(this InvoiceType type) => type switch
+    public static string ToDescription(this FarmsInvoiceType type) => type switch
     {
         // (FA) Faktura
-        InvoiceType.Vat => "(FA) Podstawowa",
-        InvoiceType.Zal => "(FA) Zaliczkowa",
-        InvoiceType.Kor => "(FA) Korygująca",
-        InvoiceType.Roz => "(FA) Rozliczeniowa",
-        InvoiceType.Upr => "(FA) Uproszczona",
-        InvoiceType.KorZal => "(FA) Korygująca fakturę zaliczkową",
-        InvoiceType.KorRoz => "(FA) Korygująca fakturę rozliczeniową",
+        FarmsInvoiceType.Vat => "(FA) Podstawowa",
+        FarmsInvoiceType.Zal => "(FA) Zaliczkowa",
+        FarmsInvoiceType.Kor => "(FA) Korygująca",
+        FarmsInvoiceType.Roz => "(FA) Rozliczeniowa",
+        FarmsInvoiceType.Upr => "(FA) Uproszczona",
+        FarmsInvoiceType.KorZal => "(FA) Korygująca fakturę zaliczkową",
+        FarmsInvoiceType.KorRoz => "(FA) Korygująca fakturę rozliczeniową",
 
         // (PEF) Platforma Elektronicznego Fakturowania
-        InvoiceType.VatPef => "(PEF) Podstawowa",
-        InvoiceType.VatPefSp => "(PEF) Specjalizowana",
-        InvoiceType.KorPef => "(PEF) Korygująca",
+        FarmsInvoiceType.VatPef => "(PEF) Podstawowa",
+        FarmsInvoiceType.VatPefSp => "(PEF) Specjalizowana",
+        FarmsInvoiceType.KorPef => "(PEF) Korygująca",
 
         // (RR) Faktura RR
-        InvoiceType.VatRr => "(RR) Podstawowa",
-        InvoiceType.KorVatRr => "(RR) Korygująca",
+        FarmsInvoiceType.VatRr => "(RR) Podstawowa",
+        FarmsInvoiceType.KorVatRr => "(RR) Korygująca",
+
+        // Nowe typy
+        FarmsInvoiceType.CostInvoice => "(RK) Rachunek kosztowy",
+        FarmsInvoiceType.CostInvoiceCorrection => "(RK-KOR) Korekta rachunku kosztowego",
+        FarmsInvoiceType.Other => "Inny dokument",
 
         // Domyślna ścieżka na wypadek rozszerzenia enum w przyszłości
         _ => type.ToString()

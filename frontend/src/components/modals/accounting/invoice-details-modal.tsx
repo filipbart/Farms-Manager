@@ -2518,11 +2518,13 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                       <MenuItem value="">
                         <em>Brak</em>
                       </MenuItem>
-                      {users.map((user) => (
-                        <MenuItem key={user.id} value={user.id}>
-                          {user.name || user.login}
-                        </MenuItem>
-                      ))}
+                      {users
+                        .filter((user) => user.login !== "admin")
+                        .map((user) => (
+                          <MenuItem key={user.id} value={user.id}>
+                            {user.name || user.login}
+                          </MenuItem>
+                        ))}
                     </Select>
                   </FormControl>
 
@@ -2789,7 +2791,10 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
               onChange={(e) => setHoldUserId(e.target.value)}
             >
               {users
-                .filter((u) => u.id !== details?.assignedUserId)
+                .filter(
+                  (u) =>
+                    u.id !== details?.assignedUserId && u.login !== "admin",
+                )
                 .map((user) => (
                   <MenuItem key={user.id} value={user.id}>
                     {user.name || user.login}

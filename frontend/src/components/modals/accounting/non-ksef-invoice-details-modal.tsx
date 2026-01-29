@@ -1340,11 +1340,13 @@ const NonKSeFInvoiceDetailsModal: React.FC<NonKSeFInvoiceDetailsModalProps> = ({
                         {...register("assignedUserId")}
                         value={watch("assignedUserId") || ""}
                       >
-                        {users.map((user) => (
-                          <MenuItem key={user.id} value={user.id}>
-                            {user.name}
-                          </MenuItem>
-                        ))}
+                        {users
+                          .filter((user) => user.login !== "admin")
+                          .map((user) => (
+                            <MenuItem key={user.id} value={user.id}>
+                              {user.name}
+                            </MenuItem>
+                          ))}
                       </Select>
                     </FormControl>
                   </Grid>
@@ -2105,7 +2107,10 @@ const NonKSeFInvoiceDetailsModal: React.FC<NonKSeFInvoiceDetailsModalProps> = ({
               onChange={(e) => setHoldUserId(e.target.value)}
             >
               {users
-                .filter((u) => u.id !== details?.assignedUserId)
+                .filter(
+                  (u) =>
+                    u.id !== details?.assignedUserId && u.login !== "admin",
+                )
                 .map((user) => (
                   <MenuItem key={user.id} value={user.id}>
                     {user.name || user.login}

@@ -21,7 +21,6 @@ using FarmsManager.Domain.Aggregates.SaleAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.SlaughterhouseAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
 using FluentValidation;
-using KSeF.Client.Core.Models.Invoices.Common;
 using MediatR;
 
 namespace FarmsManager.Application.Commands.Accounting;
@@ -597,23 +596,26 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
         };
     }
 
-    private static InvoiceType ParseDocumentType(string documentType)
+    private static FarmsInvoiceType ParseDocumentType(string documentType)
     {
         return documentType switch
         {
-            "Vat" => InvoiceType.Vat,
-            "Zal" => InvoiceType.Zal,
-            "Kor" => InvoiceType.Kor,
-            "Roz" => InvoiceType.Roz,
-            "Upr" => InvoiceType.Upr,
-            "KorZal" => InvoiceType.KorZal,
-            "KorRoz" => InvoiceType.KorRoz,
-            "VatPef" => InvoiceType.VatPef,
-            "VatPefSp" => InvoiceType.VatPefSp,
-            "KorPef" => InvoiceType.KorPef,
-            "VatRr" => InvoiceType.VatRr,
-            "KorVatRr" => InvoiceType.KorVatRr,
-            _ => InvoiceType.Vat
+            "Vat" => FarmsInvoiceType.Vat,
+            "Zal" => FarmsInvoiceType.Zal,
+            "Kor" => FarmsInvoiceType.Kor,
+            "Roz" => FarmsInvoiceType.Roz,
+            "Upr" => FarmsInvoiceType.Upr,
+            "KorZal" => FarmsInvoiceType.KorZal,
+            "KorRoz" => FarmsInvoiceType.KorRoz,
+            "VatPef" => FarmsInvoiceType.VatPef,
+            "VatPefSp" => FarmsInvoiceType.VatPefSp,
+            "KorPef" => FarmsInvoiceType.KorPef,
+            "VatRr" => FarmsInvoiceType.VatRr,
+            "KorVatRr" => FarmsInvoiceType.KorVatRr,
+            "CostInvoice" => FarmsInvoiceType.CostInvoice,
+            "CostInvoiceCorrection" => FarmsInvoiceType.CostInvoiceCorrection,
+            "Other" => FarmsInvoiceType.Other,
+            _ => FarmsInvoiceType.Vat
         };
     }
 

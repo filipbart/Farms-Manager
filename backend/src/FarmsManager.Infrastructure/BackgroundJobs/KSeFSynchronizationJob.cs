@@ -14,6 +14,7 @@ using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
 using FarmsManager.Domain.Aggregates.GasAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.SlaughterhouseAggregate.Interfaces;
+using FarmsManager.Infrastructure.Helpers.KSeF;
 using KSeF.Client.Core.Models.Invoices.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -253,7 +254,7 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                         farmId: null, cycleId: null);
 
                     // Sprawdź czy faktura wymaga powiązania z inną fakturą
-                    if (InvoiceRequiresLinking(invoiceSummary.InvoiceType))
+                    if (InvoiceRequiresLinking(invoiceEntity.InvoiceType))
                     {
                         invoiceEntity.MarkAsRequiresLinking();
                     }
@@ -625,7 +626,7 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
             sellerName: invoiceItem.SellerName,
             buyerNip: invoiceItem.BuyerNip,
             buyerName: invoiceItem.BuyerName,
-            invoiceType: invoiceItem.InvoiceType,
+            invoiceType: invoiceItem.InvoiceType.ToFarmsInvoiceType(),
             status: KSeFInvoiceStatus.New,
             paymentStatus: paymentStatus,
             paymentType: paymentType,
@@ -829,17 +830,18 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
     /// <summary>
     /// Sprawdza czy typ faktury wymaga powiązania z inną fakturą
     /// </summary>
-    private static bool InvoiceRequiresLinking(InvoiceType invoiceType)
+    private static bool InvoiceRequiresLinking(FarmsInvoiceType invoiceType)
     {
         return invoiceType switch
         {
-            InvoiceType.Zal => true, // Zaliczkowa
-            InvoiceType.Roz => true, // Rozliczeniowa
-            InvoiceType.Kor => true, // Korygująca
-            InvoiceType.KorZal => true, // Korygująca zaliczkową
-            InvoiceType.KorRoz => true, // Korygująca rozliczeniową
-            InvoiceType.KorPef => true, // PEF Korygująca
-            InvoiceType.KorVatRr => true, // RR Korygująca
+            FarmsInvoiceType.Zal => true, // Zaliczkowa
+            FarmsInvoiceType.Roz => true, // Rozliczeniowa
+            FarmsInvoiceType.Kor => true, // Korygująca
+            FarmsInvoiceType.KorZal => true, // Korygująca zaliczkową
+            FarmsInvoiceType.KorRoz => true, // Korygująca rozliczeniową
+            FarmsInvoiceType.KorPef => true, // PEF Korygująca
+            FarmsInvoiceType.KorVatRr => true, // RR Korygująca
+            FarmsInvoiceType.CostInvoiceCorrection => true, // Korekta rachunku kosztowego
             _ => false
         };
     }

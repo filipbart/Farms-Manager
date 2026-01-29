@@ -1276,11 +1276,13 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                       {...register("assignedUserId")}
                       value={watch("assignedUserId") || ""}
                     >
-                      {users.map((user) => (
-                        <MenuItem key={user.id} value={user.id}>
-                          {user.name}
-                        </MenuItem>
-                      ))}
+                      {users
+                        .filter((user) => user.login !== "admin")
+                        .map((user) => (
+                          <MenuItem key={user.id} value={user.id}>
+                            {user.name}
+                          </MenuItem>
+                        ))}
                     </Select>
                   </FormControl>
                 </Grid>
