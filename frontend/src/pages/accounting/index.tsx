@@ -528,8 +528,20 @@ const AccountingPage: React.FC = () => {
     [downloadingId, deletingInvoiceId, handleDeleteInvoice],
   );
 
-  const [initialGridState] = useState(() => {
-    const savedState = localStorage.getItem("accountingGridState");
+  const getGridStateKey = useCallback(() => {
+    switch (tabValue) {
+      case 1:
+        return "accountingSalesGridState";
+      case 2:
+        return "accountingPurchaseGridState";
+      default:
+        return "accountingAllGridState";
+    }
+  }, [tabValue]);
+
+  const [initialGridState, setInitialGridState] = useState(() => {
+    const gridStateKey = getGridStateKey();
+    const savedState = localStorage.getItem(gridStateKey);
     return savedState
       ? JSON.parse(savedState)
       : {
@@ -539,8 +551,23 @@ const AccountingPage: React.FC = () => {
         };
   });
 
+  // Update initialGridState when tab changes
+  useEffect(() => {
+    const gridStateKey = getGridStateKey();
+    const savedState = localStorage.getItem(gridStateKey);
+    const newState = savedState
+      ? JSON.parse(savedState)
+      : {
+          columns: {
+            columnVisibilityModel: { id: false, quantity: false },
+          },
+        };
+    setInitialGridState(newState);
+  }, [getGridStateKey]);
+
   const renderDataGrid = () => {
     const { filters, dispatch, storageKey } = getCurrentFilters();
+    const gridStateKey = getGridStateKey();
 
     return (
       <DataGridPremium
@@ -555,10 +582,7 @@ const AccountingPage: React.FC = () => {
             filter: newState.filter,
             pinnedColumns: newState.pinnedColumns,
           };
-          localStorage.setItem(
-            "accountingGridState",
-            JSON.stringify(stateToSave),
-          );
+          localStorage.setItem(gridStateKey, JSON.stringify(stateToSave));
         }}
         paginationMode="server"
         pagination
