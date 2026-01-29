@@ -23,8 +23,8 @@ import React, {
 import { toast } from "react-toastify";
 import {
   DataGridPremium,
-  type GridState,
   type GridRowSelectionModel,
+  type GridSortDirection,
 } from "@mui/x-data-grid-premium";
 import NoRowsOverlay from "../../components/datagrid/custom-norows";
 import { AccountingService } from "../../services/accounting-service";
@@ -62,6 +62,7 @@ import type FarmRowModel from "../../models/farms/farm-row-model";
 import ConfirmDialog from "../../components/common/confirm-dialog";
 import { getAccountingDueDateClassName } from "../../utils/due-date-helper";
 import { useNotifications } from "../../context/notification-context";
+import { useAuth } from "../../auth/useAuth";
 
 interface TabPanelProps {
   children: React.ReactNode;
@@ -82,6 +83,7 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, index, value }) => (
 
 const AccountingPage: React.FC = () => {
   const { fetchNotifications } = useNotifications();
+  const { userData } = useAuth();
   const [tabValue, setTabValue] = useState(0);
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
@@ -542,51 +544,50 @@ const AccountingPage: React.FC = () => {
     }
   }, [tabValue]);
 
-  const [initialGridState, setInitialGridState] = useState(() => {
-    const gridStateKey = getGridStateKey();
-    const savedState = localStorage.getItem(gridStateKey);
-    return savedState
-      ? JSON.parse(savedState)
-      : {
-          columns: {
-            columnVisibilityModel: { id: false, quantity: false },
-          },
-        };
-  });
+  const getInitialGridState = useCallback(() => {
+    const { filters } = getCurrentFilters();
+    const sortModel: Array<{ field: string; sort: GridSortDirection }> = [];
 
-  // Update initialGridState when tab changes
-  useEffect(() => {
-    const gridStateKey = getGridStateKey();
-    const savedState = localStorage.getItem(gridStateKey);
-    const newState = savedState
-      ? JSON.parse(savedState)
-      : {
-          columns: {
-            columnVisibilityModel: { id: false, quantity: false },
-          },
-        };
-    setInitialGridState(newState);
-  }, [getGridStateKey]);
+    if (filters.orderBy) {
+      const field = mapKSeFOrderTypeToField(filters.orderBy);
+      sortModel.push({
+        field,
+        sort: (filters.isDescending ? "desc" : "asc") as GridSortDirection,
+      });
+    }
+
+    return {
+      columns: {
+        columnVisibilityModel: { id: false, quantity: false },
+      },
+      sorting: {
+        sortModel,
+      },
+    };
+  }, [getCurrentFilters]);
 
   const renderDataGrid = () => {
     const { filters, dispatch, storageKey } = getCurrentFilters();
     const gridStateKey = getGridStateKey();
+    const initialGridState = getInitialGridState();
+
+    const sortModel = filters.orderBy
+      ? [
+          {
+            field: mapKSeFOrderTypeToField(filters.orderBy),
+            sort: (filters.isDescending ? "desc" : "asc") as GridSortDirection,
+          },
+        ]
+      : [];
 
     return (
       <DataGridPremium
+        key={gridStateKey}
         loading={loading}
         rows={invoices}
         columns={columns}
         initialState={initialGridState}
-        onStateChange={(newState: GridState) => {
-          const stateToSave = {
-            columns: newState.columns,
-            sorting: newState.sorting,
-            filter: newState.filter,
-            pinnedColumns: newState.pinnedColumns,
-          };
-          localStorage.setItem(gridStateKey, JSON.stringify(stateToSave));
-        }}
+        sortModel={sortModel}
         paginationMode="server"
         pagination
         paginationModel={{
@@ -613,12 +614,18 @@ const AccountingPage: React.FC = () => {
         pageSizeOptions={[10, 25, 50, 100]}
         slots={{ noRowsOverlay: NoRowsOverlay }}
         showToolbar
-        getRowClassName={(params) =>
-          getAccountingDueDateClassName(
+        getRowClassName={(params) => {
+          // Only highlight rows for invoices assigned to the current user
+          const isAssignedToCurrentUser =
+            params.row.assignedUserId === userData?.id;
+          if (!isAssignedToCurrentUser) {
+            return "";
+          }
+          return getAccountingDueDateClassName(
             params.row.paymentDueDate,
             params.row.paymentDate,
-          )
-        }
+          );
+        }}
         sx={{
           [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },
           [`& .${tablePaginationClasses.input}`]: { display: "inline-flex" },
