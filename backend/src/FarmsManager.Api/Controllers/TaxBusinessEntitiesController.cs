@@ -16,6 +16,7 @@ public class TaxBusinessEntitiesController(IMediator mediator) : BaseController
     /// Pobiera listę wszystkich podmiotów gospodarczych
     /// </summary>
     [HttpGet]
+    [HasPermission(AppPermissions.Data.View)]
     [ProducesResponseType(typeof(BaseResponse<GetAllTaxBusinessEntitiesQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetAll()

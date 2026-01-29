@@ -16,7 +16,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FarmsManager.Api.Controllers;
 
-[HasPermission(AppPermissions.Accounting.Manage)]
+[HasPermission(AppPermissions.Accounting.View)]
 public class AccountingController : BaseController
 {
     private readonly IMediator _mediator;
@@ -107,6 +107,7 @@ public class AccountingController : BaseController
     /// Upload faktur z zaczytywaniem danych przez AI
     /// </summary>
     [HttpPost("invoices/upload")]
+    [HasPermission(AppPermissions.Accounting.Manage)]
     [ProducesResponseType(typeof(BaseResponse<UploadAccountingInvoicesCommandResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> UploadInvoices(
@@ -138,6 +139,7 @@ public class AccountingController : BaseController
     /// Upload faktur KSeF z plików XML (bez AI, bezpośredni import)
     /// </summary>
     [HttpPost("invoices/upload-xml")]
+    [HasPermission(AppPermissions.Accounting.Manage)]
     [ProducesResponseType(typeof(BaseResponse<UploadKSeFXmlInvoicesCommandResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> UploadKSeFXmlInvoices(
@@ -167,6 +169,7 @@ public class AccountingController : BaseController
     /// Zapisuje fakturę po zaczytaniu przez AI
     /// </summary>
     [HttpPost("invoices/save")]
+    [HasPermission(AppPermissions.Accounting.Manage)]
     [ProducesResponseType(typeof(BaseResponse<Guid>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> SaveInvoice([FromBody] SaveAccountingInvoiceDto data)
@@ -179,6 +182,7 @@ public class AccountingController : BaseController
     /// Aktualizuje fakturę KSeF
     /// </summary>
     [HttpPatch("invoices/{invoiceId:guid}/update")]
+    [HasPermission(AppPermissions.Accounting.Manage)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateInvoice(Guid invoiceId, [FromBody] UpdateKSeFInvoiceDto request)
@@ -191,6 +195,7 @@ public class AccountingController : BaseController
     /// Usuwa fakturę KSeF
     /// </summary>
     [HttpDelete("invoices/{invoiceId:guid}/delete")]
+    [HasPermission(AppPermissions.Accounting.Manage)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -204,6 +209,7 @@ public class AccountingController : BaseController
     /// Wstrzymuje fakturę i przypisuje ją do innego pracownika (nie zmienia statusu)
     /// </summary>
     [HttpPost("invoices/{invoiceId:guid}/hold")]
+    [HasPermission(AppPermissions.Accounting.Manage)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -226,6 +232,7 @@ public class AccountingController : BaseController
     }
 
     [HttpPost("send-invoice")]
+    [HasPermission(AppPermissions.Accounting.Manage)]
     [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -245,6 +252,7 @@ public class AccountingController : BaseController
     /// Ręczne uruchomienie synchronizacji faktur z KSeF
     /// </summary>
     [HttpPost("sync-ksef-invoices")]
+    [HasPermission(AppPermissions.Accounting.Manage)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> TriggerKSeFSynchronization()
@@ -274,6 +282,7 @@ public class AccountingController : BaseController
     /// Tworzy powiązania między fakturami
     /// </summary>
     [HttpPost("invoices/link")]
+    [HasPermission(AppPermissions.Accounting.Manage)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> LinkInvoices([FromBody] LinkInvoicesDto request)
     {
@@ -284,6 +293,7 @@ public class AccountingController : BaseController
     /// Akceptuje brak powiązania dla faktury
     /// </summary>
     [HttpPost("invoices/{invoiceId:guid}/accept-no-linking")]
+    [HasPermission(AppPermissions.Accounting.Manage)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> AcceptNoLinking(Guid invoiceId)
     {
@@ -294,6 +304,7 @@ public class AccountingController : BaseController
     /// Odkłada przypomnienie o powiązaniu faktury
     /// </summary>
     [HttpPost("invoices/{invoiceId:guid}/postpone-linking")]
+    [HasPermission(AppPermissions.Accounting.Manage)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> PostponeLinkingReminder(Guid invoiceId, [FromQuery] int days = 3)
     {
@@ -304,6 +315,7 @@ public class AccountingController : BaseController
     /// Tworzy encję w module na podstawie faktury KSeF
     /// </summary>
     [HttpPost("invoices/{invoiceId:guid}/create-module-entity")]
+    [HasPermission(AppPermissions.Accounting.Manage)]
     [ProducesResponseType(typeof(BaseResponse<Guid?>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateModuleEntityFromInvoice(
@@ -329,6 +341,7 @@ public class AccountingController : BaseController
     /// Zmienia status faktury na "Accepted" i wymaga podania danych modułowych (jeśli moduł tego wymaga).
     /// </summary>
     [HttpPost("invoices/{invoiceId:guid}/accept")]
+    [HasPermission(AppPermissions.Accounting.Manage)]
     [ProducesResponseType(typeof(BaseResponse<Guid?>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> AcceptInvoice(
@@ -354,6 +367,7 @@ public class AccountingController : BaseController
     /// Zmienia status faktury na "Rejected".
     /// </summary>
     [HttpPost("invoices/{invoiceId:guid}/reject")]
+    [HasPermission(AppPermissions.Accounting.Manage)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> RejectInvoice(Guid invoiceId)
@@ -366,6 +380,7 @@ public class AccountingController : BaseController
     /// Synchronizuje status płatności między fakturą KSeF a powiązanym modułem
     /// </summary>
     [HttpPost("invoices/{invoiceId:guid}/sync-payment-status")]
+    [HasPermission(AppPermissions.Accounting.Manage)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> SyncPaymentStatus(Guid invoiceId, [FromBody] SyncPaymentStatusRequest request)
@@ -381,6 +396,7 @@ public class AccountingController : BaseController
     /// Przesyła załącznik do faktury
     /// </summary>
     [HttpPost("invoices/{invoiceId:guid}/attachments")]
+    [HasPermission(AppPermissions.Accounting.Manage)]
     [ProducesResponseType(typeof(BaseResponse<InvoiceAttachmentDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> UploadAttachment(Guid invoiceId, [FromForm] IFormFile file)
@@ -410,6 +426,7 @@ public class AccountingController : BaseController
     /// Usuwa załącznik faktury
     /// </summary>
     [HttpDelete("invoices/{invoiceId:guid}/attachments/{attachmentId:guid}")]
+    [HasPermission(AppPermissions.Accounting.Manage)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteAttachment(Guid invoiceId, Guid attachmentId)

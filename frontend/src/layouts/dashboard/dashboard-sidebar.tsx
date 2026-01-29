@@ -413,7 +413,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           isOpen={openItems.includes("Dane")}
           onClick={() => handleItemClick("Dane", true)}
         >
-          {hasPermission("data:taxbusinessentities:manage") && (
+          {hasPermission("data:view") && (
             <SidebarMenuItem
               to="/data/tax-business-entities"
               title="Podmioty"
