@@ -654,6 +654,12 @@ const AccountingPage: React.FC = () => {
         }}
         sortingMode="server"
         onSortModelChange={(model) => {
+          // Zapisz sortowanie do localStorage
+          localStorage.setItem(
+            gridStateKey,
+            JSON.stringify({ sorting: model }),
+          );
+
           const sortOptions = getSortOptionsFromGridModel(
             model,
             KSeFInvoicesOrderType,
