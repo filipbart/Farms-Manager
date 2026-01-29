@@ -1342,6 +1342,7 @@ const NonKSeFInvoiceDetailsModal: React.FC<NonKSeFInvoiceDetailsModalProps> = ({
                       >
                         {users
                           .filter((user) => user.login !== "admin")
+                          .sort((a, b) => a.name.localeCompare(b.name))
                           .map((user) => (
                             <MenuItem key={user.id} value={user.id}>
                               {user.name}
@@ -2111,6 +2112,7 @@ const NonKSeFInvoiceDetailsModal: React.FC<NonKSeFInvoiceDetailsModalProps> = ({
                   (u) =>
                     u.id !== details?.assignedUserId && u.login !== "admin",
                 )
+                .sort((a, b) => a.name.localeCompare(b.name))
                 .map((user) => (
                   <MenuItem key={user.id} value={user.id}>
                     {user.name || user.login}

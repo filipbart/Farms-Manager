@@ -142,7 +142,10 @@ const AccountingPage: React.FC = () => {
   const filterConfig = useMemo(
     () =>
       getAccountingFiltersConfig({
-        users: users.map((u) => ({ value: u.id, label: u.name })),
+        users: users
+          .filter((u) => u.login !== "admin")
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .map((u) => ({ value: u.id, label: u.name })),
         farms: farms.map((f) => ({ value: f.id, label: f.name })),
       }),
     [users, farms],

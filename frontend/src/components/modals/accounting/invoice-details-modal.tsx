@@ -2520,6 +2520,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                       </MenuItem>
                       {users
                         .filter((user) => user.login !== "admin")
+                        .sort((a, b) => a.name.localeCompare(b.name))
                         .map((user) => (
                           <MenuItem key={user.id} value={user.id}>
                             {user.name || user.login}
@@ -2794,6 +2795,9 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                 .filter(
                   (u) =>
                     u.id !== details?.assignedUserId && u.login !== "admin",
+                )
+                .sort((a, b) =>
+                  (a.name || a.login).localeCompare(b.name || b.login),
                 )
                 .map((user) => (
                   <MenuItem key={user.id} value={user.id}>

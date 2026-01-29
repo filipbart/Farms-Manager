@@ -1278,6 +1278,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
                     >
                       {users
                         .filter((user) => user.login !== "admin")
+                        .sort((a, b) => a.name.localeCompare(b.name))
                         .map((user) => (
                           <MenuItem key={user.id} value={user.id}>
                             {user.name}
