@@ -6,9 +6,12 @@ import {
   Tab,
   Tabs,
   tablePaginationClasses,
+  Tooltip,
   Typography,
+  IconButton,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import InfoIcon from "@mui/icons-material/Info";
 import { MdAdd, MdSync } from "react-icons/md";
 import React, {
   useCallback,
@@ -671,7 +674,47 @@ const AccountingPage: React.FC = () => {
         alignItems={{ xs: "flex-start", sm: "center" }}
         gap={2}
       >
-        <Typography variant="h4">Księgowość</Typography>
+        <Box display="flex" alignItems="center" gap={1}>
+          <Typography variant="h4">Księgowość</Typography>
+          <Tooltip
+            title={
+              <Box>
+                <Typography
+                  variant="subtitle2"
+                  sx={{ fontWeight: "bold", mb: 1 }}
+                >
+                  Legenda statusu terminów (Księgowość)
+                </Typography>
+                <Typography variant="body2">
+                  Kolory informują o czasie pozostałym do terminu płatności:
+                </Typography>
+                <Box component="ul" sx={{ pl: 2, mt: 1, mb: 0 }}>
+                  <Typography component="li" variant="body2">
+                    14+ dni – bez zmian
+                  </Typography>
+                  <Typography component="li" variant="body2">
+                    🟡 14–8 dni – zbliżający się termin
+                  </Typography>
+                  <Typography component="li" variant="body2">
+                    🟠 7–4 dni – pilne
+                  </Typography>
+                  <Typography component="li" variant="body2">
+                    🔴 3–1 dni – bardzo pilne
+                  </Typography>
+                  <Typography component="li" variant="body2">
+                    🔴 Po terminie – po terminie
+                  </Typography>
+                </Box>
+              </Box>
+            }
+            placement="right"
+            arrow
+          >
+            <IconButton size="small" sx={{ color: "text.secondary" }}>
+              <InfoIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
         <Box display="flex" gap={2}>
           <Button
             variant="outlined"
