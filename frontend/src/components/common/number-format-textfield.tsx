@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { TextField } from "@mui/material";
 import type { TextFieldProps } from "@mui/material";
-import { formatNumber, parseFormattedNumber } from "../../utils/number-format";
+import { parseFormattedNumber } from "../../utils/number-format";
 
 interface NumberFormatTextFieldProps extends Omit<
   TextFieldProps,
@@ -32,11 +32,10 @@ const NumberFormatTextField: React.FC<NumberFormatTextFieldProps> = ({
   useEffect(() => {
     if (!isFocused) {
       if (value !== null && value !== undefined && !isNaN(value)) {
-        const formatted = formatNumber(
-          value,
+        const formatted = value.toLocaleString("pl-PL", {
           minimumFractionDigits,
           maximumFractionDigits,
-        );
+        });
         setDisplayValue(formatted);
         lastValidValue.current = formatted;
       } else {
@@ -71,14 +70,14 @@ const NumberFormatTextField: React.FC<NumberFormatTextFieldProps> = ({
       setDisplayValue("");
     } else {
       // Apply negative restriction if needed
-      const finalValue = allowNegative ? parsed : Math.abs(parsed);
+      const parsedNum = parseFloat(parsed);
+      const finalValue = allowNegative ? parsedNum : Math.abs(parsedNum);
       onChange(finalValue);
 
-      const formatted = formatNumber(
-        finalValue,
+      const formatted = finalValue.toLocaleString("pl-PL", {
         minimumFractionDigits,
         maximumFractionDigits,
-      );
+      });
       setDisplayValue(formatted);
     }
 

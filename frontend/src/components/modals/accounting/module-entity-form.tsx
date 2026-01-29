@@ -607,6 +607,7 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
           case ModuleType.Feeds: {
             const data = feedForm.getValues();
             request.feedData = {
+              invoiceId,
               farmId: selectedFarmId,
               cycleId: selectedCycleId,
               henhouseId: data.henhouseId,
@@ -628,6 +629,7 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
           case ModuleType.Gas: {
             const data = gasForm.getValues();
             request.gasData = {
+              invoiceId,
               farmId: selectedFarmId,
               contractorId: data.contractorId || undefined,
               contractorNip: invoiceData.sellerNip,
@@ -644,6 +646,7 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
           case ModuleType.ProductionExpenses: {
             const data = expenseForm.getValues();
             request.expenseData = {
+              invoiceId,
               farmId: selectedFarmId,
               cycleId: selectedCycleId,
               expenseContractorId: data.expenseContractorId || undefined,
@@ -662,6 +665,7 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
           case ModuleType.Sales: {
             const data = saleForm.getValues();
             request.saleData = {
+              invoiceId,
               farmId: selectedFarmId,
               cycleId: selectedCycleId,
               slaughterhouseId: data.slaughterhouseId || undefined,
