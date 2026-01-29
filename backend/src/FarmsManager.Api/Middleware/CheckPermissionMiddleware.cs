@@ -13,14 +13,18 @@ public class CheckPermissionMiddleware(IMediator mediator) : IMiddleware
     {
         var endpoint = context.Features.Get<IEndpointFeature>()?.Endpoint;
         var allowAnonymousAttribute = endpoint?.Metadata.GetMetadata<AllowAnonymousAttribute>();
-        var hasPermissionAttribute = endpoint?.Metadata.GetMetadata<HasPermissionAttribute>();
+        var hasPermissionAttributes = endpoint?.Metadata.GetOrderedMetadata<HasPermissionAttribute>() ?? [];
 
-        if (allowAnonymousAttribute is null && hasPermissionAttribute != null)
+        if (allowAnonymousAttribute is null && hasPermissionAttributes.Count > 0)
         {
-            var allow = await mediator.Send(new CheckPermissionQuery(hasPermissionAttribute.Permission));
-            if (!allow)
+            // Sprawdź wszystkie wymagane uprawnienia (zarówno z kontrolera jak i metody)
+            foreach (var permissionAttribute in hasPermissionAttributes)
             {
-                throw DomainException.Forbidden();
+                var allow = await mediator.Send(new CheckPermissionQuery(permissionAttribute.Permission));
+                if (!allow)
+                {
+                    throw DomainException.Forbidden();
+                }
             }
         }
 
