@@ -12,8 +12,8 @@ public record InvoiceAssignmentRuleDto
     public string[] ExcludeKeywords { get; init; } = [];
     public Guid? TaxBusinessEntityId { get; init; }
     public string TaxBusinessEntityName { get; init; }
-    public Guid? FarmId { get; init; }
-    public string FarmName { get; init; }
+    public Guid[] FarmIds { get; init; } = [];
+    public Dictionary<Guid, string> FarmNames { get; init; } = new();
     public bool IsActive { get; init; }
     public DateTime DateCreatedUtc { get; init; }
 }

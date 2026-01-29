@@ -13,7 +13,6 @@ public sealed class GetInvoiceAssignmentRulesSpec : BaseSpecification<InvoiceAss
 
         Query.Include(x => x.AssignedUser);
         Query.Include(x => x.TaxBusinessEntity);
-        Query.Include(x => x.Farm);
 
         Query.OrderBy(x => x.Priority);
     }

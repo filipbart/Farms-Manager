@@ -164,7 +164,8 @@ const SortableRuleItem: React.FC<SortableRuleItemProps> = ({
           )}
         </Box>
 
-        {(rule.taxBusinessEntityName || rule.farmName) && (
+        {(rule.taxBusinessEntityName ||
+          Object.keys(rule.farmNames).length > 0) && (
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 1 }}>
             {rule.taxBusinessEntityName && (
               <Chip
@@ -173,12 +174,17 @@ const SortableRuleItem: React.FC<SortableRuleItemProps> = ({
                 variant="outlined"
               />
             )}
-            {rule.farmName && (
-              <Chip
-                label={`Lokalizacja: ${rule.farmName}`}
-                size="small"
-                variant="outlined"
-              />
+            {Object.keys(rule.farmNames).length > 0 && (
+              <>
+                {Object.values(rule.farmNames).map((farmName, idx) => (
+                  <Chip
+                    key={idx}
+                    label={`Lokalizacja: ${farmName}`}
+                    size="small"
+                    variant="outlined"
+                  />
+                ))}
+              </>
             )}
           </Box>
         )}
@@ -212,7 +218,7 @@ const InvoiceAssignmentRulesPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<InvoiceAssignmentRule | null>(
-    null
+    null,
   );
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [ruleToDelete, setRuleToDelete] =
@@ -222,7 +228,7 @@ const InvoiceAssignmentRulesPage: React.FC = () => {
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   const fetchRules = useCallback(async () => {
@@ -236,7 +242,7 @@ const InvoiceAssignmentRulesPage: React.FC = () => {
           }
         },
         undefined,
-        "Błąd podczas pobierania reguł"
+        "Błąd podczas pobierania reguł",
       );
     } finally {
       setLoading(false);
@@ -261,7 +267,7 @@ const InvoiceAssignmentRulesPage: React.FC = () => {
         await handleApiResponse(
           () =>
             SettingsService.reorderInvoiceAssignmentRules(
-              newRules.map((r) => r.id)
+              newRules.map((r) => r.id),
             ),
           () => {
             toast.success("Kolejność reguł została zmieniona");
@@ -269,7 +275,7 @@ const InvoiceAssignmentRulesPage: React.FC = () => {
           () => {
             fetchRules();
           },
-          "Błąd podczas zmiany kolejności"
+          "Błąd podczas zmiany kolejności",
         );
       } catch {
         fetchRules();
@@ -303,7 +309,7 @@ const InvoiceAssignmentRulesPage: React.FC = () => {
           fetchRules();
         },
         undefined,
-        "Błąd podczas usuwania reguły"
+        "Błąd podczas usuwania reguły",
       );
     } finally {
       setDeleteDialogOpen(false);
@@ -322,12 +328,12 @@ const InvoiceAssignmentRulesPage: React.FC = () => {
           toast.success(
             rule.isActive
               ? "Reguła została dezaktywowana"
-              : "Reguła została aktywowana"
+              : "Reguła została aktywowana",
           );
           fetchRules();
         },
         undefined,
-        "Błąd podczas zmiany statusu reguły"
+        "Błąd podczas zmiany statusu reguły",
       );
     } catch {
       // Error handled by handleApiResponse

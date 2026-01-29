@@ -25,7 +25,6 @@ public class InvoiceAssignmentRuleRepository : AbstractRepository<InvoiceAssignm
             .OrderBy(r => r.Priority)
             .Include(r => r.AssignedUser)
             .Include(r => r.TaxBusinessEntity)
-            .Include(r => r.Farm)
             .ToListAsync(cancellationToken);
     }
 

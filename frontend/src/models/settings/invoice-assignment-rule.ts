@@ -9,8 +9,8 @@ export interface InvoiceAssignmentRule {
   excludeKeywords: string[];
   taxBusinessEntityId?: string;
   taxBusinessEntityName?: string;
-  farmId?: string;
-  farmName?: string;
+  farmIds: string[];
+  farmNames: Record<string, string>;
   isActive: boolean;
   dateCreatedUtc: string;
 }
@@ -22,7 +22,7 @@ export interface CreateInvoiceAssignmentRuleDto {
   includeKeywords: string[];
   excludeKeywords: string[];
   taxBusinessEntityId?: string;
-  farmId?: string;
+  farmIds: string[];
 }
 
 export interface UpdateInvoiceAssignmentRuleDto {
@@ -32,6 +32,6 @@ export interface UpdateInvoiceAssignmentRuleDto {
   includeKeywords?: string[];
   excludeKeywords?: string[];
   taxBusinessEntityId?: string;
-  farmId?: string;
+  farmIds?: string[];
   isActive?: boolean;
 }

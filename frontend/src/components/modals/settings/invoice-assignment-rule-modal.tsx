@@ -43,7 +43,7 @@ interface FormData {
   description: string;
   assignedUserId: string;
   taxBusinessEntityId: string;
-  farmId: string;
+  farmIds: string[];
 }
 
 const InvoiceAssignmentRuleModal: React.FC<InvoiceAssignmentRuleModalProps> = ({
@@ -75,7 +75,7 @@ const InvoiceAssignmentRuleModal: React.FC<InvoiceAssignmentRuleModalProps> = ({
       description: "",
       assignedUserId: "",
       taxBusinessEntityId: "",
-      farmId: "",
+      farmIds: [],
     },
   });
 
@@ -115,7 +115,7 @@ const InvoiceAssignmentRuleModal: React.FC<InvoiceAssignmentRuleModalProps> = ({
       setValue("description", rule.description || "");
       setValue("assignedUserId", rule.assignedUserId);
       setValue("taxBusinessEntityId", rule.taxBusinessEntityId || "");
-      setValue("farmId", rule.farmId || "");
+      setValue("farmIds", rule.farmIds || []);
       setIncludeKeywords(rule.includeKeywords || []);
       setExcludeKeywords(rule.excludeKeywords || []);
     } else {
@@ -166,10 +166,10 @@ const InvoiceAssignmentRuleModal: React.FC<InvoiceAssignmentRuleModalProps> = ({
     if (
       includeKeywords.length === 0 &&
       !data.taxBusinessEntityId &&
-      !data.farmId
+      data.farmIds.length === 0
     ) {
       toast.error(
-        "Dodaj przynajmniej jedno słowo kluczowe lub wybierz działalność/lokalizację"
+        "Dodaj przynajmniej jedno słowo kluczowe lub wybierz działalność/lokalizację",
       );
       return;
     }
@@ -187,7 +187,7 @@ const InvoiceAssignmentRuleModal: React.FC<InvoiceAssignmentRuleModalProps> = ({
         includeKeywords,
         excludeKeywords,
         taxBusinessEntityId: data.taxBusinessEntityId || undefined,
-        farmId: data.farmId || undefined,
+        farmIds: data.farmIds.length > 0 ? data.farmIds : [],
       };
 
       await handleApiResponse(
@@ -199,7 +199,7 @@ const InvoiceAssignmentRuleModal: React.FC<InvoiceAssignmentRuleModalProps> = ({
           onSave();
         },
         undefined,
-        "Błąd podczas aktualizacji reguły"
+        "Błąd podczas aktualizacji reguły",
       );
     } else {
       const createPayload: CreateInvoiceAssignmentRuleDto = {
@@ -209,7 +209,7 @@ const InvoiceAssignmentRuleModal: React.FC<InvoiceAssignmentRuleModalProps> = ({
         includeKeywords,
         excludeKeywords,
         taxBusinessEntityId: data.taxBusinessEntityId || undefined,
-        farmId: data.farmId || undefined,
+        farmIds: data.farmIds,
       };
 
       await handleApiResponse(
@@ -220,7 +220,7 @@ const InvoiceAssignmentRuleModal: React.FC<InvoiceAssignmentRuleModalProps> = ({
           onSave();
         },
         undefined,
-        "Błąd podczas tworzenia reguły"
+        "Błąd podczas tworzenia reguły",
       );
     }
 
@@ -286,25 +286,35 @@ const InvoiceAssignmentRuleModal: React.FC<InvoiceAssignmentRuleModalProps> = ({
 
             <Grid size={{ xs: 12, md: 6 }}>
               <Controller
-                name="farmId"
+                name="farmIds"
                 control={control}
                 render={({ field }) => (
-                  <LoadingTextField
+                  <TextField
                     {...field}
                     select
-                    label="Lokalizacja (opcjonalna)"
+                    label="Lokalizacje (opcjonalne)"
                     fullWidth
-                    loading={loadingFarms}
+                    disabled={loadingFarms}
+                    SelectProps={{
+                      multiple: true,
+                      renderValue: (selected) => {
+                        const selectedIds = selected as string[];
+                        if (selectedIds.length === 0) {
+                          return <em>Wszystkie lokalizacje</em>;
+                        }
+                        return selectedIds
+                          .map((id) => farms.find((f) => f.id === id)?.name)
+                          .filter(Boolean)
+                          .join(", ");
+                      },
+                    }}
                   >
-                    <MenuItem value="">
-                      <em>Wszystkie lokalizacje</em>
-                    </MenuItem>
                     {farms.map((farm) => (
                       <MenuItem key={farm.id} value={farm.id}>
                         {farm.name}
                       </MenuItem>
                     ))}
-                  </LoadingTextField>
+                  </TextField>
                 )}
               />
             </Grid>

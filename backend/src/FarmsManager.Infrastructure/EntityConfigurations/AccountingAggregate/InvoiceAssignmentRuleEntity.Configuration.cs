@@ -36,6 +36,10 @@ public class InvoiceAssignmentRuleEntityConfiguration : BaseConfiguration<Invoic
             .HasColumnType("jsonb")
             .IsRequired();
 
+        builder.Property(r => r.FarmIds)
+            .HasColumnType("jsonb")
+            .IsRequired();
+
         builder.Property(r => r.IsActive)
             .IsRequired()
             .HasDefaultValue(true);
@@ -50,12 +54,6 @@ public class InvoiceAssignmentRuleEntityConfiguration : BaseConfiguration<Invoic
         builder.HasOne(r => r.TaxBusinessEntity)
             .WithMany()
             .HasForeignKey(r => r.TaxBusinessEntityId)
-            .OnDelete(DeleteBehavior.SetNull);
-
-        // Relacja z fermą (opcjonalna)
-        builder.HasOne(r => r.Farm)
-            .WithMany()
-            .HasForeignKey(r => r.FarmId)
             .OnDelete(DeleteBehavior.SetNull);
 
         // Indexes

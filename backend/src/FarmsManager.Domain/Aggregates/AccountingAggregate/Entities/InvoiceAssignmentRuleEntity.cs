@@ -24,7 +24,7 @@ public class InvoiceAssignmentRuleEntity : Entity
         string[] includeKeywords,
         string[] excludeKeywords = null,
         Guid? taxBusinessEntityId = null,
-        Guid? farmId = null,
+        Guid[] farmIds = null,
         string description = null,
         Guid? createdBy = null)
     {
@@ -36,7 +36,7 @@ public class InvoiceAssignmentRuleEntity : Entity
             IncludeKeywords = includeKeywords,
             ExcludeKeywords = excludeKeywords ?? [],
             TaxBusinessEntityId = taxBusinessEntityId,
-            FarmId = farmId,
+            FarmIds = farmIds ?? [],
             Description = description,
             IsActive = true,
             CreatedBy = createdBy
@@ -90,14 +90,10 @@ public class InvoiceAssignmentRuleEntity : Entity
     public virtual TaxBusinessEntity TaxBusinessEntity { get; init; }
 
     /// <summary>
-    /// Opcjonalne powiązanie z fermą (lokalizacją)
+    /// Opcjonalne powiązanie z fermami (lokalizacjami)
+    /// Pusta tablica = wszystkie fermy
     /// </summary>
-    public Guid? FarmId { get; private set; }
-
-    /// <summary>
-    /// Ferma powiązana z regułą
-    /// </summary>
-    public virtual FarmEntity Farm { get; init; }
+    public Guid[] FarmIds { get; private set; } = [];
 
     /// <summary>
     /// Czy reguła jest aktywna
@@ -115,7 +111,7 @@ public class InvoiceAssignmentRuleEntity : Entity
         string[] includeKeywords = null,
         string[] excludeKeywords = null,
         Guid? taxBusinessEntityId = null,
-        Guid? farmId = null,
+        Guid[] farmIds = null,
         bool? isActive = null)
     {
         if (name != null)
@@ -139,8 +135,8 @@ public class InvoiceAssignmentRuleEntity : Entity
         if (taxBusinessEntityId.HasValue)
             TaxBusinessEntityId = taxBusinessEntityId.Value == Guid.Empty ? null : taxBusinessEntityId.Value;
 
-        if (farmId.HasValue)
-            FarmId = farmId.Value == Guid.Empty ? null : farmId.Value;
+        if (farmIds != null)
+            FarmIds = farmIds;
 
         if (isActive.HasValue)
             IsActive = isActive.Value;
@@ -189,9 +185,14 @@ public class InvoiceAssignmentRuleEntity : Entity
         if (TaxBusinessEntityId.HasValue && TaxBusinessEntityId != invoiceTaxBusinessEntityId)
             return false;
 
-        // Sprawdź powiązanie z fermą
-        if (FarmId.HasValue && FarmId != invoiceFarmId)
-            return false;
+        // Sprawdź powiązanie z fermami (OR - którakolwiek z wybranych)
+        // Jeśli FarmIds jest puste = wszystkie fermy
+        // Jeśli FarmIds ma wartości = faktura musi mieć jedną z tych ferm
+        if (FarmIds.Length > 0 && invoiceFarmId.HasValue)
+        {
+            if (!FarmIds.Contains(invoiceFarmId.Value))
+                return false;
+        }
 
         var textLower = searchableText.ToLowerInvariant();
 
@@ -224,8 +225,8 @@ public class InvoiceAssignmentRuleEntity : Entity
         }
 
         // Jeśli nie ma słów kluczowych wymaganych, reguła nie może działać samodzielnie
-        // (musi mieć przynajmniej jedno słowo kluczowe lub powiązanie z podmiotem/fermą)
-        if (IncludeKeywords.Length == 0 && !TaxBusinessEntityId.HasValue && !FarmId.HasValue)
+        // (musi mieć przynajmniej jedno słowo kluczowe lub powiązanie z podmiotem/fermami)
+        if (IncludeKeywords.Length == 0 && !TaxBusinessEntityId.HasValue && FarmIds.Length == 0)
             return false;
 
         return true;

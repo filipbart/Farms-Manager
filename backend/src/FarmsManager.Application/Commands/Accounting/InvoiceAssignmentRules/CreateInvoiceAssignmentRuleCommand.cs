@@ -17,7 +17,7 @@ public record CreateInvoiceAssignmentRuleDto
     public string[] IncludeKeywords { get; set; } = [];
     public string[] ExcludeKeywords { get; set; } = [];
     public Guid? TaxBusinessEntityId { get; set; }
-    public Guid? FarmId { get; set; }
+    public Guid[] FarmIds { get; set; } = [];
 }
 
 public class CreateInvoiceAssignmentRuleCommandHandler : IRequestHandler<CreateInvoiceAssignmentRuleCommand, BaseResponse<Guid>>
@@ -45,7 +45,7 @@ public class CreateInvoiceAssignmentRuleCommandHandler : IRequestHandler<CreateI
             includeKeywords: request.Data.IncludeKeywords,
             excludeKeywords: request.Data.ExcludeKeywords,
             taxBusinessEntityId: request.Data.TaxBusinessEntityId,
-            farmId: request.Data.FarmId,
+            farmIds: request.Data.FarmIds,
             description: request.Data.Description,
             createdBy: userId
         );

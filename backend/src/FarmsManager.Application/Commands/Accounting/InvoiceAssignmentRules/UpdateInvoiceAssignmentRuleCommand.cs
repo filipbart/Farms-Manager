@@ -16,7 +16,7 @@ public record UpdateInvoiceAssignmentRuleDto
     public string[] IncludeKeywords { get; init; }
     public string[] ExcludeKeywords { get; init; }
     public Guid? TaxBusinessEntityId { get; init; }
-    public Guid? FarmId { get; init; }
+    public Guid[] FarmIds { get; init; }
     public bool? IsActive { get; init; }
 }
 
@@ -46,7 +46,7 @@ public class UpdateInvoiceAssignmentRuleCommandHandler : IRequestHandler<UpdateI
             includeKeywords: request.Data.IncludeKeywords,
             excludeKeywords: request.Data.ExcludeKeywords,
             taxBusinessEntityId: request.Data.TaxBusinessEntityId,
-            farmId: request.Data.FarmId,
+            farmIds: request.Data.FarmIds,
             isActive: request.Data.IsActive
         );
 
