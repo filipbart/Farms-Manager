@@ -1195,7 +1195,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
         >
           <Grid container spacing={0} sx={{ height: "100%" }}>
             <Grid
-              size={{ md: 12, lg: 8, xl: 9 }}
+              size={{ md: 12, lg: 7, xl: 8 }}
               sx={{
                 height: { lg: "100%" },
                 overflowY: { lg: "auto" },
@@ -1209,7 +1209,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
             </Grid>
 
             <Grid
-              size={{ md: 12, lg: 4, xl: 3 }}
+              size={{ md: 12, lg: 5, xl: 4 }}
               sx={{
                 height: { lg: "100%" },
                 overflowY: { lg: "auto" },
