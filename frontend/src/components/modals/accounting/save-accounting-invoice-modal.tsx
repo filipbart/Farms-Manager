@@ -795,7 +795,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
     return (
       <FilePreview
         file={file}
-        maxHeight={isLg ? 900 : isMd ? 700 : 500}
+        maxHeight={isLg ? 1100 : isMd ? 900 : 600}
         showPreviewButton={true}
       />
     );
@@ -1154,7 +1154,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
         >
           <Grid container spacing={0} sx={{ height: "100%" }}>
             <Grid
-              size={{ md: 12, lg: 5, xl: 6 }}
+              size={{ md: 12, lg: 6, xl: 7 }}
               sx={{
                 height: { lg: "100%" },
                 overflowY: { lg: "auto" },
@@ -1168,7 +1168,7 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
             </Grid>
 
             <Grid
-              size={{ md: 12, lg: 7, xl: 6 }}
+              size={{ md: 12, lg: 6, xl: 5 }}
               sx={{
                 height: { lg: "100%" },
                 overflowY: { lg: "auto" },
