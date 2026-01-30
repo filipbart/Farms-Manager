@@ -276,6 +276,13 @@ export const getKSeFInvoicesColumns = ({
       }) ?? "—",
   },
   {
+    field: "dateCreatedUtc",
+    headerName: "Data utworzenia wpisu",
+    width: 180,
+    valueGetter: (value: string) =>
+      value ? dayjs(value).format("YYYY-MM-DD HH:mm") : "—",
+  },
+  {
     field: "actions",
     type: "actions",
     headerName: "Akcje",

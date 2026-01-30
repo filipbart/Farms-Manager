@@ -176,6 +176,11 @@ public sealed class GetKSeFInvoicesFromDbSpec : BaseSpecification<KSeFInvoiceEnt
                 else Query.OrderBy(x => x.PaymentDueDate);
                 break;
                 
+            case KSeFInvoicesFromDbOrderBy.DateCreatedUtc:
+                if (isDescending) Query.OrderByDescending(x => x.DateCreatedUtc);
+                else Query.OrderBy(x => x.DateCreatedUtc);
+                break;
+                
             case KSeFInvoicesFromDbOrderBy.InvoiceDate:
             default:
                 if (isDescending) Query.OrderByDescending(x => x.InvoiceDate);

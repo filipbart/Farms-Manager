@@ -31,7 +31,8 @@ public class KSeFInvoiceProfile : Profile
             .ForMember(d => d.HasPdf, opt => opt.MapFrom(s => false))
             .ForMember(d => d.AssignedUserId, opt => opt.MapFrom(s => s.AssignedUserId))
             .ForMember(d => d.AssignedUserName, opt => opt.MapFrom(s => s.AssignedUser != null ? s.AssignedUser.Name : null))
-            .ForMember(d => d.PaymentDate, opt => opt.MapFrom(s => s.PaymentDate));
+            .ForMember(d => d.PaymentDate, opt => opt.MapFrom(s => s.PaymentDate))
+            .ForMember(d => d.DateCreatedUtc, opt => opt.MapFrom(s => s.DateCreatedUtc));
 
         // Entity -> DTO dla szczegółów faktury
         CreateMap<KSeFInvoiceEntity, KSeFInvoiceDetailsDto>()

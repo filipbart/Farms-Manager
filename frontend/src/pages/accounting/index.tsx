@@ -561,7 +561,11 @@ const AccountingPage: React.FC = () => {
 
     return {
       columns: {
-        columnVisibilityModel: { id: false, quantity: false },
+        columnVisibilityModel: {
+          id: false,
+          quantity: false,
+          dateCreatedUtc: false,
+        },
       },
       sorting: {
         sortModel,

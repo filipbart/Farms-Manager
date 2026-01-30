@@ -15,7 +15,8 @@ public enum KSeFInvoicesFromDbOrderBy
     KSeFNumber,
     Status,
     PaymentStatus,
-    PaymentDueDate
+    PaymentDueDate,
+    DateCreatedUtc
 }
 
 /// <summary>

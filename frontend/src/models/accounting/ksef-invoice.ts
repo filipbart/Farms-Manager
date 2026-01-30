@@ -123,6 +123,7 @@ export interface KSeFInvoiceListModel {
   hasPdf: boolean;
   assignedUserId: string | null;
   assignedUserName: string | null;
+  dateCreatedUtc: string;
 }
 
 // Model szczegółów faktury

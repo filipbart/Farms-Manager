@@ -34,6 +34,7 @@ public class KSeFInvoiceFromDbDto
     public bool HasPdf { get; set; }
     public Guid? AssignedUserId { get; set; }
     public string AssignedUserName { get; set; }
+    public DateTime DateCreatedUtc { get; set; }
 }
 
 public class GetKSeFInvoicesFromDbQueryResponse : PaginationModel<KSeFInvoiceFromDbDto>;

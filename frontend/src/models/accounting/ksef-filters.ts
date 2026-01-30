@@ -14,6 +14,7 @@ export enum KSeFInvoicesOrderType {
   BuyerName = "BuyerName",
   KSeFNumber = "KSeFNumber",
   PaymentDueDate = "PaymentDueDate",
+  DateCreatedUtc = "DateCreatedUtc",
 }
 
 export interface KSeFInvoicesFilters {
@@ -50,7 +51,7 @@ export interface KSeFInvoicesFilters {
 export const initialKSeFFilters: KSeFInvoicesFilters = {
   page: 0,
   pageSize: 25,
-  orderBy: KSeFInvoicesOrderType.InvoiceDate,
+  orderBy: KSeFInvoicesOrderType.DateCreatedUtc,
   isDescending: true,
   buyerName: "",
   sellerName: "",
@@ -163,6 +164,8 @@ export const mapKSeFOrderTypeToField = (
       return "kSeFNumber";
     case KSeFInvoicesOrderType.PaymentDueDate:
       return "paymentDueDate";
+    case KSeFInvoicesOrderType.DateCreatedUtc:
+      return "dateCreatedUtc";
     default:
       return "";
   }
