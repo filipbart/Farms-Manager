@@ -270,13 +270,14 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
         var isNew = false;
 
         // Szukaj/twórz FeedContractor
+        var normalizedNip = NormalizeNip(extractedFields.SellerNip);
         var contractor = await _feedContractorRepository.FirstOrDefaultAsync(
-            new FeedContractorByNipSpec(extractedFields.SellerNip?.Replace("-", "")), cancellationToken);
+            new FeedContractorByNipSpec(normalizedNip), cancellationToken);
 
-        if (contractor is null && extractedFields.SellerNip.IsNotEmpty())
+        if (contractor is null && normalizedNip.IsNotEmpty())
         {
             contractor = FeedContractorEntity.CreateNewFromInvoice(
-                extractedFields.SellerName, extractedFields.SellerNip, userId);
+                extractedFields.SellerName, normalizedNip, userId);
             await _feedContractorRepository.AddAsync(contractor, cancellationToken);
             isNew = true;
         }
@@ -318,13 +319,14 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
         var isNew = false;
 
         // Szukaj/twórz GasContractor
+        var normalizedNip = NormalizeNip(extractedFields.SellerNip);
         var contractor = await _gasContractorRepository.FirstOrDefaultAsync(
-            new GasContractorByNipSpec(extractedFields.SellerNip?.Replace("-", "")), cancellationToken);
+            new GasContractorByNipSpec(normalizedNip), cancellationToken);
 
-        if (contractor is null && extractedFields.SellerNip.IsNotEmpty())
+        if (contractor is null && normalizedNip.IsNotEmpty())
         {
             contractor = GasContractorEntity.CreateNew(
-                extractedFields.SellerName, extractedFields.SellerNip,
+                extractedFields.SellerName, normalizedNip,
                 extractedFields.SellerAddress?.Replace("\n", " "), userId);
             await _gasContractorRepository.AddAsync(contractor, cancellationToken);
             isNew = true;
@@ -352,13 +354,14 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
         var isNew = false;
 
         // Szukaj/twórz ExpenseContractor
+        var normalizedNip = NormalizeNip(extractedFields.SellerNip);
         var contractor = await _expenseContractorRepository.FirstOrDefaultAsync(
-            new ExpenseContractorByNipSpec(extractedFields.SellerNip?.Replace("-", "")), cancellationToken);
+            new ExpenseContractorByNipSpec(normalizedNip), cancellationToken);
 
-        if (contractor is null && extractedFields.SellerNip.IsNotEmpty())
+        if (contractor is null && normalizedNip.IsNotEmpty())
         {
             contractor = ExpenseContractorEntity.CreateNewFromInvoice(
-                extractedFields.SellerName, extractedFields.SellerNip ?? string.Empty,
+                extractedFields.SellerName, normalizedNip,
                 extractedFields.SellerAddress?.Replace("\n", "") ?? string.Empty, userId);
             await _expenseContractorRepository.AddAsync(contractor, cancellationToken);
             isNew = true;
@@ -389,14 +392,15 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
         var isNew = false;
 
         // Szukaj/twórz Slaughterhouse (rzeźnia = Customer w fakturze sprzedaży)
+        var normalizedNip = NormalizeNip(extractedFields.BuyerNip);
         var slaughterhouse = await _slaughterhouseRepository.FirstOrDefaultAsync(
-            new SlaughterhouseByNipSpec(extractedFields.BuyerNip?.Replace("-", "")), cancellationToken);
+            new SlaughterhouseByNipSpec(normalizedNip), cancellationToken);
 
-        if (slaughterhouse is null && extractedFields.BuyerNip.IsNotEmpty())
+        if (slaughterhouse is null && normalizedNip.IsNotEmpty())
         {
             slaughterhouse = SlaughterhouseEntity.CreateNew(
                 extractedFields.BuyerName, string.Empty,
-                extractedFields.BuyerNip, extractedFields.BuyerAddress, userId);
+                normalizedNip, extractedFields.BuyerAddress, userId);
             await _slaughterhouseRepository.AddAsync(slaughterhouse, cancellationToken);
             isNew = true;
         }
@@ -566,7 +570,12 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
 
     private static string NormalizeNip(string nip)
     {
-        return nip?.Replace("PL", "").Replace("-", "").Replace(" ", "").Trim();
+        if (string.IsNullOrWhiteSpace(nip))
+            return null;
+
+        // Usuń wszystkie znaki oprócz cyfr (kropki, myślniki, spacje, prefix PL, itp.)
+        var digitsOnly = System.Text.RegularExpressions.Regex.Replace(nip, @"[^\d]", "");
+        return string.IsNullOrEmpty(digitsOnly) ? null : digitsOnly;
     }
 
     /// <summary>
@@ -614,9 +623,9 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
             InvoiceDate = model.InvoiceDate,
             DueDate = model.DueDate,
             SellerName = model.VendorName,
-            SellerNip = model.VendorNip,
+            SellerNip = NormalizeNip(model.VendorNip),
             BuyerName = model.CustomerName,
-            BuyerNip = model.CustomerNip,
+            BuyerNip = NormalizeNip(model.CustomerNip),
             BuyerAddress = model.CustomerAddress,
             GrossAmount = model.InvoiceTotal,
             NetAmount = model.SubTotal,
@@ -658,10 +667,10 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
             InvoiceDate = model.InvoiceDate,
             DueDate = model.DueDate,
             SellerName = model.VendorName,
-            SellerNip = model.VendorNip,
+            SellerNip = NormalizeNip(model.VendorNip),
             SellerAddress = model.VendorAddress,
             BuyerName = model.CustomerName,
-            BuyerNip = model.CustomerNip,
+            BuyerNip = NormalizeNip(model.CustomerNip),
             GrossAmount = model.InvoiceTotal,
             NetAmount = model.SubTotal,
             VatAmount = model.VatAmount,
@@ -681,10 +690,10 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
             InvoiceDate = model.InvoiceDate,
             DueDate = model.DueDate,
             SellerName = model.VendorName,
-            SellerNip = model.VendorNip,
+            SellerNip = NormalizeNip(model.VendorNip),
             SellerAddress = model.VendorAddress,
             BuyerName = model.CustomerName,
-            BuyerNip = model.CustomerNip,
+            BuyerNip = NormalizeNip(model.CustomerNip),
             GrossAmount = model.InvoiceTotal,
             NetAmount = model.SubTotal,
             VatAmount = model.VatAmount
@@ -701,9 +710,9 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
             InvoiceDate = model.InvoiceDate,
             DueDate = model.DueDate,
             SellerName = model.VendorName,
-            SellerNip = model.VendorNip,
+            SellerNip = NormalizeNip(model.VendorNip),
             BuyerName = model.CustomerName,
-            BuyerNip = model.CustomerNip,
+            BuyerNip = NormalizeNip(model.CustomerNip),
             BuyerAddress = model.CustomerAddress,
             GrossAmount = model.InvoiceTotal,
             NetAmount = model.SubTotal,
