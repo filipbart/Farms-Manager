@@ -64,7 +64,8 @@ public class SaleInvoiceEntity : Entity
         DateOnly? paymentDate,
         decimal invoiceTotal,
         decimal subTotal,
-        decimal vatAmount)
+        decimal vatAmount,
+        string comment = null)
     {
         InvoiceNumber = invoiceNumber;
         InvoiceDate = invoiceDate;
@@ -73,6 +74,7 @@ public class SaleInvoiceEntity : Entity
         InvoiceTotal = invoiceTotal;
         SubTotal = subTotal;
         VatAmount = vatAmount;
+        Comment = comment ?? Comment;
     }
 
     public void SetCycle(Guid cycleId)
@@ -89,14 +91,12 @@ public class SaleInvoiceEntity : Entity
     {
         PaymentDate = paymentDate;
     }
-
     public void MarkAsCompleted(DateOnly paymentDate, string comment = null)
     {
         Status = SaleInvoiceStatus.Realized;
         PaymentDate = paymentDate;
         Comment = comment;
     }
-
     public void MarkAsUnrealized()
     {
         Status = SaleInvoiceStatus.Unrealized;

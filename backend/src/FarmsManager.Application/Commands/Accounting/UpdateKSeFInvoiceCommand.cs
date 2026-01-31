@@ -2,8 +2,10 @@ using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Interfaces;
+using FarmsManager.Domain.Aggregates.GasAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.SaleAggregate.Interfaces;
 using FarmsManager.Domain.Exceptions;
 using MediatR;
@@ -35,6 +37,8 @@ public class UpdateKSeFInvoiceCommandHandler : IRequestHandler<UpdateKSeFInvoice
     private readonly IFeedInvoiceRepository _feedInvoiceRepository;
     private readonly ISaleInvoiceRepository _saleInvoiceRepository;
     private readonly IFeedPaymentRepository _feedPaymentRepository;
+    private readonly IExpenseProductionRepository _expenseProductionRepository;
+    private readonly IGasDeliveryRepository _gasDeliveryRepository;
 
     public UpdateKSeFInvoiceCommandHandler(
         IKSeFInvoiceRepository repository, 
@@ -42,7 +46,9 @@ public class UpdateKSeFInvoiceCommandHandler : IRequestHandler<UpdateKSeFInvoice
         IInvoiceAuditService auditService,
         IFeedInvoiceRepository feedInvoiceRepository,
         ISaleInvoiceRepository saleInvoiceRepository,
-        IFeedPaymentRepository feedPaymentRepository)
+        IFeedPaymentRepository feedPaymentRepository,
+        IExpenseProductionRepository expenseProductionRepository,
+        IGasDeliveryRepository gasDeliveryRepository)
     {
         _repository = repository;
         _userDataResolver = userDataResolver;
@@ -50,6 +56,8 @@ public class UpdateKSeFInvoiceCommandHandler : IRequestHandler<UpdateKSeFInvoice
         _feedInvoiceRepository = feedInvoiceRepository;
         _saleInvoiceRepository = saleInvoiceRepository;
         _feedPaymentRepository = feedPaymentRepository;
+        _expenseProductionRepository = expenseProductionRepository;
+        _gasDeliveryRepository = gasDeliveryRepository;
     }
 
     public async Task<EmptyBaseResponse> Handle(UpdateKSeFInvoiceCommand request, CancellationToken cancellationToken)
@@ -87,7 +95,6 @@ public class UpdateKSeFInvoiceCommandHandler : IRequestHandler<UpdateKSeFInvoice
                 KSeFInvoiceStatus.Accepted => KSeFInvoiceAuditAction.Accepted,
                 _ => (KSeFInvoiceAuditAction?)null
             };
-
             if (action.HasValue)
             {
                 await _auditService.LogStatusChangeAsync(
@@ -119,6 +126,12 @@ public class UpdateKSeFInvoiceCommandHandler : IRequestHandler<UpdateKSeFInvoice
         if (request.Data.DueDate.HasValue && invoice.AssignedEntityInvoiceId.HasValue)
         {
             await UpdateModuleEntityDueDateAsync(invoice.ModuleType, invoice.AssignedEntityInvoiceId.Value, request.Data.DueDate.Value, cancellationToken);
+        }
+
+        // Synchronizuj komentarz do powiązanej encji modułowej (jeśli istnieje)
+        if (!string.IsNullOrEmpty(request.Data.Comment) && invoice.AssignedEntityInvoiceId.HasValue)
+        {
+            await UpdateModuleEntityCommentAsync(invoice.ModuleType, invoice.AssignedEntityInvoiceId.Value, request.Data.Comment, cancellationToken);
         }
 
         // Synchronizuj status płatności do modułowych encji (Feeds i Sales)
@@ -184,7 +197,8 @@ public class UpdateKSeFInvoiceCommandHandler : IRequestHandler<UpdateKSeFInvoice
                         saleInvoice.PaymentDate,
                         saleInvoice.InvoiceTotal,
                         saleInvoice.SubTotal,
-                        saleInvoice.VatAmount);
+                        saleInvoice.VatAmount,
+                        saleInvoice.Comment);
                     await _saleInvoiceRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
                 }
                 break;
@@ -217,10 +231,8 @@ public class UpdateKSeFInvoiceCommandHandler : IRequestHandler<UpdateKSeFInvoice
                     string.Empty,
                     userId);
                 payment.MarkAsCompleted($"Automatycznie utworzony z księgowości w dniu {DateTime.Now:yyyy-MM-dd}");
-                
                 await _feedPaymentRepository.AddAsync(payment, cancellationToken);
                 await _feedPaymentRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
-                
                 feedInvoice.MarkAsPaid(payment.Id);
                 await _feedInvoiceRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
             }
@@ -250,7 +262,68 @@ public class UpdateKSeFInvoiceCommandHandler : IRequestHandler<UpdateKSeFInvoice
         {
             saleInvoice.MarkAsUnrealized();
         }
-
         await _saleInvoiceRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task UpdateModuleEntityCommentAsync(ModuleType moduleType, Guid entityId, string comment, CancellationToken cancellationToken)
+    {
+        switch (moduleType)
+        {
+            case ModuleType.Feeds:
+                var feedInvoice = await _feedInvoiceRepository.GetByIdAsync(entityId, cancellationToken);
+                if (feedInvoice != null)
+                {
+                    feedInvoice.SetComment(comment);
+                    await _feedInvoiceRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
+                }
+                break;
+
+            case ModuleType.Sales:
+                var saleInvoice = await _saleInvoiceRepository.GetByIdAsync(entityId, cancellationToken);
+                if (saleInvoice != null)
+                {
+                    saleInvoice.Update(
+                        saleInvoice.InvoiceNumber,
+                        saleInvoice.InvoiceDate,
+                        saleInvoice.DueDate,
+                        saleInvoice.PaymentDate,
+                        saleInvoice.InvoiceTotal,
+                        saleInvoice.SubTotal,
+                        saleInvoice.VatAmount,
+                        comment);
+                    await _saleInvoiceRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
+                }
+                break;
+
+            case ModuleType.ProductionExpenses:
+                var expenseProduction = await _expenseProductionRepository.GetByIdAsync(entityId, cancellationToken);
+                if (expenseProduction != null)
+                {
+                    expenseProduction.Update(
+                        expenseProduction.InvoiceNumber,
+                        expenseProduction.InvoiceTotal,
+                        expenseProduction.SubTotal,
+                        expenseProduction.VatAmount,
+                        expenseProduction.InvoiceDate,
+                        comment);
+                    await _expenseProductionRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
+                }
+                break;
+
+            case ModuleType.Gas:
+                var gasDelivery = await _gasDeliveryRepository.GetByIdAsync(entityId, cancellationToken);
+                if (gasDelivery != null)
+                {
+                    gasDelivery.Update(
+                        gasDelivery.InvoiceNumber,
+                        gasDelivery.InvoiceDate,
+                        gasDelivery.InvoiceTotal,
+                        gasDelivery.UnitPrice,
+                        gasDelivery.Quantity,
+                        comment);
+                    await _gasDeliveryRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
+                }
+                break;
+        }
     }
 }

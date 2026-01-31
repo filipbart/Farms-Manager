@@ -1,4 +1,4 @@
-export type KSeFInvoiceDirection = "Purchase" | "Sale";
+export type KSeFInvoiceDirection = "Purchase" | "Sales";
 
 export interface InvoiceFarmAssignmentRule {
   id: string;
@@ -45,5 +45,5 @@ export const INVOICE_DIRECTION_OPTIONS: {
   label: string;
 }[] = [
   { value: "Purchase", label: "Zakup" },
-  { value: "Sale", label: "Sprzedaż" },
+  { value: "Sales", label: "Sprzedaż" },
 ];

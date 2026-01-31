@@ -51,7 +51,7 @@ const invoiceDirectionOptions: {
   label: string;
 }[] = [
   { value: "Purchase", label: "Zakup" },
-  { value: "Sale", label: "Sprzedaż" },
+  { value: "Sales", label: "Sprzedaż" },
 ];
 
 const InvoiceFarmAssignmentRuleModal: React.FC<
@@ -91,13 +91,11 @@ const InvoiceFarmAssignmentRuleModal: React.FC<
     const fetchData = async () => {
       setLoadingFarms(true);
       setLoadingTaxBusinessEntities(true);
-
       try {
         const [farmsRes, taxBusinessEntitiesRes] = await Promise.all([
           FarmsService.getFarmsAsync(),
           TaxBusinessEntitiesService.getAllAsync(),
         ]);
-
         if (farmsRes.success && farmsRes.responseData) {
           setFarms(farmsRes.responseData.items || []);
         }
@@ -106,7 +104,7 @@ const InvoiceFarmAssignmentRuleModal: React.FC<
           taxBusinessEntitiesRes.responseData
         ) {
           setTaxBusinessEntities(
-            taxBusinessEntitiesRes.responseData.items || []
+            taxBusinessEntitiesRes.responseData.items || [],
           );
         }
       } catch {
@@ -116,7 +114,6 @@ const InvoiceFarmAssignmentRuleModal: React.FC<
         setLoadingTaxBusinessEntities(false);
       }
     };
-
     if (open) {
       fetchData();
     }
@@ -182,13 +179,11 @@ const InvoiceFarmAssignmentRuleModal: React.FC<
       !data.invoiceDirection
     ) {
       toast.error(
-        "Dodaj przynajmniej jedno słowo kluczowe lub wybierz działalność/kierunek faktury"
+        "Dodaj przynajmniej jedno słowo kluczowe lub wybierz działalność/kierunek faktury",
       );
       return;
     }
-
     setLoading(true);
-
     const payload: CreateInvoiceFarmAssignmentRuleDto = {
       name: data.name,
       description: data.description || undefined,
@@ -214,7 +209,7 @@ const InvoiceFarmAssignmentRuleModal: React.FC<
           onSave();
         },
         undefined,
-        "Błąd podczas aktualizacji reguły"
+        "Błąd podczas aktualizacji reguły",
       );
     } else {
       await handleApiResponse(
@@ -225,10 +220,9 @@ const InvoiceFarmAssignmentRuleModal: React.FC<
           onSave();
         },
         undefined,
-        "Błąd podczas tworzenia reguły"
+        "Błąd podczas tworzenia reguły",
       );
     }
-
     setLoading(false);
   };
 
@@ -239,6 +233,7 @@ const InvoiceFarmAssignmentRuleModal: React.FC<
           ? "Edytuj regułę przypisywania do lokalizacji"
           : "Dodaj nową regułę przypisywania do lokalizacji"}
       </DialogTitle>
+
       <form onSubmit={handleSubmit(handleSave)}>
         <DialogContent>
           <Grid container spacing={2.5} sx={{ mt: 0.5 }}>
@@ -304,6 +299,7 @@ const InvoiceFarmAssignmentRuleModal: React.FC<
                     <MenuItem value="">
                       <em>Wszystkie działalności</em>
                     </MenuItem>
+
                     {taxBusinessEntities.map((entity) => (
                       <MenuItem key={entity.id} value={entity.id}>
                         {entity.name} ({entity.businessType})
@@ -328,6 +324,7 @@ const InvoiceFarmAssignmentRuleModal: React.FC<
                     <MenuItem value="">
                       <em>Zakup i sprzedaż</em>
                     </MenuItem>
+
                     {invoiceDirectionOptions.map((option) => (
                       <MenuItem key={option.value} value={option.value}>
                         {option.label}
@@ -342,6 +339,7 @@ const InvoiceFarmAssignmentRuleModal: React.FC<
               <Typography variant="subtitle2" gutterBottom color="success.main">
                 Słowa kluczowe (przynajmniej jedno musi wystąpić na fakturze)
               </Typography>
+
               <Box sx={{ display: "flex", gap: 1, mb: 1 }}>
                 <TextField
                   size="small"
@@ -356,6 +354,7 @@ const InvoiceFarmAssignmentRuleModal: React.FC<
                   }}
                   sx={{ flex: 1 }}
                 />
+
                 <IconButton
                   color="success"
                   onClick={handleAddIncludeKeyword}
@@ -364,6 +363,7 @@ const InvoiceFarmAssignmentRuleModal: React.FC<
                   <AddIcon />
                 </IconButton>
               </Box>
+
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
                 {includeKeywords.map((keyword) => (
                   <Chip
@@ -376,6 +376,7 @@ const InvoiceFarmAssignmentRuleModal: React.FC<
                   />
                 ))}
               </Box>
+
               {includeKeywords.length === 0 && (
                 <Typography
                   variant="caption"
@@ -391,6 +392,7 @@ const InvoiceFarmAssignmentRuleModal: React.FC<
               <Typography variant="subtitle2" gutterBottom color="error.main">
                 Słowa wykluczające (jeśli wystąpią, reguła nie zadziała)
               </Typography>
+
               <Box sx={{ display: "flex", gap: 1, mb: 1 }}>
                 <TextField
                   size="small"
@@ -405,6 +407,7 @@ const InvoiceFarmAssignmentRuleModal: React.FC<
                   }}
                   sx={{ flex: 1 }}
                 />
+
                 <IconButton
                   color="error"
                   onClick={handleAddExcludeKeyword}
@@ -413,6 +416,7 @@ const InvoiceFarmAssignmentRuleModal: React.FC<
                   <AddIcon />
                 </IconButton>
               </Box>
+
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
                 {excludeKeywords.map((keyword) => (
                   <Chip
@@ -428,10 +432,12 @@ const InvoiceFarmAssignmentRuleModal: React.FC<
             </Grid>
           </Grid>
         </DialogContent>
+
         <DialogActions>
           <Button onClick={handleClose} variant="outlined" color="inherit">
             Anuluj
           </Button>
+
           <LoadingButton
             type="submit"
             variant="contained"

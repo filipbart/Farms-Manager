@@ -38,6 +38,7 @@ export interface UpdateExpenseProductionData {
   farmId: string;
   cycleId: string;
   expenseContractorId: string;
+  expenseTypeId?: string;
   invoiceNumber: string;
   invoiceTotal: number;
   subTotal: number;

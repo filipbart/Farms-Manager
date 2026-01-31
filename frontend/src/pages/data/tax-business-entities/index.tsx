@@ -15,7 +15,6 @@ import type { PaginateModel } from "../../../common/interfaces/paginate";
 const TaxBusinessEntitiesPage: React.FC = () => {
   const { userData } = useAuth();
   const isAdmin = userData?.isAdmin ?? false;
-
   const [entities, setEntities] = useState<TaxBusinessEntityRowModel[]>([]);
   const [loading, setLoading] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -31,7 +30,7 @@ const TaxBusinessEntitiesPage: React.FC = () => {
         setEntities(data.responseData?.items ?? []);
       },
       undefined,
-      "Nie udało się pobrać listy podmiotów"
+      "Nie udało się pobrać listy podmiotów",
     );
     setLoading(false);
   }, []);
@@ -58,7 +57,7 @@ const TaxBusinessEntitiesPage: React.FC = () => {
         await fetchEntities();
       },
       undefined,
-      "Nie udało się usunąć podmiotu"
+      "Nie udało się usunąć podmiotu",
     );
   };
 
@@ -98,7 +97,6 @@ const TaxBusinessEntitiesPage: React.FC = () => {
         ],
       },
     ];
-
     const auditColumns = getAuditColumns<TaxBusinessEntityRowModel>(isAdmin);
     return [...baseColumns, ...auditColumns];
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -138,6 +136,7 @@ const TaxBusinessEntitiesPage: React.FC = () => {
         mt={4}
         sx={{
           width: "100%",
+
           overflowX: "auto",
         }}
       >
@@ -145,6 +144,11 @@ const TaxBusinessEntitiesPage: React.FC = () => {
           loading={loading}
           rows={entities}
           columns={columns}
+          initialState={{
+            sorting: {
+              sortModel: [{ field: "dateCreatedUtc", sort: "desc" }],
+            },
+          }}
           localeText={{
             noRowsLabel: "Brak wpisów",
             footerTotalRows: "Łączna liczba wierszy:",

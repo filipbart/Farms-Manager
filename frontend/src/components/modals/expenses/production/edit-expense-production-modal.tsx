@@ -6,6 +6,10 @@ import {
   Grid,
   TextField,
   MenuItem,
+  FormControl,
+  InputLabel,
+  Select,
+  FormHelperText,
 } from "@mui/material";
 import DialogTitle from "@mui/material/DialogTitle";
 import { useState, useEffect, useCallback, useMemo } from "react";
@@ -18,6 +22,7 @@ import dayjs from "dayjs";
 import LoadingButton from "../../../common/loading-button";
 import { handleApiResponse } from "../../../../utils/axios/handle-api-response";
 import { ExpensesService } from "../../../../services/expenses-service";
+import type { ExpenseTypeRow } from "../../../../models/expenses/expenses-types";
 import type {
   ExpenseProductionListModel,
   UpdateExpenseProductionData,
@@ -50,9 +55,10 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
     fetchExpensesContractors,
   } = useExpensesContractor(stableFilters);
 
-  const [loading, setLoading] = useState(false);
+  const [expenseTypes, setExpenseTypes] = useState<ExpenseTypeRow[]>([]);
   const [cycles, setCycles] = useState<CycleDto[]>([]);
   const [loadingCycles, setLoadingCycles] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const {
     control,
@@ -67,6 +73,7 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
       farmId: "",
       cycleId: "",
       expenseContractorId: "",
+      expenseTypeId: "",
       expenseTypeNameDisplay: "",
       invoiceNumber: "",
       invoiceTotal: 0,
@@ -78,11 +85,18 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
   });
 
   const watchedFarmId = watch("farmId");
+  const watchedContractorId = watch("expenseContractorId");
 
   useEffect(() => {
     if (open) {
       void fetchFarms();
       void fetchExpensesContractors();
+      // Fetch all expense types as fallback
+      handleApiResponse(
+        () => ExpensesService.getExpensesTypes(),
+        (data) => setExpenseTypes(data.responseData?.types || []),
+        () => setExpenseTypes([]),
+      );
     }
   }, [open, fetchFarms, fetchExpensesContractors]);
 
@@ -101,7 +115,7 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
 
         const currentCycleId = watch("cycleId");
         const isCurrentCycleValid = fetchedCycles.some(
-          (c) => c.id === currentCycleId
+          (c) => c.id === currentCycleId,
         );
 
         if (!isCurrentCycleValid) {
@@ -110,7 +124,7 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
         }
       },
       () => setCycles([]),
-      "Nie udało się pobrać cykli dla wybranej fermy."
+      "Nie udało się pobrać cykli dla wybranej fermy.",
     );
     setLoadingCycles(false);
   }, [watch, farms, setValue]);
@@ -135,11 +149,11 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
       setValue("cycleId", expenseProductionToEdit.cycleId);
       setValue(
         "expenseContractorId",
-        expenseProductionToEdit.expenseContractorId
+        expenseProductionToEdit.expenseContractorId,
       );
       setValue(
         "expenseTypeNameDisplay",
-        expenseProductionToEdit.expenseTypeName
+        expenseProductionToEdit.expenseTypeName,
       );
     }
   }, [expenseProductionToEdit, farms, expensesContractors, setValue]);
@@ -148,8 +162,20 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
     const selected = expensesContractors.find((c) => c.id === contractorId);
     setValue(
       "expenseTypeNameDisplay",
-      selected?.expenseTypes?.map((t) => t.name).join(", ") || ""
+      selected?.expenseTypes?.map((t) => t.name).join(", ") || "",
     );
+    // Clear expense type if contractor changes and current type is not in new contractor's types
+    if (selected) {
+      const currentExpenseTypeId = watch("expenseTypeId");
+      const hasCurrentType = selected.expenseTypes.some(
+        (t) => t.id === currentExpenseTypeId,
+      );
+      if (!hasCurrentType) {
+        setValue("expenseTypeId", "");
+      }
+    } else {
+      setValue("expenseTypeId", "");
+    }
   };
 
   const handleClose = () => {
@@ -166,7 +192,7 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
       () =>
         ExpensesService.updateExpenseProduction(
           expenseProductionToEdit.id,
-          data
+          data,
         ),
       () => {
         toast.success("Pomyślnie zaktualizowano koszt produkcji");
@@ -174,7 +200,7 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
         onSave();
       },
       undefined,
-      "Wystąpił błąd podczas aktualizacji kosztu produkcji"
+      "Wystąpił błąd podczas aktualizacji kosztu produkcji",
     );
     setLoading(false);
   };
@@ -242,7 +268,7 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
                     loading={loadingExpensesContractors}
                     value={
                       expensesContractors.find(
-                        (contractor) => contractor.id === field.value
+                        (contractor) => contractor.id === field.value,
                       ) || null
                     }
                     onChange={(_, newValue) => {
@@ -263,11 +289,55 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                label="Typ wydatku"
-                value={watch("expenseTypeNameDisplay") || ""}
-                slotProps={{ input: { readOnly: true } }}
-                fullWidth
+              <Controller
+                name="expenseTypeId"
+                control={control}
+                rules={{
+                  required: "Typ wydatku jest wymagany",
+                }}
+                render={({ field }) => (
+                  <FormControl
+                    fullWidth
+                    required
+                    error={!!errors.expenseTypeId}
+                  >
+                    <InputLabel>Typ wydatku</InputLabel>
+                    <Select
+                      label="Typ wydatku"
+                      value={field.value || ""}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                    >
+                      {(() => {
+                        const selectedContractor = expensesContractors.find(
+                          (c) => c.id === watchedContractorId,
+                        );
+
+                        if (
+                          selectedContractor &&
+                          selectedContractor.expenseTypes.length > 0
+                        ) {
+                          return selectedContractor.expenseTypes.map((type) => (
+                            <MenuItem key={type.id} value={type.id}>
+                              {type.name}
+                            </MenuItem>
+                          ));
+                        }
+
+                        return expenseTypes.map((type) => (
+                          <MenuItem key={type.id} value={type.id}>
+                            {type.name}
+                          </MenuItem>
+                        ));
+                      })()}
+                    </Select>
+                    {errors.expenseTypeId && (
+                      <FormHelperText>
+                        {errors.expenseTypeId.message}
+                      </FormHelperText>
+                    )}
+                  </FormControl>
+                )}
               />
             </Grid>
 
@@ -294,7 +364,7 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
                     value={field.value ? dayjs(field.value) : null}
                     onChange={(date) =>
                       field.onChange(
-                        date ? dayjs(date).format("YYYY-MM-DD") : ""
+                        date ? dayjs(date).format("YYYY-MM-DD") : "",
                       )
                     }
                     slotProps={{
@@ -329,7 +399,7 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
                   required: "Wartość netto jest wymagana",
                   validate: (value) =>
                     !Number.isNaN(
-                      parseFloat(String(value).replace(",", "."))
+                      parseFloat(String(value).replace(",", ".")),
                     ) || "Wartość musi być liczbą",
                   setValueAs: (v) =>
                     v === "" ? null : parseFloat(String(v).replace(",", ".")),
@@ -349,7 +419,7 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
                   required: "VAT jest wymagany",
                   validate: (value) =>
                     !Number.isNaN(
-                      parseFloat(String(value).replace(",", "."))
+                      parseFloat(String(value).replace(",", ".")),
                     ) || "Wartość musi być liczbą",
                   setValueAs: (v) =>
                     v === "" ? null : parseFloat(String(v).replace(",", ".")),
@@ -369,7 +439,7 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
                   required: "Wartość brutto jest wymagana",
                   validate: (value) =>
                     !Number.isNaN(
-                      parseFloat(String(value).replace(",", "."))
+                      parseFloat(String(value).replace(",", ".")),
                     ) || "Wartość musi być liczbą",
                   setValueAs: (v) =>
                     v === "" ? null : parseFloat(String(v).replace(",", ".")),

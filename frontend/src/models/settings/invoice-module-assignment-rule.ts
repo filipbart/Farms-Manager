@@ -5,9 +5,11 @@ export type ModuleType =
   | "Gas"
   | "Sales"
   | "Farmstead"
+  | "Investments"
+  | "RealEstate"
   | "Other";
 
-export type KSeFInvoiceDirection = "Purchase" | "Sale";
+export type KSeFInvoiceDirection = "Purchase" | "Sales";
 
 export interface InvoiceModuleAssignmentRule {
   id: string;
@@ -55,11 +57,14 @@ export interface UpdateInvoiceModuleAssignmentRuleDto {
 }
 
 export const MODULE_TYPE_OPTIONS: { value: ModuleType; label: string }[] = [
+  { value: "None", label: "Brak przypisanego" },
   { value: "Feeds", label: "Pasze" },
   { value: "ProductionExpenses", label: "Koszty produkcyjne" },
   { value: "Gas", label: "Gaz" },
   { value: "Sales", label: "Sprzedaże" },
   { value: "Farmstead", label: "Gospodarstwo rolne" },
+  { value: "Investments", label: "Inwestycje" },
+  { value: "RealEstate", label: "Nieruchomości" },
   { value: "Other", label: "Inne" },
 ];
 
@@ -68,5 +73,5 @@ export const INVOICE_DIRECTION_OPTIONS: {
   label: string;
 }[] = [
   { value: "Purchase", label: "Zakup" },
-  { value: "Sale", label: "Sprzedaż" },
+  { value: "Sales", label: "Sprzedaż" },
 ];
