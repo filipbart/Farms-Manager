@@ -15,6 +15,7 @@ export enum KSeFInvoicesOrderType {
   KSeFNumber = "KSeFNumber",
   PaymentDueDate = "PaymentDueDate",
   DateCreatedUtc = "DateCreatedUtc",
+  PaymentStatus = "PaymentStatus",
 }
 
 export interface KSeFInvoicesFilters {
@@ -166,6 +167,8 @@ export const mapKSeFOrderTypeToField = (
       return "paymentDueDate";
     case KSeFInvoicesOrderType.DateCreatedUtc:
       return "dateCreatedUtc";
+    case KSeFInvoicesOrderType.PaymentStatus:
+      return "paymentStatus";
     default:
       return "";
   }
