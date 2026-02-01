@@ -6,11 +6,12 @@ import type {
   KSeFPaymentData,
   KSeFBankAccount,
   KSeFAdditionalDescription,
+  KSeFTransportData,
 } from "../models/accounting/ksef-invoice";
 
 const getElementText = (
   parent: Element | Document,
-  tagName: string
+  tagName: string,
 ): string | undefined => {
   const el = parent.getElementsByTagName(tagName)[0];
   return el?.textContent?.trim() || undefined;
@@ -18,7 +19,7 @@ const getElementText = (
 
 const getElementNumber = (
   parent: Element | Document,
-  tagName: string
+  tagName: string,
 ): number | undefined => {
   const text = getElementText(parent, tagName);
   if (!text) return undefined;
@@ -113,7 +114,7 @@ const parseVatBreakdown = (faElement: Element | null): KSeFVatBreakdown[] => {
 };
 
 const parseAdditionalDescriptions = (
-  faElement: Element | null
+  faElement: Element | null,
 ): KSeFAdditionalDescription[] => {
   if (!faElement) return [];
 
@@ -132,7 +133,7 @@ const parseAdditionalDescriptions = (
 };
 
 const parseBankAccounts = (
-  platnoscElement: Element | null
+  platnoscElement: Element | null,
 ): KSeFBankAccount[] => {
   if (!platnoscElement) return [];
 
@@ -152,7 +153,7 @@ const parseBankAccounts = (
 };
 
 const parsePaymentData = (
-  platnoscElement: Element | null
+  platnoscElement: Element | null,
 ): KSeFPaymentData | undefined => {
   if (!platnoscElement) return undefined;
 
@@ -185,8 +186,33 @@ const parsePaymentData = (
   };
 };
 
+const parseTransportData = (
+  transportElement: Element | null,
+): KSeFTransportData | undefined => {
+  if (!transportElement) return undefined;
+
+  const parseAddress = (addressElement: Element | null) => {
+    if (!addressElement) return undefined;
+    return {
+      countryCode: getElementText(addressElement, "KodKraju"),
+      addressLine1: getElementText(addressElement, "AdresL1"),
+      addressLine2: getElementText(addressElement, "AdresL2"),
+      gln: getElementText(addressElement, "GLN"),
+    };
+  };
+
+  return {
+    shippingFrom: parseAddress(
+      transportElement.getElementsByTagName("WysylkaZ")[0],
+    ),
+    shippingTo: parseAddress(
+      transportElement.getElementsByTagName("WysylkaDo")[0],
+    ),
+  };
+};
+
 export const parseKSeFInvoiceXml = (
-  xmlString: string | null | undefined
+  xmlString: string | null | undefined,
 ): KSeFParsedXmlData | null => {
   if (!xmlString) return null;
 
@@ -206,6 +232,7 @@ export const parseKSeFInvoiceXml = (
     const podmiot3 = doc.getElementsByTagName("Podmiot3")[0];
     const fa = doc.getElementsByTagName("Fa")[0];
     const platnosc = fa?.getElementsByTagName("Platnosc")[0];
+    const transport = fa?.getElementsByTagName("Transport")[0];
     const stopka = doc.getElementsByTagName("Stopka")[0];
 
     const kodFormularza = naglowek?.getElementsByTagName("KodFormularza")[0];
@@ -241,10 +268,11 @@ export const parseKSeFInvoiceXml = (
         : undefined,
       lineItems: parseLineItems(fa),
       payment: parsePaymentData(platnosc),
+      transport: parseTransportData(transport),
       footer: stopka
         ? getElementText(
             stopka.getElementsByTagName("Informacje")[0] || stopka,
-            "StopkaFaktury"
+            "StopkaFaktury",
           )
         : undefined,
       additionalDescriptions: parseAdditionalDescriptions(fa),

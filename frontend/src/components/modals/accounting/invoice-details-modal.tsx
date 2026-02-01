@@ -1284,6 +1284,101 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                     />
                   </Box>
 
+                  {/* Transport Section - display if transport data exists */}
+                  {parsedXml?.transport &&
+                    (parsedXml.transport.shippingFrom ||
+                      parsedXml.transport.shippingTo) && (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          gap: 4,
+                          mb: 3,
+                          pb: 2,
+                          borderBottom: 1,
+                          borderColor: "primary.main",
+                        }}
+                      >
+                        {parsedXml.transport.shippingFrom && (
+                          <Box sx={{ flex: 1 }}>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{
+                                textTransform: "uppercase",
+                                fontSize: "0.65rem",
+                                letterSpacing: 0.5,
+                              }}
+                            >
+                              Wysyłka z:
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              fontWeight={600}
+                              sx={{ mt: 0.5 }}
+                            >
+                              {parsedXml.transport.shippingFrom.addressLine1 ||
+                                "—"}
+                            </Typography>
+                            {parsedXml.transport.shippingFrom.addressLine2 && (
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                              >
+                                {parsedXml.transport.shippingFrom.addressLine2}
+                              </Typography>
+                            )}
+                            {parsedXml.transport.shippingFrom.countryCode && (
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                              >
+                                {parsedXml.transport.shippingFrom.countryCode}
+                              </Typography>
+                            )}
+                          </Box>
+                        )}
+                        {parsedXml.transport.shippingTo && (
+                          <Box sx={{ flex: 1 }}>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{
+                                textTransform: "uppercase",
+                                fontSize: "0.65rem",
+                                letterSpacing: 0.5,
+                              }}
+                            >
+                              Wysyłka do:
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              fontWeight={600}
+                              sx={{ mt: 0.5 }}
+                            >
+                              {parsedXml.transport.shippingTo.addressLine1 ||
+                                "—"}
+                            </Typography>
+                            {parsedXml.transport.shippingTo.addressLine2 && (
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                              >
+                                {parsedXml.transport.shippingTo.addressLine2}
+                              </Typography>
+                            )}
+                            {parsedXml.transport.shippingTo.countryCode && (
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                              >
+                                {parsedXml.transport.shippingTo.countryCode}
+                              </Typography>
+                            )}
+                          </Box>
+                        )}
+                      </Box>
+                    )}
+
                   {/* Dates and Payment Info Section - side by side */}
                   <Box
                     sx={{
