@@ -1327,14 +1327,6 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                                 {parsedXml.transport.shippingFrom.addressLine2}
                               </Typography>
                             )}
-                            {parsedXml.transport.shippingFrom.countryCode && (
-                              <Typography
-                                variant="body2"
-                                color="text.secondary"
-                              >
-                                {parsedXml.transport.shippingFrom.countryCode}
-                              </Typography>
-                            )}
                           </Box>
                         )}
                         {parsedXml.transport.shippingTo && (
@@ -1364,14 +1356,6 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                                 color="text.secondary"
                               >
                                 {parsedXml.transport.shippingTo.addressLine2}
-                              </Typography>
-                            )}
-                            {parsedXml.transport.shippingTo.countryCode && (
-                              <Typography
-                                variant="body2"
-                                color="text.secondary"
-                              >
-                                {parsedXml.transport.shippingTo.countryCode}
                               </Typography>
                             )}
                           </Box>
