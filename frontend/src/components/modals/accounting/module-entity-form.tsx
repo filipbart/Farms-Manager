@@ -57,6 +57,7 @@ interface ModuleEntityFormProps {
     bankAccountNumber?: string;
     gasQuantity?: number | null;
     gasUnitPrice?: number | null;
+    feedHenhouseId?: string | null;
   };
   farms: FarmRowModel[];
   selectedFarmId: string;
@@ -230,41 +231,32 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
       },
     });
 
-    // Load henhouses for feed module and auto-detect from invoice text
+    // Load henhouses for feed module and auto-select from database ID
     useEffect(() => {
       if (moduleType === ModuleType.Feeds && selectedFarmId) {
         const farm = farms.find((f) => f.id === selectedFarmId);
         if (farm?.henhouses) {
           setHenhouses(farm.henhouses);
 
-          // Auto-detect henhouse from invoice text (line items, seller name, footer/uwagi, additionalDescriptions)
-          const searchableText = [
-            invoiceData.sellerName,
-            invoiceData.buyerName,
-            ...(invoiceData.lineItems?.map((item) => item.name) || []),
-            invoiceData.footer, // Stopka faktury - może zawierać "Miejsce rozładunku: Jaworowo Kłódź K5"
-            // Dodatkowe opisy (DodatkowyOpis z FA(4)) - klucz i wartość
-            ...(invoiceData.additionalDescriptions?.flatMap((d) => [
-              d.key,
-              d.value,
-            ]) || []),
-          ]
-            .filter(Boolean)
-            .join(" ")
-            .toLowerCase();
-
-          // Find henhouse by name or code match in invoice text
-          const matchedHenhouse = farm.henhouses.find((h) => {
-            const henhouseName = h.name.toLowerCase();
-            // Sprawdź czy nazwa kurnika występuje w tekście
-            return searchableText.includes(henhouseName);
-          });
-          if (matchedHenhouse && !feedForm.getValues("henhouseId")) {
-            feedForm.setValue("henhouseId", matchedHenhouse.id);
+          // Use henhouse ID from database if available
+          if (invoiceData.feedHenhouseId && !feedForm.getValues("henhouseId")) {
+            // Verify the henhouse exists in this farm
+            const henhouseExists = farm.henhouses.some(
+              (h) => h.id === invoiceData.feedHenhouseId,
+            );
+            if (henhouseExists) {
+              feedForm.setValue("henhouseId", invoiceData.feedHenhouseId);
+            }
           }
         }
       }
-    }, [moduleType, selectedFarmId, farms, invoiceData, feedForm]);
+    }, [
+      moduleType,
+      selectedFarmId,
+      farms,
+      invoiceData.feedHenhouseId,
+      feedForm,
+    ]);
 
     // Load feed names
     useEffect(() => {
@@ -640,43 +632,6 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
               unitPrice: data.unitPrice,
               quantity: data.quantity,
               comment: comment || "",
-            };
-            break;
-          }
-          case ModuleType.ProductionExpenses: {
-            const data = expenseForm.getValues();
-            request.expenseData = {
-              invoiceId,
-              farmId: selectedFarmId,
-              cycleId: selectedCycleId,
-              expenseContractorId: data.expenseContractorId || undefined,
-              expenseTypeId: data.expenseTypeId,
-              contractorNip: invoiceData.sellerNip,
-              contractorName: invoiceData.sellerName,
-              invoiceNumber: data.invoiceNumber,
-              invoiceTotal: data.invoiceTotal,
-              subTotal: data.subTotal,
-              vatAmount: data.vatAmount,
-              invoiceDate: data.invoiceDate,
-              comment: comment || "",
-            };
-            break;
-          }
-          case ModuleType.Sales: {
-            const data = saleForm.getValues();
-            request.saleData = {
-              invoiceId,
-              farmId: selectedFarmId,
-              cycleId: selectedCycleId,
-              slaughterhouseId: data.slaughterhouseId || undefined,
-              slaughterhouseNip: invoiceData.buyerNip,
-              slaughterhouseName: invoiceData.buyerName,
-              invoiceNumber: data.invoiceNumber,
-              invoiceDate: data.invoiceDate,
-              dueDate: data.dueDate || invoiceData.dueDate || "",
-              invoiceTotal: data.invoiceTotal,
-              subTotal: data.subTotal,
-              vatAmount: data.vatAmount,
             };
             break;
           }

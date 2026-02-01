@@ -247,6 +247,7 @@ export interface KSeFParsedXmlData {
   };
   lineItems?: KSeFLineItem[];
   payment?: KSeFPaymentData;
+  transport?: KSeFTransportData;
   footer?: string;
   additionalDescriptions?: KSeFAdditionalDescription[];
 }
@@ -308,6 +309,21 @@ export interface KSeFBankAccount {
   accountNumber?: string;
   bankName?: string;
   description?: string;
+}
+
+export interface KSeFTransportData {
+  shippingFrom?: {
+    countryCode?: string;
+    addressLine1?: string;
+    addressLine2?: string;
+    gln?: string;
+  };
+  shippingTo?: {
+    countryCode?: string;
+    addressLine1?: string;
+    addressLine2?: string;
+    gln?: string;
+  };
 }
 
 // Model faktury możliwej do powiązania
