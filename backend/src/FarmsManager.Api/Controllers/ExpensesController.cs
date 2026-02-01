@@ -13,7 +13,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FarmsManager.Api.Controllers;
 
-[HasPermission(AppPermissions.Expenses.ProductionView)]
 public class ExpensesController(IMediator mediator) : BaseController
 {
     /// <summary>
@@ -119,6 +118,7 @@ public class ExpensesController(IMediator mediator) : BaseController
     /// </summary>
     /// <returns></returns>
     [HttpGet("productions/dictionary")]
+    [HasPermission(AppPermissions.Expenses.ProductionView)]
     [ProducesResponseType(typeof(BaseResponse<GetExpenseProductionDictionaryQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetExpenseProductionDictionary()
@@ -132,6 +132,7 @@ public class ExpensesController(IMediator mediator) : BaseController
     /// <param name="filters"></param>
     /// <returns></returns>
     [HttpGet("productions")]
+    [HasPermission(AppPermissions.Expenses.ProductionView)]
     [ProducesResponseType(typeof(BaseResponse<GetExpensesProductionQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetExpensesProduction([FromQuery] GetExpensesProductionsFilters filters)
@@ -145,6 +146,7 @@ public class ExpensesController(IMediator mediator) : BaseController
     /// <param name="data"></param>
     /// <returns></returns>
     [HttpPost("productions/add")]
+    [HasPermission(AppPermissions.Expenses.ProductionView)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> AddExpenseProduction([FromForm] AddExpenseProductionData data)
@@ -159,6 +161,7 @@ public class ExpensesController(IMediator mediator) : BaseController
     /// <param name="data"></param>
     /// <returns></returns>
     [HttpPatch("productions/update/{expenseProductionId:guid}")]
+    [HasPermission(AppPermissions.Expenses.ProductionView)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UpdateExpenseProduction([FromRoute] Guid expenseProductionId,
@@ -173,6 +176,7 @@ public class ExpensesController(IMediator mediator) : BaseController
     /// <param name="expenseProductionId"></param>
     /// <returns></returns>
     [HttpDelete("productions/delete/{expenseProductionId:guid}")]
+    [HasPermission(AppPermissions.Expenses.ProductionView)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> DeleteExpenseProduction([FromRoute] Guid expenseProductionId)
@@ -187,6 +191,7 @@ public class ExpensesController(IMediator mediator) : BaseController
     /// <returns></returns>
     [HttpPost("productions/upload")]
     [Consumes("multipart/form-data")]
+    [HasPermission(AppPermissions.Expenses.ProductionView)]
     [ProducesResponseType(typeof(BaseResponse<UploadExpensesInvoicesCommandResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UploadExpenseInvoices([FromForm] UploadExpensesInvoicesDto dto)
@@ -200,6 +205,7 @@ public class ExpensesController(IMediator mediator) : BaseController
     /// <param name="command"></param>
     /// <returns></returns>
     [HttpPost("productions/save-invoice")]
+    [HasPermission(AppPermissions.Expenses.ProductionView)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> SaveExpenseInvoice(SaveExpenseProductionInvoiceCommand command)

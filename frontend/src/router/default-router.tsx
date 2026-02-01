@@ -47,6 +47,7 @@ import UserDetailsPage from "../pages/settings/users/details";
 import ForbiddenPage from "../pages/forbidden-page";
 import AccountingPage from "../pages/accounting";
 import WelcomePage from "../pages/welcome-page";
+import HomeRedirect from "../components/routing/home-redirect";
 
 const DefaultRouter: React.FC = () => {
   const { getRoute } = useRouter();
@@ -54,7 +55,11 @@ const DefaultRouter: React.FC = () => {
     <Routes>
       <Route path={getRoute(RouteName.Login)} element={<LoginPage />} />
       <Route path="/" element={<DashboardLayout />}>
-        <Route path="" element={<DashboardPage />} />
+        <Route path="" element={<HomeRedirect />} />
+        <Route
+          path={getRoute(RouteName.Dashboard)}
+          element={<DashboardPage />}
+        />
         <Route path={getRoute(RouteName.Welcome)} element={<WelcomePage />} />
         <Route
           path={getRoute(RouteName.Accounting)}

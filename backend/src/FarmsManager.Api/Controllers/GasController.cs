@@ -12,7 +12,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FarmsManager.Api.Controllers;
 
-[HasPermission(AppPermissions.Gas.View)]
 public class GasController(IMediator mediator) : BaseController
 {
     /// <summary>
