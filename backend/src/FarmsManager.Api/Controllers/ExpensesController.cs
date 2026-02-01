@@ -21,6 +21,7 @@ public class ExpensesController(IMediator mediator) : BaseController
     /// </summary>
     /// <returns></returns>
     [HttpGet("types")]
+    [HasPermission(AppPermissions.Expenses.TypesView)]
     [ProducesResponseType(typeof(BaseResponse<GetExpensesTypesQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetExpensesTypes()
@@ -75,7 +76,7 @@ public class ExpensesController(IMediator mediator) : BaseController
     /// <param name="data"></param>
     /// <returns></returns>
     [HttpPost("add-contractor")]
-    [HasPermission(AppPermissions.Expenses.ContractorsView)]
+    [HasPermission(AppPermissions.Expenses.ContractorsManage)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> AddExpenseContractor(AddExpenseContractorDto data)
@@ -89,7 +90,7 @@ public class ExpensesController(IMediator mediator) : BaseController
     /// <param name="expenseContractorId"></param>
     /// <returns></returns>
     [HttpDelete("delete-contractor/{expenseContractorId:guid}")]
-    [HasPermission(AppPermissions.Expenses.ContractorsView)]
+    [HasPermission(AppPermissions.Expenses.ContractorsManage)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> DeleteExpenseContractor([FromRoute] Guid expenseContractorId)
@@ -104,7 +105,7 @@ public class ExpensesController(IMediator mediator) : BaseController
     /// <param name="data"></param>
     /// <returns></returns>
     [HttpPatch("update-contractor/{expenseContractorId:guid}")]
-    [HasPermission(AppPermissions.Expenses.ContractorsView)]
+    [HasPermission(AppPermissions.Expenses.ContractorsManage)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UpdateExpenseContractor([FromRoute] Guid expenseContractorId,

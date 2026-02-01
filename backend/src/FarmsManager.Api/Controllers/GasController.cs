@@ -47,7 +47,7 @@ public class GasController(IMediator mediator) : BaseController
     /// </summary>
     /// <returns></returns>
     [HttpGet("contractors")]
-    [HasPermission(AppPermissions.Gas.DeliveriesView)]
+    [HasPermission(AppPermissions.Gas.ContractorsView)]
     [ProducesResponseType(typeof(BaseResponse<GetGasContractorsQueryResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetGasContractors()

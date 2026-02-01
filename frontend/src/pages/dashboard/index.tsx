@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useReducer, useState } from "react";
+import { Navigate } from "react-router-dom";
 import {
   filterReducer,
   initialFilters,
@@ -46,8 +47,13 @@ import type {
   DashboardNotificationsResponse,
   DashboardStats,
 } from "../../models/dashboard/dashboard";
+import { usePermissions } from "../../context/permission-context";
+import { useRouter } from "../../router/use-router";
+import { RouteName } from "../../router/route-names";
 
 const DashboardPage: React.FC = () => {
+  const { hasPermission } = usePermissions();
+  const { getRoute } = useRouter();
   const [filters, dispatch] = useReducer(filterReducer, initialFilters);
   const [dictionary, setDictionary] = useState<DashboardDictionary>();
 
@@ -88,7 +94,7 @@ const DashboardPage: React.FC = () => {
       try {
         await handleApiResponse(
           () => DashboardService.getDictionaries(),
-          (data) => setDictionary(data.responseData)
+          (data) => setDictionary(data.responseData),
         );
       } catch (error) {
         toast.error(`Wystąpił błąd podczas pobierania słowników: ${error}`);
@@ -162,7 +168,7 @@ const DashboardPage: React.FC = () => {
           (apiData) => {
             setStats(apiData.responseData?.stats);
             setChickenHousesStatus(apiData.responseData?.chickenHousesStatus);
-          }
+          },
         );
       } catch (error) {
         toast.error(`Wystąpił błąd podczas ładowania statystyk: ${error}`);
@@ -178,7 +184,7 @@ const DashboardPage: React.FC = () => {
           () => DashboardService.getNotifications(filters),
           (apiData) => {
             setNotifications(apiData.responseData ?? []);
-          }
+          },
         );
       } catch (error) {
         toast.error(`Wystąpił błąd podczas ładowania powiadomień: ${error}`);
@@ -199,7 +205,7 @@ const DashboardPage: React.FC = () => {
               setFlockLossChart(apiData.responseData.flockLossChart);
               setGasConsumptionChart(apiData.responseData.gasConsumptionChart);
             }
-          }
+          },
         );
       } catch (error) {
         toast.error(`Wystąpił błąd podczas ładowania wykresów: ${error}`);
@@ -221,11 +227,11 @@ const DashboardPage: React.FC = () => {
           () => DashboardService.getExpensesPieChart(filters),
           (apiData) => {
             setExpensesPieChart(apiData.responseData);
-          }
+          },
         );
       } catch (error) {
         toast.error(
-          `Wystąpił błąd podczas ładowania struktury wydatków: ${error}`
+          `Wystąpił błąd podczas ładowania struktury wydatków: ${error}`,
         );
       } finally {
         setIsLoadingExpenses(false);
@@ -255,6 +261,10 @@ const DashboardPage: React.FC = () => {
     "Listopad",
     "Grudzień",
   ];
+
+  if (!hasPermission("dashboard:view")) {
+    return <Navigate to={getRoute(RouteName.Welcome)} replace />;
+  }
 
   if (isLoadingDictionary) {
     return (

@@ -45,6 +45,7 @@ export enum RouteName {
   SettingsInvoiceFarmAssignmentRules = "settings/invoice-farm-assignment-rules",
   Users = "users",
   UserProfile = "user-profile",
+  Welcome = "welcome",
   NotFound = "not-found",
   Forbidden = "forbidden",
   InternalServerError = "internal-server-error",

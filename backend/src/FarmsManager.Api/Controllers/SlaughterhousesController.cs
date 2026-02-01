@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FarmsManager.Api.Controllers;
 
-[HasPermission(AppPermissions.Data.SlaughterhousesManage)]
+[HasPermission(AppPermissions.Data.SlaughterhousesView)]
 public class SlaughterhousesController(IMediator mediator) : BaseController
 {
     /// <summary>
@@ -31,6 +31,7 @@ public class SlaughterhousesController(IMediator mediator) : BaseController
     /// <param name="command"></param>
     /// <returns></returns>
     [HttpPost("add")]
+    [HasPermission(AppPermissions.Data.SlaughterhousesManage)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> AddSlaughterhouse(AddSlaughterhouseCommand command)
@@ -45,6 +46,7 @@ public class SlaughterhousesController(IMediator mediator) : BaseController
     /// <param name="data"></param>
     /// <returns></returns>
     [HttpPatch("update/{slaughterhouseId:guid}")]
+    [HasPermission(AppPermissions.Data.SlaughterhousesManage)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UpdateSlaughterhouse([FromRoute] Guid slaughterhouseId,
@@ -59,6 +61,7 @@ public class SlaughterhousesController(IMediator mediator) : BaseController
     /// <param name="slaughterhouseId"></param>
     /// <returns></returns>
     [HttpPost("delete/{slaughterhouseId:guid}")]
+    [HasPermission(AppPermissions.Data.SlaughterhousesManage)]
     [ProducesResponseType(typeof(EmptyBaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> DeleteSlaughterhouse([FromRoute] Guid slaughterhouseId)

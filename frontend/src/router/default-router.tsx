@@ -46,6 +46,7 @@ import UsersPage from "../pages/settings/users/users";
 import UserDetailsPage from "../pages/settings/users/details";
 import ForbiddenPage from "../pages/forbidden-page";
 import AccountingPage from "../pages/accounting";
+import WelcomePage from "../pages/welcome-page";
 
 const DefaultRouter: React.FC = () => {
   const { getRoute } = useRouter();
@@ -54,6 +55,7 @@ const DefaultRouter: React.FC = () => {
       <Route path={getRoute(RouteName.Login)} element={<LoginPage />} />
       <Route path="/" element={<DashboardLayout />}>
         <Route path="" element={<DashboardPage />} />
+        <Route path={getRoute(RouteName.Welcome)} element={<WelcomePage />} />
         <Route
           path={getRoute(RouteName.Accounting)}
           element={<AccountingPage />}

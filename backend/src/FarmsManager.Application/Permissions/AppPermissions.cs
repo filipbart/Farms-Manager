@@ -74,6 +74,12 @@ public static class AppPermissions
         [Description("Przeglądanie kontrahentów")]
         public const string ContractorsView = "expenses:contractors:view";
 
+        [Description("Zarządzanie kontrahentami")]
+        public const string ContractorsManage = "expenses:contractors:manage";
+
+        [Description("Przeglądanie typów wydatków")]
+        public const string TypesView = "expenses:types:view";
+
         [Description("Zarządzanie typami wydatków")]
         public const string TypesManage = "expenses:types:manage";
     }
@@ -115,6 +121,9 @@ public static class AppPermissions
 
         [Description("Przeglądanie zużycia gazu")]
         public const string ConsumptionsView = "gas:consumptions:view";
+
+        [Description("Przeglądanie kontrahentów gazu")]
+        public const string ContractorsView = "gas:contractors:view";
     }
 
     [PermissionGroup("Notatki z Wylęgarni")]
@@ -162,6 +171,9 @@ public static class AppPermissions
 
         [Description("Zarządzanie wylęgarniami")]
         public const string HatcheriesManage = "data:hatcheries:manage";
+
+        [Description("Przeglądanie ubojni")]
+        public const string SlaughterhousesView = "data:slaughterhouses:view";
 
         [Description("Zarządzanie ubojniami")]
         public const string SlaughterhousesManage = "data:slaughterhouses:manage";
