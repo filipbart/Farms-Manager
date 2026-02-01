@@ -385,6 +385,8 @@ export default class ApiUrl {
     this.AccountingInvoices + "/" + id + "/update";
   public static AccountingDeleteInvoice = (id: string) =>
     this.AccountingInvoices + "/" + id + "/delete";
+  public static AccountingDeleteAllInvoices =
+    this.AccountingInvoices + "/delete-all";
   public static AccountingSyncKSeF = this.Accounting + "/sync-ksef-invoices";
   public static AccountingLinkableInvoices = (id: string) =>
     this.AccountingInvoices + "/" + id + "/linkable";

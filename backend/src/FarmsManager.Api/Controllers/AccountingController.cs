@@ -206,6 +206,18 @@ public class AccountingController : BaseController
     }
 
     /// <summary>
+    /// Usuwa wszystkie faktury (hard delete - tylko do testów)
+    /// </summary>
+    [HttpPost("invoices/delete-all")]
+    [HasPermission(AppPermissions.Accounting.Manage)]
+    [ProducesResponseType(typeof(BaseResponse<DeleteAllKSeFInvoicesCommandResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> DeleteAllInvoices()
+    {
+        var result = await _mediator.Send(new DeleteAllKSeFInvoicesCommand());
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Wstrzymuje fakturę i przypisuje ją do innego pracownika (nie zmienia statusu)
     /// </summary>
     [HttpPost("invoices/{invoiceId:guid}/hold")]

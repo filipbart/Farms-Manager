@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import InfoIcon from "@mui/icons-material/Info";
-import { MdAdd, MdSync } from "react-icons/md";
+import { MdAdd, MdSync, MdDeleteForever } from "react-icons/md";
 import React, {
   useCallback,
   useEffect,
@@ -87,6 +87,7 @@ const AccountingPage: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [invoices, setInvoices] = useState<KSeFInvoiceListModel[]>([]);
   const [totalRows, setTotalRows] = useState(0);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
@@ -525,6 +526,32 @@ const AccountingPage: React.FC = () => {
     }
   };
 
+  const handleDeleteAllInvoices = async () => {
+    if (
+      !window.confirm(
+        "Czy na pewno chcesz usunąć WSZYSTKIE faktury? Ta operacja jest nieodwracalna!",
+      )
+    ) {
+      return;
+    }
+    setDeleting(true);
+    try {
+      await handleApiResponse(
+        () => AccountingService.deleteAllInvoices(),
+        (data) => {
+          toast.success(
+            `Usunięto ${data.responseData?.deletedCount || 0} faktur`,
+          );
+          fetchInvoices();
+        },
+        undefined,
+        "Błąd podczas usuwania faktur",
+      );
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const columns = useMemo(
     () =>
       getKSeFInvoicesColumns({
@@ -736,6 +763,15 @@ const AccountingPage: React.FC = () => {
           </Tooltip>
         </Box>
         <Box display="flex" gap={2}>
+          <Button
+            variant="outlined"
+            color="error"
+            startIcon={<MdDeleteForever />}
+            onClick={handleDeleteAllInvoices}
+            disabled={deleting}
+          >
+            Usuń wszystkie
+          </Button>
           <Button
             variant="outlined"
             color="info"

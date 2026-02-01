@@ -1,7 +1,7 @@
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
+using FarmsManager.Domain.Aggregates.AccountingAggregate.Entities;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
-using FarmsManager.Domain.Aggregates.AccountingAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Entities;
 using FarmsManager.Domain.Aggregates.FeedAggregate.Entities;
 using FarmsManager.Domain.Aggregates.GasAggregate.Entities;
@@ -12,52 +12,68 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FarmsManager.Application.Commands.Accounting;
 
-public record DeleteKSeFInvoiceCommand(Guid InvoiceId) : IRequest<EmptyBaseResponse>;
-
-public class DeleteKSeFInvoiceCommandHandler : IRequestHandler<DeleteKSeFInvoiceCommand, EmptyBaseResponse>
+public record DeleteAllKSeFInvoicesCommandResponse
 {
-    private readonly IUserDataResolver _userDataResolver;
-    private readonly IKSeFInvoiceRepository _ksefInvoiceRepository;
-    private readonly DbContext _dbContext;
+    public int DeletedCount { get; init; }
+}
 
-    public DeleteKSeFInvoiceCommandHandler(
-        IUserDataResolver userDataResolver,
-        IKSeFInvoiceRepository ksefInvoiceRepository,
-        DbContext dbContext)
+public record DeleteAllKSeFInvoicesCommand : IRequest<BaseResponse<DeleteAllKSeFInvoicesCommandResponse>>;
+
+public class DeleteAllKSeFInvoicesCommandHandler : IRequestHandler<DeleteAllKSeFInvoicesCommand,
+    BaseResponse<DeleteAllKSeFInvoicesCommandResponse>>
+{
+    private readonly DbContext _dbContext;
+    private readonly IUserDataResolver _userDataResolver;
+
+    public DeleteAllKSeFInvoicesCommandHandler(
+        DbContext dbContext,
+        IUserDataResolver userDataResolver)
     {
-        _userDataResolver = userDataResolver;
-        _ksefInvoiceRepository = ksefInvoiceRepository;
         _dbContext = dbContext;
+        _userDataResolver = userDataResolver;
     }
 
-    public async Task<EmptyBaseResponse> Handle(DeleteKSeFInvoiceCommand request, CancellationToken cancellationToken)
+    public async Task<BaseResponse<DeleteAllKSeFInvoicesCommandResponse>> Handle(
+        DeleteAllKSeFInvoicesCommand request,
+        CancellationToken cancellationToken)
     {
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
-        
-        // Get the invoice to delete
-        var invoice = await _ksefInvoiceRepository.GetAsync(
-            new KSeFInvoiceByIdSpec(request.InvoiceId), cancellationToken);
 
-        if (invoice == null)
-            throw DomainException.RecordNotFound($"Invoice with ID {request.InvoiceId} not found");
+        // Get all non-deleted invoices
+        var invoices = await _dbContext.Set<KSeFInvoiceEntity>()
+            .Where(i => i.DateDeletedUtc == null)
+            .ToListAsync(cancellationToken);
 
-        // Only allow deletion of non-KSeF invoices (manually uploaded ones)
-        if (invoice.InvoiceSource == KSeFInvoiceSource.KSeF)
-            throw DomainException.BadRequest("Nie można usunąć faktury z KSeF. Można usuwać tylko faktury dodane ręcznie.");
-
-        // Hard delete associated module entity if exists
-        if (invoice.AssignedEntityInvoiceId.HasValue)
+        // Hard delete associated module entities for each invoice
+        foreach (var invoice in invoices)
         {
-            await HardDeleteAssociatedModuleEntity(invoice.ModuleType, invoice.AssignedEntityInvoiceId.Value, invoice.InvoiceNumber, cancellationToken);
+            if (invoice.AssignedEntityInvoiceId.HasValue && invoice.ModuleType.HasValue)
+            {
+                await HardDeleteAssociatedModuleEntity(
+                    invoice.ModuleType.Value,
+                    invoice.AssignedEntityInvoiceId.Value,
+                    invoice.InvoiceNumber,
+                    cancellationToken);
+            }
         }
 
-        // Hard delete the KSeF invoice
-        await _ksefInvoiceRepository.DeleteAsync(invoice, cancellationToken);
+        var count = invoices.Count;
 
-        return BaseResponse.EmptyResponse;
+        // Hard delete all invoices
+        _dbContext.Set<KSeFInvoiceEntity>().RemoveRange(invoices);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return BaseResponse.CreateResponse(new DeleteAllKSeFInvoicesCommandResponse
+        {
+            DeletedCount = count
+        });
     }
 
-    private async Task HardDeleteAssociatedModuleEntity(ModuleType? moduleType, Guid entityId, string invoiceNumber, CancellationToken cancellationToken)
+    private async Task HardDeleteAssociatedModuleEntity(
+        ModuleType moduleType,
+        Guid entityId,
+        string invoiceNumber,
+        CancellationToken cancellationToken)
     {
         switch (moduleType)
         {
@@ -69,7 +85,7 @@ public class DeleteKSeFInvoiceCommandHandler : IRequestHandler<DeleteKSeFInvoice
                     _dbContext.Set<FeedInvoiceEntity>().Remove(feedInvoice);
                 }
                 break;
-            
+
             case ModuleType.Gas:
                 var gasDelivery = await _dbContext.Set<GasDeliveryEntity>()
                     .FirstOrDefaultAsync(e => e.Id == entityId, cancellationToken);
@@ -77,7 +93,7 @@ public class DeleteKSeFInvoiceCommandHandler : IRequestHandler<DeleteKSeFInvoice
                 {
                     _dbContext.Set<GasDeliveryEntity>().Remove(gasDelivery);
                 }
-                
+
                 // Usuń również powiązany wpis w Kosztach Produkcyjnych (tworzony razem z dostawą gazu)
                 if (!string.IsNullOrEmpty(invoiceNumber))
                 {
@@ -89,7 +105,7 @@ public class DeleteKSeFInvoiceCommandHandler : IRequestHandler<DeleteKSeFInvoice
                     }
                 }
                 break;
-            
+
             case ModuleType.ProductionExpenses:
                 var expenseProduction = await _dbContext.Set<ExpenseProductionEntity>()
                     .FirstOrDefaultAsync(e => e.Id == entityId, cancellationToken);
@@ -98,7 +114,7 @@ public class DeleteKSeFInvoiceCommandHandler : IRequestHandler<DeleteKSeFInvoice
                     _dbContext.Set<ExpenseProductionEntity>().Remove(expenseProduction);
                 }
                 break;
-            
+
             case ModuleType.Sales:
                 var saleInvoice = await _dbContext.Set<SaleInvoiceEntity>()
                     .FirstOrDefaultAsync(e => e.Id == entityId, cancellationToken);

@@ -284,6 +284,16 @@ export class AccountingService {
   }
 
   /**
+   * Usuwa wszystkie faktury (hard delete - tylko do testów)
+   */
+  public static async deleteAllInvoices() {
+    return await AxiosWrapper.post<{ deletedCount: number }>(
+      ApiUrl.AccountingDeleteAllInvoices,
+      {},
+    );
+  }
+
+  /**
    * Synchronizacja z KSeF
    */
   public static async syncWithKSeF() {
