@@ -57,7 +57,7 @@ public partial class KSeFInvoiceXmlParser : IKSeFInvoiceXmlParser
                     using var reader = new StringReader(xml);
                     if (serializer.Deserialize(reader) is KSeFInvoiceXml result)
                     {
-                        _logger.LogDebug("Pomyślnie sparsowano XML faktury z namespace {Namespace}", ns);
+                        _logger.LogInformation("Pomyślnie sparsowano XML faktury z namespace {Namespace}", ns);
                         return result;
                     }
                 }
@@ -68,11 +68,16 @@ public partial class KSeFInvoiceXmlParser : IKSeFInvoiceXmlParser
             }
 
             // Próba bez namespace
-            var genericSerializer = new XmlSerializer(typeof(KSeFInvoiceXml));
-            using var genericReader = new StringReader(xml);
             try
             {
-                return genericSerializer.Deserialize(genericReader) as KSeFInvoiceXml;
+                var genericSerializer = new XmlSerializer(typeof(KSeFInvoiceXml));
+                using var genericReader = new StringReader(xml);
+                var result = genericSerializer.Deserialize(genericReader) as KSeFInvoiceXml;
+                if (result != null)
+                {
+                    _logger.LogInformation("Pomyślnie sparsowano XML faktury bez namespace");
+                    return result;
+                }
             }
             catch (Exception ex)
             {
@@ -80,7 +85,7 @@ public partial class KSeFInvoiceXmlParser : IKSeFInvoiceXmlParser
             }
 
             // Jeśli wszystkie próby zawiodły, spróbuj usunąć prefiksy namespace (dla faktur z tns: itp.)
-            _logger.LogDebug("Parsowanie nie powiodło się, próbując usunąć prefiksy namespace");
+            _logger.LogWarning("Standardowe parsowanie nie powiodło się, próbując usunąć prefiksy namespace");
             var cleanedXml = RemoveNamespacePrefixes(xml);
 
             foreach (var ns in namespaces)
@@ -93,7 +98,7 @@ public partial class KSeFInvoiceXmlParser : IKSeFInvoiceXmlParser
                     using var reader = new StringReader(cleanedXml);
                     if (serializer.Deserialize(reader) is KSeFInvoiceXml result)
                     {
-                        _logger.LogDebug(
+                        _logger.LogInformation(
                             "Pomyślnie sparsowano XML faktury z namespace {Namespace} po usunięciu prefiksów", ns);
                         return result;
                     }
@@ -109,13 +114,20 @@ public partial class KSeFInvoiceXmlParser : IKSeFInvoiceXmlParser
             {
                 var cleanedGenericSerializer = new XmlSerializer(typeof(KSeFInvoiceXml));
                 using var cleanedGenericReader = new StringReader(cleanedXml);
-                return cleanedGenericSerializer.Deserialize(cleanedGenericReader) as KSeFInvoiceXml;
+                var result = cleanedGenericSerializer.Deserialize(cleanedGenericReader) as KSeFInvoiceXml;
+                if (result != null)
+                {
+                    _logger.LogInformation("Pomyślnie sparsowano oczyszczony XML faktury bez namespace");
+                    return result;
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogDebug(ex, "Nie udało się sparsować oczyszczonego XML bez namespace");
-                return null;
+                _logger.LogError(ex, "Nie udało się sparsować oczyszczonego XML bez namespace");
             }
+
+            _logger.LogError("Wszystkie próby parsowania XML faktury KSeF nie powiodły się");
+            return null;
         }
         catch (Exception ex)
         {
@@ -135,8 +147,11 @@ public partial class KSeFInvoiceXmlParser : IKSeFInvoiceXmlParser
 
         try
         {
+            // Formatuj XML dla lepszej czytelności i parsowania
+            var formattedXml = FormatXml(xml);
+            
             var doc = new XmlDocument();
-            doc.LoadXml(xml);
+            doc.LoadXml(formattedXml);
 
             // Rekurencyjnie usuń prefiksy ze wszystkich węzłów
             if (doc.DocumentElement != null)
@@ -167,6 +182,39 @@ public partial class KSeFInvoiceXmlParser : IKSeFInvoiceXmlParser
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Nie udało się usunąć prefiksów namespace z XML, zwracam oryginalny XML");
+            return xml;
+        }
+    }
+
+    /// <summary>
+    /// Formatuje XML dla lepszej czytelności i parsowania
+    /// </summary>
+    private string FormatXml(string xml)
+    {
+        try
+        {
+            var doc = new XmlDocument();
+            doc.LoadXml(xml);
+            
+            var sb = new StringBuilder();
+            var settings = new XmlWriterSettings
+            {
+                Indent = true,
+                IndentChars = "  ",
+                OmitXmlDeclaration = false,
+                Encoding = Encoding.UTF8
+            };
+
+            using (var writer = XmlWriter.Create(sb, settings))
+            {
+                doc.Save(writer);
+            }
+
+            return sb.ToString();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Nie udało się sformatować XML, używam oryginalnego");
             return xml;
         }
     }
