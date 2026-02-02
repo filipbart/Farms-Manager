@@ -546,7 +546,7 @@ export interface CreateFeedInvoiceFromKSeFData {
   invoiceId: string;
   farmId: string;
   cycleId: string;
-  henhouseId: string;
+  henhouseId?: string;
   invoiceNumber: string;
   bankAccountNumber: string;
   vendorName: string;
@@ -580,7 +580,7 @@ export interface CreateExpenseProductionFromKSeFData {
   farmId: string;
   cycleId: string;
   expenseContractorId?: string;
-  expenseTypeId: string;
+  expenseTypeId?: string;
   contractorNip?: string;
   contractorName?: string;
   invoiceNumber: string;
