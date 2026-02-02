@@ -1,3 +1,5 @@
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Serialization;
 using AutoMapper;
@@ -11,7 +13,7 @@ namespace FarmsManager.Application.Services;
 /// <summary>
 /// Parser XML faktur KSeF
 /// </summary>
-public class KSeFInvoiceXmlParser : IKSeFInvoiceXmlParser
+public partial class KSeFInvoiceXmlParser : IKSeFInvoiceXmlParser
 {
     private readonly ILogger<KSeFInvoiceXmlParser> _logger;
     private readonly IMapper _mapper;
@@ -44,6 +46,7 @@ public class KSeFInvoiceXmlParser : IKSeFInvoiceXmlParser
                 "http://crd.gov.pl/wzor/2021/11/29/11090/" // Alternatywny
             };
 
+            // Najpierw spróbuj z oryginalnym XML (dla kompatybilności wstecznej)
             foreach (var ns in namespaces)
             {
                 try
@@ -52,28 +55,167 @@ public class KSeFInvoiceXmlParser : IKSeFInvoiceXmlParser
                     var rootAttribute = new XmlRootAttribute("Faktura") { Namespace = ns };
                     var serializer = new XmlSerializer(typeof(KSeFInvoiceXml), rootAttribute);
                     using var reader = new StringReader(xml);
-                    var result = serializer.Deserialize(reader) as KSeFInvoiceXml;
-                    if (result != null)
+                    if (serializer.Deserialize(reader) is KSeFInvoiceXml result)
                     {
                         _logger.LogDebug("Pomyślnie sparsowano XML faktury z namespace {Namespace}", ns);
                         return result;
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // Próbuj kolejny namespace
+                    _logger.LogDebug(ex, "Nie udało się sparsować XML z namespace {Namespace}, próbowanie kolejnego", ns);
                 }
             }
 
             // Próba bez namespace
             var genericSerializer = new XmlSerializer(typeof(KSeFInvoiceXml));
             using var genericReader = new StringReader(xml);
-            return genericSerializer.Deserialize(genericReader) as KSeFInvoiceXml;
+            try
+            {
+                return genericSerializer.Deserialize(genericReader) as KSeFInvoiceXml;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(ex, "Nie udało się sparsować XML bez namespace");
+            }
+
+            // Jeśli wszystkie próby zawiodły, spróbuj usunąć prefiksy namespace (dla faktur z tns: itp.)
+            _logger.LogDebug("Parsowanie nie powiodło się, próbując usunąć prefiksy namespace");
+            var cleanedXml = RemoveNamespacePrefixes(xml);
+
+            foreach (var ns in namespaces)
+            {
+                try
+                {
+                    // Nadpisanie XmlRoot z dynamicznym namespace
+                    var rootAttribute = new XmlRootAttribute("Faktura") { Namespace = ns };
+                    var serializer = new XmlSerializer(typeof(KSeFInvoiceXml), rootAttribute);
+                    using var reader = new StringReader(cleanedXml);
+                    if (serializer.Deserialize(reader) is KSeFInvoiceXml result)
+                    {
+                        _logger.LogDebug(
+                            "Pomyślnie sparsowano XML faktury z namespace {Namespace} po usunięciu prefiksów", ns);
+                        return result;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogDebug(ex, "Nie udało się sparsować oczyszczonego XML z namespace {Namespace}", ns);
+                }
+            }
+
+            // Ostateczna próba bez namespace po czyszczeniu
+            try
+            {
+                var cleanedGenericSerializer = new XmlSerializer(typeof(KSeFInvoiceXml));
+                using var cleanedGenericReader = new StringReader(cleanedXml);
+                return cleanedGenericSerializer.Deserialize(cleanedGenericReader) as KSeFInvoiceXml;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(ex, "Nie udało się sparsować oczyszczonego XML bez namespace");
+                return null;
+            }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Błąd podczas parsowania XML faktury KSeF");
             return null;
+        }
+    }
+
+    /// <summary>
+    /// Usuwa prefiksy namespace z elementów XML (np. tns:Faktura -> Faktura)
+    /// XmlSerializer nie poprawnie radzi sobie z prefiksami namespace
+    /// </summary>
+    private string RemoveNamespacePrefixes(string xml)
+    {
+        if (string.IsNullOrWhiteSpace(xml))
+            return xml;
+
+        try
+        {
+            var doc = new XmlDocument();
+            doc.LoadXml(xml);
+
+            // Rekurencyjnie usuń prefiksy ze wszystkich węzłów
+            if (doc.DocumentElement != null)
+            {
+                RemovePrefixesFromNode(doc.DocumentElement);
+            }
+            else
+            {
+                _logger.LogWarning("Dokument XML nie zawiera elementu głównego");
+                return xml;
+            }
+
+            // Zachowaj deklarację XML ale usuń xmlns atrybuty
+            var sb = new StringBuilder();
+            using (var writer = new StringWriter(sb))
+            {
+                doc.Save(writer);
+            }
+
+            var result = sb.ToString();
+
+            // Usuń xmlns atrybuty które mogą zostać
+            result = XmlnsPrefixedNamespaceRegex().Replace(result, "");
+            result = XmlnsDefaultNamespaceRegex().Replace(result, "");
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Nie udało się usunąć prefiksów namespace z XML, zwracam oryginalny XML");
+            return xml;
+        }
+    }
+
+    private static void RemovePrefixesFromNode(XmlNode node)
+    {
+        if (node == null) return;
+
+        // Usuń prefiks z nazwy węzła poprzez klonowanie
+        if (!string.IsNullOrEmpty(node.Prefix))
+        {
+            if (node.ParentNode != null && node.NodeType == XmlNodeType.Element)
+            {
+                if (node.OwnerDocument != null)
+                {
+                    var newNode = node.OwnerDocument.CreateElement(node.LocalName);
+                    // Kopiuj atrybuty
+                    foreach (XmlAttribute attr in node.Attributes)
+                    {
+                        if (attr.Name.StartsWith("xmlns"))
+                            continue; // Pomiń xmlns atrybuty
+
+                        var newAttr = node.OwnerDocument.CreateAttribute(attr.LocalName);
+                        newAttr.Value = attr.Value;
+                        newNode.Attributes.Append(newAttr);
+                    }
+
+                    // Kopiuj zawartość
+                    newNode.InnerXml = node.InnerXml;
+                    // Zamień węzły
+                    node.ParentNode.ReplaceChild(newNode, node);
+                }
+            }
+        }
+
+        // Rekurencyjnie przetwórz dzieci (wstecz, ponieważ ReplaceChild zmienia kolekcję)
+        if (node.NodeType == XmlNodeType.Element)
+        {
+            var children = new List<XmlNode>();
+            foreach (XmlNode child in node.ChildNodes)
+            {
+                if (child.NodeType == XmlNodeType.Element)
+                    children.Add(child);
+            }
+
+            foreach (var child in children)
+            {
+                RemovePrefixesFromNode(child);
+            }
         }
     }
 
@@ -139,7 +281,7 @@ public class KSeFInvoiceXmlParser : IKSeFInvoiceXmlParser
         }
     }
 
-    private decimal ExtractNetAmount(XmlDocument doc, XmlNamespaceManager nsManager)
+    private static decimal ExtractNetAmount(XmlDocument doc, XmlNamespaceManager nsManager)
     {
         decimal sum = 0;
         var netFields = new[] { "P_13_1", "P_13_2", "P_13_3", "P_13_4", "P_13_5", "P_13_6_1" };
@@ -159,4 +301,14 @@ public class KSeFInvoiceXmlParser : IKSeFInvoiceXmlParser
 
         return sum;
     }
+
+    [GeneratedRegex("""
+                    \s+xmlns:\w+="[^"]*"
+                    """)]
+    private static partial Regex XmlnsPrefixedNamespaceRegex();
+
+    [GeneratedRegex("""
+                    \s+xmlns="[^"]*"
+                    """)]
+    private static partial Regex XmlnsDefaultNamespaceRegex();
 }

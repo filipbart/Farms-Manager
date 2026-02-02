@@ -184,17 +184,17 @@ public class KSeFInvoiceEntity : Entity
     /// <summary>
     /// Kwota brutto faktury
     /// </summary>
-    public decimal GrossAmount { get; init; }
+    public decimal GrossAmount { get; private set; }
 
     /// <summary>
     /// Kwota netto faktury
     /// </summary>
-    public decimal NetAmount { get; init; }
+    public decimal NetAmount { get; private set; }
 
     /// <summary>
     /// Kwota VAT faktury
     /// </summary>
-    public decimal VatAmount { get; init; }
+    public decimal VatAmount { get; private set; }
 
     /// <summary>
     /// Ilość (opcjonalnie)
@@ -340,7 +340,10 @@ public void Update(
     Guid? farmId = null,
     Guid? cycleId = null,
     Guid? assignedUserId = null,
-    string relatedInvoiceNumber = null)
+    string relatedInvoiceNumber = null,
+    decimal? grossAmount = null,
+    decimal? netAmount = null,
+    decimal? vatAmount = null)
 {
     if (status.HasValue)
         Status = status.Value;
@@ -349,23 +352,21 @@ public void Update(
     {
         PaymentStatus = paymentStatus.Value;
         
-        // Automatycznie ustaw datę płatności gdy status zmienia się na opłaconą
-        if (paymentStatus.Value == KSeFPaymentStatus.PaidCash || 
-            paymentStatus.Value == KSeFPaymentStatus.PaidTransfer)
-        {
-            if (!PaymentDate.HasValue && !paymentDate.HasValue)
-            {
-                PaymentDate = DateOnly.FromDateTime(DateTime.Today);
-            }
-        }
         // Wyczyść datę płatności gdy status zmienia się na nieopłaconą
-        else if (paymentStatus.Value == KSeFPaymentStatus.Unpaid)
+        if (paymentStatus.Value == KSeFPaymentStatus.Unpaid)
         {
             PaymentDate = null;
         }
+        // Automatycznie ustaw datę płatności gdy status zmienia się na opłaconą (jeśli nie podano daty)
+        else if ((paymentStatus.Value == KSeFPaymentStatus.PaidCash || 
+                  paymentStatus.Value == KSeFPaymentStatus.PaidTransfer) && 
+                 !paymentDate.HasValue && !PaymentDate.HasValue)
+        {
+            PaymentDate = DateOnly.FromDateTime(DateTime.Today);
+        }
     }
 
-    // Ustaw datę płatności jeśli została przekazana
+    // Ustaw datę płatności jeśli została przekazana (nadpisuje automatyczną datę)
     if (paymentDate.HasValue)
     {
         PaymentDate = paymentDate.Value;
@@ -397,6 +398,16 @@ public void Update(
 
     if (relatedInvoiceNumber != null)
         RelatedInvoiceNumber = relatedInvoiceNumber;
+
+    // Aktualizuj kwoty jeśli zostały przekazane
+    if (grossAmount.HasValue)
+        GrossAmount = grossAmount.Value;
+
+    if (netAmount.HasValue)
+        NetAmount = netAmount.Value;
+
+    if (vatAmount.HasValue)
+        VatAmount = vatAmount.Value;
 }
 
 /// <summary>

@@ -27,6 +27,9 @@ public class UpdateKSeFInvoiceDto
     public Guid? CycleId { get; set; }
     public Guid? AssignedUserId { get; set; }
     public string RelatedInvoiceNumber { get; set; }
+    public decimal? GrossAmount { get; set; }
+    public decimal? NetAmount { get; set; }
+    public decimal? VatAmount { get; set; }
 }
 
 public class UpdateKSeFInvoiceCommandHandler : IRequestHandler<UpdateKSeFInvoiceCommand, EmptyBaseResponse>
@@ -80,7 +83,10 @@ public class UpdateKSeFInvoiceCommandHandler : IRequestHandler<UpdateKSeFInvoice
             request.Data.FarmId,
             request.Data.CycleId,
             request.Data.AssignedUserId,
-            request.Data.RelatedInvoiceNumber
+            request.Data.RelatedInvoiceNumber,
+            request.Data.GrossAmount,
+            request.Data.NetAmount,
+            request.Data.VatAmount
         );
 
         invoice.SetModified(userId);

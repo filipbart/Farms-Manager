@@ -56,6 +56,7 @@ import {
   InvoiceDocumentType,
   InvoiceDocumentTypeLabels,
 } from "../../../models/accounting/ksef-invoice";
+import type { CreateModuleEntityRequest } from "../../../services/accounting-service";
 import type {
   KSeFInvoiceDetails,
   KSeFInvoiceListModel,
@@ -568,13 +569,47 @@ const NonKSeFInvoiceDetailsModal: React.FC<NonKSeFInvoiceDetailsModalProps> = ({
     }
   };
 
+  // Helper function to convert string | number to number
+  const toNumber = (value: string | number): number => {
+    if (typeof value === "number") return value;
+    const parsed = parseFormattedNumber(String(value));
+    return parsed ? Number(parsed) : 0;
+  };
+
   // Handle save
   const handleSave = async (formData: InvoiceFormData) => {
     if (!details) return;
 
+    // Store original module type before update
+    const originalModuleType = details.moduleType;
+    const newModuleType = formData.moduleType;
+
+    // Check if module changed to one that requires entity creation
+    const requiresEntity = [
+      ModuleType.Feeds,
+      ModuleType.Gas,
+      ModuleType.ProductionExpenses,
+      ModuleType.Sales,
+    ].includes(newModuleType as ModuleType);
+
+    // Validate required fields BEFORE setting saving state
+    if (originalModuleType !== newModuleType && requiresEntity) {
+      const farmId = getFarmIdForModule(formData);
+      const cycleId = getCycleIdForModule(formData);
+
+      if (!farmId) {
+        toast.warning("Wybierz lokalizację (fermę) dla nowego modułu");
+        return;
+      }
+
+      if (newModuleType !== ModuleType.Gas && !cycleId) {
+        toast.warning("Wybierz cykl dla nowego modułu");
+        return;
+      }
+    }
+
     setSaving(true);
     try {
-      // Build module-specific data
       // Update invoice with all data
       await handleApiResponse(
         () =>
@@ -602,22 +637,105 @@ const NonKSeFInvoiceDetailsModal: React.FC<NonKSeFInvoiceDetailsModalProps> = ({
           }),
         () => {
           toast.success("Faktura została zaktualizowana");
-          onSave?.();
         },
         undefined,
         "Wystąpił błąd podczas aktualizacji faktury",
       );
+
+      // If module changed and new module requires entity, create it
+      if (originalModuleType !== newModuleType && requiresEntity) {
+        const moduleEntityRequest: CreateModuleEntityRequest = {
+          moduleType: newModuleType,
+        };
+
+        // Build module-specific data based on module type
+        if (newModuleType === ModuleType.Feeds) {
+          moduleEntityRequest.feedData = {
+            invoiceId: details.id,
+            farmId: formData.feedFarmId,
+            cycleId: formData.feedCycleId,
+            henhouseId: formData.feedHenhouseId || undefined,
+            invoiceNumber: formData.invoiceNumber,
+            bankAccountNumber: formData.feedBankAccountNumber || "",
+            vendorName: formData.feedVendorName || formData.sellerName,
+            itemName: formData.feedItemName,
+            quantity: toNumber(formData.feedQuantity),
+            unitPrice: toNumber(formData.feedUnitPrice),
+            invoiceDate: formData.invoiceDate,
+            dueDate: formData.dueDate || formData.invoiceDate,
+            invoiceTotal: formData.grossAmount,
+            subTotal: formData.netAmount,
+            vatAmount: formData.vatAmount,
+            comment: formData.comment || "",
+          };
+        } else if (newModuleType === ModuleType.Gas) {
+          moduleEntityRequest.gasData = {
+            invoiceId: details.id,
+            farmId: formData.gasFarmId,
+            contractorId: formData.gasContractorId || undefined,
+            contractorNip: formData.sellerNip,
+            contractorName: formData.sellerName,
+            invoiceNumber: formData.invoiceNumber,
+            invoiceDate: formData.invoiceDate,
+            invoiceTotal: formData.grossAmount,
+            unitPrice: toNumber(formData.gasUnitPrice),
+            quantity: toNumber(formData.gasQuantity),
+            comment: formData.comment || "",
+          };
+        } else if (newModuleType === ModuleType.ProductionExpenses) {
+          moduleEntityRequest.expenseData = {
+            invoiceId: details.id,
+            farmId: formData.expenseFarmId,
+            cycleId: formData.expenseCycleId,
+            expenseContractorId: formData.expenseContractorId || undefined,
+            expenseTypeId: formData.expenseTypeId || undefined,
+            contractorNip: formData.sellerNip,
+            contractorName: formData.sellerName,
+            invoiceNumber: formData.invoiceNumber,
+            invoiceTotal: formData.grossAmount,
+            subTotal: formData.netAmount,
+            vatAmount: formData.vatAmount,
+            invoiceDate: formData.invoiceDate,
+            comment: formData.comment || "",
+          };
+        } else if (newModuleType === ModuleType.Sales) {
+          moduleEntityRequest.saleData = {
+            invoiceId: details.id,
+            farmId: formData.saleFarmId,
+            cycleId: formData.saleCycleId,
+            slaughterhouseId: formData.saleSlaughterhouseId || undefined,
+            slaughterhouseNip: formData.buyerNip,
+            slaughterhouseName: formData.buyerName,
+            invoiceNumber: formData.invoiceNumber,
+            invoiceDate: formData.invoiceDate,
+            dueDate: formData.dueDate || formData.invoiceDate,
+            invoiceTotal: formData.grossAmount,
+            subTotal: formData.netAmount,
+            vatAmount: formData.vatAmount,
+          };
+        }
+
+        // Create module entity
+        await handleApiResponse(
+          () =>
+            AccountingService.createModuleEntity(
+              details.id,
+              moduleEntityRequest,
+            ),
+          () => {
+            toast.success(
+              `Utworzono wpis w module ${ModuleTypeLabels[newModuleType]}`,
+            );
+          },
+          undefined,
+          "Błąd podczas tworzenia wpisu w module",
+        );
+      }
+
+      onSave?.();
     } finally {
       setSaving(false);
     }
-  };
-
-  // Handle accept
-  // Helper function to convert string | number to number
-  const toNumber = (value: string | number): number => {
-    if (typeof value === "number") return value;
-    const parsed = parseFormattedNumber(String(value));
-    return parsed ? Number(parsed) : 0;
   };
 
   const handleAcceptClick = async () => {
@@ -849,7 +967,7 @@ const NonKSeFInvoiceDetailsModal: React.FC<NonKSeFInvoiceDetailsModalProps> = ({
           render={({ field }) => (
             <TextField
               label="Kwota netto [zł]"
-              value={formatNumberWithSpaces(field.value || "")}
+              value={formatNumberWithSpaces(field.value ?? "")}
               onChange={(e) => {
                 const parsed = parseFormattedNumber(e.target.value);
                 field.onChange(parsed ? Number(parsed) : "");
@@ -883,7 +1001,7 @@ const NonKSeFInvoiceDetailsModal: React.FC<NonKSeFInvoiceDetailsModalProps> = ({
           render={({ field }) => (
             <TextField
               label="Kwota VAT [zł]"
-              value={formatNumberWithSpaces(field.value || "")}
+              value={formatNumberWithSpaces(field.value ?? "")}
               onChange={(e) => {
                 const parsed = parseFormattedNumber(e.target.value);
                 field.onChange(parsed ? Number(parsed) : "");
@@ -917,7 +1035,7 @@ const NonKSeFInvoiceDetailsModal: React.FC<NonKSeFInvoiceDetailsModalProps> = ({
           render={({ field }) => (
             <TextField
               label="Kwota brutto [zł]"
-              value={formatNumberWithSpaces(field.value || "")}
+              value={formatNumberWithSpaces(field.value ?? "")}
               onChange={(e) => {
                 const parsed = parseFormattedNumber(e.target.value);
                 field.onChange(parsed ? Number(parsed) : "");

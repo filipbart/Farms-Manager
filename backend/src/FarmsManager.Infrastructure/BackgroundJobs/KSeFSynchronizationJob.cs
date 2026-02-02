@@ -15,7 +15,6 @@ using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
 using FarmsManager.Domain.Aggregates.GasAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.SlaughterhouseAggregate.Interfaces;
 using FarmsManager.Infrastructure.Helpers.KSeF;
-using KSeF.Client.Core.Models.Invoices.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

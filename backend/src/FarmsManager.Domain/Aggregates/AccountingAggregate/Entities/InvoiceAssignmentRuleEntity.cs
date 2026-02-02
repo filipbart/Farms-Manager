@@ -1,4 +1,3 @@
-using FarmsManager.Domain.Aggregates.FarmAggregate.Entities;
 using FarmsManager.Domain.Aggregates.UserAggregate.Entities;
 using FarmsManager.Domain.SeedWork;
 
