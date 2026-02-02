@@ -17,6 +17,7 @@ public record UpdateExpenseProductionData
     public Guid FarmId { get; init; }
     public Guid CycleId { get; init; }
     public Guid ExpenseContractorId { get; init; }
+    public Guid? ExpenseTypeId { get; init; }
     public string InvoiceNumber { get; init; }
     public decimal InvoiceTotal { get; init; }
     public decimal SubTotal { get; init; }
@@ -73,6 +74,11 @@ public class UpdateExpenseProductionCommandHandler : IRequestHandler<UpdateExpen
         if (entity.ExpenseContractorId != expenseContractor.Id)
         {
             entity.SetExpenseContractor(expenseContractor.Id);
+        }
+
+        if (entity.ExpenseTypeId != request.Data.ExpenseTypeId)
+        {
+            entity.SetExpenseType(request.Data.ExpenseTypeId);
         }
 
         entity.Update(

@@ -13,6 +13,7 @@ public class ExpenseProductionRow
     public string ContractorName { get; init; }
     public string InvoiceNumber { get; init; }
     public string ExpenseTypeName { get; init; }
+    public Guid? ExpenseTypeId { get; init; }
     public decimal InvoiceTotal { get; init; }
     public decimal SubTotal { get; init; }
     public decimal VatAmount { get; init; }

@@ -151,6 +151,7 @@ const EditExpenseProductionModal: React.FC<EditExpenseProductionModalProps> = ({
         "expenseContractorId",
         expenseProductionToEdit.expenseContractorId,
       );
+      setValue("expenseTypeId", expenseProductionToEdit.expenseTypeId || "");
       setValue(
         "expenseTypeNameDisplay",
         expenseProductionToEdit.expenseTypeName,

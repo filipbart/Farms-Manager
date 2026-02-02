@@ -10,6 +10,7 @@ export interface ExpenseProductionListModel extends AuditFields {
   contractorName: string;
   invoiceNumber: string;
   expenseTypeName: string;
+  expenseTypeId?: string;
   invoiceTotal: number;
   subTotal: number;
   vatAmount: number;

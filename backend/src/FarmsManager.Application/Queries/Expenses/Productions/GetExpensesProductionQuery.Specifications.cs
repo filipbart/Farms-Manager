@@ -20,6 +20,7 @@ public sealed class GetAllExpenseProductionsSpec : BaseSpecification<ExpenseProd
         Query.Include(t => t.ExpenseContractor);
         Query.Include(t => t.ExpenseType);
         Query.Include(t => t.Farm);
+        Query.Include(t => t.Cycle);
         Query.Include(t => t.Creator);
         Query.Include(t => t.Modifier);
         Query.Include(t => t.Deleter);
