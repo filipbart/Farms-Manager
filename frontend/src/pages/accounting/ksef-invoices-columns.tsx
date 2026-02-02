@@ -23,7 +23,25 @@ interface GetKSeFInvoicesColumnsProps {
   downloadingId: string | null;
 }
 
-const getStatusColor = (status: KSeFInvoiceStatus) => {
+const getStatusColor = (
+  status: KSeFInvoiceStatus,
+  invoiceDate?: string | null,
+) => {
+  if (status === KSeFInvoiceStatus.New && invoiceDate) {
+    const daysSinceIssued = dayjs().diff(dayjs(invoiceDate), "day");
+    if (daysSinceIssued >= 15) {
+      return "error"; // 🔴 15+ dni – zaległe
+    }
+    if (daysSinceIssued >= 8) {
+      return "warning"; // 🟠 8–14 dni – pilne (używamy warning jako pomarańczowy)
+    }
+    // 🟡 4–7 dni – bez zmian (info jako żółty) lub default
+    if (daysSinceIssued >= 4) {
+      return "info";
+    }
+    return "default"; // < 4 dni – brak koloru
+  }
+
   switch (status) {
     case KSeFInvoiceStatus.Accepted:
       return "success";
@@ -31,7 +49,7 @@ const getStatusColor = (status: KSeFInvoiceStatus) => {
       return "error";
     case KSeFInvoiceStatus.New:
     default:
-      return "warning";
+      return "default";
   }
 };
 
@@ -194,7 +212,10 @@ export const getKSeFInvoicesColumns = ({
           params.value
         }
         size="small"
-        color={getStatusColor(params.value as KSeFInvoiceStatus)}
+        color={getStatusColor(
+          params.value as KSeFInvoiceStatus,
+          params.row.invoiceDate,
+        )}
       />
     ),
   },

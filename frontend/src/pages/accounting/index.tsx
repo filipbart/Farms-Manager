@@ -725,6 +725,27 @@ const AccountingPage: React.FC = () => {
                     🔴 Po terminie – po terminie
                   </Typography>
                 </Box>
+                <Typography
+                  variant="subtitle2"
+                  sx={{ fontWeight: "bold", mt: 2, mb: 1 }}
+                >
+                  Legenda statusu „Nowa"
+                </Typography>
+                <Typography variant="body2">
+                  Kolory pokazują, jak długo faktura jest w statusie „Nowa” (od
+                  daty wystawienia):
+                </Typography>
+                <Box component="ul" sx={{ pl: 2, mt: 1, mb: 0 }}>
+                  <Typography component="li" variant="body2">
+                    🟡 4–7 dni – bez zmian
+                  </Typography>
+                  <Typography component="li" variant="body2">
+                    🟠 8–14 dni – pilne
+                  </Typography>
+                  <Typography component="li" variant="body2">
+                    🔴 15+ dni – zaległe
+                  </Typography>
+                </Box>
               </Box>
             }
             placement="right"
