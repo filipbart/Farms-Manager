@@ -65,7 +65,7 @@ export function ProductionResultsChart({
 
     const allXValues = new Set<string>();
     sourceData.series.forEach((s) =>
-      s.data.forEach((d) => allXValues.add(d.x))
+      s.data.forEach((d) => allXValues.add(d.x)),
     );
     const sortedXValues = Array.from(allXValues).sort((a, b) => {
       const [aId, aYear] = a.split("/");
@@ -89,7 +89,15 @@ export function ProductionResultsChart({
   const hasData = xAxisData.length > 0 && seriesData.length > 0;
 
   return (
-    <Paper sx={{ p: 2, height: 375, display: "flex", flexDirection: "column" }}>
+    <Paper
+      sx={{
+        p: 2,
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        minHeight: 375,
+      }}
+    >
       <Box
         sx={{
           display: "flex",
