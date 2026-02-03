@@ -1,5 +1,6 @@
 using FarmsManager.Application.Common.Responses;
 using FarmsManager.Application.Interfaces;
+using FarmsManager.Application.Specifications.Expenses;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Interfaces;
 using FarmsManager.Domain.Aggregates.ExpenseAggregate.Interfaces;
@@ -138,6 +139,12 @@ public class UpdateKSeFInvoiceCommandHandler : IRequestHandler<UpdateKSeFInvoice
         if (!string.IsNullOrEmpty(request.Data.Comment) && invoice.AssignedEntityInvoiceId.HasValue)
         {
             await UpdateModuleEntityCommentAsync(invoice.ModuleType, invoice.AssignedEntityInvoiceId.Value, request.Data.Comment, cancellationToken);
+        }
+
+        // Synchronizuj CycleId do powiązanej encji modułowej (jeśli istnieje)
+        if (request.Data.CycleId.HasValue && invoice.AssignedEntityInvoiceId.HasValue)
+        {
+            await UpdateModuleEntityCycleIdAsync(invoice.ModuleType, invoice.AssignedEntityInvoiceId.Value, request.Data.CycleId.Value, cancellationToken);
         }
 
         // Synchronizuj status płatności do modułowych encji (Feeds i Sales)
@@ -328,6 +335,56 @@ public class UpdateKSeFInvoiceCommandHandler : IRequestHandler<UpdateKSeFInvoice
                         gasDelivery.Quantity,
                         comment);
                     await _gasDeliveryRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
+                }
+                break;
+        }
+    }
+
+    private async Task UpdateModuleEntityCycleIdAsync(ModuleType moduleType, Guid entityId, Guid cycleId, CancellationToken cancellationToken)
+    {
+        switch (moduleType)
+        {
+            case ModuleType.Feeds:
+                var feedInvoice = await _feedInvoiceRepository.GetByIdAsync(entityId, cancellationToken);
+                if (feedInvoice != null)
+                {
+                    feedInvoice.SetCycle(cycleId);
+                    await _feedInvoiceRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
+                }
+                break;
+
+            case ModuleType.ProductionExpenses:
+                var expenseProduction = await _expenseProductionRepository.GetByIdAsync(entityId, cancellationToken);
+                if (expenseProduction != null)
+                {
+                    expenseProduction.SetCycle(cycleId);
+                    await _expenseProductionRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
+                }
+                break;
+
+            case ModuleType.Sales:
+                var saleInvoice = await _saleInvoiceRepository.GetByIdAsync(entityId, cancellationToken);
+                if (saleInvoice != null)
+                {
+                    saleInvoice.SetCycle(cycleId);
+                    await _saleInvoiceRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
+                }
+                break;
+
+            case ModuleType.Gas:
+                // Gas deliveries don't have CycleId, but they might have associated ProductionExpense
+                // Find the ProductionExpense with the same invoice number
+                var gasDelivery = await _gasDeliveryRepository.GetByIdAsync(entityId, cancellationToken);
+                if (gasDelivery != null)
+                {
+                    var relatedExpense = await _expenseProductionRepository.FirstOrDefaultAsync(
+                        new GetExpenseProductionInvoiceByInvoiceNumberSpec(gasDelivery.InvoiceNumber), 
+                        cancellationToken);
+                    if (relatedExpense != null)
+                    {
+                        relatedExpense.SetCycle(cycleId);
+                        await _expenseProductionRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
+                    }
                 }
                 break;
         }
