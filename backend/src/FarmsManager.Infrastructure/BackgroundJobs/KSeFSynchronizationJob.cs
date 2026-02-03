@@ -263,28 +263,50 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                         invoiceEntity.MarkAsRequiresLinking();
                     }
 
-                    // Krok 3: PRIORYTET 1 - Automatyczne przypisanie fermy na podstawie reguł (InvoiceFarmAssignmentRuleEntity)
-                    var ruleAssignedFarmId =
-                        await invoiceAssignmentService.FindFarmForInvoiceAsync(invoiceEntity, cancellationToken);
-                    if (ruleAssignedFarmId.HasValue)
+                    // Krok 3: PRIORYTET 1 - Automatyczne przypisanie modułu na podstawie reguł
+                    var assignedModule =
+                        await invoiceAssignmentService.FindModuleForInvoiceAsync(invoiceEntity, cancellationToken);
+                    if (assignedModule.HasValue)
                     {
-                        var assignedFarm = allFarms.FirstOrDefault(f => f.Id == ruleAssignedFarmId.Value);
-                        var assignedCycleId = assignedFarm?.ActiveCycleId;
-
-                        invoiceEntity.Update(farmId: ruleAssignedFarmId.Value, cycleId: assignedCycleId);
-                        _logger.LogDebug("Invoice {KsefNumber} assigned to farm {FarmId} by RULE with cycle {CycleId}",
-                            invoiceSummary.KsefNumber, ruleAssignedFarmId.Value, assignedCycleId);
+                        invoiceEntity.Update(moduleType: assignedModule.Value);
+                        _logger.LogDebug("Invoice {KsefNumber} auto-assigned to module {ModuleType}",
+                            invoiceSummary.KsefNumber, assignedModule.Value);
                     }
-                    // Krok 4: PRIORYTET 2 - Fallback do dopasowania po NIP/nazwie (jeśli reguły nie dopasowały)
-                    else if (fallbackFarmId.HasValue)
+
+                    // Krok 4: PRIORYTET 2 - Automatyczne przypisanie fermy na podstawie reguł (InvoiceFarmAssignmentRuleEntity)
+                    // UWAGA: Dla modułów "Gospodarstwo rolne", "Inne" i "Inwestycje" pomijamy przypisywanie lokalizacji
+                    if (assignedModule != ModuleType.Farmstead && 
+                        assignedModule != ModuleType.Other && 
+                        assignedModule != ModuleType.Investments)
                     {
-                        invoiceEntity.Update(farmId: fallbackFarmId.Value, cycleId: fallbackCycleId);
+                        var ruleAssignedFarmId =
+                            await invoiceAssignmentService.FindFarmForInvoiceAsync(invoiceEntity, cancellationToken);
+                        if (ruleAssignedFarmId.HasValue)
+                        {
+                            var assignedFarm = allFarms.FirstOrDefault(f => f.Id == ruleAssignedFarmId.Value);
+                            var assignedCycleId = assignedFarm?.ActiveCycleId;
+
+                            invoiceEntity.Update(farmId: ruleAssignedFarmId.Value, cycleId: assignedCycleId);
+                            _logger.LogDebug("Invoice {KsefNumber} assigned to farm {FarmId} by RULE with cycle {CycleId}",
+                                invoiceSummary.KsefNumber, ruleAssignedFarmId.Value, assignedCycleId);
+                        }
+                        // Krok 5: PRIORYTET 3 - Fallback do dopasowania po NIP/nazwie (jeśli reguły nie dopasowały)
+                        else if (fallbackFarmId.HasValue)
+                        {
+                            invoiceEntity.Update(farmId: fallbackFarmId.Value, cycleId: fallbackCycleId);
+                            _logger.LogDebug(
+                                "Invoice {KsefNumber} assigned to farm {FarmId} by NIP/NAME match with cycle {CycleId}",
+                                invoiceSummary.KsefNumber, fallbackFarmId.Value, fallbackCycleId);
+                        }
+                    }
+                    else
+                    {
                         _logger.LogDebug(
-                            "Invoice {KsefNumber} assigned to farm {FarmId} by NIP/NAME match with cycle {CycleId}",
-                            invoiceSummary.KsefNumber, fallbackFarmId.Value, fallbackCycleId);
+                            "Invoice {KsefNumber} assigned to module {ModuleType} - skipping farm assignment (no location needed)",
+                            invoiceSummary.KsefNumber, assignedModule);
                     }
 
-                    // Automatyczne przypisanie pracownika na podstawie reguł
+                    // Krok 6: PRIORYTET 4 - Automatyczne przypisanie pracownika na podstawie reguł
                     var assignedUserId =
                         await invoiceAssignmentService.FindAssignedUserForInvoiceAsync(invoiceEntity,
                             cancellationToken);
@@ -295,18 +317,12 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                             invoiceSummary.KsefNumber, assignedUserId.Value);
                     }
 
-                    // Automatyczne przypisanie modułu na podstawie reguł
-                    var assignedModule =
-                        await invoiceAssignmentService.FindModuleForInvoiceAsync(invoiceEntity, cancellationToken);
-                    if (assignedModule.HasValue)
+                    // Automatyczne tworzenie kontrahenta
+                    try
                     {
-                        invoiceEntity.Update(moduleType: assignedModule.Value);
-                        _logger.LogDebug("Invoice {KsefNumber} auto-assigned to module {ModuleType}",
-                            invoiceSummary.KsefNumber, assignedModule.Value);
-
-                        // Automatyczne tworzenie kontrahenta jeśli nie istnieje
-                        try
+                        if (assignedModule.HasValue)
                         {
+                            // Jeśli moduł został przypisany, utwórz kontrahenta w odpowiednim module
                             await contractorAutoCreationService.EnsureContractorExistsAsync(
                                 invoiceSummary.SellerNip,
                                 invoiceSummary.SellerName,
@@ -326,11 +342,25 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                                 feedContractorRepository,
                                 cancellationToken);
                         }
-                        catch (Exception ex)
+                        else
                         {
-                            _logger.LogWarning(ex, "Failed to auto-create contractor for invoice {KsefNumber}",
+                            // Jeśli moduł nie został znaleziony, utwórz kontrahenta w module ProductionExpenses
+                            await contractorAutoCreationService.EnsureContractorExistsAsync(
+                                invoiceSummary.SellerNip,
+                                invoiceSummary.SellerName,
+                                null,
+                                ModuleType.ProductionExpenses,
+                                cancellationToken);
+                            
+                            _logger.LogDebug(
+                                "Invoice {KsefNumber} has no assigned module - created contractor in ProductionExpenses",
                                 invoiceSummary.KsefNumber);
                         }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to auto-create contractor for invoice {KsefNumber}",
+                            invoiceSummary.KsefNumber);
                     }
 
                     await invoiceRepository.AddAsync(invoiceEntity, cancellationToken);
