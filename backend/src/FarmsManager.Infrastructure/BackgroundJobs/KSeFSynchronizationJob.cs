@@ -5,6 +5,7 @@ using FarmsManager.Application.Specifications.KSeF;
 using FarmsManager.Application.Specifications.Expenses;
 using FarmsManager.Application.Specifications.Feeds;
 using FarmsManager.Application.Specifications.Gas;
+using FarmsManager.Application.Specifications.Accounting;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Entities;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Enums;
 using FarmsManager.Domain.Aggregates.AccountingAggregate.Interfaces;
@@ -242,6 +243,9 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                         decryptedToken,
                         matchingEntity.Nip,
                         cancellationToken);
+
+                    // Krok 0: Sprawdź czy istnieją podobne faktury (potencjalne duplikaty)
+                    var similarInvoices = await CheckForSimilarInvoicesAsync(invoiceSummary, invoiceRepository, cancellationToken);
 
                     // Krok 1: Dopasuj podmiot gospodarczy po NIP lub nazwie
                     var (taxBusinessEntityId, fallbackFarmId, fallbackCycleId) =
@@ -843,6 +847,145 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
             FarmsInvoiceType.CostInvoiceCorrection => true, // Korekta rachunku kosztowego
             _ => false
         };
+    }
+
+    /// <summary>
+    /// Sprawdza czy istnieją podobne faktury w systemie (potencjalne duplikaty)
+    /// Wykrywa faktury o podobnych kwotach, od tych samych podmiotów i w zbliżonym czasie
+    /// </summary>
+    private async Task<List<KSeFInvoiceEntity>> CheckForSimilarInvoicesAsync(
+        KSeFInvoiceSyncItem invoiceItem,
+        IKSeFInvoiceRepository invoiceRepository,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var normalizedSellerNip = NormalizeNip(invoiceItem.SellerNip);
+            var normalizedBuyerNip = NormalizeNip(invoiceItem.BuyerNip);
+
+            // Sprawdź tylko jeśli mamy NIP do porównania
+            if (string.IsNullOrWhiteSpace(normalizedSellerNip) && string.IsNullOrWhiteSpace(normalizedBuyerNip))
+                return new List<KSeFInvoiceEntity>();
+
+            var similarInvoicesSpec = new SimilarKSeFInvoicesSpec(
+                normalizedSellerNip,
+                normalizedBuyerNip,
+                invoiceItem.GrossAmount,
+                invoiceItem.InvoiceDate,
+                amountTolerancePercentage: 5.0m, // 5% tolerancji kwoty
+                dateRangeDays: 30); // 30 dni tolerancji daty
+
+            var similarInvoices = await invoiceRepository.ListAsync(similarInvoicesSpec, cancellationToken);
+
+            // Filtruj faktury o identycznym numerze (te są już sprawdzane gdzie indziej)
+            var filteredInvoices = similarInvoices
+                .Where(i => !string.Equals(i.InvoiceNumber?.Trim(), invoiceItem.InvoiceNumber?.Trim(), StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            // Dodatkowo sprawdź podobne numery faktur (np. "66/2025" vs "66 /2025")
+            var similarNumberInvoices = filteredInvoices
+                .Where(i => AreInvoiceNumbersSimilar(i.InvoiceNumber, invoiceItem.InvoiceNumber))
+                .ToList();
+
+            if (similarNumberInvoices.Count > 0)
+            {
+                _logger.LogWarning(
+                    "Found {Count} potential duplicate invoices for KSeF {KsefNumber} ({InvoiceNumber}) from {SellerName} - Amount: {GrossAmount:C}",
+                    similarNumberInvoices.Count,
+                    invoiceItem.KsefNumber,
+                    invoiceItem.InvoiceNumber,
+                    invoiceItem.SellerName,
+                    invoiceItem.GrossAmount);
+
+                foreach (var similar in similarNumberInvoices)
+                {
+                    var similarityType = AreInvoiceNumbersSimilar(similar.InvoiceNumber, invoiceItem.InvoiceNumber) 
+                        ? "SIMILAR NUMBER" 
+                        : "SIMILAR AMOUNT/ENTITY";
+                    
+                    _logger.LogWarning(
+                        "  {SimilarityType}: {InvoiceNumber} from {SellerName} - Amount: {GrossAmount:C}, Date: {InvoiceDate}",
+                        similarityType,
+                        similar.InvoiceNumber,
+                        similar.SellerName,
+                        similar.GrossAmount,
+                        similar.InvoiceDate);
+                }
+            }
+
+            return similarNumberInvoices;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error checking for similar invoices for KSeF {KsefNumber}", invoiceItem.KsefNumber);
+            return new List<KSeFInvoiceEntity>();
+        }
+    }
+
+    /// <summary>
+    /// Normalizuje numer faktury do porównań (usuwa zbędne spacje, slashe itp.)
+    /// </summary>
+    private static string NormalizeInvoiceNumber(string invoiceNumber)
+    {
+        if (string.IsNullOrWhiteSpace(invoiceNumber))
+            return string.Empty;
+
+        // Usuń zbędne spacje wokół slashe i innych znaków
+        return System.Text.RegularExpressions.Regex.Replace(invoiceNumber.Trim(), @"\s*[/\\-]\s*", "/");
+    }
+
+    /// <summary>
+    /// Sprawdza czy numery faktur są podobne (z tolerancją na błędy OCR)
+    /// </summary>
+    private static bool AreInvoiceNumbersSimilar(string number1, string number2)
+    {
+        if (string.IsNullOrWhiteSpace(number1) || string.IsNullOrWhiteSpace(number2))
+            return false;
+
+        var normalized1 = NormalizeInvoiceNumber(number1);
+        var normalized2 = NormalizeInvoiceNumber(number2);
+
+        // Dokładne dopasowanie po normalizacji
+        if (string.Equals(normalized1, normalized2, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        // Sprawdź czy są bardzo podobne (Levenshtein distance)
+        var distance = ComputeLevenshteinDistance(normalized1, normalized2);
+        var maxLength = Math.Max(normalized1.Length, normalized2.Length);
+        
+        // Jeśli różnica jest mniejsza niż 20% długości, uznaj za podobne
+        return maxLength > 0 && (double)distance / maxLength <= 0.2;
+    }
+
+    /// <summary>
+    /// Oblicza odległość Levenshteina między dwoma stringami
+    /// </summary>
+    private static int ComputeLevenshteinDistance(string s1, string s2)
+    {
+        if (string.IsNullOrEmpty(s1))
+            return string.IsNullOrEmpty(s2) ? 0 : s2.Length;
+        if (string.IsNullOrEmpty(s2))
+            return s1.Length;
+
+        var matrix = new int[s1.Length + 1, s2.Length + 1];
+
+        for (var i = 0; i <= s1.Length; i++)
+            matrix[i, 0] = i;
+        for (var j = 0; j <= s2.Length; j++)
+            matrix[0, j] = j;
+
+        for (var i = 1; i <= s1.Length; i++)
+        {
+            for (var j = 1; j <= s2.Length; j++)
+            {
+                var cost = s1[i - 1] == s2[j - 1] ? 0 : 1;
+                matrix[i, j] = Math.Min(
+                    Math.Min(matrix[i - 1, j] + 1, matrix[i, j - 1] + 1),
+                    matrix[i - 1, j - 1] + cost);
+            }
+        }
+
+        return matrix[s1.Length, s2.Length];
     }
 
     public override void Dispose()
