@@ -98,4 +98,9 @@ export const getAccountingFiltersConfig = (
     type: "select",
     options: options?.farms ?? [],
   },
+  {
+    key: "exclusions",
+    label: "Wykluczenia",
+    type: "text",
+  },
 ];

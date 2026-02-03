@@ -129,6 +129,17 @@ public sealed class GetKSeFInvoicesFromDbSpec : BaseSpecification<KSeFInvoiceEnt
                 EF.Functions.ILike(x.SellerName, phrase) ||
                 EF.Functions.ILike(x.BuyerName, phrase));
         }
+
+        // Filtrowanie wykluczeń - odfiltrowuje faktury zawierające podany tekst w NIP lub nazwach
+        if (filters.Exclusions.IsNotEmpty())
+        {
+            var exclusionPhrase = $"%{filters.Exclusions}%";
+            Query.Where(x =>
+                !(EF.Functions.ILike(x.SellerNip, exclusionPhrase) ||
+                  EF.Functions.ILike(x.BuyerNip, exclusionPhrase) ||
+                  EF.Functions.ILike(x.SellerName, exclusionPhrase) ||
+                  EF.Functions.ILike(x.BuyerName, exclusionPhrase)));
+        }
     }
 
     private void ApplyOrdering(GetKSeFInvoicesFromDbQueryFilters filters)

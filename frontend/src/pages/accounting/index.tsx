@@ -295,6 +295,11 @@ const AccountingPage: React.FC = () => {
               md: 6,
             })}
           </Grid>
+          <Grid container spacing={2}>
+            {renderFilterField(filters, dispatch, "exclusions", {
+              xs: 12,
+            })}
+          </Grid>
         </Box>
       </Collapse>
     </Box>

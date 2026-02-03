@@ -137,6 +137,11 @@ public record GetKSeFInvoicesFromDbQueryFilters : OrderedPaginationParams<KSeFIn
     /// Filtrowanie po lokalizacji (fermie)
     /// </summary>
     public Guid? FarmId { get; init; }
+
+    /// <summary>
+    /// Wykluczenia - filtrowanie po NIP i nazwach sprzedawców/kupców
+    /// </summary>
+    public string Exclusions { get; init; }
 }
 
 public record GetKSeFInvoicesFromDbQuery(GetKSeFInvoicesFromDbQueryFilters Filters) 

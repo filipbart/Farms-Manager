@@ -47,6 +47,8 @@ export interface KSeFInvoicesFilters {
   farmId?: string;
   // Ogólne wyszukiwanie (zachowane dla kompatybilności)
   searchQuery?: string;
+  // Wykluczenia (NIP i nazwy sprzedawców/kupców)
+  exclusions?: string;
 }
 
 export const initialKSeFFilters: KSeFInvoicesFilters = {
@@ -67,6 +69,8 @@ export const initialKSeFFilters: KSeFInvoicesFilters = {
   assignedUserId: undefined,
   moduleType: undefined,
   farmId: undefined,
+  searchQuery: undefined,
+  exclusions: undefined,
 };
 
 export type KSeFFiltersAction =
@@ -90,6 +94,7 @@ export type KSeFFiltersAction =
   | { type: "setModuleType"; payload: ModuleType | undefined }
   | { type: "setFarmId"; payload: string | undefined }
   | { type: "setSearchQuery"; payload: string | undefined }
+  | { type: "setExclusions"; payload: string | undefined }
   | { type: "setMultiple"; payload: Partial<KSeFInvoicesFilters> }
   | { type: "reset" };
 
@@ -138,6 +143,8 @@ export function ksefFiltersReducer(
       return { ...state, farmId: action.payload, page: 0 };
     case "setSearchQuery":
       return { ...state, searchQuery: action.payload, page: 0 };
+    case "setExclusions":
+      return { ...state, exclusions: action.payload, page: 0 };
     case "setMultiple":
       return { ...state, ...action.payload };
     case "reset":
