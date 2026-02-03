@@ -295,7 +295,7 @@ const AccountingPage: React.FC = () => {
               md: 6,
             })}
           </Grid>
-          <Grid container spacing={2}>
+          <Grid container spacing={2} mt={2}>
             {renderFilterField(filters, dispatch, "exclusions", {
               xs: 12,
             })}
