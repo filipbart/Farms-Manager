@@ -5,7 +5,7 @@ namespace FarmsManager.Domain.Aggregates.GasAggregate.Entities;
 
 public class GasDeliveryEntity : Entity
 {
-    public Guid FarmId { get; init; }
+    public Guid FarmId { get; protected internal set; }
     public Guid GasContractorId { get; init; }
     public string InvoiceNumber { get; protected internal set; }
     public DateOnly InvoiceDate { get; protected internal set; }
@@ -21,6 +21,7 @@ public class GasDeliveryEntity : Entity
     public virtual GasContractorEntity GasContractor { get; set; }
 
     public void SetFilePath(string filePath) => FilePath = filePath;
+    public void SetFarm(Guid farmId) => FarmId = farmId;
 
     public void AddUsedQuantity(decimal quantity)
     {

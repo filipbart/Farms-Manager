@@ -9,7 +9,7 @@ public class FeedInvoiceEntity : Entity
     {
     }
 
-    public Guid FarmId { get; init; }
+    public Guid FarmId { get; protected internal set; }
     public Guid CycleId { get; protected internal set; }
     public Guid HenhouseId { get; protected internal set; }
 
@@ -82,6 +82,7 @@ public class FeedInvoiceEntity : Entity
 
     public void SetInvoiceCorrectionId(Guid? invoiceCorrectionId) => InvoiceCorrectionId = invoiceCorrectionId;
     public void SetComment(string comment) => Comment = comment;
+    public void SetFarm(Guid farmId) => FarmId = farmId;
 
     public static FeedInvoiceEntity CreateNew(
         Guid farmId,

@@ -147,6 +147,12 @@ public class UpdateKSeFInvoiceCommandHandler : IRequestHandler<UpdateKSeFInvoice
             await UpdateModuleEntityCycleIdAsync(invoice.ModuleType, invoice.AssignedEntityInvoiceId.Value, request.Data.CycleId.Value, cancellationToken);
         }
 
+        // Synchronizuj FarmId do powiązanej encji modułowej (jeśli istnieje)
+        if (request.Data.FarmId.HasValue && invoice.AssignedEntityInvoiceId.HasValue)
+        {
+            await UpdateModuleEntityFarmIdAsync(invoice.ModuleType, invoice.AssignedEntityInvoiceId.Value, request.Data.FarmId.Value, cancellationToken);
+        }
+
         // Synchronizuj status płatności do modułowych encji (Feeds i Sales)
         if (request.Data.PaymentStatus.HasValue && invoice.AssignedEntityInvoiceId.HasValue)
         {
@@ -334,6 +340,48 @@ public class UpdateKSeFInvoiceCommandHandler : IRequestHandler<UpdateKSeFInvoice
                         gasDelivery.UnitPrice,
                         gasDelivery.Quantity,
                         comment);
+                    await _gasDeliveryRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
+                }
+                break;
+        }
+    }
+
+    private async Task UpdateModuleEntityFarmIdAsync(ModuleType moduleType, Guid entityId, Guid farmId, CancellationToken cancellationToken)
+    {
+        switch (moduleType)
+        {
+            case ModuleType.Feeds:
+                var feedInvoice = await _feedInvoiceRepository.GetByIdAsync(entityId, cancellationToken);
+                if (feedInvoice != null)
+                {
+                    feedInvoice.SetFarm(farmId);
+                    await _feedInvoiceRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
+                }
+                break;
+
+            case ModuleType.ProductionExpenses:
+                var expenseProduction = await _expenseProductionRepository.GetByIdAsync(entityId, cancellationToken);
+                if (expenseProduction != null)
+                {
+                    expenseProduction.SetFarm(farmId);
+                    await _expenseProductionRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
+                }
+                break;
+
+            case ModuleType.Sales:
+                var saleInvoice = await _saleInvoiceRepository.GetByIdAsync(entityId, cancellationToken);
+                if (saleInvoice != null)
+                {
+                    saleInvoice.SetFarm(farmId);
+                    await _saleInvoiceRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
+                }
+                break;
+
+            case ModuleType.Gas:
+                var gasDelivery = await _gasDeliveryRepository.GetByIdAsync(entityId, cancellationToken);
+                if (gasDelivery != null)
+                {
+                    gasDelivery.SetFarm(farmId);
                     await _gasDeliveryRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
                 }
                 break;

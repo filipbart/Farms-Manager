@@ -2742,35 +2742,6 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                                     editForm.relatedInvoiceNumber,
                                 }),
                               async () => {
-                                // If invoice has a module entry and farm/cycle changed, update module entity
-                                if (
-                                  details?.assignedEntityInvoiceId &&
-                                  details?.moduleType &&
-                                  [
-                                    ModuleType.Feeds,
-                                    ModuleType.Gas,
-                                    ModuleType.ProductionExpenses,
-                                    ModuleType.Sales,
-                                  ].includes(
-                                    details.moduleType as ModuleType,
-                                  ) &&
-                                  (editForm.farmId !== details.farmId ||
-                                    editForm.cycleId !== details.cycleId)
-                                ) {
-                                  await handleApiResponse(
-                                    () =>
-                                      AccountingService.updateModuleEntityFarmAndCycle(
-                                        details.assignedEntityInvoiceId!,
-                                        details.moduleType!,
-                                        editForm.farmId || "",
-                                        editForm.cycleId || "",
-                                      ),
-                                    () => {},
-                                    undefined,
-                                    "Błąd podczas aktualizacji danych w module",
-                                  );
-                                }
-
                                 toast.success("Zmiany zostały zapisane");
                                 // Update local state to reflect saved changes
                                 setDetails((prev) =>

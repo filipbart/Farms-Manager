@@ -400,25 +400,6 @@ export class AccountingService {
   }
 
   /**
-   * Aktualizuje fermę i cykl w powiązanej encji modułu
-   */
-  public static async updateModuleEntityFarmAndCycle(
-    entityInvoiceId: string,
-    moduleType: string,
-    newFarmId: string,
-    newCycleId?: string,
-  ) {
-    return await AxiosWrapper.patch(
-      `${ApiUrl.AccountingInvoices}/${entityInvoiceId}/module-entity/farm-cycle`,
-      {
-        moduleType,
-        farmId: newFarmId,
-        cycleId: newCycleId || null,
-      },
-    );
-  }
-
-  /**
    * Usuwa encję z modułu powiązaną z fakturą
    */
   public static async deleteModuleEntity(
