@@ -635,6 +635,43 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
             };
             break;
           }
+          case ModuleType.ProductionExpenses: {
+            const data = expenseForm.getValues();
+            request.expenseData = {
+              invoiceId,
+              farmId: selectedFarmId,
+              cycleId: selectedCycleId,
+              expenseContractorId: data.expenseContractorId || undefined,
+              expenseTypeId: data.expenseTypeId,
+              contractorNip: invoiceData.sellerNip,
+              contractorName: invoiceData.sellerName,
+              invoiceNumber: data.invoiceNumber,
+              invoiceTotal: data.invoiceTotal,
+              subTotal: data.subTotal,
+              vatAmount: data.vatAmount,
+              invoiceDate: data.invoiceDate,
+              comment: comment || "",
+            };
+            break;
+          }
+          case ModuleType.Sales: {
+            const data = saleForm.getValues();
+            request.saleData = {
+              invoiceId,
+              farmId: selectedFarmId,
+              cycleId: selectedCycleId,
+              slaughterhouseId: data.slaughterhouseId || undefined,
+              slaughterhouseNip: invoiceData.buyerNip,
+              slaughterhouseName: invoiceData.buyerName,
+              invoiceNumber: data.invoiceNumber,
+              invoiceDate: data.invoiceDate,
+              dueDate: data.dueDate || invoiceData.dueDate || "",
+              invoiceTotal: data.invoiceTotal,
+              subTotal: data.subTotal,
+              vatAmount: data.vatAmount,
+            };
+            break;
+          }
         }
 
         if (mode === "accept") {
