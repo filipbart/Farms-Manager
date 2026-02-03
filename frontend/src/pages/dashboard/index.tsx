@@ -474,9 +474,9 @@ const DashboardPage: React.FC = () => {
           )}
         </Grid>
 
-        <Grid size={{ xs: 12, lg: 8 }} sx={{ height: 400 }}>
+        <Grid size={{ xs: 12, lg: 8 }} sx={{ height: { xs: 350, lg: 400 } }}>
           {isLoadingCharts ? (
-            <Skeleton variant="rounded" height={400} />
+            <Skeleton variant="rounded" sx={{ height: { xs: 350, lg: 400 } }} />
           ) : (
             <ProductionResultsChart
               fcrData={fcrChart}
