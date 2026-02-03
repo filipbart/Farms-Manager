@@ -44,6 +44,11 @@ public class KSeFInvoiceEntity : Entity
     /// <param name="cycleId">Identyfikator cyklu (opcjonalnie)</param>
     /// <param name="paymentDate">Data płatności (opcjonalnie)</param>
     /// <param name="quantity">Ilość (opcjonalnie)</param>
+    /// <param name="currencyCode">Kod waluty (opcjonalnie)</param>
+    /// <param name="exchangeRate">Kurs wymiany (opcjonalnie)</param>
+    /// <param name="originalGrossAmount">Oryginalna kwota brutto (opcjonalnie)</param>
+    /// <param name="originalNetAmount">Oryginalna kwota netto (opcjonalnie)</param>
+    /// <param name="originalVatAmount">Oryginalna kwota VAT (opcjonalnie)</param>
     public static KSeFInvoiceEntity CreateNew(
         string kSeFNumber,
         string invoiceNumber,
@@ -74,7 +79,12 @@ public class KSeFInvoiceEntity : Entity
         Guid? farmId = null,
         Guid? cycleId = null,
         DateOnly? paymentDate = null,
-        decimal? quantity = null)
+        decimal? quantity = null,
+        string currencyCode = "PLN",
+        decimal? exchangeRate = null,
+        decimal? originalGrossAmount = null,
+        decimal? originalNetAmount = null,
+        decimal? originalVatAmount = null)
     {
         return new KSeFInvoiceEntity
         {
@@ -107,7 +117,12 @@ public class KSeFInvoiceEntity : Entity
             FarmId = farmId,
             AssignedCycleId = cycleId,
             PaymentDate = paymentDate,
-            Quantity = quantity
+            Quantity = quantity,
+            CurrencyCode = currencyCode ?? "PLN",
+            ExchangeRate = exchangeRate,
+            OriginalGrossAmount = originalGrossAmount,
+            OriginalNetAmount = originalNetAmount,
+            OriginalVatAmount = originalVatAmount
         };
     }
 
@@ -195,6 +210,31 @@ public class KSeFInvoiceEntity : Entity
     /// Kwota VAT faktury
     /// </summary>
     public decimal VatAmount { get; private set; }
+
+    /// <summary>
+    /// Kod waluty faktury (np. PLN, USD, EUR)
+    /// </summary>
+    public string CurrencyCode { get; init; }
+
+    /// <summary>
+    /// Kurs wymiany waluty (jeśli faktura w walucie obcej)
+    /// </summary>
+    public decimal? ExchangeRate { get; private set; }
+
+    /// <summary>
+    /// Oryginalna kwota brutto w walucie faktury (przed konwersją)
+    /// </summary>
+    public decimal? OriginalGrossAmount { get; init; }
+
+    /// <summary>
+    /// Oryginalna kwota netto w walucie faktury (przed konwersją)
+    /// </summary>
+    public decimal? OriginalNetAmount { get; init; }
+
+    /// <summary>
+    /// Oryginalna kwota VAT w walucie faktury (przed konwersją)
+    /// </summary>
+    public decimal? OriginalVatAmount { get; init; }
 
     /// <summary>
     /// Ilość (opcjonalnie)
@@ -408,6 +448,14 @@ public void Update(
 
     if (vatAmount.HasValue)
         VatAmount = vatAmount.Value;
+}
+
+/// <summary>
+/// Aktualizuje kurs wymiany waluty
+/// </summary>
+public void UpdateExchangeRate(decimal exchangeRate)
+{
+    ExchangeRate = exchangeRate;
 }
 
 /// <summary>

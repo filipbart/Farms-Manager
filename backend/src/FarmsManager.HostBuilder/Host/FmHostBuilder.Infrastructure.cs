@@ -1,6 +1,7 @@
 ﻿using Autofac;
 using FarmsManager.Application.Common.Configurations;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace FarmsManager.HostBuilder.Host;
 
@@ -16,6 +17,14 @@ public partial class FmHostBuilder
                 .AsImplementedInterfaces().AsSelf();
         });
 
+        ConfigureServices(services =>
+        {
+            services.AddHttpClient("NBP", client =>
+            {
+                client.BaseAddress = new Uri("https://api.nbp.pl/api/");
+                client.Timeout = TimeSpan.FromSeconds(30);
+            });
+        });
 
         return this;
     }

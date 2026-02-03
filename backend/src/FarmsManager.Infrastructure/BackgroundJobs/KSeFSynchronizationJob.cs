@@ -97,6 +97,7 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
         var invoiceAssignmentService = scope.ServiceProvider.GetRequiredService<IInvoiceAssignmentService>();
         var contractorAutoCreationService = scope.ServiceProvider.GetRequiredService<IContractorAutoCreationService>();
         var encryptionService = scope.ServiceProvider.GetRequiredService<IEncryptionService>();
+        var nbpExchangeRateService = scope.ServiceProvider.GetRequiredService<INbpExchangeRateService>();
 
         // Add repositories for fetching authoritative entity names
         var gasContractorRepository = scope.ServiceProvider.GetRequiredService<IGasContractorRepository>();
@@ -253,8 +254,8 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                             xmlParser);
 
                     // Krok 2: Utwórz encję faktury (bez fermy na razie - ferma będzie przypisana przez reguły lub fallback)
-                    var invoiceEntity = CreateInvoiceEntity(invoiceSummary, invoiceXml, xmlParser, taxBusinessEntityId,
-                        farmId: null, cycleId: null);
+                    var invoiceEntity = await CreateInvoiceEntityAsync(invoiceSummary, invoiceXml, xmlParser, taxBusinessEntityId,
+                        farmId: null, cycleId: null, nbpExchangeRateService, cancellationToken);
 
                     // Sprawdź czy faktura wymaga powiązania z inną fakturą
                     if (InvoiceRequiresLinking(invoiceEntity.InvoiceType))
@@ -587,14 +588,17 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
 
     /// <summary>
     /// Tworzy encję faktury na podstawie danych z KSeF
+    /// Jeśli faktura jest w walucie obcej, konwertuje kwoty na PLN używając kursu NBP z daty płatności (lub faktury)
     /// </summary>
-    private static KSeFInvoiceEntity CreateInvoiceEntity(
+    private static async Task<KSeFInvoiceEntity> CreateInvoiceEntityAsync(
         KSeFInvoiceSyncItem invoiceItem,
         string invoiceXml,
         IKSeFInvoiceXmlParser xmlParser,
         Guid? taxBusinessEntityId = null,
         Guid? farmId = null,
-        Guid? cycleId = null)
+        Guid? cycleId = null,
+        INbpExchangeRateService nbpExchangeRateService = null,
+        CancellationToken cancellationToken = default)
     {
         // Parsuj XML aby wyciągnąć dodatkowe dane
         var parsedInvoice = xmlParser.ParseInvoiceXml(invoiceXml);
@@ -619,6 +623,52 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
         // Wyciągnij ilość z pozycji faktury (suma wszystkich pozycji)
         var quantity = ExtractQuantity(parsedInvoice);
 
+        // Wyciągnij kod waluty z XML
+        var currencyCode = parsedInvoice?.Fa?.KodWaluty ?? "PLN";
+
+        // Konwersja walut jeśli nie jest PLN
+        decimal grossAmountInPLN = invoiceItem.GrossAmount;
+        decimal netAmountInPLN = invoiceItem.NetAmount;
+        decimal vatAmountInPLN = invoiceItem.VatAmount;
+        decimal? exchangeRate = null;
+        decimal? originalGrossAmount = null;
+        decimal? originalNetAmount = null;
+        decimal? originalVatAmount = null;
+
+        if (!string.IsNullOrWhiteSpace(currencyCode) && 
+            !string.Equals(currencyCode, "PLN", StringComparison.OrdinalIgnoreCase))
+        {
+            try
+            {
+                // Zapisz oryginalne kwoty
+                originalGrossAmount = invoiceItem.GrossAmount;
+                originalNetAmount = invoiceItem.NetAmount;
+                originalVatAmount = invoiceItem.VatAmount;
+
+                // Użyj daty płatności lub daty faktury do pobrania kursu
+                var exchangeRateDate = paymentDate ?? invoiceItem.InvoiceDate;
+
+                // Pobierz kurs z NBP API
+                if (nbpExchangeRateService != null)
+                {
+                    exchangeRate = await nbpExchangeRateService.GetExchangeRateAsync(
+                        currencyCode, 
+                        exchangeRateDate, 
+                        cancellationToken);
+
+                    // Konwertuj kwoty na PLN
+                    grossAmountInPLN = Math.Round(invoiceItem.GrossAmount * exchangeRate.Value, 2);
+                    netAmountInPLN = Math.Round(invoiceItem.NetAmount * exchangeRate.Value, 2);
+                    vatAmountInPLN = Math.Round(invoiceItem.VatAmount * exchangeRate.Value, 2);
+                }
+            }
+            catch (Exception)
+            {
+                // Jeśli nie udało się pobrać kursu, użyj oryginalnych kwot
+                // i zaloguj ostrzeżenie (logowanie jest w serwisie NBP)
+            }
+        }
+
         return KSeFInvoiceEntity.CreateNew(
             kSeFNumber: invoiceItem.KsefNumber,
             invoiceNumber: invoiceItem.InvoiceNumber,
@@ -638,14 +688,19 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
             invoiceXml: invoiceXml,
             invoiceDirection: invoiceDirection,
             invoiceSource: KSeFInvoiceSource.KSeF,
-            grossAmount: invoiceItem.GrossAmount,
-            netAmount: invoiceItem.NetAmount,
-            vatAmount: invoiceItem.VatAmount,
+            grossAmount: grossAmountInPLN,
+            netAmount: netAmountInPLN,
+            vatAmount: vatAmountInPLN,
             taxBusinessEntityId: taxBusinessEntityId,
             farmId: farmId,
             cycleId: cycleId,
             paymentDate: paymentDate,
-            quantity: quantity
+            quantity: quantity,
+            currencyCode: currencyCode,
+            exchangeRate: exchangeRate,
+            originalGrossAmount: originalGrossAmount,
+            originalNetAmount: originalNetAmount,
+            originalVatAmount: originalVatAmount
         );
     }
 
