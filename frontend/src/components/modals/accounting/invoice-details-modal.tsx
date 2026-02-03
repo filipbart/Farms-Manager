@@ -841,6 +841,15 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
       // Submit the module form directly (creates entry and changes status)
       if (moduleFormRef.current) {
         await moduleFormRef.current.submit();
+      } else {
+        console.error("ModuleFormRef is null!", {
+          showModuleForm,
+          pendingModuleType,
+          currentModule,
+        });
+        toast.error(
+          "Formularz modułu nie jest dostępny. Odśwież stronę i spróbuj ponownie.",
+        );
       }
     } else {
       // For modules that don't require entity (Farmstead, Other, None), accept directly
@@ -853,6 +862,8 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
     editForm.moduleType,
     moduleRequiresEntity,
     handleStatusChange,
+    showModuleForm,
+    pendingModuleType,
   ]);
 
   // Linking handlers
