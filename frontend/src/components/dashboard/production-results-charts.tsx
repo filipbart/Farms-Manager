@@ -96,6 +96,7 @@ export function ProductionResultsChart({
         display: "flex",
         flexDirection: "column",
         minHeight: 375,
+        overflow: "hidden",
       }}
     >
       <Box
@@ -121,10 +122,9 @@ export function ProductionResultsChart({
         </FormControl>
       </Box>
 
-      <Box sx={{ flexGrow: 1 }}>
+      <Box sx={{ flexGrow: 1, minHeight: 0 }}>
         {hasData ? (
           <LineChart
-            height={300}
             xAxis={[{ data: xAxisData, scaleType: "band" }]}
             series={seriesData}
             margin={{ top: 10, right: 20, bottom: 30, left: 50 }}
