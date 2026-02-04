@@ -1148,15 +1148,25 @@ const SaveAccountingInvoiceModal: React.FC<SaveAccountingInvoiceModalProps> = ({
       {(watchedPaymentStatus === KSeFPaymentStatus.PaidCash ||
         watchedPaymentStatus === KSeFPaymentStatus.PaidTransfer) && (
         <Grid size={{ xs: 12, sm: 4 }}>
-          <TextField
-            fullWidth
-            label="Data płatności"
-            type="date"
-            {...register("paymentDate")}
-            InputLabelProps={{ shrink: true }}
-            inputProps={{
-              max: new Date().toISOString().split("T")[0],
-            }}
+          <Controller
+            name="paymentDate"
+            control={control}
+            render={({ field }) => (
+              <DatePicker
+                label="Data płatności"
+                format="DD.MM.YYYY"
+                value={field.value ? dayjs(field.value) : null}
+                onChange={(date) =>
+                  field.onChange(date ? dayjs(date).format("YYYY-MM-DD") : "")
+                }
+                maxDate={dayjs()}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                  },
+                }}
+              />
+            )}
           />
         </Grid>
       )}

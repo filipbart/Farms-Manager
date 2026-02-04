@@ -1,4 +1,5 @@
 using FarmsManager.Application.Common.Responses;
+using FarmsManager.Application.FileSystem;
 using FarmsManager.Application.Interfaces;
 using FarmsManager.Application.Specifications.Expenses;
 using FarmsManager.Application.Specifications.Gas;
@@ -127,6 +128,7 @@ public class CreateModuleEntityFromInvoiceCommandHandler
 {
     private readonly IUserDataResolver _userDataResolver;
     private readonly IKSeFInvoiceRepository _ksefInvoiceRepository;
+    private readonly IS3Service _s3Service;
     private readonly IFarmRepository _farmRepository;
     private readonly ICycleRepository _cycleRepository;
     private readonly IHenhouseRepository _henhouseRepository;
@@ -143,6 +145,7 @@ public class CreateModuleEntityFromInvoiceCommandHandler
     public CreateModuleEntityFromInvoiceCommandHandler(
         IUserDataResolver userDataResolver,
         IKSeFInvoiceRepository ksefInvoiceRepository,
+        IS3Service s3Service,
         IFarmRepository farmRepository,
         ICycleRepository cycleRepository,
         IHenhouseRepository henhouseRepository,
@@ -158,6 +161,7 @@ public class CreateModuleEntityFromInvoiceCommandHandler
     {
         _userDataResolver = userDataResolver;
         _ksefInvoiceRepository = ksefInvoiceRepository;
+        _s3Service = s3Service;
         _farmRepository = farmRepository;
         _cycleRepository = cycleRepository;
         _henhouseRepository = henhouseRepository;
@@ -183,20 +187,21 @@ public class CreateModuleEntityFromInvoiceCommandHandler
         var previousEntityId = invoice.AssignedEntityInvoiceId;
 
         Guid? newEntityId = null;
+        var invoiceFilePath = invoice.FilePath;
 
         switch (request.ModuleType)
         {
             case ModuleType.Feeds:
-                newEntityId = await CreateFeedInvoice(request.FeedData, userId, ct);
+                newEntityId = await CreateFeedInvoice(request.FeedData, invoiceFilePath, userId, ct);
                 break;
             case ModuleType.Gas:
-                newEntityId = await CreateGasDelivery(request.GasData, userId, ct);
+                newEntityId = await CreateGasDelivery(request.GasData, invoiceFilePath, userId, ct);
                 break;
             case ModuleType.ProductionExpenses:
-                newEntityId = await CreateExpenseProduction(request.ExpenseData, userId, ct);
+                newEntityId = await CreateExpenseProduction(request.ExpenseData, invoiceFilePath, userId, ct);
                 break;
             case ModuleType.Sales:
-                newEntityId = await CreateSaleInvoice(request.SaleData, userId, ct);
+                newEntityId = await CreateSaleInvoice(request.SaleData, invoiceFilePath, userId, ct);
                 break;
             case ModuleType.Farmstead:
             case ModuleType.Other:
@@ -218,7 +223,7 @@ public class CreateModuleEntityFromInvoiceCommandHandler
         return BaseResponse.CreateResponse(newEntityId);
     }
 
-    private async Task<Guid> CreateFeedInvoice(CreateFeedInvoiceFromKSeFDto data, Guid userId, CancellationToken ct)
+    private async Task<Guid> CreateFeedInvoice(CreateFeedInvoiceFromKSeFDto data, string filePath, Guid userId, CancellationToken ct)
     {
         var exists = await _feedInvoiceRepository.AnyAsync(
             new GetFeedInvoiceByInvoiceNumberSpec(data.InvoiceNumber), ct);
@@ -258,6 +263,16 @@ public class CreateModuleEntityFromInvoiceCommandHandler
             data.Comment,
             userId);
 
+        // Skopiuj plik z faktury księgowej do folderu modułowego
+        if (!string.IsNullOrEmpty(filePath))
+        {
+            var copiedFilePath = await CopyFileToModuleAsync(filePath, FileType.FeedDeliveryInvoice, newFeedInvoice.Id, ct);
+            if (!string.IsNullOrEmpty(copiedFilePath))
+            {
+                newFeedInvoice.SetFilePath(copiedFilePath);
+            }
+        }
+
         var feedPrices = await _feedPriceRepository.GetFeedPricesForInvoiceDateAsync(
             farm.Id, cycle.Id, data.ItemName, data.InvoiceDate);
         newFeedInvoice.CheckUnitPrice(feedPrices);
@@ -266,7 +281,7 @@ public class CreateModuleEntityFromInvoiceCommandHandler
         return newFeedInvoice.Id;
     }
 
-    private async Task<Guid> CreateGasDelivery(CreateGasDeliveryFromKSeFDto data, Guid userId, CancellationToken ct)
+    private async Task<Guid> CreateGasDelivery(CreateGasDeliveryFromKSeFDto data, string filePath, Guid userId, CancellationToken ct)
     {
         var exists = await _gasDeliveryRepository.AnyAsync(
             new GetGasDeliveryByInvoiceNumberSpec(data.InvoiceNumber), ct);
@@ -299,6 +314,16 @@ public class CreateModuleEntityFromInvoiceCommandHandler
             data.Quantity,
             data.Comment,
             userId);
+
+        // Skopiuj plik z faktury księgowej do folderu modułowego
+        if (!string.IsNullOrEmpty(filePath))
+        {
+            var copiedFilePath = await CopyFileToModuleAsync(filePath, FileType.GasDelivery, newGasDelivery.Id, ct);
+            if (!string.IsNullOrEmpty(copiedFilePath))
+            {
+                newGasDelivery.SetFilePath(copiedFilePath);
+            }
+        }
 
         await _gasDeliveryRepository.AddAsync(newGasDelivery, ct);
         return newGasDelivery.Id;
@@ -333,7 +358,7 @@ public class CreateModuleEntityFromInvoiceCommandHandler
         return newContractor.Id;
     }
 
-    private async Task<Guid> CreateExpenseProduction(CreateExpenseProductionFromKSeFDto data, Guid userId, CancellationToken ct)
+    private async Task<Guid> CreateExpenseProduction(CreateExpenseProductionFromKSeFDto data, string filePath, Guid userId, CancellationToken ct)
     {
         var exists = await _expenseProductionRepository.AnyAsync(
             new GetExpenseProductionInvoiceByInvoiceNumberSpec(data.InvoiceNumber), ct);
@@ -370,6 +395,16 @@ public class CreateModuleEntityFromInvoiceCommandHandler
             data.Comment,
             userId);
 
+        // Skopiuj plik z faktury księgowej do folderu modułowego
+        if (!string.IsNullOrEmpty(filePath))
+        {
+            var copiedFilePath = await CopyFileToModuleAsync(filePath, FileType.ExpenseProduction, newExpenseProduction.Id, ct);
+            if (!string.IsNullOrEmpty(copiedFilePath))
+            {
+                newExpenseProduction.SetFilePath(copiedFilePath);
+            }
+        }
+
         await _expenseProductionRepository.AddAsync(newExpenseProduction, ct);
         return newExpenseProduction.Id;
     }
@@ -403,7 +438,7 @@ public class CreateModuleEntityFromInvoiceCommandHandler
         return newContractor.Id;
     }
 
-    private async Task<Guid> CreateSaleInvoice(CreateSaleInvoiceFromKSeFDto data, Guid userId, CancellationToken ct)
+    private async Task<Guid> CreateSaleInvoice(CreateSaleInvoiceFromKSeFDto data, string filePath, Guid userId, CancellationToken ct)
     {
         var exists = await _saleInvoiceRepository.AnyAsync(
             new GetSaleInvoiceByInvoiceNumberSpec(data.InvoiceNumber), ct);
@@ -438,6 +473,16 @@ public class CreateModuleEntityFromInvoiceCommandHandler
             data.SubTotal,
             data.VatAmount,
             userId);
+
+        // Skopiuj plik z faktury księgowej do folderu modułowego
+        if (!string.IsNullOrEmpty(filePath))
+        {
+            var copiedFilePath = await CopyFileToModuleAsync(filePath, FileType.SalesInvoices, newSaleInvoice.Id, ct);
+            if (!string.IsNullOrEmpty(copiedFilePath))
+            {
+                newSaleInvoice.SetFilePath(copiedFilePath);
+            }
+        }
 
         await _saleInvoiceRepository.AddAsync(newSaleInvoice, ct);
         return newSaleInvoice.Id;
@@ -493,6 +538,45 @@ public class CreateModuleEntityFromInvoiceCommandHandler
                 if (saleInvoice != null)
                     await _saleInvoiceRepository.DeleteAsync(saleInvoice, ct);
                 break;
+        }
+    }
+
+    /// <summary>
+    /// Kopiuje plik z faktury księgowej do folderu modułowego
+    /// </summary>
+    private async Task<string> CopyFileToModuleAsync(string sourceFilePath, FileType targetFileType, Guid entityId, CancellationToken ct)
+    {
+        if (string.IsNullOrEmpty(sourceFilePath))
+            return null;
+
+        try
+        {
+            // Pobierz plik źródłowy z folderu accounting
+            var sourceFile = await _s3Service.GetFileAsync(FileType.AccountingInvoice, sourceFilePath);
+            if (sourceFile?.Data == null || sourceFile.Data.Length == 0)
+                return null;
+
+            // Określ rozszerzenie pliku
+            var extension = Path.GetExtension(sourceFilePath);
+            if (string.IsNullOrEmpty(extension))
+                extension = ".pdf";
+
+            // Utwórz ścieżkę docelową w folderze modułowym
+            var targetPath = $"{entityId}{extension}";
+
+            // Skopiuj plik do folderu modułowego
+            var uploadedPath = await _s3Service.UploadFileAsync(
+                sourceFile.Data, 
+                targetFileType, 
+                targetPath, 
+                ct);
+
+            return uploadedPath;
+        }
+        catch
+        {
+            // W przypadku błędu kopiowania, zwróć oryginalną ścieżkę
+            return sourceFilePath;
         }
     }
 }

@@ -142,6 +142,11 @@ public record GetKSeFInvoicesFromDbQueryFilters : OrderedPaginationParams<KSeFIn
     /// Wykluczenia - filtrowanie po NIP i nazwach sprzedawców/kupców
     /// </summary>
     public string Exclusions { get; init; }
+
+    /// <summary>
+    /// Filtrowanie nieopłaconych faktur z terminem płatności do X dni w przód (włącznie z przeterminowanymi)
+    /// </summary>
+    public int? UnpaidDaysAhead { get; init; }
 }
 
 public record GetKSeFInvoicesFromDbQuery(GetKSeFInvoicesFromDbQueryFilters Filters) 

@@ -198,7 +198,7 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
             sellerNip, sellerName, buyerNip, buyerName, cancellationToken);
 
         // Sprawdź duplikaty przed zapisem
-        await CheckForDuplicatesAsync(data.InvoiceNumber, sellerNip, taxBusinessEntityId, cancellationToken);
+        await CheckForDuplicatesAsync(data.InvoiceNumber, sellerNip, buyerNip, taxBusinessEntityId, cancellationToken);
 
         // Dla manualnych faktur generujemy placeholder KSeFNumber
         var manualKSeFNumber = $"MANUAL-{data.DraftId:N}";
@@ -340,18 +340,19 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
         return matchedByName?.Id;
     }
 
-    private async Task CheckForDuplicatesAsync(string invoiceNumber, string sellerNip, Guid? taxBusinessEntityId, CancellationToken cancellationToken)
+    private async Task CheckForDuplicatesAsync(string invoiceNumber, string sellerNip, string buyerNip, Guid? taxBusinessEntityId, CancellationToken cancellationToken)
     {
         var normalizedSellerNip = NormalizeNip(sellerNip);
+        var normalizedBuyerNip = NormalizeNip(buyerNip);
         
-        // Sprawdź duplikaty w fakturach KSeF
+        // Sprawdź duplikaty w fakturach KSeF (ten sam numer faktury od tego samego sprzedawcy dla tego samego nabywcy)
         var existsInKSeF = await _invoiceRepository.AnyAsync(
-            new KSeFInvoiceByNumberAndSellerSpec(invoiceNumber, normalizedSellerNip, taxBusinessEntityId),
+            new KSeFInvoiceByNumberAndSellerSpec(invoiceNumber, normalizedSellerNip, taxBusinessEntityId, normalizedBuyerNip),
             cancellationToken);
 
         if (existsInKSeF)
         {
-            throw DomainException.BadRequest($"Faktura o numerze '{invoiceNumber}' od tego sprzedawcy już istnieje w księgowości.");
+            throw DomainException.BadRequest($"Faktura o numerze '{invoiceNumber}' od tego sprzedawcy dla tego nabywcy już istnieje w księgowości.");
         }
         
         // Sprawdź duplikaty w dostawach gazu
@@ -615,6 +616,7 @@ public class SaveAccountingInvoiceCommandHandler : IRequestHandler<SaveAccountin
             "CostInvoice" => FarmsInvoiceType.CostInvoice,
             "CostInvoiceCorrection" => FarmsInvoiceType.CostInvoiceCorrection,
             "Other" => FarmsInvoiceType.Other,
+            "InsurancePolicy" => FarmsInvoiceType.InsurancePolicy,
             _ => FarmsInvoiceType.Vat
         };
     }

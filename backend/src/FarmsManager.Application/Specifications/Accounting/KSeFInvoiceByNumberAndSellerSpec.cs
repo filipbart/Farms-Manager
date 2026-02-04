@@ -6,7 +6,7 @@ namespace FarmsManager.Application.Specifications.Accounting;
 
 public sealed class KSeFInvoiceByNumberAndSellerSpec : BaseSpecification<KSeFInvoiceEntity>
 {
-    public KSeFInvoiceByNumberAndSellerSpec(string invoiceNumber, string normalizedSellerNip, Guid? taxBusinessEntityId)
+    public KSeFInvoiceByNumberAndSellerSpec(string invoiceNumber, string normalizedSellerNip, Guid? taxBusinessEntityId, string normalizedBuyerNip = null)
     {
         DisableTracking();
         EnsureExists();
@@ -16,14 +16,16 @@ public sealed class KSeFInvoiceByNumberAndSellerSpec : BaseSpecification<KSeFInv
             Query.Where(i =>
                 i.InvoiceNumber == invoiceNumber &&
                 i.Status != KSeFInvoiceStatus.Rejected &&
-                (i.SellerNip == normalizedSellerNip || i.TaxBusinessEntityId == taxBusinessEntityId));
+                (i.SellerNip == normalizedSellerNip || i.TaxBusinessEntityId == taxBusinessEntityId) &&
+                (normalizedBuyerNip == null || i.BuyerNip == normalizedBuyerNip));
         }
         else
         {
             Query.Where(i =>
                 i.InvoiceNumber == invoiceNumber &&
                 i.Status != KSeFInvoiceStatus.Rejected &&
-                i.SellerNip == normalizedSellerNip);
+                i.SellerNip == normalizedSellerNip &&
+                (normalizedBuyerNip == null || i.BuyerNip == normalizedBuyerNip));
         }
     }
 }

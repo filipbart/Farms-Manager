@@ -554,6 +554,7 @@ const AccountingPage: React.FC = () => {
 
   const getInitialGridState = useCallback(() => {
     const { filters } = getCurrentFilters();
+    const gridStateKey = getGridStateKey();
     const sortModel: Array<{ field: string; sort: GridSortDirection }> = [];
 
     if (filters.orderBy) {
@@ -564,19 +565,36 @@ const AccountingPage: React.FC = () => {
       });
     }
 
+    // Wczytaj zapisaną widoczność kolumn z localStorage
+    const savedState = localStorage.getItem(gridStateKey);
+    let columnVisibilityModel: Record<string, boolean> = {
+      id: false,
+      quantity: false,
+    };
+
+    if (savedState) {
+      try {
+        const parsed = JSON.parse(savedState);
+        if (parsed.columnVisibility) {
+          columnVisibilityModel = {
+            ...columnVisibilityModel,
+            ...parsed.columnVisibility,
+          };
+        }
+      } catch {
+        // Ignoruj błędy parsowania
+      }
+    }
+
     return {
       columns: {
-        columnVisibilityModel: {
-          id: false,
-          quantity: false,
-          dateCreatedUtc: false,
-        },
+        columnVisibilityModel,
       },
       sorting: {
         sortModel,
       },
     };
-  }, [getCurrentFilters]);
+  }, [getCurrentFilters, getGridStateKey]);
 
   const renderDataGrid = () => {
     const { filters, dispatch, storageKey } = getCurrentFilters();
@@ -599,6 +617,7 @@ const AccountingPage: React.FC = () => {
         rows={invoices}
         columns={columns}
         initialState={initialGridState}
+        scrollbarSize={17}
         sortModel={sortModel}
         paginationMode="server"
         pagination
@@ -638,10 +657,21 @@ const AccountingPage: React.FC = () => {
             params.row.paymentDate,
           );
         }}
+        autoHeight={false}
         sx={{
           [`& .${tablePaginationClasses.selectLabel}`]: { display: "block" },
           [`& .${tablePaginationClasses.input}`]: { display: "inline-flex" },
+          height: "calc(100vh - 350px)",
           minHeight: 400,
+          "& .MuiDataGrid-main": {
+            overflow: "auto",
+          },
+          "& .MuiDataGrid-columnHeaders": {
+            position: "sticky",
+            top: 0,
+            zIndex: 1,
+            backgroundColor: "background.paper",
+          },
           "& .MuiDataGrid-row:hover": {
             cursor: "pointer",
           },
@@ -666,10 +696,19 @@ const AccountingPage: React.FC = () => {
         }}
         sortingMode="server"
         onSortModelChange={(model) => {
-          // Zapisz sortowanie do localStorage
+          // Zapisz sortowanie do localStorage (zachowaj widoczność kolumn)
+          const savedState = localStorage.getItem(gridStateKey);
+          let existingState = {};
+          if (savedState) {
+            try {
+              existingState = JSON.parse(savedState);
+            } catch {
+              // Ignoruj błędy parsowania
+            }
+          }
           localStorage.setItem(
             gridStateKey,
-            JSON.stringify({ sorting: model }),
+            JSON.stringify({ ...existingState, sorting: model }),
           );
 
           const sortOptions = getSortOptionsFromGridModel(
@@ -684,6 +723,22 @@ const AccountingPage: React.FC = () => {
             type: "setMultiple",
             payload,
           });
+        }}
+        onColumnVisibilityModelChange={(model) => {
+          // Zapisz widoczność kolumn do localStorage (zachowaj sortowanie)
+          const savedState = localStorage.getItem(gridStateKey);
+          let existingState = {};
+          if (savedState) {
+            try {
+              existingState = JSON.parse(savedState);
+            } catch {
+              // Ignoruj błędy parsowania
+            }
+          }
+          localStorage.setItem(
+            gridStateKey,
+            JSON.stringify({ ...existingState, columnVisibility: model }),
+          );
         }}
       />
     );

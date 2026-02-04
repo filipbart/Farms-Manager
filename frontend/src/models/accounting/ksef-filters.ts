@@ -49,6 +49,8 @@ export interface KSeFInvoicesFilters {
   searchQuery?: string;
   // Wykluczenia (NIP i nazwy sprzedawców/kupców)
   exclusions?: string;
+  // Filtr nieopłaconych faktur z terminem do X dni w przód
+  unpaidDaysAhead?: number;
 }
 
 export const initialKSeFFilters: KSeFInvoicesFilters = {
@@ -71,6 +73,7 @@ export const initialKSeFFilters: KSeFInvoicesFilters = {
   farmId: undefined,
   searchQuery: undefined,
   exclusions: undefined,
+  unpaidDaysAhead: undefined,
 };
 
 export type KSeFFiltersAction =

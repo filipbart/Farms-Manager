@@ -274,7 +274,7 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
         var contractor = await _feedContractorRepository.FirstOrDefaultAsync(
             new FeedContractorByNipSpec(normalizedNip), cancellationToken);
 
-        if (contractor is null && normalizedNip.IsNotEmpty())
+        if (contractor is null && normalizedNip.IsNotEmpty() && !string.IsNullOrWhiteSpace(extractedFields.SellerName))
         {
             contractor = FeedContractorEntity.CreateNewFromInvoice(
                 extractedFields.SellerName, normalizedNip, userId);
@@ -323,7 +323,7 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
         var contractor = await _gasContractorRepository.FirstOrDefaultAsync(
             new GasContractorByNipSpec(normalizedNip), cancellationToken);
 
-        if (contractor is null && normalizedNip.IsNotEmpty())
+        if (contractor is null && normalizedNip.IsNotEmpty() && !string.IsNullOrWhiteSpace(extractedFields.SellerName))
         {
             contractor = GasContractorEntity.CreateNew(
                 extractedFields.SellerName, normalizedNip,
@@ -358,7 +358,7 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
         var contractor = await _expenseContractorRepository.FirstOrDefaultAsync(
             new ExpenseContractorByNipSpec(normalizedNip), cancellationToken);
 
-        if (contractor is null && normalizedNip.IsNotEmpty())
+        if (contractor is null && normalizedNip.IsNotEmpty() && !string.IsNullOrWhiteSpace(extractedFields.SellerName))
         {
             contractor = ExpenseContractorEntity.CreateNewFromInvoice(
                 extractedFields.SellerName, normalizedNip,
@@ -396,7 +396,7 @@ public class UploadAccountingInvoicesCommandHandler : IRequestHandler<UploadAcco
         var slaughterhouse = await _slaughterhouseRepository.FirstOrDefaultAsync(
             new SlaughterhouseByNipSpec(normalizedNip), cancellationToken);
 
-        if (slaughterhouse is null && normalizedNip.IsNotEmpty())
+        if (slaughterhouse is null && normalizedNip.IsNotEmpty() && !string.IsNullOrWhiteSpace(extractedFields.BuyerName))
         {
             slaughterhouse = SlaughterhouseEntity.CreateNew(
                 extractedFields.BuyerName, string.Empty,

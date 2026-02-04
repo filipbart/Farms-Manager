@@ -103,4 +103,9 @@ export const getAccountingFiltersConfig = (
     label: "Wykluczenia",
     type: "text",
   },
+  {
+    key: "unpaidDaysAhead",
+    label: "Nieopłacone do X dni",
+    type: "number",
+  },
 ];

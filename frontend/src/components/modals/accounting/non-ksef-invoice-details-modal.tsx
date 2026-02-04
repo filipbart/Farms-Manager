@@ -1164,15 +1164,25 @@ const NonKSeFInvoiceDetailsModal: React.FC<NonKSeFInvoiceDetailsModalProps> = ({
               borderRadius: 1,
             }}
           >
-            <TextField
-              fullWidth
-              label="Data płatności"
-              type="date"
-              {...register("paymentDate")}
-              InputLabelProps={{ shrink: true }}
-              inputProps={{
-                max: new Date().toISOString().split("T")[0],
-              }}
+            <Controller
+              name="paymentDate"
+              control={control}
+              render={({ field }) => (
+                <DatePicker
+                  label="Data płatności"
+                  format="DD.MM.YYYY"
+                  value={field.value ? dayjs(field.value) : null}
+                  onChange={(date) =>
+                    field.onChange(date ? dayjs(date).format("YYYY-MM-DD") : "")
+                  }
+                  maxDate={dayjs()}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                    },
+                  }}
+                />
+              )}
             />
           </Box>
         </Grid>

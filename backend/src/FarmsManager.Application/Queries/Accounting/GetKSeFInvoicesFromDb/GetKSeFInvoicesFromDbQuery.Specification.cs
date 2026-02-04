@@ -140,6 +140,26 @@ public sealed class GetKSeFInvoicesFromDbSpec : BaseSpecification<KSeFInvoiceEnt
                   EF.Functions.ILike(x.SellerName, exclusionPhrase) ||
                   EF.Functions.ILike(x.BuyerName, exclusionPhrase)));
         }
+
+        // Filtrowanie nieopłaconych faktur z terminem płatności do X dni w przód (włącznie z przeterminowanymi)
+        if (filters.UnpaidDaysAhead.HasValue)
+        {
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var endDate = today.AddDays(filters.UnpaidDaysAhead.Value);
+            
+            // Tylko nieopłacone faktury (Unpaid, PartiallyPaid, Suspended)
+            var unpaidStatuses = new[] 
+            { 
+                KSeFPaymentStatus.Unpaid, 
+                KSeFPaymentStatus.PartiallyPaid, 
+                KSeFPaymentStatus.Suspended 
+            };
+            
+            Query.Where(x => 
+                unpaidStatuses.Contains(x.PaymentStatus) &&
+                x.PaymentDueDate.HasValue &&
+                x.PaymentDueDate.Value <= endDate);
+        }
     }
 
     private void ApplyOrdering(GetKSeFInvoicesFromDbQueryFilters filters)

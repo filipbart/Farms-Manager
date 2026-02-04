@@ -74,6 +74,10 @@ export enum InvoiceDocumentType {
   KorPef = "KorPef",
   VatRr = "VatRr",
   KorVatRr = "KorVatRr",
+  CostInvoice = "CostInvoice",
+  CostInvoiceCorrection = "CostInvoiceCorrection",
+  Other = "Other",
+  InsurancePolicy = "InsurancePolicy",
 }
 
 export const InvoiceDocumentTypeLabels: Record<InvoiceDocumentType, string> = {
@@ -89,6 +93,11 @@ export const InvoiceDocumentTypeLabels: Record<InvoiceDocumentType, string> = {
   [InvoiceDocumentType.KorPef]: "(PEF) Korygująca",
   [InvoiceDocumentType.VatRr]: "(RR) Podstawowa",
   [InvoiceDocumentType.KorVatRr]: "(RR) Korygująca",
+  [InvoiceDocumentType.CostInvoice]: "(RK) Rachunek kosztowy",
+  [InvoiceDocumentType.CostInvoiceCorrection]:
+    "(RK-KOR) Korekta rachunku kosztowego",
+  [InvoiceDocumentType.Other]: "(ID) Inny dokument",
+  [InvoiceDocumentType.InsurancePolicy]: "(PU) Polisa ubezpieczeniowa",
 };
 
 // Model faktury KSeF w liście

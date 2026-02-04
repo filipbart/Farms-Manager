@@ -35,5 +35,8 @@ public enum FarmsInvoiceType
     [Description("(RK-KOR) Korekta rachunku kosztowego")]
     CostInvoiceCorrection,
 
-    [Description("Inny dokument")] Other,
+    [Description("(ID) Inny dokument")] Other,
+
+    [Description("(PU) Polisa ubezpieczeniowa")]
+    InsurancePolicy,
 }
