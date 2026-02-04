@@ -383,7 +383,11 @@ public void Update(
     string relatedInvoiceNumber = null,
     decimal? grossAmount = null,
     decimal? netAmount = null,
-    decimal? vatAmount = null)
+    decimal? vatAmount = null,
+    string sellerName = null,
+    string sellerNip = null,
+    string buyerName = null,
+    string buyerNip = null)
 {
     if (status.HasValue)
         Status = status.Value;
@@ -448,6 +452,12 @@ public void Update(
 
     if (vatAmount.HasValue)
         VatAmount = vatAmount.Value;
+
+    // Aktualizuj dane sprzedawcy i nabywcy jeśli zostały przekazane
+    if (sellerName != null || sellerNip != null || buyerName != null || buyerNip != null)
+    {
+        UpdateSellerBuyerInfo(sellerName, sellerNip, buyerName, buyerNip);
+    }
 }
 
 /// <summary>

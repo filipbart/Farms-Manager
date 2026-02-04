@@ -570,6 +570,7 @@ const AccountingPage: React.FC = () => {
     let columnVisibilityModel: Record<string, boolean> = {
       id: false,
       quantity: false,
+      dateCreatedUtc: true, // Domyślnie widoczna
     };
 
     if (savedState) {

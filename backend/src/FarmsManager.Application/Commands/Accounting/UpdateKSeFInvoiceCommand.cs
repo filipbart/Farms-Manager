@@ -31,6 +31,10 @@ public class UpdateKSeFInvoiceDto
     public decimal? GrossAmount { get; set; }
     public decimal? NetAmount { get; set; }
     public decimal? VatAmount { get; set; }
+    public string SellerName { get; set; }
+    public string SellerNip { get; set; }
+    public string BuyerName { get; set; }
+    public string BuyerNip { get; set; }
 }
 
 public class UpdateKSeFInvoiceCommandHandler : IRequestHandler<UpdateKSeFInvoiceCommand, EmptyBaseResponse>
@@ -87,7 +91,11 @@ public class UpdateKSeFInvoiceCommandHandler : IRequestHandler<UpdateKSeFInvoice
             request.Data.RelatedInvoiceNumber,
             request.Data.GrossAmount,
             request.Data.NetAmount,
-            request.Data.VatAmount
+            request.Data.VatAmount,
+            request.Data.SellerName,
+            request.Data.SellerNip,
+            request.Data.BuyerName,
+            request.Data.BuyerNip
         );
 
         invoice.SetModified(userId);
