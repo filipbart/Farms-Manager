@@ -16,6 +16,16 @@ namespace FarmsManager.Infrastructure.Migrations
                 table: "farm");
 
             migrationBuilder.DropForeignKey(
+                name: "fk_ksef_invoice_tax_business_entity_tax_business_entity_id",
+                schema: "farms_manager",
+                table: "ksef_invoice");
+
+            migrationBuilder.DropForeignKey(
+                name: "fk_invoice_module_assignment_rule_tax_business_entity_tax_busi",
+                schema: "farms_manager",
+                table: "invoice_module_assignment_rule");
+
+            migrationBuilder.DropForeignKey(
                 name: "fk_invoice_farm_assignment_rules_farm_entity_target_farm_id",
                 schema: "farms_manager",
                 table: "invoice_farm_assignment_rules");
@@ -775,6 +785,26 @@ namespace FarmsManager.Infrastructure.Migrations
                 principalTable: "user",
                 principalColumn: "id",
                 onDelete: ReferentialAction.Restrict);
+
+            migrationBuilder.AddForeignKey(
+                name: "fk_ksef_invoice_tax_business_entity_tax_business_entity_id",
+                schema: "farms_manager",
+                table: "ksef_invoice",
+                column: "tax_business_entity_id",
+                principalSchema: "farms_manager",
+                principalTable: "tax_business_entity",
+                principalColumn: "id",
+                onDelete: ReferentialAction.SetNull);
+
+            migrationBuilder.AddForeignKey(
+                name: "fk_invoice_module_assignment_rule_tax_business_entity_tax_busi",
+                schema: "farms_manager",
+                table: "invoice_module_assignment_rule",
+                column: "tax_business_entity_id",
+                principalSchema: "farms_manager",
+                principalTable: "tax_business_entity",
+                principalColumn: "id",
+                onDelete: ReferentialAction.SetNull);
         }
     }
 }
