@@ -703,6 +703,37 @@ const AccountingPage: React.FC = () => {
         }}
         sortingMode="server"
         onSortModelChange={(model) => {
+          // Sprawdź czy sortowanie faktycznie się zmieniło (zapobiega resetowi strony przy zmianie paginacji)
+          const currentSortField = filters.orderBy
+            ? mapKSeFOrderTypeToField(filters.orderBy)
+            : null;
+          const currentSortDirection = filters.isDescending ? "desc" : "asc";
+
+          const newSortField = model.length > 0 ? model[0].field : null;
+          const newSortDirection = model.length > 0 ? model[0].sort : null;
+
+          // Jeśli sortowanie się nie zmieniło, nie rób nic (nie resetuj strony)
+          if (
+            currentSortField === newSortField &&
+            currentSortDirection === newSortDirection
+          ) {
+            // Tylko zapisz do localStorage bez dispatchowania zmian
+            const savedState = localStorage.getItem(gridStateKey);
+            let existingState = {};
+            if (savedState) {
+              try {
+                existingState = JSON.parse(savedState);
+              } catch {
+                // Ignoruj błędy parsowania
+              }
+            }
+            localStorage.setItem(
+              gridStateKey,
+              JSON.stringify({ ...existingState, sorting: model }),
+            );
+            return;
+          }
+
           // Zapisz sortowanie do localStorage (zachowaj widoczność kolumn)
           const savedState = localStorage.getItem(gridStateKey);
           let existingState = {};
@@ -723,6 +754,8 @@ const AccountingPage: React.FC = () => {
             KSeFInvoicesOrderType,
             mapKSeFOrderTypeToField,
           );
+
+          // Resetuj stronę TYLKO gdy sortowanie faktycznie się zmieniło
           const payload =
             model.length > 0 ? { ...sortOptions, page: 0 } : { ...sortOptions };
 
