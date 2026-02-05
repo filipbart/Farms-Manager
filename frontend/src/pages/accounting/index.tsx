@@ -627,6 +627,10 @@ const AccountingPage: React.FC = () => {
           page: filters.page,
         }}
         onPaginationModelChange={({ page, pageSize }) => {
+          // Zapobiegnij podwójnemu wywołaniu - sprawdź czy wartości się zmieniły
+          if (filters.page === page && filters.pageSize === pageSize) {
+            return;
+          }
           localStorage.setItem(storageKey, pageSize.toString());
           dispatch({
             type: "setMultiple",

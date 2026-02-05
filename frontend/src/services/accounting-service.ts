@@ -142,14 +142,30 @@ export class AccountingService {
    */
   public static async getKSeFInvoices(filters: KSeFInvoicesFilters) {
     const { paymentStatus, ...restFilters } = filters;
-    const params = {
-      ...restFilters,
-      paymentStatuses: paymentStatus?.length ? paymentStatus : undefined,
-    };
+
+    // Usuń puste wartości z parametrów
+    const cleanedParams: Record<string, any> = {};
+
+    Object.entries(restFilters).forEach(([key, value]) => {
+      // Pomiń puste stringi, undefined, null, puste tablice
+      if (
+        value !== undefined &&
+        value !== null &&
+        value !== "" &&
+        !(Array.isArray(value) && value.length === 0)
+      ) {
+        cleanedParams[key] = value;
+      }
+    });
+
+    // Dodaj paymentStatuses tylko jeśli nie jest puste
+    if (paymentStatus?.length) {
+      cleanedParams.paymentStatuses = paymentStatus;
+    }
 
     return await AxiosWrapper.get<PaginateModel<KSeFInvoiceListModel>>(
       ApiUrl.AccountingInvoices,
-      params,
+      cleanedParams,
     );
   }
 
