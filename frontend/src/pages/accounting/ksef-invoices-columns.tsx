@@ -209,15 +209,16 @@ export const getKSeFInvoicesColumns = ({
       let color = "inherit";
       let fontWeight = "normal";
 
+      // Sprawdź czy faktura jest opłacona
+      const paymentStatus = params.row.paymentStatus;
+      if (
+        paymentStatus === KSeFPaymentStatus.PaidCash ||
+        paymentStatus === KSeFPaymentStatus.PaidTransfer
+      ) {
+        return "—";
+      }
+
       if (daysNum < 0) {
-        // Sprawdź czy faktura jest opłacona
-        const paymentStatus = params.row.paymentStatus;
-        if (
-          paymentStatus === KSeFPaymentStatus.PaidCash ||
-          paymentStatus === KSeFPaymentStatus.PaidTransfer
-        ) {
-          return "—";
-        }
         // Przeterminowane - czerwony
         color = "#d32f2f";
         fontWeight = "bold";
