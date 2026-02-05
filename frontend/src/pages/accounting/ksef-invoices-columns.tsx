@@ -193,6 +193,45 @@ export const getKSeFInvoicesColumns = ({
       value ? dayjs(value).format("YYYY-MM-DD") : "—",
   },
   {
+    field: "daysUntilDue",
+    headerName: "Dni do terminu płatności",
+    width: 180,
+    type: "number",
+    valueGetter: (value: number | null) => {
+      if (value === null || value === undefined) return "—";
+      return value;
+    },
+    renderCell: (params) => {
+      const days = params.value;
+      if (days === "—" || days === null || days === undefined) return "—";
+
+      const daysNum = Number(days);
+      let color = "inherit";
+      let fontWeight = "normal";
+
+      if (daysNum < 0) {
+        // Przeterminowane - czerwony
+        color = "#d32f2f";
+        fontWeight = "bold";
+      } else if (daysNum <= 3) {
+        // 0-3 dni - pomarańczowy
+        color = "#ed6c02";
+        fontWeight = "bold";
+      } else if (daysNum <= 7) {
+        // 4-7 dni - żółty
+        color = "#f57c00";
+      }
+
+      return (
+        <span style={{ color, fontWeight }}>
+          {daysNum < 0
+            ? `${Math.abs(daysNum)} dni po terminie`
+            : `${daysNum} dni`}
+        </span>
+      );
+    },
+  },
+  {
     field: "moduleType",
     headerName: "Moduł",
     width: 150,

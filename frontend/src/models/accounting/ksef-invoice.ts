@@ -133,6 +133,7 @@ export interface KSeFInvoiceListModel {
   assignedUserId: string | null;
   assignedUserName: string | null;
   dateCreatedUtc: string;
+  daysUntilDue: number | null;
 }
 
 // Model szczegółów faktury

@@ -16,7 +16,8 @@ public enum KSeFInvoicesFromDbOrderBy
     Status,
     PaymentStatus,
     PaymentDueDate,
-    DateCreatedUtc
+    DateCreatedUtc,
+    DaysUntilDue
 }
 
 /// <summary>

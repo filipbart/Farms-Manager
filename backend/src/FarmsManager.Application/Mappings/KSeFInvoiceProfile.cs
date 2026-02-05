@@ -32,7 +32,11 @@ public class KSeFInvoiceProfile : Profile
             .ForMember(d => d.AssignedUserId, opt => opt.MapFrom(s => s.AssignedUserId))
             .ForMember(d => d.AssignedUserName, opt => opt.MapFrom(s => s.AssignedUser != null ? s.AssignedUser.Name : null))
             .ForMember(d => d.PaymentDate, opt => opt.MapFrom(s => s.PaymentDate))
-            .ForMember(d => d.DateCreatedUtc, opt => opt.MapFrom(s => s.DateCreatedUtc));
+            .ForMember(d => d.DateCreatedUtc, opt => opt.MapFrom(s => s.DateCreatedUtc))
+            .ForMember(d => d.DaysUntilDue, opt => opt.MapFrom(s => 
+                s.PaymentDueDate.HasValue 
+                    ? (int?)(s.PaymentDueDate.Value.ToDateTime(TimeOnly.MinValue) - DateTime.Today).TotalDays 
+                    : null));
 
         // Entity -> DTO dla szczegółów faktury
         CreateMap<KSeFInvoiceEntity, KSeFInvoiceDetailsDto>()
