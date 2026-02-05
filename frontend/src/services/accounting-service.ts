@@ -284,6 +284,8 @@ export class AccountingService {
       // Gas module fields
       gasQuantity?: number;
       gasUnitPrice?: number;
+      // Feed module fields
+      henhouseId?: string;
     },
   ) {
     return await AxiosWrapper.patch(

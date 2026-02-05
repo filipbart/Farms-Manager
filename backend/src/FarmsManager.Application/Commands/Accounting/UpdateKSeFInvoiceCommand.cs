@@ -27,6 +27,8 @@ public class UpdateKSeFInvoiceDto
     public Guid? FarmId { get; set; }
     public Guid? CycleId { get; set; }
     public Guid? AssignedUserId { get; set; }
+    public string InvoiceNumber { get; set; }
+    public Guid? HenhouseId { get; set; }
     public string RelatedInvoiceNumber { get; set; }
     public decimal? GrossAmount { get; set; }
     public decimal? NetAmount { get; set; }
@@ -159,6 +161,18 @@ public class UpdateKSeFInvoiceCommandHandler : IRequestHandler<UpdateKSeFInvoice
         if (request.Data.FarmId.HasValue && invoice.AssignedEntityInvoiceId.HasValue)
         {
             await UpdateModuleEntityFarmIdAsync(invoice.ModuleType, invoice.AssignedEntityInvoiceId.Value, request.Data.FarmId.Value, cancellationToken);
+        }
+
+        // Synchronizuj HenhouseId do powiązanej encji modułowej Feeds (jeśli istnieje)
+        if (request.Data.HenhouseId.HasValue && invoice.AssignedEntityInvoiceId.HasValue && invoice.ModuleType == ModuleType.Feeds)
+        {
+            await UpdateModuleEntityHenhouseIdAsync(invoice.AssignedEntityInvoiceId.Value, request.Data.HenhouseId.Value, cancellationToken);
+        }
+
+        // Synchronizuj InvoiceNumber do powiązanej encji modułowej (jeśli istnieje)
+        if (!string.IsNullOrEmpty(request.Data.InvoiceNumber) && invoice.AssignedEntityInvoiceId.HasValue)
+        {
+            await UpdateModuleEntityInvoiceNumberAsync(invoice.ModuleType, invoice.AssignedEntityInvoiceId.Value, request.Data.InvoiceNumber, cancellationToken);
         }
 
         // Synchronizuj status płatności do modułowych encji (Feeds i Sales)
@@ -390,6 +404,90 @@ public class UpdateKSeFInvoiceCommandHandler : IRequestHandler<UpdateKSeFInvoice
                 if (gasDelivery != null)
                 {
                     gasDelivery.SetFarm(farmId);
+                    await _gasDeliveryRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
+                }
+                break;
+        }
+    }
+
+    private async Task UpdateModuleEntityHenhouseIdAsync(Guid entityId, Guid henhouseId, CancellationToken cancellationToken)
+    {
+        var feedInvoice = await _feedInvoiceRepository.GetByIdAsync(entityId, cancellationToken);
+        if (feedInvoice != null)
+        {
+            feedInvoice.SetHenhouse(henhouseId);
+            await _feedInvoiceRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
+        }
+    }
+
+    private async Task UpdateModuleEntityInvoiceNumberAsync(ModuleType moduleType, Guid entityId, string invoiceNumber, CancellationToken cancellationToken)
+    {
+        switch (moduleType)
+        {
+            case ModuleType.Feeds:
+                var feedInvoice = await _feedInvoiceRepository.GetByIdAsync(entityId, cancellationToken);
+                if (feedInvoice != null && feedInvoice.InvoiceNumber != invoiceNumber)
+                {
+                    feedInvoice.Update(
+                        invoiceNumber,
+                        feedInvoice.BankAccountNumber,
+                        feedInvoice.ItemName,
+                        feedInvoice.VendorName,
+                        feedInvoice.Quantity,
+                        feedInvoice.UnitPrice,
+                        feedInvoice.InvoiceDate,
+                        feedInvoice.DueDate,
+                        feedInvoice.InvoiceTotal,
+                        feedInvoice.SubTotal,
+                        feedInvoice.VatAmount,
+                        feedInvoice.Comment);
+                    await _feedInvoiceRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
+                }
+                break;
+
+            case ModuleType.ProductionExpenses:
+                var expenseProduction = await _expenseProductionRepository.GetByIdAsync(entityId, cancellationToken);
+                if (expenseProduction != null && expenseProduction.InvoiceNumber != invoiceNumber)
+                {
+                    expenseProduction.Update(
+                        invoiceNumber,
+                        expenseProduction.InvoiceTotal,
+                        expenseProduction.SubTotal,
+                        expenseProduction.VatAmount,
+                        expenseProduction.InvoiceDate,
+                        expenseProduction.Comment);
+                    await _expenseProductionRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
+                }
+                break;
+
+            case ModuleType.Sales:
+                var saleInvoice = await _saleInvoiceRepository.GetByIdAsync(entityId, cancellationToken);
+                if (saleInvoice != null && saleInvoice.InvoiceNumber != invoiceNumber)
+                {
+                    saleInvoice.Update(
+                        invoiceNumber,
+                        saleInvoice.InvoiceDate,
+                        saleInvoice.DueDate,
+                        saleInvoice.PaymentDate,
+                        saleInvoice.InvoiceTotal,
+                        saleInvoice.SubTotal,
+                        saleInvoice.VatAmount,
+                        saleInvoice.Comment);
+                    await _saleInvoiceRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
+                }
+                break;
+
+            case ModuleType.Gas:
+                var gasDelivery = await _gasDeliveryRepository.GetByIdAsync(entityId, cancellationToken);
+                if (gasDelivery != null && gasDelivery.InvoiceNumber != invoiceNumber)
+                {
+                    gasDelivery.Update(
+                        invoiceNumber,
+                        gasDelivery.InvoiceDate,
+                        gasDelivery.InvoiceTotal,
+                        gasDelivery.UnitPrice,
+                        gasDelivery.Quantity,
+                        gasDelivery.Comment);
                     await _gasDeliveryRepository.UnitOfWork.SaveChangesAsync(cancellationToken);
                 }
                 break;

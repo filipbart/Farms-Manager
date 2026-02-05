@@ -64,6 +64,10 @@ interface ModuleEntityFormProps {
   selectedCycleId: string;
   comment?: string;
   onSuccess: () => void;
+  onDataChange?: (data: {
+    henhouseId?: string;
+    invoiceNumber?: string;
+  }) => void;
   /**
    * Mode: 'create' - creates module entity without changing status
    * Mode: 'accept' - creates module entity AND changes status to Accepted
@@ -141,6 +145,7 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
       selectedCycleId,
       comment,
       onSuccess,
+      onDataChange,
       mode = "create",
     },
     ref,
@@ -230,6 +235,54 @@ const ModuleEntityForm = forwardRef<ModuleEntityFormRef, ModuleEntityFormProps>(
         vatAmount: invoiceData.vatAmount,
       },
     });
+
+    // Watch for form changes and notify parent
+    const watchedFeedHenhouseId = feedForm.watch("henhouseId");
+    const watchedFeedInvoiceNumber = feedForm.watch("invoiceNumber");
+
+    useEffect(() => {
+      if (moduleType === ModuleType.Feeds && onDataChange) {
+        onDataChange({
+          henhouseId: watchedFeedHenhouseId,
+          invoiceNumber: watchedFeedInvoiceNumber,
+        });
+      }
+    }, [
+      moduleType,
+      watchedFeedHenhouseId,
+      watchedFeedInvoiceNumber,
+      onDataChange,
+    ]);
+
+    const watchedGasInvoiceNumber = gasForm.watch("invoiceNumber");
+
+    useEffect(() => {
+      if (moduleType === ModuleType.Gas && onDataChange) {
+        onDataChange({
+          invoiceNumber: watchedGasInvoiceNumber,
+        });
+      }
+    }, [moduleType, watchedGasInvoiceNumber, onDataChange]);
+
+    const watchedExpenseInvoiceNumber = expenseForm.watch("invoiceNumber");
+
+    useEffect(() => {
+      if (moduleType === ModuleType.ProductionExpenses && onDataChange) {
+        onDataChange({
+          invoiceNumber: watchedExpenseInvoiceNumber,
+        });
+      }
+    }, [moduleType, watchedExpenseInvoiceNumber, onDataChange]);
+
+    const watchedSaleInvoiceNumber = saleForm.watch("invoiceNumber");
+
+    useEffect(() => {
+      if (moduleType === ModuleType.Sales && onDataChange) {
+        onDataChange({
+          invoiceNumber: watchedSaleInvoiceNumber,
+        });
+      }
+    }, [moduleType, watchedSaleInvoiceNumber, onDataChange]);
 
     // Load henhouses for feed module and auto-select from database ID
     useEffect(() => {

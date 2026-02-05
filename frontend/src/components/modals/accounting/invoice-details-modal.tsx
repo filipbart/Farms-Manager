@@ -424,6 +424,7 @@ interface EditFormState {
   assignedUserId: string;
   comment: string;
   relatedInvoiceNumber: string;
+  henhouseId: string;
 }
 
 const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
@@ -461,6 +462,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
     assignedUserId: "",
     comment: "",
     relatedInvoiceNumber: "",
+    henhouseId: "",
   });
 
   // Data for dropdowns
@@ -583,6 +585,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
         assignedUserId: details.assignedUserId || "",
         comment: details.comment || "",
         relatedInvoiceNumber: details.relatedInvoiceNumber || "",
+        henhouseId: details.feedHenhouseId || "",
       });
 
       // Auto-show module form if module type requires entity creation
@@ -784,6 +787,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
             dueDate: editForm.dueDate || null,
             comment: editForm.comment,
             relatedInvoiceNumber: editForm.relatedInvoiceNumber,
+            henhouseId: editForm.henhouseId || undefined,
           }),
         () => {
           toast.success(
@@ -2448,6 +2452,18 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                       selectedCycleId={editForm.cycleId}
                       comment={editForm.comment}
                       mode="accept"
+                      onDataChange={(data) => {
+                        if (data.henhouseId !== undefined) {
+                          setEditForm((prev) => ({
+                            ...prev,
+                            henhouseId: data.henhouseId || "",
+                          }));
+                        }
+                        if (data.invoiceNumber !== undefined) {
+                          // Also update invoiceNumber in the form
+                          // This will be synced to module entities on save
+                        }
+                      }}
                       onSuccess={() => {
                         setShowModuleForm(false);
                         setPendingModuleType(null);
@@ -2666,6 +2682,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                                 comment: editForm.comment,
                                 relatedInvoiceNumber:
                                   editForm.relatedInvoiceNumber,
+                                henhouseId: editForm.henhouseId || undefined,
                               }),
                             () => {
                               toast.success("Zmiany zostały zapisane");
@@ -2684,6 +2701,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                                       paymentDate: editForm.paymentDate,
                                       paymentDueDate: editForm.dueDate,
                                       comment: editForm.comment,
+                                      feedHenhouseId: editForm.henhouseId,
                                       relatedInvoiceNumber:
                                         editForm.relatedInvoiceNumber,
                                     }
@@ -2716,6 +2734,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                       editForm.cycleId !== details.cycleId ||
                       editForm.vatDeductionType !== details.vatDeductionType ||
                       editForm.assignedUserId !== details.assignedUserId ||
+                      editForm.henhouseId !== (details.feedHenhouseId || "") ||
                       editForm.relatedInvoiceNumber !==
                         details.relatedInvoiceNumber) && (
                       <Button
@@ -2740,6 +2759,7 @@ const InvoiceDetailsModal: React.FC<InvoiceDetailsModalProps> = ({
                                     editForm.assignedUserId || null,
                                   relatedInvoiceNumber:
                                     editForm.relatedInvoiceNumber,
+                                  henhouseId: editForm.henhouseId || undefined,
                                 }),
                               async () => {
                                 toast.success("Zmiany zostały zapisane");
