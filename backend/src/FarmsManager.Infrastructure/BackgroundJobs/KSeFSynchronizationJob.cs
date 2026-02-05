@@ -246,7 +246,7 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
                         cancellationToken);
 
                     // Krok 0: Sprawdź czy istnieją podobne faktury (potencjalne duplikaty)
-                    var similarInvoices = await CheckForSimilarInvoicesAsync(invoiceSummary, invoiceRepository, cancellationToken);
+                    await CheckForSimilarInvoicesAsync(invoiceSummary, invoiceRepository, cancellationToken);
 
                     // Krok 1: Dopasuj podmiot gospodarczy po NIP lub nazwie
                     var (taxBusinessEntityId, fallbackFarmId, fallbackCycleId) =
@@ -950,7 +950,7 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
 
             // Sprawdź tylko jeśli mamy NIP do porównania
             if (string.IsNullOrWhiteSpace(normalizedSellerNip) && string.IsNullOrWhiteSpace(normalizedBuyerNip))
-                return new List<KSeFInvoiceEntity>();
+                return [];
 
             var similarInvoicesSpec = new SimilarKSeFInvoicesSpec(
                 normalizedSellerNip,
@@ -1003,7 +1003,7 @@ public class KSeFSynchronizationJob : BackgroundService, IKSeFSynchronizationJob
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error checking for similar invoices for KSeF {KsefNumber}", invoiceItem.KsefNumber);
-            return new List<KSeFInvoiceEntity>();
+            return [];
         }
     }
 

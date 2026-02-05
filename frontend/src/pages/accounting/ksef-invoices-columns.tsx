@@ -4,6 +4,7 @@ import { Chip, IconButton, Tooltip } from "@mui/material";
 import { MdPictureAsPdf, MdCode, MdDeleteForever } from "react-icons/md";
 import type { KSeFInvoiceListModel } from "../../models/accounting/ksef-invoice";
 import {
+  KSeFPaymentStatus,
   KSeFInvoiceStatusLabels,
   KSeFPaymentStatusLabels,
   KSeFInvoicePaymentTypeLabels,
@@ -12,7 +13,6 @@ import {
   KSeFInvoiceTypeLabels,
   VatDeductionTypeLabels,
   KSeFInvoiceStatus,
-  KSeFPaymentStatus,
   VatDeductionType,
 } from "../../models/accounting/ksef-invoice";
 
@@ -210,6 +210,14 @@ export const getKSeFInvoicesColumns = ({
       let fontWeight = "normal";
 
       if (daysNum < 0) {
+        // Sprawdź czy faktura jest opłacona
+        const paymentStatus = params.row.paymentStatus;
+        if (
+          paymentStatus === KSeFPaymentStatus.PaidCash ||
+          paymentStatus === KSeFPaymentStatus.PaidTransfer
+        ) {
+          return "—";
+        }
         // Przeterminowane - czerwony
         color = "#d32f2f";
         fontWeight = "bold";
