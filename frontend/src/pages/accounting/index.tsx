@@ -9,6 +9,8 @@ import {
   Tooltip,
   Typography,
   IconButton,
+  Checkbox,
+  FormControlLabel,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import InfoIcon from "@mui/icons-material/Info";
@@ -41,6 +43,7 @@ import {
 import {
   KSeFInvoiceType,
   type KSeFInvoiceListModel,
+  KSeFPaymentStatus,
 } from "../../models/accounting/ksef-invoice";
 import { getKSeFInvoicesColumns } from "./ksef-invoices-columns";
 import InvoiceDetailsModal from "../../components/modals/accounting/invoice-details-modal";
@@ -108,6 +111,8 @@ const AccountingPage: React.FC = () => {
     null,
   );
   const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false);
+  const [showNearestPaymentsExceptWipasz, setShowNearestPaymentsExceptWipasz] =
+    useState(false);
   const [invoiceToDelete, setInvoiceToDelete] =
     useState<KSeFInvoiceListModel | null>(null);
   const [users, setUsers] = useState<UserListModel[]>([]);
@@ -138,6 +143,40 @@ const AccountingPage: React.FC = () => {
     };
     fetchFarms();
   }, []);
+
+  // Handle predefined filter for nearest payments except Wipasz
+  const handleNearestPaymentsFilterChange = (
+    checked: boolean,
+    dispatch: React.Dispatch<
+      | { type: "set"; key: keyof KSeFInvoicesFilters; value: any }
+      | { type: "setMultiple"; payload: Partial<KSeFInvoicesFilters> }
+    >,
+  ) => {
+    setShowNearestPaymentsExceptWipasz(checked);
+
+    if (checked) {
+      // Set predefined filters
+      dispatch({
+        type: "setMultiple",
+        payload: {
+          exclusions: "Wipasz",
+          paymentStatus: [KSeFPaymentStatus.Unpaid],
+          orderBy: KSeFInvoicesOrderType.PaymentDueDate,
+          isDescending: false,
+          page: 0,
+        },
+      });
+    } else {
+      // Clear the predefined filters
+      dispatch({
+        type: "setMultiple",
+        payload: {
+          exclusions: undefined,
+          paymentStatus: [],
+        },
+      });
+    }
+  };
 
   const filterConfig = useMemo(
     () =>
@@ -299,6 +338,24 @@ const AccountingPage: React.FC = () => {
             {renderFilterField(filters, dispatch, "exclusions", {
               xs: 12,
             })}
+          </Grid>
+          <Grid container spacing={2} mt={2}>
+            <Grid size={12}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={showNearestPaymentsExceptWipasz}
+                    onChange={(e) =>
+                      handleNearestPaymentsFilterChange(
+                        e.target.checked,
+                        dispatch,
+                      )
+                    }
+                  />
+                }
+                label="Pokaż najbliższe płatności z wyjątkiem Wipasz"
+              />
+            </Grid>
           </Grid>
         </Box>
       </Collapse>
