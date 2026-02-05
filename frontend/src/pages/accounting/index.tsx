@@ -18,7 +18,6 @@ import React, {
   useEffect,
   useMemo,
   useReducer,
-  useRef,
   useState,
 } from "react";
 import { toast } from "react-toastify";
@@ -117,10 +116,6 @@ const AccountingPage: React.FC = () => {
   // Sequential processing state
   const [sequentialMode, setSequentialMode] = useState(false);
   const [sequentialIndex, setSequentialIndex] = useState(0);
-
-  // Ref do śledzenia czy paginacja została zainicjalizowana (zapobiega podwójnemu wywołaniu)
-  const paginationInitializedRef = useRef(false);
-  const lastGridKeyRef = useRef<string | null>(null);
 
   // Fetch users for filter
   useEffect(() => {
@@ -387,8 +382,13 @@ const AccountingPage: React.FC = () => {
     }
   }, [tabValue, allFilters, salesFilters, purchaseFilters]);
 
-  const fetchInvoices = useCallback(async () => {
-    const { filters } = getCurrentFilters();
+  const fetchInvoices = async () => {
+    const filters =
+      tabValue === 1
+        ? salesFilters
+        : tabValue === 2
+          ? purchaseFilters
+          : allFilters;
     setLoading(true);
     try {
       await handleApiResponse(
@@ -407,7 +407,7 @@ const AccountingPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [getCurrentFilters]);
+  };
 
   const handleDeleteInvoice = useCallback(
     async (invoice: KSeFInvoiceListModel) => {
@@ -416,7 +416,7 @@ const AccountingPage: React.FC = () => {
     [],
   );
 
-  const confirmDeleteInvoice = useCallback(async () => {
+  const confirmDeleteInvoice = async () => {
     if (!invoiceToDelete) return;
     setDeletingInvoiceId(invoiceToDelete.id);
     try {
@@ -433,12 +433,13 @@ const AccountingPage: React.FC = () => {
       setDeletingInvoiceId(null);
       setInvoiceToDelete(null);
     }
-  }, [fetchInvoices, invoiceToDelete]);
+  };
 
   // Fetch data when tab or filters change
-  React.useEffect(() => {
+  useEffect(() => {
     fetchInvoices();
-  }, [fetchInvoices]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tabValue, allFilters, salesFilters, purchaseFilters]);
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -632,25 +633,6 @@ const AccountingPage: React.FC = () => {
           page: filters.page,
         }}
         onPaginationModelChange={({ page, pageSize }) => {
-          // Reset flagi przy zmianie klucza grida (zmiana taba)
-          if (lastGridKeyRef.current !== gridStateKey) {
-            lastGridKeyRef.current = gridStateKey;
-            paginationInitializedRef.current = false;
-          }
-
-          // Ignoruj pierwsze wywołanie po renderze (DataGrid wywołuje to przy inicjalizacji)
-          if (!paginationInitializedRef.current) {
-            paginationInitializedRef.current = true;
-            // Jeśli DataGrid próbuje zresetować do page 0, a my mamy inną stronę - ignoruj
-            if (page === 0 && filters.page !== 0) {
-              return;
-            }
-          }
-
-          // Zapobiegnij podwójnemu wywołaniu - sprawdź czy wartości się zmieniły
-          if (filters.page === page && filters.pageSize === pageSize) {
-            return;
-          }
           localStorage.setItem(storageKey, pageSize.toString());
           dispatch({
             type: "setMultiple",
