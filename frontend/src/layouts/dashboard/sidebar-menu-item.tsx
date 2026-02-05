@@ -86,9 +86,9 @@ const SidebarMenuItem: React.FC<SidebarMenuItemProps> = ({
       case NotificationPriority.High:
         return theme.palette.error.main;
       case NotificationPriority.Medium:
-        return theme.palette.warning.main;
+        return "#F57C00";
       case NotificationPriority.Low:
-        return theme.palette.info.main;
+        return "#FBC02D";
       default:
         return "transparent";
     }

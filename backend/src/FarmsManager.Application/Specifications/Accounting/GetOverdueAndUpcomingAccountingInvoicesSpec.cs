@@ -24,8 +24,8 @@ public sealed class GetOverdueAndUpcomingAccountingInvoicesSpec : BaseSpecificat
         // Due date within range (up to 14 days from now)
         Query.Where(t => t.PaymentDueDate.Value <= date);
 
-        // Exclude Feeds module invoices - they are already reminded in the Feeds module
-        Query.Where(t => t.ModuleType != ModuleType.Feeds);
+        // Exclude Feeds and Sales module invoices - they are already reminded in their respective modules
+        Query.Where(t => t.ModuleType != ModuleType.Feeds && t.ModuleType != ModuleType.Sales);
 
         // Filter by assigned user: show only invoices assigned to current user
         if (userId.HasValue)

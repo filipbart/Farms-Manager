@@ -703,6 +703,13 @@ const AccountingPage: React.FC = () => {
           if (!isAssignedToCurrentUser) {
             return "";
           }
+          // Exclude Feeds and Sales module invoices (they are reminded in their respective modules)
+          if (
+            params.row.moduleType === "Feeds" ||
+            params.row.moduleType === "Sales"
+          ) {
+            return "";
+          }
           return getAccountingDueDateClassName(
             params.row.paymentDueDate,
             params.row.paymentDate,
