@@ -11,13 +11,13 @@ namespace FarmsManager.Application.Services;
 /// </summary>
 public class InvoiceAssignmentService : IInvoiceAssignmentService, IService
 {
-    private readonly IInvoiceAssignmentRuleRepository _ruleRepository;
+    private readonly IInvoiceUserAssignmentRuleRepository _ruleRepository;
     private readonly IInvoiceModuleAssignmentRuleRepository _moduleRuleRepository;
     private readonly IInvoiceFarmAssignmentRuleRepository _farmRuleRepository;
     private readonly IKSeFInvoiceXmlParser _xmlParser;
 
     public InvoiceAssignmentService(
-        IInvoiceAssignmentRuleRepository ruleRepository,
+        IInvoiceUserAssignmentRuleRepository ruleRepository,
         IInvoiceModuleAssignmentRuleRepository moduleRuleRepository,
         IInvoiceFarmAssignmentRuleRepository farmRuleRepository,
         IKSeFInvoiceXmlParser xmlParser)

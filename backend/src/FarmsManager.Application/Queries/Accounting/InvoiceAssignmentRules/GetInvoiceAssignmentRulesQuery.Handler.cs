@@ -11,11 +11,11 @@ namespace FarmsManager.Application.Queries.Accounting.InvoiceAssignmentRules;
 public class GetInvoiceAssignmentRulesQueryHandler 
     : IRequestHandler<GetInvoiceAssignmentRulesQuery, BaseResponse<List<InvoiceAssignmentRuleDto>>>
 {
-    private readonly IInvoiceAssignmentRuleRepository _repository;
+    private readonly IInvoiceUserAssignmentRuleRepository _repository;
     private readonly IFarmRepository _farmRepository;
 
     public GetInvoiceAssignmentRulesQueryHandler(
-        IInvoiceAssignmentRuleRepository repository,
+        IInvoiceUserAssignmentRuleRepository repository,
         IFarmRepository farmRepository)
     {
         _repository = repository;

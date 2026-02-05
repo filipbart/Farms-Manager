@@ -10,7 +10,7 @@ public class TaxBusinessEntityConfiguration : BaseConfiguration<TaxBusinessEntit
     {
         base.Configure(builder);
 
-        builder.ToTable("tax_business_entity");
+        builder.ToTable("tax_business");
 
         builder.HasKey(t => t.Id);
 

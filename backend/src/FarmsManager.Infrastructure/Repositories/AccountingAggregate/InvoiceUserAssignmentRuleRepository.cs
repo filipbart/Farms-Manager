@@ -6,21 +6,21 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FarmsManager.Infrastructure.Repositories.AccountingAggregate;
 
-public class InvoiceAssignmentRuleRepository : AbstractRepository<InvoiceAssignmentRuleEntity>,
-    IInvoiceAssignmentRuleRepository
+public class InvoiceUserAssignmentRuleRepository : AbstractRepository<InvoiceUserAssignmentRuleEntity>,
+    IInvoiceUserAssignmentRuleRepository
 {
     private readonly FarmsManagerContext _context;
     public IUnitOfWork UnitOfWork => _context;
 
-    public InvoiceAssignmentRuleRepository(FarmsManagerContext context, IConfigurationProvider configurationProvider) :
+    public InvoiceUserAssignmentRuleRepository(FarmsManagerContext context, IConfigurationProvider configurationProvider) :
         base(context, configurationProvider)
     {
         _context = context;
     }
 
-    public async Task<List<InvoiceAssignmentRuleEntity>> GetAllActiveOrderedByPriorityAsync(CancellationToken cancellationToken = default)
+    public async Task<List<InvoiceUserAssignmentRuleEntity>> GetAllActiveOrderedByPriorityAsync(CancellationToken cancellationToken = default)
     {
-        return await _context.Set<InvoiceAssignmentRuleEntity>()
+        return await _context.Set<InvoiceUserAssignmentRuleEntity>()
             .Where(r => r.IsActive && r.DateDeletedUtc == null)
             .OrderBy(r => r.Priority)
             .Include(r => r.AssignedUser)
@@ -30,7 +30,7 @@ public class InvoiceAssignmentRuleRepository : AbstractRepository<InvoiceAssignm
 
     public async Task<int> GetNextPriorityAsync(CancellationToken cancellationToken = default)
     {
-        var maxPriority = await _context.Set<InvoiceAssignmentRuleEntity>()
+        var maxPriority = await _context.Set<InvoiceUserAssignmentRuleEntity>()
             .Where(r => r.DateDeletedUtc == null)
             .MaxAsync(r => (int?)r.Priority, cancellationToken);
 

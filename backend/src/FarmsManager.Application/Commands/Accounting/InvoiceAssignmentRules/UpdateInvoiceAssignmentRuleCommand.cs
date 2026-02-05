@@ -22,11 +22,11 @@ public record UpdateInvoiceAssignmentRuleDto
 
 public class UpdateInvoiceAssignmentRuleCommandHandler : IRequestHandler<UpdateInvoiceAssignmentRuleCommand, EmptyBaseResponse>
 {
-    private readonly IInvoiceAssignmentRuleRepository _repository;
+    private readonly IInvoiceUserAssignmentRuleRepository _repository;
     private readonly IUserDataResolver _userDataResolver;
 
     public UpdateInvoiceAssignmentRuleCommandHandler(
-        IInvoiceAssignmentRuleRepository repository,
+        IInvoiceUserAssignmentRuleRepository repository,
         IUserDataResolver userDataResolver)
     {
         _repository = repository;

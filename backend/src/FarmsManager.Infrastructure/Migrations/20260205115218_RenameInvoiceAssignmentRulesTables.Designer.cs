@@ -5,6 +5,7 @@ using FarmsManager.Domain.Aggregates.UserAggregate.Models;
 using FarmsManager.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -13,9 +14,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FarmsManager.Infrastructure.Migrations
 {
     [DbContext(typeof(FarmsManagerContext))]
-    partial class FarmsManagerContextModelSnapshot : ModelSnapshot
+    [Migration("20260205115218_RenameInvoiceAssignmentRulesTables")]
+    partial class RenameInvoiceAssignmentRulesTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -101,30 +104,30 @@ namespace FarmsManager.Infrastructure.Migrations
                         .HasColumnName("tax_business_entity_id");
 
                     b.HasKey("Id")
-                        .HasName("pk_invoice_farm_assignment_rule");
+                        .HasName("pk_invoice_farm_assignment_rules");
 
                     b.HasIndex("CreatedBy")
-                        .HasDatabaseName("ix_invoice_farm_assignment_rule_created_by");
+                        .HasDatabaseName("ix_invoice_farm_assignment_rules_created_by");
 
                     b.HasIndex("DeletedBy")
-                        .HasDatabaseName("ix_invoice_farm_assignment_rule_deleted_by");
+                        .HasDatabaseName("ix_invoice_farm_assignment_rules_deleted_by");
 
                     b.HasIndex("IsActive")
-                        .HasDatabaseName("ix_invoice_farm_assignment_rule_is_active");
+                        .HasDatabaseName("ix_invoice_farm_assignment_rules_is_active");
 
                     b.HasIndex("ModifiedBy")
-                        .HasDatabaseName("ix_invoice_farm_assignment_rule_modified_by");
+                        .HasDatabaseName("ix_invoice_farm_assignment_rules_modified_by");
 
                     b.HasIndex("Priority")
-                        .HasDatabaseName("ix_invoice_farm_assignment_rule_priority");
+                        .HasDatabaseName("ix_invoice_farm_assignment_rules_priority");
 
                     b.HasIndex("TargetFarmId")
-                        .HasDatabaseName("ix_invoice_farm_assignment_rule_target_farm_id");
+                        .HasDatabaseName("ix_invoice_farm_assignment_rules_target_farm_id");
 
                     b.HasIndex("TaxBusinessEntityId")
-                        .HasDatabaseName("ix_invoice_farm_assignment_rule_tax_business_entity_id");
+                        .HasDatabaseName("ix_invoice_farm_assignment_rules_tax_business_entity_id");
 
-                    b.ToTable("invoice_farm_assignment_rule", "farms_manager");
+                    b.ToTable("invoice_farm_assignment_rules", "farms_manager");
                 });
 
             modelBuilder.Entity("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.InvoiceModuleAssignmentRuleEntity", b =>
@@ -314,33 +317,33 @@ namespace FarmsManager.Infrastructure.Migrations
                         .HasColumnName("tax_business_entity_id");
 
                     b.HasKey("Id")
-                        .HasName("pk_invoice_user_assignment_rule");
+                        .HasName("pk_invoice_user_assignment_rules");
 
                     b.HasIndex("AssignedUserId")
-                        .HasDatabaseName("ix_invoice_user_assignment_rule_assigned_user_id");
+                        .HasDatabaseName("ix_invoice_user_assignment_rules_assigned_user_id");
 
                     b.HasIndex("CreatedBy")
-                        .HasDatabaseName("ix_invoice_user_assignment_rule_created_by");
+                        .HasDatabaseName("ix_invoice_user_assignment_rules_created_by");
 
                     b.HasIndex("DeletedBy")
-                        .HasDatabaseName("ix_invoice_user_assignment_rule_deleted_by");
+                        .HasDatabaseName("ix_invoice_user_assignment_rules_deleted_by");
 
                     b.HasIndex("IsActive")
-                        .HasDatabaseName("ix_invoice_user_assignment_rule_is_active");
+                        .HasDatabaseName("ix_invoice_user_assignment_rules_is_active");
 
                     b.HasIndex("ModifiedBy")
-                        .HasDatabaseName("ix_invoice_user_assignment_rule_modified_by");
+                        .HasDatabaseName("ix_invoice_user_assignment_rules_modified_by");
 
                     b.HasIndex("Priority")
-                        .HasDatabaseName("ix_invoice_user_assignment_rule_priority");
+                        .HasDatabaseName("ix_invoice_user_assignment_rules_priority");
 
                     b.HasIndex("TaxBusinessEntityId")
-                        .HasDatabaseName("ix_invoice_user_assignment_rule_tax_business_entity_id");
+                        .HasDatabaseName("ix_invoice_user_assignment_rules_tax_business_entity_id");
 
                     b.HasIndex("IsActive", "Priority")
-                        .HasDatabaseName("ix_invoice_user_assignment_rule_is_active_priority");
+                        .HasDatabaseName("ix_invoice_user_assignment_rules_is_active_priority");
 
-                    b.ToTable("invoice_user_assignment_rule", "farms_manager");
+                    b.ToTable("invoice_user_assignment_rules", "farms_manager");
                 });
 
             modelBuilder.Entity("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.KSeFInvoiceAttachmentEntity", b =>
@@ -1008,24 +1011,24 @@ namespace FarmsManager.Infrastructure.Migrations
                         .HasColumnName("nip");
 
                     b.HasKey("Id")
-                        .HasName("pk_tax_business");
+                        .HasName("pk_tax_business_entity");
 
                     b.HasIndex("CreatedBy")
-                        .HasDatabaseName("ix_tax_business_created_by");
+                        .HasDatabaseName("ix_tax_business_entity_created_by");
 
                     b.HasIndex("DeletedBy")
-                        .HasDatabaseName("ix_tax_business_deleted_by");
+                        .HasDatabaseName("ix_tax_business_entity_deleted_by");
 
                     b.HasIndex("ModifiedBy")
-                        .HasDatabaseName("ix_tax_business_modified_by");
+                        .HasDatabaseName("ix_tax_business_entity_modified_by");
 
                     b.HasIndex("Nip")
-                        .HasDatabaseName("ix_tax_business_nip");
+                        .HasDatabaseName("ix_tax_business_entity_nip");
 
                     b.HasIndex("Nip", "Name")
-                        .HasDatabaseName("ix_tax_business_nip_name");
+                        .HasDatabaseName("ix_tax_business_entity_nip_name");
 
-                    b.ToTable("tax_business", "farms_manager");
+                    b.ToTable("tax_business_entity", "farms_manager");
                 });
 
             modelBuilder.Entity("FarmsManager.Domain.Aggregates.EmployeeAggregate.Entities.EmployeeEntity", b =>
@@ -4701,32 +4704,32 @@ namespace FarmsManager.Infrastructure.Migrations
                         .WithMany()
                         .HasForeignKey("CreatedBy")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_invoice_farm_assignment_rule_user_created_by");
+                        .HasConstraintName("fk_invoice_farm_assignment_rules_user_created_by");
 
                     b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Deleter")
                         .WithMany()
                         .HasForeignKey("DeletedBy")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_invoice_farm_assignment_rule_user_deleted_by");
+                        .HasConstraintName("fk_invoice_farm_assignment_rules_user_deleted_by");
 
                     b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Modifier")
                         .WithMany()
                         .HasForeignKey("ModifiedBy")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_invoice_farm_assignment_rule_user_modified_by");
+                        .HasConstraintName("fk_invoice_farm_assignment_rules_user_modified_by");
 
                     b.HasOne("FarmsManager.Domain.Aggregates.FarmAggregate.Entities.FarmEntity", "TargetFarm")
                         .WithMany()
                         .HasForeignKey("TargetFarmId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_invoice_farm_assignment_rule_farm_entity_target_farm_id");
+                        .HasConstraintName("fk_invoice_farm_assignment_rules_farm_entity_target_farm_id");
 
                     b.HasOne("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.TaxBusinessEntity", "TaxBusinessEntity")
                         .WithMany()
                         .HasForeignKey("TaxBusinessEntityId")
                         .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("fk_invoice_farm_assignment_rule_tax_business_entity_tax_busine");
+                        .HasConstraintName("fk_invoice_farm_assignment_rules_tax_business_entity_tax_busin");
 
                     b.Navigation("Creator");
 
@@ -4789,31 +4792,31 @@ namespace FarmsManager.Infrastructure.Migrations
                         .HasForeignKey("AssignedUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_invoice_user_assignment_rule_user_entity_assigned_user_id");
+                        .HasConstraintName("fk_invoice_user_assignment_rules_user_entity_assigned_user_id");
 
                     b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Creator")
                         .WithMany()
                         .HasForeignKey("CreatedBy")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_invoice_user_assignment_rule_user_created_by");
+                        .HasConstraintName("fk_invoice_user_assignment_rules_user_created_by");
 
                     b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Deleter")
                         .WithMany()
                         .HasForeignKey("DeletedBy")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_invoice_user_assignment_rule_user_deleted_by");
+                        .HasConstraintName("fk_invoice_user_assignment_rules_user_deleted_by");
 
                     b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Modifier")
                         .WithMany()
                         .HasForeignKey("ModifiedBy")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_invoice_user_assignment_rule_user_modified_by");
+                        .HasConstraintName("fk_invoice_user_assignment_rules_user_modified_by");
 
                     b.HasOne("FarmsManager.Domain.Aggregates.AccountingAggregate.Entities.TaxBusinessEntity", "TaxBusinessEntity")
                         .WithMany()
                         .HasForeignKey("TaxBusinessEntityId")
                         .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("fk_invoice_user_assignment_rule_tax_business_entity_tax_busine");
+                        .HasConstraintName("fk_invoice_user_assignment_rules_tax_business_entity_tax_busin");
 
                     b.Navigation("AssignedUser");
 
@@ -5050,19 +5053,19 @@ namespace FarmsManager.Infrastructure.Migrations
                         .WithMany()
                         .HasForeignKey("CreatedBy")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_tax_business_user_created_by");
+                        .HasConstraintName("fk_tax_business_entity_user_created_by");
 
                     b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Deleter")
                         .WithMany()
                         .HasForeignKey("DeletedBy")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_tax_business_user_deleted_by");
+                        .HasConstraintName("fk_tax_business_entity_user_deleted_by");
 
                     b.HasOne("FarmsManager.Domain.Aggregates.UserAggregate.Entities.UserEntity", "Modifier")
                         .WithMany()
                         .HasForeignKey("ModifiedBy")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_tax_business_user_modified_by");
+                        .HasConstraintName("fk_tax_business_entity_user_modified_by");
 
                     b.Navigation("Creator");
 
@@ -5743,7 +5746,7 @@ namespace FarmsManager.Infrastructure.Migrations
                         .WithMany("Farms")
                         .HasForeignKey("TaxBusinessEntityId")
                         .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("fk_farm_tax_business_tax_business_entity_id");
+                        .HasConstraintName("fk_farm_tax_business_entity_tax_business_entity_id");
 
                     b.Navigation("ActiveCycle");
 

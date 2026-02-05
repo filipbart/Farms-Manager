@@ -4,7 +4,7 @@ using FarmsManager.Domain.Aggregates.AccountingAggregate.Entities;
 
 namespace FarmsManager.Application.Queries.Accounting.InvoiceAssignmentRules;
 
-public sealed class GetInvoiceAssignmentRulesSpec : BaseSpecification<InvoiceAssignmentRuleEntity>
+public sealed class GetInvoiceAssignmentRulesSpec : BaseSpecification<InvoiceUserAssignmentRuleEntity>
 {
     public GetInvoiceAssignmentRulesSpec()
     {

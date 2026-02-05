@@ -3,8 +3,8 @@ using FarmsManager.Domain.SeedWork;
 
 namespace FarmsManager.Domain.Aggregates.AccountingAggregate.Interfaces;
 
-public interface IInvoiceAssignmentRuleRepository : IRepository<InvoiceAssignmentRuleEntity>
+public interface IInvoiceUserAssignmentRuleRepository : IRepository<InvoiceUserAssignmentRuleEntity>
 {
-    Task<List<InvoiceAssignmentRuleEntity>> GetAllActiveOrderedByPriorityAsync(CancellationToken cancellationToken = default);
+    Task<List<InvoiceUserAssignmentRuleEntity>> GetAllActiveOrderedByPriorityAsync(CancellationToken cancellationToken = default);
     Task<int> GetNextPriorityAsync(CancellationToken cancellationToken = default);
 }

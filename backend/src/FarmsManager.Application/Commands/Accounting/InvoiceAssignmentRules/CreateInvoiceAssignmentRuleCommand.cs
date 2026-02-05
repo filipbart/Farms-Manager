@@ -22,11 +22,11 @@ public record CreateInvoiceAssignmentRuleDto
 
 public class CreateInvoiceAssignmentRuleCommandHandler : IRequestHandler<CreateInvoiceAssignmentRuleCommand, BaseResponse<Guid>>
 {
-    private readonly IInvoiceAssignmentRuleRepository _repository;
+    private readonly IInvoiceUserAssignmentRuleRepository _repository;
     private readonly IUserDataResolver _userDataResolver;
 
     public CreateInvoiceAssignmentRuleCommandHandler(
-        IInvoiceAssignmentRuleRepository repository,
+        IInvoiceUserAssignmentRuleRepository repository,
         IUserDataResolver userDataResolver)
     {
         _repository = repository;
@@ -38,7 +38,7 @@ public class CreateInvoiceAssignmentRuleCommandHandler : IRequestHandler<CreateI
         var userId = _userDataResolver.GetUserId() ?? throw DomainException.Unauthorized();
         var nextPriority = await _repository.GetNextPriorityAsync(cancellationToken);
 
-        var rule = InvoiceAssignmentRuleEntity.CreateNew(
+        var rule = InvoiceUserAssignmentRuleEntity.CreateNew(
             name: request.Data.Name,
             priority: nextPriority,
             assignedUserId: request.Data.AssignedUserId,

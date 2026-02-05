@@ -4,13 +4,13 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace FarmsManager.Infrastructure.EntityConfigurations.AccountingAggregate;
 
-public class InvoiceAssignmentRuleEntityConfiguration : BaseConfiguration<InvoiceAssignmentRuleEntity>
+public class InvoiceAssignmentRuleEntityConfiguration : BaseConfiguration<InvoiceUserAssignmentRuleEntity>
 {
-    public override void Configure(EntityTypeBuilder<InvoiceAssignmentRuleEntity> builder)
+    public override void Configure(EntityTypeBuilder<InvoiceUserAssignmentRuleEntity> builder)
     {
         base.Configure(builder);
 
-        builder.ToTable("invoice_assignment_rules");
+        builder.ToTable("invoice_user_assignment_rule");
 
         builder.HasKey(r => r.Id);
 

@@ -8,7 +8,7 @@ public class InvoiceFarmAssignmentRuleEntityConfiguration : IEntityTypeConfigura
 {
     public void Configure(EntityTypeBuilder<InvoiceFarmAssignmentRuleEntity> builder)
     {
-        builder.ToTable("InvoiceFarmAssignmentRules");
+        builder.ToTable("invoice_farm_assignment_rule");
 
         builder.HasKey(x => x.Id);
 

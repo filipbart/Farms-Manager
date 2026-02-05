@@ -10,11 +10,11 @@ public record ReorderInvoiceAssignmentRulesCommand(List<Guid> OrderedRuleIds) : 
 
 public class ReorderInvoiceAssignmentRulesCommandHandler : IRequestHandler<ReorderInvoiceAssignmentRulesCommand, EmptyBaseResponse>
 {
-    private readonly IInvoiceAssignmentRuleRepository _repository;
+    private readonly IInvoiceUserAssignmentRuleRepository _repository;
     private readonly IUserDataResolver _userDataResolver;
 
     public ReorderInvoiceAssignmentRulesCommandHandler(
-        IInvoiceAssignmentRuleRepository repository,
+        IInvoiceUserAssignmentRuleRepository repository,
         IUserDataResolver userDataResolver)
     {
         _repository = repository;

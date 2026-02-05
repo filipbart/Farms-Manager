@@ -7,16 +7,16 @@ namespace FarmsManager.Domain.Aggregates.AccountingAggregate.Entities;
 /// Reguła automatycznego przypisywania faktur do pracowników.
 /// Reguły są sprawdzane w kolejności priorytetu (od najniższego).
 /// </summary>
-public class InvoiceAssignmentRuleEntity : Entity
+public class InvoiceUserAssignmentRuleEntity : Entity
 {
-    protected InvoiceAssignmentRuleEntity()
+    protected InvoiceUserAssignmentRuleEntity()
     {
     }
 
     /// <summary>
     /// Tworzy nową regułę przypisywania faktur
     /// </summary>
-    public static InvoiceAssignmentRuleEntity CreateNew(
+    public static InvoiceUserAssignmentRuleEntity CreateNew(
         string name,
         int priority,
         Guid assignedUserId,
@@ -27,7 +27,7 @@ public class InvoiceAssignmentRuleEntity : Entity
         string description = null,
         Guid? createdBy = null)
     {
-        return new InvoiceAssignmentRuleEntity
+        return new InvoiceUserAssignmentRuleEntity
         {
             Name = name,
             Priority = priority,

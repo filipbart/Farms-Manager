@@ -10,11 +10,11 @@ public record DeleteInvoiceAssignmentRuleCommand(Guid RuleId) : IRequest<EmptyBa
 
 public class DeleteInvoiceAssignmentRuleCommandHandler : IRequestHandler<DeleteInvoiceAssignmentRuleCommand, EmptyBaseResponse>
 {
-    private readonly IInvoiceAssignmentRuleRepository _repository;
+    private readonly IInvoiceUserAssignmentRuleRepository _repository;
     private readonly IUserDataResolver _userDataResolver;
 
     public DeleteInvoiceAssignmentRuleCommandHandler(
-        IInvoiceAssignmentRuleRepository repository,
+        IInvoiceUserAssignmentRuleRepository repository,
         IUserDataResolver userDataResolver)
     {
         _repository = repository;
