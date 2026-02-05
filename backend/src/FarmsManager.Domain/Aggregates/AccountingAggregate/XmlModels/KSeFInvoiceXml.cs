@@ -86,6 +86,12 @@ public class Podmiot2
 
     [XmlElement("DaneKontaktowe")]
     public DaneKontaktowe DaneKontaktowe { get; set; }
+
+    [XmlElement("JST")]
+    public string JST { get; set; }
+
+    [XmlElement("GV")]
+    public string GV { get; set; }
 }
 
 /// <summary>
@@ -256,12 +262,105 @@ public class FaDane
     public Platnosc Platnosc { get; set; }
 
     /// <summary>
+    /// Warunki transakcji (w tym Transport z WysyłkaDo)
+    /// </summary>
+    [XmlElement("WarunkiTransakcji")]
+    public WarunkiTransakcji WarunkiTransakcji { get; set; }
+
+    /// <summary>
     /// Dodatkowy opis - pola przeznaczone dla wykazywania dodatkowych danych na fakturze,
     /// w tym wymaganych przepisami prawa, dla których nie przewidziano innych pól/elementów.
     /// Może zawierać np. "Miejsce rozładunku: Jaworowo Kłódź K5"
     /// </summary>
+    [XmlElement("Adnotacje")]
+    public Adnotacje Adnotacje { get; set; }
+
+    /// <summary>
+    /// Dodatkowe opisy faktury
+    /// </summary>
     [XmlElement("DodatkowyOpis")]
     public List<DodatkowyOpis> DodatkoweOpisy { get; set; } = [];
+}
+
+/// <summary>
+/// Adnotacje na fakturze (P_16, P_17, Zwolnienie, etc.)
+/// </summary>
+public class Adnotacje
+{
+    [XmlElement("P_16")]
+    public string P_16 { get; set; }
+
+    [XmlElement("P_17")]
+    public string P_17 { get; set; }
+
+    [XmlElement("P_18")]
+    public string P_18 { get; set; }
+
+    [XmlElement("P_18A")]
+    public string P_18A { get; set; }
+
+    [XmlElement("P_23")]
+    public string P_23 { get; set; }
+
+    [XmlElement("Zwolnienie")]
+    public Zwolnienie Zwolnienie { get; set; }
+
+    [XmlElement("NoweSrodkiTransportu")]
+    public NoweSrodkiTransportu NoweSrodkiTransportu { get; set; }
+
+    [XmlElement("PMarzy")]
+    public PMarzy PMarzy { get; set; }
+}
+
+public class Zwolnienie
+{
+    [XmlElement("P_19")]
+    public string P_19 { get; set; }
+
+    [XmlElement("P_19A")]
+    public string P_19A { get; set; }
+}
+
+public class NoweSrodkiTransportu
+{
+    [XmlElement("P_22N")]
+    public string P_22N { get; set; }
+}
+
+public class PMarzy
+{
+    [XmlElement("P_PMarzyN")]
+    public string P_PMarzyN { get; set; }
+}
+
+/// <summary>
+/// Dane transportu faktury
+/// </summary>
+public class Transport
+{
+    /// <summary>
+    /// Adres wysyłki z
+    /// </summary>
+    [XmlElement("WysylkaZ")]
+    public AdresPodmiotu WysylkaZ { get; set; }
+
+    /// <summary>
+    /// Adres wysyłki do
+    /// </summary>
+    [XmlElement("WysylkaDo")]
+    public AdresPodmiotu WysylkaDo { get; set; }
+}
+
+/// <summary>
+/// Warunki transakcji faktury
+/// </summary>
+public class WarunkiTransakcji
+{
+    /// <summary>
+    /// Dane transportu w ramach warunków transakcji
+    /// </summary>
+    [XmlElement("Transport")]
+    public Transport Transport { get; set; }
 }
 
 /// <summary>
@@ -318,10 +417,16 @@ public class FaWiersz
     public decimal? P_11A { get; set; }
 
     /// <summary>
+    /// Kwota VAT (np. P_11Vat)
+    /// </summary>
+    [XmlElement("P_11Vat")]
+    public decimal? P_11Vat { get; set; }
+
+    /// <summary>
     /// Stawka VAT (np. 23, 8, 5, 0)
     /// </summary>
     [XmlElement("P_12")]
-    public decimal? P_12 { get; set; }
+    public string P_12 { get; set; }
 
     /// <summary>
     /// PKWiU
@@ -474,12 +579,21 @@ public class Stopka
 {
     [XmlElement("Informacje")]
     public Informacje Informacje { get; set; }
+
+    [XmlElement("Rejestry")]
+    public Rejestry Rejestry { get; set; }
 }
 
 public class Informacje
 {
     [XmlElement("StopkaFaktury")]
     public string StopkaFaktury { get; set; }
+}
+
+public class Rejestry
+{
+    [XmlElement("BDO")]
+    public string BDO { get; set; }
 }
 
 /// <summary>

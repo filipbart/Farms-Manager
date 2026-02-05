@@ -167,6 +167,30 @@ public class InvoiceAssignmentService : IInvoiceAssignmentService, IService
                 if (!string.IsNullOrWhiteSpace(parsedXml?.Stopka?.Informacje?.StopkaFaktury))
                     parts.Add(parsedXml.Stopka.Informacje.StopkaFaktury);
 
+                // Dane transportu z WarunkiTransakcji (często używane w praktyce)
+                if (parsedXml?.Fa?.WarunkiTransakcji?.Transport != null)
+                {
+                    var transport = parsedXml.Fa.WarunkiTransakcji.Transport;
+                    
+                    // Adres wysyłki z
+                    if (transport.WysylkaZ != null)
+                    {
+                        if (!string.IsNullOrWhiteSpace(transport.WysylkaZ.AdresL1))
+                            parts.Add(transport.WysylkaZ.AdresL1);
+                        if (!string.IsNullOrWhiteSpace(transport.WysylkaZ.AdresL2))
+                            parts.Add(transport.WysylkaZ.AdresL2);
+                    }
+                    
+                    // Adres wysyłki do - szczególnie ważne
+                    if (transport.WysylkaDo != null)
+                    {
+                        if (!string.IsNullOrWhiteSpace(transport.WysylkaDo.AdresL1))
+                            parts.Add(transport.WysylkaDo.AdresL1);
+                        if (!string.IsNullOrWhiteSpace(transport.WysylkaDo.AdresL2))
+                            parts.Add(transport.WysylkaDo.AdresL2);
+                    }
+                }
+
                 // Dodatkowe opisy (DodatkowyOpis - klucz/wartość, zgodne z FA(4))
                 if (parsedXml?.Fa?.DodatkoweOpisy != null)
                 {

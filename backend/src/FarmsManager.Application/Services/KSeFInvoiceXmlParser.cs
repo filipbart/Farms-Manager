@@ -72,8 +72,7 @@ public partial class KSeFInvoiceXmlParser : IKSeFInvoiceXmlParser
             {
                 var genericSerializer = new XmlSerializer(typeof(KSeFInvoiceXml));
                 using var genericReader = new StringReader(xml);
-                var result = genericSerializer.Deserialize(genericReader) as KSeFInvoiceXml;
-                if (result != null)
+                if (genericSerializer.Deserialize(genericReader) is KSeFInvoiceXml result)
                 {
                     _logger.LogInformation("Pomyślnie sparsowano XML faktury bez namespace");
                     return result;
@@ -114,8 +113,7 @@ public partial class KSeFInvoiceXmlParser : IKSeFInvoiceXmlParser
             {
                 var cleanedGenericSerializer = new XmlSerializer(typeof(KSeFInvoiceXml));
                 using var cleanedGenericReader = new StringReader(cleanedXml);
-                var result = cleanedGenericSerializer.Deserialize(cleanedGenericReader) as KSeFInvoiceXml;
-                if (result != null)
+                if (cleanedGenericSerializer.Deserialize(cleanedGenericReader) is KSeFInvoiceXml result)
                 {
                     _logger.LogInformation("Pomyślnie sparsowano oczyszczony XML faktury bez namespace");
                     return result;

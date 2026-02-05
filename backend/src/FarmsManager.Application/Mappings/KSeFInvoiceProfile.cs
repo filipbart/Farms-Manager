@@ -100,11 +100,27 @@ public class KSeFInvoiceProfile : Profile
             .ForMember(d => d.Unit, opt => opt.MapFrom(s => s.P_8A))
             .ForMember(d => d.UnitPrice, opt => opt.MapFrom(s => s.P_9A ?? 0))
             .ForMember(d => d.NetAmount, opt => opt.MapFrom(s => s.P_11 ?? 0))
-            .ForMember(d => d.VatRate, opt => opt.MapFrom(s => s.P_12 ?? 0))
-            .ForMember(d => d.VatAmount, opt => opt.MapFrom(s => 
-                s.P_11.HasValue && s.P_12.HasValue ? (s.P_11.Value * s.P_12.Value) / 100 : 0))
-            .ForMember(d => d.GrossAmount, opt => opt.MapFrom(s => 
-                s.P_11A ?? (s.P_11 ?? 0) + (s.P_11.HasValue && s.P_12.HasValue ? (s.P_11.Value * s.P_12.Value) / 100 : 0)));
+            .ForMember(d => d.VatRate, opt => opt.MapFrom(s => ParseVatRate(s.P_12)))
+            .ForMember(d => d.VatAmount, opt => opt.MapFrom(s =>
+                s.P_11Vat ?? (s.P_11.HasValue ? (s.P_11.Value * ParseVatRate(s.P_12)) / 100 : 0)))
+            .ForMember(d => d.GrossAmount, opt => opt.MapFrom(s =>
+                s.P_11A ?? (s.P_11 ?? 0) + (s.P_11Vat ?? (s.P_11.HasValue ? (s.P_11.Value * ParseVatRate(s.P_12)) / 100 : 0))));
+    }
+
+    private static decimal ParseVatRate(string vatRate)
+    {
+        if (string.IsNullOrWhiteSpace(vatRate))
+        {
+            return 0;
+        }
+
+        // "zw" oznacza zwolniony z VAT (stawka 0%)
+        if (vatRate.Equals("zw", StringComparison.OrdinalIgnoreCase))
+        {
+            return 0;
+        }
+        
+        return decimal.TryParse(vatRate, out var value) ? value : 0;
     }
 }
 
