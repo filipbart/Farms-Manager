@@ -281,6 +281,21 @@ const AccountingPage: React.FC = () => {
           md: 4,
         })}
       </Grid>
+      <Grid container spacing={2} mb={2}>
+        <Grid size={12}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={showNearestPaymentsExceptWipasz}
+                onChange={(e) =>
+                  handleNearestPaymentsFilterChange(e.target.checked, dispatch)
+                }
+              />
+            }
+            label="Pokaż najbliższe płatności z wyjątkiem Wipasz"
+          />
+        </Grid>
+      </Grid>
       <Button
         variant="text"
         color="primary"
@@ -338,24 +353,6 @@ const AccountingPage: React.FC = () => {
             {renderFilterField(filters, dispatch, "exclusions", {
               xs: 12,
             })}
-          </Grid>
-          <Grid container spacing={2} mt={2}>
-            <Grid size={12}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={showNearestPaymentsExceptWipasz}
-                    onChange={(e) =>
-                      handleNearestPaymentsFilterChange(
-                        e.target.checked,
-                        dispatch,
-                      )
-                    }
-                  />
-                }
-                label="Pokaż najbliższe płatności z wyjątkiem Wipasz"
-              />
-            </Grid>
           </Grid>
         </Box>
       </Collapse>
