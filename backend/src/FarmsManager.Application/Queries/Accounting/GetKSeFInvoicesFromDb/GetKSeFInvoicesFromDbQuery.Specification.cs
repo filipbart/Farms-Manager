@@ -47,18 +47,18 @@ public sealed class GetKSeFInvoicesFromDbSpec : BaseSpecification<KSeFInvoiceEnt
             Query.Where(x => x.InvoiceSource == source);
         }
         
-        // Filtrowanie po nazwie nabywcy
+        // Filtrowanie po nazwie nabywcy lub NIP
         if (filters.BuyerName.IsNotEmpty())
         {
             var phrase = $"%{filters.BuyerName}%";
-            Query.Where(x => EF.Functions.ILike(x.BuyerName, phrase));
+            Query.Where(x => EF.Functions.ILike(x.BuyerName, phrase) || EF.Functions.ILike(x.BuyerNip, phrase));
         }
         
-        // Filtrowanie po nazwie sprzedawcy
+        // Filtrowanie po nazwie sprzedawcy lub NIP
         if (filters.SellerName.IsNotEmpty())
         {
             var phrase = $"%{filters.SellerName}%";
-            Query.Where(x => EF.Functions.ILike(x.SellerName, phrase));
+            Query.Where(x => EF.Functions.ILike(x.SellerName, phrase) || EF.Functions.ILike(x.SellerNip, phrase));
         }
         
         // Filtrowanie po numerze faktury
