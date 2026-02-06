@@ -97,7 +97,8 @@ public class UpdateKSeFInvoiceCommandHandler : IRequestHandler<UpdateKSeFInvoice
             request.Data.SellerName,
             request.Data.SellerNip,
             request.Data.BuyerName,
-            request.Data.BuyerNip
+            request.Data.BuyerNip,
+            request.Data.InvoiceNumber
         );
 
         invoice.SetModified(userId);

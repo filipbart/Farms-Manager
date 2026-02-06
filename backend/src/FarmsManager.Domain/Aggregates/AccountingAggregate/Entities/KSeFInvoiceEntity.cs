@@ -134,7 +134,7 @@ public class KSeFInvoiceEntity : Entity
     /// <summary>
     /// Numer faktury
     /// </summary>
-    public string InvoiceNumber { get; init; }
+    public string InvoiceNumber { get; private set; }
 
     /// <summary>
     /// Data wystawienia faktury
@@ -387,7 +387,8 @@ public void Update(
     string sellerName = null,
     string sellerNip = null,
     string buyerName = null,
-    string buyerNip = null)
+    string buyerNip = null,
+    string invoiceNumber = null)
 {
     if (status.HasValue)
         Status = status.Value;
@@ -452,6 +453,10 @@ public void Update(
 
     if (vatAmount.HasValue)
         VatAmount = vatAmount.Value;
+
+    // Aktualizuj numer faktury jeśli został przekazany
+    if (invoiceNumber != null)
+        InvoiceNumber = invoiceNumber;
 
     // Aktualizuj dane sprzedawcy i nabywcy jeśli zostały przekazane
     if (sellerName != null || sellerNip != null || buyerName != null || buyerNip != null)
